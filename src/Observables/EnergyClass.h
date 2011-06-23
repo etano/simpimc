@@ -8,8 +8,13 @@ class Energy : public Observable
 private: 
   vec Etot, KEtot, VEtot, NEtot;
   double E, KE, VE, NE;
-protected:
 
+  // Energy Observables
+  double getKE();
+  double getVE();
+  double getVEint( Bead *b1 , Bead *b2 );
+  double getNE();  
+protected:
 public:
   Energy( Path& pathIn , std::string outputSuffixIn , std::string observableLabelIn , unsigned int skipIn , unsigned int blockIn )
     : Observable( pathIn , outputSuffixIn , observableLabelIn , skipIn , blockIn )

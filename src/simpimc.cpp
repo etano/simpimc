@@ -1,4 +1,4 @@
-#include "brown-pimc.h" // Import headers, set global constants, and build system
+#include "simpimc.h" // Import headers, set global constants, and build system
 
 using namespace std;
 

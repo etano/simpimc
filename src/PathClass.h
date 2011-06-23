@@ -35,12 +35,6 @@ public:
 
   // Constructor
   Path( const int nPartIn , const int nDIn , const int nBeadIn, const double betaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn );  
-
-  // Energy Observables
-  double getKE();
-  double getVE();
-  double getVEint( Bead *b1 , Bead *b2 );
-  double getNE();  
   
   int getPType();
   
