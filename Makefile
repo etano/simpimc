@@ -1,7 +1,6 @@
 CC=g++
-CFLAGS=-I eigen3 -I /opt/local/include -c -O3 -Wall -msse3 -fomit-frame-pointer -fstrict-aliasing -ffast-math -g
-LDFLAGS= -I /opt/local/include -O3 -Wall -msse3 -fomit-frame-pointer -fstrict-aliasing -ffast-math -g
-LIBFLAGS = -larmadillo -framework Accelerate
+CFLAGS=-c -O3 -Wall -g
+LDFLAGS=-O3 -Wall -g -I /opt/local/include -larmadillo -framework Accelerate -msse4
 SOURCES=src/simpimc.cpp
 SOURCES+=src/SimulationClass.cpp
 SOURCES+=src/PathClass.cpp
@@ -32,7 +31,7 @@ EXECUTABLE=simpimc
 all: $(SOURCES) $(EXECUTABLE)
 		
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@ $(LIBFLAGS)
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@

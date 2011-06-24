@@ -20,8 +20,8 @@ protected:
 
 public:
   // Constructor
-  Simulation( const int nPartIn , const int nDIn , const int nBeadIn, const double betaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn )
-    : rng((int)time(0)) , path( nPartIn , nDIn , nBeadIn, betaIn , fermiIn , halfspaceIn , nodeTypeIn , useNodeDistIn )
+  Simulation( const int nPartIn , const int nDIn , const int nBeadIn, const double betaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn , const double LIn )
+    : rng((int)time(0)) , path( nPartIn , nDIn , nBeadIn, betaIn , fermiIn , halfspaceIn , nodeTypeIn , useNodeDistIn , LIn )
   {
   }  
 

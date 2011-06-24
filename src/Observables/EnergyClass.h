@@ -12,7 +12,8 @@ private:
   // Energy Observables
   double getKE();
   double getVE();
-  double getVEint( Bead *b1 , Bead *b2 );
+  double getVEint();
+  double getVEext();
   double getNE();  
 protected:
 public:

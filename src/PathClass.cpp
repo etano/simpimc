@@ -1,7 +1,7 @@
 #include "PathClass.h"
 
-Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double betaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn )
-  : nPart(nPartIn) , nD(nDIn) , nBead(nBeadIn) , beta(betaIn) , fermi(fermiIn) , halfspace(halfspaceIn) , nodeType(nodeTypeIn) , useNodeDist(useNodeDistIn)
+Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double betaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn , const double LIn )
+  : nPart(nPartIn) , nD(nDIn) , nBead(nBeadIn) , beta(betaIn) , fermi(fermiIn) , halfspace(halfspaceIn) , nodeType(nodeTypeIn) , useNodeDist(useNodeDistIn) , L(LIn)
 {
   // Constants
   tau = beta/(1.0*nBead);

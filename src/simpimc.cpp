@@ -28,7 +28,8 @@ int main (int argc, char* argv[])
   double duration; // duration of simulation
   bool fermi; // 0 - Boson, 1 - Fermion
   int halfspace; // -1 - Negative Halfspace, 1 - Positive Halfspace
-  int nodeType; // 0 - Exact Nodes, 1 - High T Nodes, 2 - Low T Nodes  
+  int nodeType; // 0 - Exact Nodes, 1 - High T Nodes, 2 - Low T Nodes 
+  double L; // Box Size 
 
   for (unsigned int iLine = 0; iLine < nLineSkip; iLine += 1) {
     inputStream >> nPart;
@@ -39,6 +40,7 @@ int main (int argc, char* argv[])
     inputStream >> fermi;
     inputStream >> halfspace;
     inputStream >> nodeType;   
+    inputStream >> L;
   }
   inputStream.close();
 
@@ -47,7 +49,7 @@ int main (int argc, char* argv[])
   // Output Settings to Screen
   cout << scientific << setprecision(4);   
   cout << "\nSIMULATION SETTINGS::\n";
-  cout << "\nDuration (s): " << duration << "\nBeta: " << beta << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead << "\nDTau: " << tau << "\nOmega: " << omega << "\nFermions?(1/0): " << fermi << "\n";   
+  cout << "\nDuration (s): " << duration << "\nBeta: " << beta << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead << "\nDTau: " << tau << "\nOmega: " << omega << "\nFermions?(1/0): " << fermi << "\nL: " << L << "\n";   
   
 
   ///////////////////////////
@@ -56,7 +58,7 @@ int main (int argc, char* argv[])
   
   int useNodeDist = 0;
   if(!fermi) useNodeDist = 0;
-  Simulation sim(nPart,nD,nBead,beta,fermi,halfspace,nodeType,useNodeDist);
+  Simulation sim(nPart,nD,nBead,beta,fermi,halfspace,nodeType,useNodeDist,L);
   
   //////////////////////////
   /* Initialization Moves */
@@ -81,9 +83,9 @@ int main (int argc, char* argv[])
   ////////////////////////////
 
   // Form Output String
-  char outputFormat[] = "-%d-%d-%d-%g-%g-%d-%d-%d.dat";
+  char outputFormat[] = "-%d-%d-%d-%g-%g-%d-%d-%d-%d.dat";
   char outputFile[sizeof outputFormat];
-  sprintf(outputFile,outputFormat,nPart,nD,nBead,beta,duration,fermi,halfspace,nodeType); 
+  sprintf(outputFile,outputFormat,nPart,nD,nBead,beta,duration,fermi,halfspace,nodeType,L); 
   string outputSuffix(outputFile);
   
   // Blocking

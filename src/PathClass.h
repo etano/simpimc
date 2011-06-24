@@ -20,6 +20,9 @@ private:
 protected:
   // protected things
 public:
+  // Constructor
+  Path( const int nPartIn , const int nDIn , const int nBeadIn, const double betaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn , const double LIn );  
+
   // Given Global Constants
   const unsigned int nPart, nD, nBead;
   const double beta;
@@ -27,26 +30,30 @@ public:
   const int halfspace;
   const int nodeType;
   const bool useNodeDist;
+  const double L;
 
   // Calculated Global Constants
   double tau;
   unsigned int nPermType;
   double oneOverLamTau, oneOver4LamTau, oneOver4LamTau2, nPartnBeadnDOver2Tau, halfTauOmega2, halfOmega2;
-
-  // Constructor
-  Path( const int nPartIn , const int nDIn , const int nBeadIn, const double betaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn );  
   
+  // Permutation Counter
   int getPType();
-  
-  void printPerm();
-  void printBeads();
-  
-  field<Bead*> bead;
+  void setPType();
   imat permCount;
   imat pType;
   ivec iCount, pCount;
   unsigned int nType;
-  unsigned int infCount, nanCount, errCount;
+  
+  // Print things
+  void printPerm();
+  void printBeads();
+  
+  // Beads
+  field<Bead*> bead;
+
+  // Bead Iterator
+  std::vector<Bead*>::const_iterator beadIter;
 
   // Bead Class member functions (redundant)
   inline void storeR( std::vector<Bead*>& affBeads );
@@ -67,9 +74,11 @@ public:
   bool checkConstraint( const int iBead );  
   bool checkConstraint( std::vector<int>& slices );  
   
-  // Permutation Functions
+  // Difference Vector
   vec dr;
-  void setPType();
+
+  // Periodic Boundary Conditions
+  void PutInBox( vec& r );
   
   // Action Functions
   double getK();
@@ -88,8 +97,9 @@ public:
   // Tables
   ivec bL;
   mat seps;
-
-  std::vector<Bead*>::const_iterator beadIter;
+  
+  // Bad Number Counts
+  unsigned int infCount, nanCount, errCount;
 };
 
 // Single bead action
@@ -135,6 +145,19 @@ inline void Path::restoreR( std::vector<Bead*>& affBeads )
   for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter) {
     (*beadIter) -> restoreR();
   } 
+}
+
+// Put R in the Box
+inline void Path::PutInBox( vec& r )
+{
+  for (unsigned int iD = 0; iD < nD; iD++) {
+    while (r(iD) > L/2) {
+      r(iD) -= L;
+    }
+    while (r(iD) < -L/2) {
+      r(iD) += L;
+    }
+  }
 }
 
 #endif

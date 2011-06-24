@@ -57,6 +57,7 @@ double Energy::getKE()
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
     for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
       path.dr = path.bead(iPart,iBead) -> r - (path.bead(iPart,iBead) -> next -> r);
+      path.PutInBox( path.dr );
       tot += dot( path.dr , path.dr );
     }
   }
@@ -65,30 +66,38 @@ double Energy::getKE()
 }
 
 // Get Potential Energy
-double Energy::getVE()
+inline double Energy::getVE()
 {
-  double VEext = 0.0;
-  double VEint = 0.0;  
-  for (unsigned int iPart = 0; iPart < path.nPart-1; iPart += 1)  {
-    for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
-      for (unsigned int jPart = iPart+1; jPart < path.nPart; jPart += 1) {
-        VEint += 2.0 * path.getVint( path.bead(iPart,iBead) , path.bead(jPart,iBead) );
-      }
-      VEext += dot( path.bead(iPart,iBead) -> r , path.bead(iPart,iBead) -> r );
-    }
-  }
-  for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1) {
-    VEext += dot( path.bead(path.nPart-1,iBead) -> r , path.bead(path.nPart-1,iBead) -> r );
-  }
-  VEext *= path.halfOmega2;
-  
-  return VEext + VEint;
+  return getVEext() + getVEint();
 }
 
-// Get Two Bead Interaction Energy
-double Energy::getVEint( Bead *b1 , Bead *b2 )
+// Get Interaction Potential Energy
+double Energy::getVEint()
 {
-  return 0;
+  double tot = 0.0;
+
+  for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
+    for (unsigned int iPart = 0; iPart < path.nPart-1; iPart += 1)  {
+      for (unsigned int jPart = iPart+1; jPart < path.nPart; jPart += 1) {
+        tot += 2.0 * path.getVint( path.bead(iPart,iBead) , path.bead(jPart,iBead) );
+      }
+    }
+  }
+
+  return tot;
+}
+
+// Get External Potential Energy
+double Energy::getVEext()
+{
+  double tot = 0.0;
+  for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
+    for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {\
+      tot += dot( path.bead(iPart,iBead) -> r , path.bead(iPart,iBead) -> r );
+    }
+  }
+
+  return path.halfOmega2 * tot;
 }
 
 // Get Nodal Energy
