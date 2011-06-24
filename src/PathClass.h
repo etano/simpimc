@@ -150,14 +150,14 @@ inline void Path::restoreR( std::vector<Bead*>& affBeads )
 // Put R in the Box
 inline void Path::PutInBox( vec& r )
 {
-  for (unsigned int iD = 0; iD < nD; iD++) {
+  /*for (unsigned int iD = 0; iD < nD; iD++) {
     while (r(iD) > L/2) {
       r(iD) -= L;
     }
     while (r(iD) < -L/2) {
       r(iD) += L;
     }
-  }
+  }*/
 }
 
 #endif

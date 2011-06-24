@@ -74,7 +74,7 @@ int Bisect::DoBisect( const int iPart )
 
       rng.normRand(dr, 0, sigma);
       beadB -> r = 0.5 * (beadA -> r + beadC -> r) + dr;
-      //path.PutInBox(beadB -> r);
+      path.PutInBox(beadB -> r);
 
       VB[iLevel] += path.getV(beadB)*skip; 
           

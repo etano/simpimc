@@ -56,9 +56,9 @@ double Energy::getKE()
   double tot = 0.0;  
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
     for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
-      path.dr = path.bead(iPart,iBead) -> r - (path.bead(iPart,iBead) -> next -> r);
-      path.PutInBox( path.dr );
-      tot += dot( path.dr , path.dr );
+      dr = path.bead(iPart,iBead) -> r - (path.bead(iPart,iBead) -> next -> r);
+      path.PutInBox( dr );
+      tot += dot( dr , dr );
     }
   }
   

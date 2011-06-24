@@ -9,6 +9,8 @@ private:
   vec Etot, KEtot, VEtot, NEtot;
   double E, KE, VE, NE;
 
+  vec dr;
+
   // Energy Observables
   double getKE();
   double getVE();
@@ -24,6 +26,7 @@ public:
     KEtot.zeros(path.nType);
     VEtot.zeros(path.nType);
     NEtot.zeros(path.nType);
+    dr.set_size(path.nD);
   }
 
   virtual void Accumulate( const int pType );

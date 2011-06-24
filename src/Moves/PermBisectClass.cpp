@@ -93,7 +93,7 @@ int PermBisect::DoPermBisect()
 
         rng.normRand(dr, 0, sigma);
         beadB[i] -> r = 0.5*(beadA[i] -> r + beadC[i] -> r) + dr;
-        //path.PutInBox(beadB[i] -> r);
+        path.PutInBox(beadB[i] -> r);
 
         VB[iLevel] += path.getV(beadB[i])*skip;
         
