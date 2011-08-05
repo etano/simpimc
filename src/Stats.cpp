@@ -57,7 +57,7 @@ void statsEnergy ( const char* energyFile , unsigned int nType , unsigned int nB
   std::string sE, sKE, sVE, sNE;
   std::vector<double> Evec[nType], KEvec[nType], VEvec[nType], NEvec[nType];
   std::vector<double> Etotvec, KEtotvec, VEtotvec, NEtotvec;
-    
+
   energyTrace.open(energyFile);
 
   count = 0;
@@ -80,16 +80,16 @@ void statsEnergy ( const char* energyFile , unsigned int nType , unsigned int nB
       VEtotvec.push_back(VE); 
       NEtotvec.push_back(NE); 
     }
-    
+
     count += 1;
-  }  
-  
+  }
+
   std::cout << "\nEnergy estimates:\n";
   std::cout << "E: " << getMean(Etotvec) << " (" << getError(Etotvec) << ")\n";
   std::cout << "T: " << getMean(KEtotvec) << " (" << getError(KEtotvec) << ")\n";
   std::cout << "V: " << getMean(VEtotvec) << " (" << getError(VEtotvec) << ")\n";
   std::cout << "N: " << getMean(NEtotvec) << " (" << getError(NEtotvec) << ")\n";
-  
+
   std::cout << "\nEnergy Per Permutation Configuration, (E, T, V, N):\n";
   for (unsigned int iType = 0; iType < nType; iType += 1) {
     std::cout << getMean(Evec[iType]) << " " << getMean(KEvec[iType]) << " " << getMean(VEvec[iType]) << " " << getMean(NEvec[iType]) << "\n";

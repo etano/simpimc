@@ -66,7 +66,7 @@ int main (int argc, char* argv[])
 
   // ( path , perAcceptDesired , nEqSweeps , nEqSteps , moveSkip )
   sim.moves.push_back(new Bisect(sim.path,sim.rng,0.5,10,1000,1));
-  sim.moves.push_back(new PermBisect(sim.path,sim.rng,0.5,10,1000,1));
+  //sim.moves.push_back(new PermBisect(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceBead(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceParticle(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceAll(sim.path,sim.rng,0.5,10,1000,1));
@@ -97,7 +97,11 @@ int main (int argc, char* argv[])
 
   // Observables
   // ( path , outputSuffix , outputLabel , skip , block )
+<<<<<<< HEAD
   //sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
+=======
+  sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
+>>>>>>> 729495c45e5b59f60084a3fc35f62535a211b983
   //sim.observables.push_back( new R(sim.path,outputSuffix,"R",1,block) );
   //sim.observables.push_back( new R2(sim.path,outputSuffix,"R2",1,block) );
 
