@@ -97,9 +97,9 @@ int main (int argc, char* argv[])
 
   // Observables
   // ( path , outputSuffix , outputLabel , skip , block )
-  sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
-  sim.observables.push_back( new R(sim.path,outputSuffix,"R",1,block) );
-  sim.observables.push_back( new R2(sim.path,outputSuffix,"R2",1,block) );
+  //sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
+  //sim.observables.push_back( new R(sim.path,outputSuffix,"R",1,block) );
+  //sim.observables.push_back( new R2(sim.path,outputSuffix,"R2",1,block) );
 
   ////////////////////////
   /* Main Loop Settings */

@@ -1,6 +1,6 @@
 CC=g++
-CFLAGS=-c -O3 -Wall -g
-LDFLAGS=-O3 -Wall -g -I /opt/local/include -larmadillo -framework Accelerate -msse4
+CFLAGS=-c -O3 -Wall -g -pg
+LDFLAGS=-O3 -Wall -g -pg -I/usr/bin/include -larmadillo -lblas -llapack -msse4
 SOURCES=src/simpimc.cpp
 SOURCES+=src/SimulationClass.cpp
 SOURCES+=src/PathClass.cpp
