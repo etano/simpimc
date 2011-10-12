@@ -2,4 +2,9 @@ tags
 *~
 *.swp
 .VimballRecord
-.o
+*.o
+*.lo
+*.plo
+*.out
+data
+simpimc
