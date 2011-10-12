@@ -18,7 +18,7 @@ void R::Output()
       trace << Rtot(iType,iPart) * oneOverNbeadBlock << " ";
     }
   }
-  trace << "\n";
+  trace << endl;
 
   Rtot.zeros();
 }
@@ -27,9 +27,9 @@ void R::Print()
 {
   std::cout << "\nR: ";
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-    std::cout << "\n" << iPart << " : " << Rtemp(iPart); 
+    std::cout << endl << iPart << " : " << Rtemp(iPart); 
   }
-  std::cout << "\n";
+  std::cout << endl;
 }
 
 void R::Stats()

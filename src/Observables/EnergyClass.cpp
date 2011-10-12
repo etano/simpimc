@@ -3,14 +3,14 @@
 void Energy::Accumulate( const int pType )
 {
   KE = getKE(); // Kinetic Energy
-  VE = getVE(); // Potential Energy  
-  NE = getNE(); // Nodal Energy      
+  VE = getVE(); // Potential Energy
+  NE = getNE(); // Nodal Energy
   E = KE + VE + NE; // Total Energy
-  
+
   Etot(pType) += E; // Add up total energy
   KEtot(pType) += KE; // Add up total Kinetic energy
   VEtot(pType) += VE; // Add up total Potential energy
-  NEtot(pType) += NE; // Add up total Nodal energy     
+  NEtot(pType) += NE; // Add up total Nodal energy
 }
 
 void Energy::Output()
@@ -18,13 +18,13 @@ void Energy::Output()
   E = 0.0;
   KE = 0.0;
   VE = 0.0;
-  NE = 0.0;  
-  
+  NE = 0.0;
+
   Etot *= oneOverNbeadBlock;
   KEtot *= oneOverNbeadBlock;
   VEtot *= oneOverNbeadBlock;
   NEtot *= oneOverNbeadBlock;
-  
+
   for (unsigned int iType = 0; iType < path.nType; iType += 1) {
     trace << Etot(iType) << " " << KEtot(iType) << " " << VEtot(iType) << " " << NEtot(iType) << " ";
     E += Etot(iType);
@@ -32,7 +32,7 @@ void Energy::Output()
     VE += VEtot(iType);
     NE += NEtot(iType);
   }
-  trace << E << " " << KE << " " << VE << " " << NE << "\n";
+  trace << E << " " << KE << " " << VE << " " << NE << endl;
 
   Etot.zeros();
   KEtot.zeros();
@@ -42,7 +42,7 @@ void Energy::Output()
 
 void Energy::Print()
 {
-  std::cout << "\nE: " << E << "\nKE: " << KE << "\nVE: " << VE << "\nNE: " << NE << "\n"; 
+  std::cout << "\nE: " << E << "\nKE: " << KE << "\nVE: " << VE << "\nNE: " << NE << endl; 
 }
 
 void Energy::Stats()
@@ -61,7 +61,7 @@ double Energy::getKE()
       tot += dot( dr , dr );
     }
   }
-  
+
   return path.nPartnBeadnDOver2Tau - path.oneOver4LamTau2 * tot;
 }
 
@@ -106,15 +106,15 @@ double Energy::getNE()
   if(!path.useNodeDist) return 0;
 
   double xi, tot;
-  
+
   tot = 0.0;
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
     for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
       xi = (path.bead(iPart,iBead) -> nDist)*(path.bead(iPart,iBead) -> next -> nDist)*path.oneOverLamTau;
       tot += xi/(path.tau*(exp(xi) - 1.0));
-    } 
+    }
   }
 
   return tot;
-  
+
 }

@@ -30,7 +30,7 @@ public:
     : path(pathIn) , outputSuffix(outputSuffixIn) , observableLabel(observableLabelIn) , skip(skipIn) , block(blockIn) , nBlock(0)
   {
     outputFile = "data/traces/" + observableLabel + outputSuffix;
-    std::cout << "\nOutputting " << observableLabel << " data to " << outputFile << ".\n";
+    std::cout << "\nOutputting " << observableLabel << " data to " << outputFile << "." << endl;
     trace.open (outputFile.c_str(), ios::out | ios::trunc);
 
     oneOverNbeadBlock = 1.0/(path.nBead * block * 1.0);

@@ -75,6 +75,7 @@ void statsEnergy ( const char* energyFile , unsigned int nType , unsigned int nB
         NEvec[iType].push_back(NE);
       }
       energyTrace >> E >> KE >> VE >> NE;
+
       Etotvec.push_back(E); 
       KEtotvec.push_back(KE); 
       VEtotvec.push_back(VE); 
@@ -83,16 +84,16 @@ void statsEnergy ( const char* energyFile , unsigned int nType , unsigned int nB
 
     count += 1;
   }
-
+  std::cout << "nBlock: " << nBlock << endl;
   std::cout << "\nEnergy estimates:\n";
-  std::cout << "E: " << getMean(Etotvec) << " (" << getError(Etotvec) << ")\n";
-  std::cout << "T: " << getMean(KEtotvec) << " (" << getError(KEtotvec) << ")\n";
-  std::cout << "V: " << getMean(VEtotvec) << " (" << getError(VEtotvec) << ")\n";
-  std::cout << "N: " << getMean(NEtotvec) << " (" << getError(NEtotvec) << ")\n";
+  std::cout << "E: " << getMean(Etotvec) << " (" << getError(Etotvec) << ")" << endl;
+  std::cout << "T: " << getMean(KEtotvec) << " (" << getError(KEtotvec) << ")" << endl;
+  std::cout << "V: " << getMean(VEtotvec) << " (" << getError(VEtotvec) << ")" << endl;
+  std::cout << "N: " << getMean(NEtotvec) << " (" << getError(NEtotvec) << ")" << endl;
 
   std::cout << "\nEnergy Per Permutation Configuration, (E, T, V, N):\n";
   for (unsigned int iType = 0; iType < nType; iType += 1) {
-    std::cout << getMean(Evec[iType]) << " " << getMean(KEvec[iType]) << " " << getMean(VEvec[iType]) << " " << getMean(NEvec[iType]) << "\n";
+    std::cout << getMean(Evec[iType]) << " " << getMean(KEvec[iType]) << " " << getMean(VEvec[iType]) << " " << getMean(NEvec[iType]) << endl;
   }  
   
   // Close files
@@ -149,7 +150,7 @@ void statsR ( const char* rFile , unsigned int nType , unsigned int nBlock , uns
   
   std::cout << "\nR estimate:\n";
   for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-    std::cout << iPart << " : " << totavgr[iPart] << "\n";
+    std::cout << iPart << " : " << totavgr[iPart] << endl;
   }    
   
   // Close files
@@ -205,7 +206,7 @@ void statsRR ( const char* rrFile , unsigned int nType , unsigned int nBlock , u
   
   std::cout << "\nRR estimate:\n";
   for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-    std::cout << iPart << " : " << totavgrr[iPart] << "\n";
+    std::cout << iPart << " : " << totavgrr[iPart] << endl;
   }    
   
   // Close files

@@ -49,7 +49,7 @@ int main (int argc, char* argv[])
   // Output Settings to Screen
   cout << scientific << setprecision(4);   
   cout << "\nSIMULATION SETTINGS::\n";
-  cout << "\nDuration (s): " << duration << "\nBeta: " << beta << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead << "\nDTau: " << tau << "\nOmega: " << omega << "\nFermions?(1/0): " << fermi << "\nL: " << L << "\n";   
+  cout << "\nDuration (s): " << duration << "\nBeta: " << beta << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead << "\nDTau: " << tau << "\nOmega: " << omega << "\nFermions?(1/0): " << fermi << "\nL: " << L << endl;   
   
 
   ///////////////////////////
@@ -64,9 +64,9 @@ int main (int argc, char* argv[])
   /* Initialization Moves */
   //////////////////////////
 
-  // ( path , perAcceptDesired , nEqSweeps , nEqSteps , moveSkip )
+  // ( path , rng ,  perAcceptDesired , nEqSweeps , nEqSteps , moveSkip )
   sim.moves.push_back(new Bisect(sim.path,sim.rng,0.5,10,1000,1));
-  //sim.moves.push_back(new PermBisect(sim.path,sim.rng,0.5,10,1000,1));
+  sim.moves.push_back(new PermBisect(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceBead(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceParticle(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceAll(sim.path,sim.rng,0.5,10,1000,1));
@@ -75,7 +75,7 @@ int main (int argc, char* argv[])
  
   // Equilibrate Moves
   for (vector<Move*>::const_iterator move = sim.moves.begin(); move != sim.moves.end(); ++move) {
-    (*move) -> Equilibrate();
+    //(*move) -> Equilibrate();
   }
 
   ////////////////////////////
@@ -97,11 +97,8 @@ int main (int argc, char* argv[])
 
   // Observables
   // ( path , outputSuffix , outputLabel , skip , block )
-<<<<<<< HEAD
   //sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
-=======
   sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
->>>>>>> 729495c45e5b59f60084a3fc35f62535a211b983
   //sim.observables.push_back( new R(sim.path,outputSuffix,"R",1,block) );
   //sim.observables.push_back( new R2(sim.path,outputSuffix,"R2",1,block) );
 
@@ -149,9 +146,9 @@ int main (int argc, char* argv[])
     if (!(iStep % blockOut)) {
       time (&end);
       timeDif = difftime (end,start);
-      cout << "\nT- " << duration - timeDif << " s" << "\n";
+      cout << "\nT- " << duration - timeDif << " s" << endl;
       for (vector<Observable*>::const_iterator observable = sim.observables.begin(); observable != sim.observables.end(); ++observable) {
-        cout << "\n" << (*observable) -> observableLabel << " : Block # " << (*observable) -> nBlock << "\n";
+        cout << endl << (*observable) -> observableLabel << " : Block # " << (*observable) -> nBlock << endl;
         (*observable) -> Print();
       }
     }
@@ -169,12 +166,12 @@ int main (int argc, char* argv[])
   // General Results
   cout << "\n\nFINAL RESULTS::\n\n";
   cout << "Inf: " << sim.path.infCount << " , NaN: " << sim.path.nanCount << " , Err: " << sim.path.errCount << "\n\n";
-  cout << "# Monte Carlo sweeps: " << iStep << "\n";
+  cout << "# Monte Carlo sweeps: " << iStep << endl;
   
   // Move Type Results
   cout << "\nPer Move Type: \n";  
   for (vector<Move*>::const_iterator move = sim.moves.begin(); move != sim.moves.end(); ++move) {
-    cout << (*move) -> moveLabel << ": " << (*move) -> getPerAccept() << "\n";
+    cout << (*move) -> moveLabel << ": " << (*move) -> getPerAccept() << endl;
   }
   
   // Per Permutation Configuration
@@ -184,7 +181,7 @@ int main (int argc, char* argv[])
   else nPerm = 6; // Only 2 & 3 particle exchanges
   
   for (unsigned int iPerm = 0; iPerm < nPerm; iPerm += 1)  {
-    cout << iPerm << " : " << sim.path.permCount(iPerm,1) << " " << sim.path.permCount(iPerm,0) << " " << (sim.path.permCount(iPerm,1)*1.0)/(sim.path.permCount(iPerm,0)*1.0) << "\n";
+    cout << iPerm << " : " << sim.path.permCount(iPerm,1) << " " << sim.path.permCount(iPerm,0) << " " << (sim.path.permCount(iPerm,1)*1.0)/(sim.path.permCount(iPerm,0)*1.0) << endl;
   }     
   
   // Compute statistics of measure quantities
@@ -192,7 +189,7 @@ int main (int argc, char* argv[])
     (*observable) -> Stats();
   }
 
-  cout << "\n"; 
+  cout << endl; 
   sim.path.printPerm();
   //sim.path.printBeads();
   

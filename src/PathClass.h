@@ -90,6 +90,7 @@ public:
   double getV( const unsigned int iPart , const int iBead );
   double getV( Bead *bi );
   double getVint( Bead *b1 , Bead *b2 );
+  double getVext( Bead *b );
   double getN( const int iPart , const int iBead );
   double getN( Bead *b );
   double getN( std::vector<Bead*>& beads );
@@ -150,14 +151,14 @@ inline void Path::restoreR( std::vector<Bead*>& affBeads )
 // Put R in the Box
 inline void Path::PutInBox( vec& r )
 {
-  /*for (unsigned int iD = 0; iD < nD; iD++) {
+  for (unsigned int iD = 0; iD < nD; iD++) {
     while (r(iD) > L/2) {
       r(iD) -= L;
     }
     while (r(iD) < -L/2) {
       r(iD) += L;
     }
-  }*/
+  }
 }
 
 #endif

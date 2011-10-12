@@ -14,29 +14,29 @@ void DisplaceBead::MakeMove()
 int DisplaceBead::DoDisplaceBead( const int iPart , const int iBead )
 {
   Bead *b = path.bead(iPart,iBead);
-  
+
   // Store coordinates
-  b -> storeR(); 
-  
+  b -> storeR();
+
   double V0 = path.getV(b);  // Calculate old potential action 
   double K0 = path.getK(b);  // Calculate old kinetic action
-  double A0 = V0 + K0;   // Total old action  
-  
-  // Make a bead move  
-  rng.unifRand(dr, stepSize); 
+  double A0 = V0 + K0;   // Total old action
+
+  // Make a bead move
+  rng.unifRand(dr, stepSize);
   b -> move(dr);
-                 
+
   double V1 = path.getV(b);  // Calculate new potential action
   double K1 = path.getK(b);  // Calculate new kinetic action
-  double A1 = V1 + K1;   // Total new action  
-  
-  // Decide whether or not to accept move  
+  double A1 = V1 + K1;   // Total new action
+
+  // Decide whether or not to accept move
   if ((A0 - A1) < log(rng.unifRand())) {
     b -> restoreR(); // Restore coordinates
-    return 0;    
+    return 0;
   }
-  
-  return 1; 
+
+  return 1;
 }
 
 /*
