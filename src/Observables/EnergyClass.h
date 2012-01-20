@@ -29,7 +29,7 @@ public:
     dr.set_size(path.nD);
   }
 
-  virtual void Accumulate( const int pType );
+  virtual void Accumulate( const int iType );
   virtual void Output();
   virtual void Print();
   virtual void Stats();

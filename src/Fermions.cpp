@@ -51,59 +51,59 @@ void Path::updateNodeDistance( std::vector<Bead*>& beads )
 void Path::updateRho ( const int iBead )
 {
   double sum, diff;
-  
+
   switch (nodeType){
-    case 1:          
+    case 1:
       for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-        for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {    
+        for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
           dr = (bead(iPart,iBead) -> r) - (bead(jPart,0) -> r);
           diff = dot( dr , dr );
-          rho(iPart,jPart,iBead) = exp( cf1(1,iBead) * diff );      
+          rho(iPart,jPart,iBead) = exp( cf1(1,iBead) * diff );
         }
-      }     
+      }
       break;
     default:
       for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-        for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {      
+        for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
           sum = dot( bead(iPart,0) -> r , bead(jPart,iBead) -> r );
-          rho(iPart,jPart,iBead) = exp( cf1(0,iBead) * sum );        
+          rho(iPart,jPart,iBead) = exp( cf1(0,iBead) * sum );
         }
-      }  
+      }
       break;
   }
-  
+
 }
- 
+
 // Check the Constraint 
 bool Path::checkConstraint( const int iBead )
-{    
+{
   int sign = 1.0; // <<<<<<--------------------FIX
-    
+
   if (!iBead) { // Reference bead moves
     for (unsigned int jBead = 1; jBead < nBead; jBead += 1) { 
-      updateRho(jBead); // Update rho  
-      detRho(jBead) = det(rho.slice(jBead));   
+      updateRho(jBead); // Update rho
+      detRho(jBead) = det(rho.slice(jBead));
       if ( detRho(jBead)*sign < 0.0 ) return 0;
     }
-  } else { // Non-reference bead moves  
+  } else { // Non-reference bead moves
     updateRho(iBead); // Update rho
-    detRho[iBead] = det(rho.slice(iBead));   
-    if ( detRho(iBead)*sign < 0.0 ) return 0; 
+    detRho[iBead] = det(rho.slice(iBead));
+    if ( detRho(iBead)*sign < 0.0 ) return 0;
   }
-    
+
   return 1;
 }
- 
+
 // Check the Constraint 
 bool Path::checkConstraint( std::vector<int>& slices )
-{    
+{
   int sign = 1.0; // <<<<<<--------------------FIX
-  
+
   for (std::vector<int>::const_iterator iBead = slices.begin(); iBead != slices.end(); ++iBead) {
     updateRho(*iBead); // Update rho
-    detRho(*iBead) = det(rho.slice(*iBead));   
-    if ( detRho(*iBead)*sign < 0.0 ) return 0; 
+    detRho(*iBead) = det(rho.slice(*iBead));
+    if ( detRho(*iBead)*sign < 0.0 ) return 0;
   }
-    
+
   return 1;
 }

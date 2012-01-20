@@ -3,7 +3,7 @@
 using namespace std;
 
 int main (int argc, char* argv[])
-{ 
+{
   ////////////////////////////////////
   /* Initialize Simulation Settings */
   ////////////////////////////////////
@@ -25,21 +25,23 @@ int main (int argc, char* argv[])
   unsigned int nD; // dimension
   unsigned int nBead; // number of time slices
   double beta; // inverse temperature
+  double lambda; // hbar^2 / 2m
   double duration; // duration of simulation
   bool fermi; // 0 - Boson, 1 - Fermion
   int halfspace; // -1 - Negative Halfspace, 1 - Positive Halfspace
-  int nodeType; // 0 - Exact Nodes, 1 - High T Nodes, 2 - Low T Nodes 
-  double L; // Box Size 
+  int nodeType; // 0 - Exact Nodes, 1 - High T Nodes, 2 - Low T Nodes
+  double L; // Box Size
 
   for (unsigned int iLine = 0; iLine < nLineSkip; iLine += 1) {
     inputStream >> nPart;
     inputStream >> nD;
     inputStream >> nBead;
     inputStream >> beta;
+    inputStream >> lambda;
     inputStream >> duration;
     inputStream >> fermi;
     inputStream >> halfspace;
-    inputStream >> nodeType;   
+    inputStream >> nodeType;
     inputStream >> L;
   }
   inputStream.close();
@@ -47,32 +49,31 @@ int main (int argc, char* argv[])
   double tau = beta/(1.0*nBead); // tau
 
   // Output Settings to Screen
-  cout << scientific << setprecision(4);   
+  cout << scientific << setprecision(4);
   cout << "\nSIMULATION SETTINGS::\n";
-  cout << "\nDuration (s): " << duration << "\nBeta: " << beta << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead << "\nDTau: " << tau << "\nOmega: " << omega << "\nFermions?(1/0): " << fermi << "\nL: " << L << endl;   
-  
+  cout << "\nDuration (s): " << duration << "\nBeta: " << beta << "\nLambda: " << lambda << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead << "\nDTau: " << tau << "\nOmega: " << omega << "\nFermions?(1/0): " << fermi << "\nL: " << L << endl;
 
   ///////////////////////////
   /* Initialize Simulation */
   ///////////////////////////
-  
+
   int useNodeDist = 0;
   if(!fermi) useNodeDist = 0;
-  Simulation sim(nPart,nD,nBead,beta,fermi,halfspace,nodeType,useNodeDist,L);
-  
+  Simulation sim(nPart,nD,nBead,beta,lambda,fermi,halfspace,nodeType,useNodeDist,L);
+
   //////////////////////////
   /* Initialization Moves */
   //////////////////////////
 
   // ( path , rng ,  perAcceptDesired , nEqSweeps , nEqSteps , moveSkip )
-  sim.moves.push_back(new Bisect(sim.path,sim.rng,0.5,10,1000,1));
+  //sim.moves.push_back(new Bisect(sim.path,sim.rng,0.5,10,1000,1));
   sim.moves.push_back(new PermBisect(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceBead(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceParticle(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceAll(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new Relabel(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new SimplePerm(sim.path,sim.rng,0.5,10,1000,1));
- 
+
   // Equilibrate Moves
   for (vector<Move*>::const_iterator move = sim.moves.begin(); move != sim.moves.end(); ++move) {
     //(*move) -> Equilibrate();
@@ -85,19 +86,18 @@ int main (int argc, char* argv[])
   // Form Output String
   char outputFormat[] = "-%d-%d-%d-%g-%g-%d-%d-%d-%d.dat";
   char outputFile[sizeof outputFormat];
-  sprintf(outputFile,outputFormat,nPart,nD,nBead,beta,duration,fermi,halfspace,nodeType,L); 
+  sprintf(outputFile,outputFormat,nPart,nD,nBead,beta,duration,fermi,halfspace,nodeType,L);
   string outputSuffix(outputFile);
-  
+
   // Blocking
-  int block = 1000;  
-  int blockOut = 100*block;  
-  
+  int block = 1000;
+  int blockOut = 100*block;
+
   // Permutation type
   int pType;
 
   // Observables
   // ( path , outputSuffix , outputLabel , skip , block )
-  //sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
   sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
   //sim.observables.push_back( new R(sim.path,outputSuffix,"R",1,block) );
   //sim.observables.push_back( new R2(sim.path,outputSuffix,"R2",1,block) );
@@ -105,22 +105,22 @@ int main (int argc, char* argv[])
   ////////////////////////
   /* Main Loop Settings */
   ////////////////////////
-  
-  // Set up time loop  
+
+  // Set up time loop
   time_t start, end;
   time (&start);
   time (&end);
   double timeDif = difftime (end,start);
-  
+
   ///////////////////////////
   /* Main Monte Carlo Loop */
   ///////////////////////////
-  
+
   cout << "\nRUN SIMULATION::\n\n";
 
   // Monte Carlo Steps
   int iStep = 0;
-  while (timeDif < duration) {  
+  while (timeDif < duration) {
 
     // Make Move
     for (vector<Move*>::const_iterator move = sim.moves.begin(); move != sim.moves.end(); ++move) {
@@ -128,7 +128,7 @@ int main (int argc, char* argv[])
     }
 
     // Make Measurements
-        
+
     pType = sim.path.getPType(); // Get the current permutation configuration
 
     for (vector<Observable*>::const_iterator observable = sim.observables.begin(); observable != sim.observables.end(); ++observable) {
@@ -139,20 +139,21 @@ int main (int argc, char* argv[])
           (*observable) -> nBlock++; // Increment Block
         }
       }
-    }  
+    }
 
     // Print block information to screen
 
     if (!(iStep % blockOut)) {
       time (&end);
       timeDif = difftime (end,start);
-      cout << "\nT- " << duration - timeDif << " s" << endl;
+      cout << endl << "T- " << duration - timeDif << " s" << endl;
+      cout << "#: " << iStep << endl;
       for (vector<Observable*>::const_iterator observable = sim.observables.begin(); observable != sim.observables.end(); ++observable) {
         cout << endl << (*observable) -> observableLabel << " : Block # " << (*observable) -> nBlock << endl;
         (*observable) -> Print();
       }
     }
-    
+
     // Increment
     time (&end);
     timeDif = difftime (end,start);
@@ -162,36 +163,36 @@ int main (int argc, char* argv[])
   ////////////////////
   /* Output results */
   ////////////////////
-  
+
   // General Results
   cout << "\n\nFINAL RESULTS::\n\n";
   cout << "Inf: " << sim.path.infCount << " , NaN: " << sim.path.nanCount << " , Err: " << sim.path.errCount << "\n\n";
   cout << "# Monte Carlo sweeps: " << iStep << endl;
-  
+
   // Move Type Results
   cout << "\nPer Move Type: \n";  
   for (vector<Move*>::const_iterator move = sim.moves.begin(); move != sim.moves.end(); ++move) {
     cout << (*move) -> moveLabel << ": " << (*move) -> getPerAccept() << endl;
   }
-  
+
   // Per Permutation Configuration
   cout << "\nPer Perm Type: \n";  
   unsigned int nPerm;
   if (fermi) nPerm = 3; // Only 3 particle exchanges
   else nPerm = 6; // Only 2 & 3 particle exchanges
-  
+
   for (unsigned int iPerm = 0; iPerm < nPerm; iPerm += 1)  {
     cout << iPerm << " : " << sim.path.permCount(iPerm,1) << " " << sim.path.permCount(iPerm,0) << " " << (sim.path.permCount(iPerm,1)*1.0)/(sim.path.permCount(iPerm,0)*1.0) << endl;
-  }     
-  
+  }
+
   // Compute statistics of measure quantities
   for (vector<Observable*>::const_iterator observable = sim.observables.begin(); observable != sim.observables.end(); ++observable) {
     (*observable) -> Stats();
   }
 
-  cout << endl; 
+  cout << endl;
   sim.path.printPerm();
   //sim.path.printBeads();
-  
+
   return 0;
 }

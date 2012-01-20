@@ -23,8 +23,8 @@ public:
     : Move( pathIn , rngIn , perAcceptDesiredIn , nEqSweepIn , nEqStepIn , moveSkipIn )
   { 
     moveLabel = "PermBisect";
-    stepSize = 3.0;
-    
+    stepSize = floor(log(path.nBead/2.0)/log(2));
+    std::cerr << moveLabel << ": " << stepSize << endl;
     // Initiate permutation table
     permTable.zeros( path.nPermType * path.nPart * (path.nPart-1) * (path.nPart-2) );
   }

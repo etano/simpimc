@@ -1,16 +1,16 @@
 #include "EnergyClass.h"
 
-void Energy::Accumulate( const int pType )
+void Energy::Accumulate( const int iType )
 {
   KE = getKE(); // Kinetic Energy
   VE = getVE(); // Potential Energy
   NE = getNE(); // Nodal Energy
   E = KE + VE + NE; // Total Energy
 
-  Etot(pType) += E; // Add up total energy
-  KEtot(pType) += KE; // Add up total Kinetic energy
-  VEtot(pType) += VE; // Add up total Potential energy
-  NEtot(pType) += NE; // Add up total Nodal energy
+  Etot(iType) += E; // Add up total energy
+  KEtot(iType) += KE; // Add up total Kinetic energy
+  VEtot(iType) += VE; // Add up total Potential energy
+  NEtot(iType) += NE; // Add up total Nodal energy
 }
 
 void Energy::Output()

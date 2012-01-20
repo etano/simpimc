@@ -1,7 +1,7 @@
 #include "PathClass.h"
 
-Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double betaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn , const double LIn )
-  : nPart(nPartIn) , nD(nDIn) , nBead(nBeadIn) , beta(betaIn) , fermi(fermiIn) , halfspace(halfspaceIn) , nodeType(nodeTypeIn) , useNodeDist(useNodeDistIn) , L(LIn)
+Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double betaIn , const double lambdaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn , const double LIn )
+  : nPart(nPartIn) , nD(nDIn) , nBead(nBeadIn) , beta(betaIn) , lambda(lambdaIn) , fermi(fermiIn) , halfspace(halfspaceIn) , nodeType(nodeTypeIn) , useNodeDist(useNodeDistIn) , L(LIn) , oneOverL(1.0/LIn)
 {
   // Constants
   tau = beta/(1.0*nBead);
@@ -43,19 +43,19 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   iCount.zeros(nPart);
   pCount.zeros(nPart); 
   setPType();
-  
+
   // Initiate permutation counter
-  permCount.zeros(nPermType,2);  
-  
+  permCount.zeros(nPermType,2);
+
   // Initiate separation matrix
   seps.zeros(nPart,nPart);
 
   // Set up cofactors for nodal calculations
   cf1.set_size(3,nBead);
   cf2.set_size(3,nBead);
-  
+
   switch (nodeType){
-    case 1:           
+    case 1:
       for (unsigned int iBead = 1; iBead < nBead; iBead += 1) {
         cf1(1,iBead) = -1.0/(4.0*lambda*iBead*tau);
         cf2(1,iBead) = -2.0/(4.0*lambda*iBead*tau);
@@ -77,11 +77,11 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
     updateRho(iBead);
     storeRho(iBead);
-  }  
-  
+  }
+
   // Initiate detRho
   detRho.zeros(nBead);
-  
+
   // Initiate gradRho
   gradRho.zeros(nPart,nPart);
   for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
@@ -107,6 +107,8 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
 // Identify permuation state
 int Path::getPType()
 {
+  if (nType < 2) return 0;
+
   unsigned int iType, xPart;
 
   // Count up each permutation type
@@ -187,6 +189,11 @@ void Path::setPType()
       pType(5,1) = 1;
       pType(5,2) = 1;
       pType(6,4) = 1;
+      break;
+    default:
+      nType = 1;
+      pType.zeros(nType,nPart);
+      pType(0,0) = 1;
       break;
   }
 }

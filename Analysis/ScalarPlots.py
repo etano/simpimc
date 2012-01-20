@@ -14,6 +14,7 @@ outputLabel = str(sys.argv[1])
 inputFile = []
 for i in range(0, len(sys.argv)-2):  
   inputFileName = "inputs/" + str(sys.argv[i+2])
+  print inputFileName
   inputFile.append([])
   inputFile[i] = open(inputFileName,'r')
 
@@ -47,11 +48,12 @@ for i in range(0, len(inputFile)):
       beta[i].append(float(params[3]))
       nPart = float(params[0])
       nD = float(params[1])
-      interaction = float(params[11])
+      #interaction = float(params[11])
 
       fileExtension = inputLine.replace(' ','-')
       fileExtension = fileExtension.replace('\n','')
       scalarFilePath = "data/traces/scalarTrace-" + fileExtension + ".dat"    
+      scalarFilePath = "data/traces/Energy-7-3-32-2.7366-7200-1-1-1-0.dat"
       print "\nReading data from " + scalarFilePath + "."
       (myArray, myArrayHeadings) = ReadData.loadAscii(scalarFilePath)
       scalarData[i].append(CalcStatistics.getAndOutputStats(myArray, myArrayHeadings))
@@ -87,14 +89,14 @@ for i in range(0, len(col[0])):
     plt.errorbar(beta[j], col[j][i][0], col[j][i][3], label=inputFileLabel[j])
 
   # Exact Values
-  x = arange(1.0,10.0,0.01)
-  if (interaction==0):  
-    if ((myArrayHeadings[i+1]=="PE") or (myArrayHeadings[i+1]=="VE")):  
-      y =  nPart*nD*0.5/tanh(x/2.0)
-      plt.plot(x, y, label="Exact")
-    if (myArrayHeadings[i+1]=="R2"):  
-      y = nD*0.5/tanh(x/2.0)
-      plt.plot(x, y, label="Exact")
+  #x = arange(1.0,10.0,0.01)
+  #if (interaction==0):  
+  #  if ((myArrayHeadings[i+1]=="PE") or (myArrayHeadings[i+1]=="VE")):  
+  #    y =  nPart*nD*0.5/tanh(x/2.0)
+  #    plt.plot(x, y, label="Exact")
+  #  if (myArrayHeadings[i+1]=="R2"):  
+  #    y = nD*0.5/tanh(x/2.0)
+  #    plt.plot(x, y, label="Exact")
 
   # Legend
   leg = plt.legend(loc='best')

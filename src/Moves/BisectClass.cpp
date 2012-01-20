@@ -60,7 +60,7 @@ int Bisect::DoBisect( const int iPart )
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
     skip = pow(2,iLevel);
     tauEff = path.tau*skip;
-    sigma2 = lambda*tauEff;
+    sigma2 = path.lambda*tauEff;
     sigma = sqrt(sigma2);
     VA[iLevel] = 0.0;
     VB[iLevel] = 0.0;

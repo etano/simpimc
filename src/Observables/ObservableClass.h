@@ -45,7 +45,7 @@ public:
   unsigned int nBlock;
 
   // Functions
-  virtual void Accumulate( const int pType ) {};
+  virtual void Accumulate( const int iType ) {};
   virtual void Output() {};
   virtual void Print() {};
   virtual void Stats() {};

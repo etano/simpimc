@@ -93,7 +93,7 @@ int SimplePerm::permute( const int slice , const int i , const int j , const int
 // Set permutation radius
 void SimplePerm::setPermRadius( const int iBead )
 {
-  double sep2, permRadius2 = lambda*iBead*path.tau;
+  double sep2, permRadius2 = path.lambda*iBead*path.tau;
 
   for (unsigned int iPart = 0; iPart < path.nPart - 1; iPart += 1)  {
     for (unsigned int jPart = iPart + 1; jPart < path.nPart; jPart += 1) {

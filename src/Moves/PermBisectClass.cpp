@@ -18,17 +18,17 @@ int PermBisect::DoPermBisect()
   unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
   double permTot0 = constructPermTable(bead0,bead1,nBisectBeads,rollOver); // Permutation weight table
-    
+
   int permParts[3], permType;
-  permType = selectPerm(permParts,permTot0); // Select Permutation 
-  
+  permType = selectPerm(permParts,permTot0); // Select Permutation
+
   // Set up pointers
   Bead *beadA[3], *beadB[3], *beadC[3], *beadI[3], *beadF[3];
   for (unsigned int i = 0; i < 3; i += 1) {
     beadI[i] = path.bead(permParts[i],bead0);
     beadF[i] = beadI[i] -> nextB(nBisectBeads);
   }
-  
+
   // Old nodal action
   double N0(0.0), N1(0.0);
   if(path.useNodeDist) {
@@ -36,29 +36,29 @@ int PermBisect::DoPermBisect()
       N0 = 0.0;
       for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1) {
         for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-          path.bead(iPart,iBead) -> storeNodeDistance();  // Store old nodal distances      
+          path.bead(iPart,iBead) -> storeNodeDistance();  // Store old nodal distances
           N0 += path.getN(iPart,iBead);  // Calculate old nodal action
         }
       }
     } else {
       for (unsigned int iBead = bead0; iBead < bead1 + 1; iBead += 1) {
         for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-          path.bead(iPart,iBead) -> storeNodeDistance();  // Store old nodal distances      
+          path.bead(iPart,iBead) -> storeNodeDistance();  // Store old nodal distances
           N0 += path.getN(iPart,iBead);  // Calculate old nodal action
         }
-      }    
+      }
     }
   }
-  
+
   // Store permutation record 
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-    path.bead(iPart,path.bL(bead1)) -> storePartRecord();    
-    path.bead(iPart,path.bL(bead1-1)) -> storePartRecord();      
+    path.bead(iPart,path.bL(bead1)) -> storePartRecord();
+    path.bead(iPart,path.bL(bead1-1)) -> storePartRecord();
   }
-  
-  // Permute particles  
-  permuteb(beadF,permType);  
-  
+
+  // Permute particles
+  permuteb(beadF,permType);
+
   // Set final bisection beads and store
   affBeads.clear();
   for (unsigned int i = 0; i < 3; i += 1) {
@@ -69,112 +69,112 @@ int PermBisect::DoPermBisect()
       beadF[i] = beadF[i] -> next;
     }
   }
-  
+
   // Perform bisection. Move exactly through free action
   int skip;
   double tauEff, sigma;
   double VA[nLevel], VB[nLevel], dA[nLevel+1];
-  double dAold = 0.0;  
-  dA[nLevel] = 0.0; 
+  double dAold = 0.0;
+  dA[nLevel] = 0.0;
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) { 
     skip = pow(2,iLevel);
     tauEff = path.tau*skip;
-    sigma = sqrt(lambda*tauEff);
+    sigma = sqrt(path.lambda*tauEff);
     VA[iLevel] = 0.0;
     VB[iLevel] = 0.0;
-    
+
     for (unsigned int i = 0; i < 3; i += 1) {
-      beadA[i] = beadI[i];   
+      beadA[i] = beadI[i];
       while(beadA[i] != beadF[i]) {
-        beadB[i] = beadA[i] -> nextB(skip); 
+        beadB[i] = beadA[i] -> nextB(skip);
         beadC[i] = beadB[i] -> nextB(skip);
-              
+
         VA[iLevel] += path.getV(beadB[i])*skip;
 
         rng.normRand(dr, 0, sigma);
         beadB[i] -> r = 0.5*(beadA[i] -> r + beadC[i] -> r) + dr;
 
         VB[iLevel] += path.getV(beadB[i])*skip;
-        
+
         beadA[i] = beadC[i];
-      }    
+      }
     }
 
     dA[iLevel] = VA[iLevel] - VB[iLevel];
     dAold = 0.5*(dAold + dA[iLevel+1]);
     // Decide whether or not to accept move (note: only need potential action)
     if ((dA[iLevel] - dAold) < log(rng.unifRand()))  {
-    
+
       // Restore original coordinates
       path.restoreR(affBeads);
-      
+
       // Restore permutation record
       for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-        path.bead(iPart,path.bL(bead1)) -> restorePartRecord();    
-        path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();         
-      }   
+        path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
+        path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
+      }
 
-      return 0;  
-    } 
+      return 0;
+    }
   }
-  
-  // Construct Permutation Table 
-  double permTot1 = constructPermTable(bead0,bead1,nBisectBeads,rollOver);  
- 
+
+  // Construct Permutation Table
+  double permTot1 = constructPermTable(bead0,bead1,nBisectBeads,rollOver);
+
   // Decide whether or not to accept whole bisection
   if ((permTot0/permTot1) < rng.unifRand())  {
-  
+
     // Restore original coordinates
     path.restoreR(affBeads);
-      
+
     // Restore permutation record
     for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-      path.bead(iPart,path.bL(bead1)) -> restorePartRecord();    
-      path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();   
+      path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
+      path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
     }
-    
+
     return 0;
   }
-  
+
   // Sample constraint and Nodal action
   if(path.fermi) {
     // Check constraint
     if(rollOver) {
       for (unsigned int iBead = 1; iBead < path.nBead; iBead += 1) {
         if(!path.checkConstraint(iBead)) {
-    
+
           // Restore original coordinates
           path.restoreR(affBeads);
-          
+
           // Restore permutation record
           for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-            path.bead(iPart,path.bL(bead1)) -> restorePartRecord();    
-            path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();      
-          } 
-          
-          return 0;     
-        }  
+            path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
+            path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
+          }
+
+          return 0;
+        }
       }
-    } else { 
+    } else {
       for(beadA[0] = beadI[0]; beadA[0] != beadF[0]; beadA[0] = beadA[0] -> next) {
         if(!path.checkConstraint(beadA[0] -> b)) {
-    
+
           // Restore original coordinates
           path.restoreR(affBeads);
-          
+
           // Restore permutation record
           for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-            path.bead(iPart,path.bL(bead1)) -> restorePartRecord();    
-            path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();     
-          }  
-          
-          return 0;     
-        }    
+            path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
+            path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
+          }
+
+          return 0;
+        }
       }
     }
   }
-   
-  if(path.useNodeDist) { 
+
+  if(path.useNodeDist) {
     // New nodal action
     N1 = 0.0;
     if(rollOver) {
@@ -190,29 +190,29 @@ int PermBisect::DoPermBisect()
           path.updateNodeDistance(iPart,iBead);  // Update nodal distances    
           N1 += path.getN(iPart,iBead);  // Calculate old nodal action
         }
-      }     
+      }
     }
 
     // Sample nodal action
     if ((N0 - N1) < log(rng.unifRand()))  { // Decide whether or not to accept move
-    
+
       // Restore original coordinates
       path.restoreR(affBeads);
-      
+
       // Restore permutation record
       for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-        path.bead(iPart,path.bL(bead1)) -> restorePartRecord();    
-        path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();   
+        path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
+        path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
       }
-          
-      // Restore particle labels
-      assignParticleLabels();  
 
-      // Restore nodal distances 
+      // Restore particle labels
+      assignParticleLabels();
+
+      // Restore nodal distances
       if(rollOver) {
         for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1) {
           for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-            path.bead(iPart,iBead) -> restoreNodeDistance();          
+            path.bead(iPart,iBead) -> restoreNodeDistance();
           }
         }
       } else {
@@ -220,11 +220,11 @@ int PermBisect::DoPermBisect()
           for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
             path.bead(iPart,iBead) -> restoreNodeDistance();   
           }
-        }      
+        }
       }
-      
-      return 0;    
-    }  
+
+      return 0;
+    }
   }
 
   // Assign particle labels
@@ -232,9 +232,9 @@ int PermBisect::DoPermBisect()
   assignParticleLabels(); // HACK!!!
   // HACK!!!
 
-  path.permCount(permType,1) += 1;  
-  
-  return 1;    
+  path.permCount(permType,1) += 1;
+
+  return 1;
 }
 
 // Construct Permutation Table for 3 Particle Exchanges
@@ -356,3 +356,5 @@ unsigned int PermBisect::permuteb( Bead *b[3] , int permType )
     
   return permType;
 }
+
+
