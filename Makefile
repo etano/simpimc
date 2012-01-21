@@ -1,43 +1,49 @@
-CC=g++
-CFLAGS=-c -O3 -Wall -g -pg
-LDFLAGS=-O3 -Wall -g -pg -I/usr/bin/include -larmadillo -lblas -llapack -msse4
-SOURCES=src/simpimc.cpp
-SOURCES+=src/SimulationClass.cpp
-SOURCES+=src/PathClass.cpp
-SOURCES+=src/BeadClass.cpp
-SOURCES+=src/Moves/MoveClass.cpp
-SOURCES+=src/Moves/BisectClass.cpp
-SOURCES+=src/Moves/PermBisectClass.cpp
-SOURCES+=src/Moves/DisplaceBeadClass.cpp
-SOURCES+=src/Moves/DisplaceParticleClass.cpp
-SOURCES+=src/Moves/DisplaceAllClass.cpp
-SOURCES+=src/Moves/RelabelClass.cpp
-SOURCES+=src/Moves/SimplePermClass.cpp
-SOURCES+=src/Observables/ObservableClass.cpp
-SOURCES+=src/Observables/RClass.cpp
-SOURCES+=src/Observables/EnergyClass.cpp
-SOURCES+=src/Observables/R2Class.cpp
-SOURCES+=src/Fermions.cpp
-SOURCES+=src/Action.cpp
-SOURCES+=src/RNGClass.cpp
-SOURCES+=src/Stats.cpp
-SOURCES+=src/rng/sfmt.cpp 
-SOURCES+=src/rng/mersenne.cpp 
-SOURCES+=src/rng/userintf.cpp
-SOURCES+=src/rng/stoc1.cpp
-OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=simpimc
+CXX      = g++
+CXXFLAGS = -O3 -Wall -g -pg -I${HOME}/Projects/boost_1_48_0 -I/usr/bin/include
+LDFLAGS  = -larmadillo -lblas -llapack -msse4
 
-all: $(SOURCES) $(EXECUTABLE)
-		
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+TARGET = simpimc
+SRCS=src/simpimc.cpp
+SRCS+=src/SimulationClass.cpp
+SRCS+=src/PathClass.cpp
+SRCS+=src/BeadClass.cpp
+SRCS+=src/Moves/MoveClass.cpp
+SRCS+=src/Moves/BisectClass.cpp
+SRCS+=src/Moves/PermBisectClass.cpp
+SRCS+=src/Moves/DisplaceBeadClass.cpp
+SRCS+=src/Moves/DisplaceParticleClass.cpp
+SRCS+=src/Moves/DisplaceAllClass.cpp
+SRCS+=src/Moves/RelabelClass.cpp
+SRCS+=src/Moves/SimplePermClass.cpp
+SRCS+=src/Observables/ObservableClass.cpp
+SRCS+=src/Observables/RClass.cpp
+SRCS+=src/Observables/EnergyClass.cpp
+SRCS+=src/Observables/R2Class.cpp
+SRCS+=src/Fermions.cpp
+SRCS+=src/Action.cpp
+SRCS+=src/RNGClass.cpp
+SRCS+=src/Stats.cpp
+SRCS+=src/rng/sfmt.cpp 
+SRCS+=src/rng/mersenne.cpp 
+SRCS+=src/rng/userintf.cpp
+SRCS+=src/rng/stoc1.cpp
+OBJS   = $(SRCS:.cpp=.o)
+DEPS   = $(SRCS:.cpp=.depends)
+
+.PHONY: clean all
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $(TARGET)
 
 .cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
-	
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+%.depends: %.cpp
+	$(CXX) -M $(CXXFLAGS) $< > $@
+
 clean:
-	rm -rf ./src/rng/*.o ./src/Moves/*.o ./src/Observables/*.o ./src/*.o $(EXECUTABLE)
-	
-scrubData:
-	rm -rf ./data/figures/*.png ./data/traces/*.dat ./data/output/*.out
+	rm -f $(OBJS) $(DEPS) $(TARGET)
+
+-include $(DEPS)
