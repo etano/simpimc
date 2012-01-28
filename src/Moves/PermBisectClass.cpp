@@ -119,8 +119,10 @@ int PermBisect::DoPermBisect()
   }
 
   // Construct Permutation Table
+  assignParticleLabels();
   double permTot1 = constructPermTable(bead0,bead1,nBisectBeads,rollOver);
 
+  //if(permType) std::cout << permType << " " << permTot0 << " " << permTot1 << endl;
   // Decide whether or not to accept whole bisection
   if ((permTot0/permTot1) < rng.unifRand())  {
 
@@ -132,6 +134,8 @@ int PermBisect::DoPermBisect()
       path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
       path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
     }
+
+    assignParticleLabels();
 
     return 0;
   }
@@ -152,6 +156,8 @@ int PermBisect::DoPermBisect()
             path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
           }
 
+          assignParticleLabels();
+
           return 0;
         }
       }
@@ -167,6 +173,8 @@ int PermBisect::DoPermBisect()
             path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
             path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
           }
+
+          assignParticleLabels();
 
           return 0;
         }
@@ -227,68 +235,101 @@ int PermBisect::DoPermBisect()
     }
   }
 
-  // Assign particle labels
-  // HACK!!!
-  assignParticleLabels(); // HACK!!!
-  // HACK!!!
-
   path.permCount(permType,1) += 1;
 
   return 1;
 }
 
+//// Construct Permutation Table for 3 Particle Exchanges
+//void PermBisect::constructPermTable2( const int bead0 , const int nBisectBeads )
+//{
+//  int perm[path.nPart], iPerm[path.nPart];
+//  double cofactor = path.oneOver4LamTau/(1.0*nBisectBeads);
+//  double diff;
+//
+//  Bead *b0[path.nPart], *b1[path.nPart];
+//  int b0ip, b0jp, b1ip, b1jp;
+//
+//  for (unsigned int i = 0; i < path.nPart; i += 1) {
+//    b0[i] = path.bead(i,bead0);
+//    b1[i] = b0[i] -> nextB(nBisectBeads);
+//  }
+//
+//  for (unsigned int i = 0; i < path.nPart; i += 1) {
+//    for (unsigned int j = 0; j < path.nPart; j += 1) {
+//      b1ip = b1[i] -> p;
+//      b1jp = b1[j] -> p;
+//
+//      // Calculate weight
+//      dr = b0[i] -> r - b1[perm[b1ip]] -> r;
+//      path.PutInBox(dr);
+//      diff = dot(dr,dr);
+//      PT(i,j) = exp(-diff * cofactor);
+//    }
+//  }
+//
+//}
+//
+//double 
+
 // Construct Permutation Table for 3 Particle Exchanges
-double PermBisect::constructPermTable( const int bead0 , const int bead1 , const int nBisectBeads , const bool rollOver ) 
-{ 
+double PermBisect::constructPermTable( const int bead0 , const int bead1 , const int nBisectBeads , const bool rollOver )
+{
   int perm[path.nPart], iPerm[path.nPart];
   double cofactor = path.oneOver4LamTau/(1.0*nBisectBeads);
   double permTot = 0.0;
   double diff;
-  
+
   Bead *b0[path.nPart], *b1[path.nPart];
   int b1ip, b1jp, b1kp, n = 0;
-  
+
   if(rollOver) {
     for (unsigned int i = 0; i < path.nPart; i += 1) {
       b0[i] = path.bead(i,bead0);
       b1[i] = b0[i] -> nextB(nBisectBeads);
-    } 
+    }
   } else {
     for (unsigned int i = 0; i < path.nPart; i += 1) {
       b0[i] = path.bead(i,bead0);
       b1[i] = path.bead(i,bead1);
-    } 
+    }
   }
-  
+
   for (unsigned int permType = 0; permType < path.nPermType; permType += 1) {
-    for (unsigned int i = 0; i < path.nPart - 2; i += 1) {
-      for (unsigned int j = i + 1; j < path.nPart - 1; j += 1) {
-        for (unsigned int k = j + 1; k < path.nPart; k += 1) { 
-        
-          b1ip = b1[i] -> p;
-          b1jp = b1[j] -> p;
-          b1kp = b1[k] -> p;
-        
-          // Set permutation
-          setPerm(permType,perm,iPerm,b1ip,b1jp,b1kp);
-          
-          // Calculate weight
-          diff = 0.0;
-          dr = b0[i] -> r - b1[perm[b1ip]] -> r;
-          diff += dot( dr , dr );
-          dr = b0[j] -> r - b1[perm[b1jp]] -> r;
-          diff += dot( dr , dr );
-          dr = b0[k] -> r - b1[perm[b1kp]] -> r;
-          diff += dot( dr , dr );
-          
-          permTable(n) = exp(-diff*cofactor);
-          permTot += permTable(n);
+    for (unsigned int i = 0; i < path.nPart; i += 1) {
+      for (unsigned int j = 0; j < path.nPart; j += 1) {
+        for (unsigned int k = 0; k < path.nPart; k += 1) {
+          if (i == j || j == k || i == k) {
+            permTable(n) = 0.0;
+          } else {
+            b1ip = b1[i] -> p;
+            b1jp = b1[j] -> p;
+            b1kp = b1[k] -> p;
+
+            // Set permutation
+            setPerm(permType,perm,iPerm,b1ip,b1jp,b1kp);
+
+            // Calculate weight
+            diff = 0.0;
+            dr = b0[i] -> r - b1[perm[b1ip]] -> r;
+            path.PutInBox(dr);
+            diff += dot( dr , dr );
+            dr = b0[j] -> r - b1[perm[b1jp]] -> r;
+            path.PutInBox(dr);
+            diff += dot( dr , dr );
+            dr = b0[k] -> r - b1[perm[b1kp]] -> r;
+            path.PutInBox(dr);
+            diff += dot( dr , dr );
+
+            permTable(n) = exp(-diff*cofactor);
+            permTot += permTable(n);
+          }
           n += 1;
         }
       }
     }
   }
-  
+
   return permTot;
 }
 
@@ -296,12 +337,11 @@ int PermBisect::selectPerm( int* permParts , double permTot )
 {
   double permSubTot = 0.0;
   double x = rng.unifRand(0.0,permTot);  
-  
   int n = 0;
   for (unsigned int permType = 0; permType < path.nPermType; permType += 1) {
-    for (unsigned int i = 0; i < path.nPart - 2; i += 1) {
-      for (unsigned int j = i + 1; j < path.nPart - 1; j += 1) {
-        for (unsigned int k = j + 1; k < path.nPart; k += 1) {   
+    for (unsigned int i = 0; i < path.nPart; i += 1) {
+      for (unsigned int j = 0; j < path.nPart; j += 1) {
+        for (unsigned int k = 0; k < path.nPart; k += 1) {   
           permSubTot += permTable(n);
           if (x < permSubTot) {
             permParts[0] = i;
@@ -340,7 +380,7 @@ unsigned int PermBisect::permuteb( Bead *b[3] , int permType )
   
   // Set permutation type
   setPerm(permType,perm,iPerm,0,1,2);
-  
+
   // Assign permutation
   Bead *Pb[3], *iPb[3];  
   for (unsigned int i = 0; i < 3; i += 1) {
@@ -356,5 +396,3 @@ unsigned int PermBisect::permuteb( Bead *b[3] , int permType )
     
   return permType;
 }
-
-

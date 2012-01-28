@@ -134,10 +134,12 @@ double Path::getVint( Bead *b1 , Bead *b2 )
 // Get External Potential Action
 double Path::getVext( Bead *b )
 {
-  //dr = b -> r;
-  //PutInBox(dr);
-  //return halfTauOmega2 * dot( dr , dr );
-  return 0;
+  if(trap) {
+    dr = b -> r;
+    return halfTauOmega2 * dot( dr , dr );
+  } else {
+    return 0;
+  }
 }
 
 // Get Single Bead Nodal Action

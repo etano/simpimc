@@ -98,6 +98,7 @@ void SimplePerm::setPermRadius( const int iBead )
   for (unsigned int iPart = 0; iPart < path.nPart - 1; iPart += 1)  {
     for (unsigned int jPart = iPart + 1; jPart < path.nPart; jPart += 1) {
       dr = path.bead(iPart,iBead) -> r - path.bead(jPart,iBead) -> r;
+      path.PutInBox(dr);
       sep2 = dot( dr , dr );
       if(sep2 < permRadius2) {
         path.seps(iPart,jPart) = 1;             

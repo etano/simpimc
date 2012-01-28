@@ -1,14 +1,15 @@
 #include "MoveClass.h"
 
 void Move::Equilibrate()
-{   
+{
   for (unsigned int iEqSweep = 0; iEqSweep < nEqSweep; iEqSweep += 1)  {    
-    resetCounters();   
+    resetCounters();
     for (unsigned int iEqStep = 0; iEqStep < nEqStep; iEqStep += 1)  {        
       MakeMove();
-    }        
+    }
     perAccept = getPerAccept();  // Percentage accepted
     stepSize *= 1.0 - perAcceptDesired + perAccept; // Recalculate step size
+    if (stepSize > path.maxLevel) stepSize = path.maxLevel;
   }
   std::cout << moveLabel << ": " << stepSize << ", Percent Accepted: " << perAccept << "\n";
   resetCounters();
@@ -16,8 +17,8 @@ void Move::Equilibrate()
 
 void Move::resetCounters()
 {
-  nAccept = 0;  
-  nAttempt = 0;   
+  nAccept = 0;
+  nAttempt = 0;
 }
 
 double Move::getPerAccept()
@@ -30,7 +31,7 @@ double Move::getPerAccept()
 void Move::assignParticleLabels()
 {
   Bead *b;
-  
+
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  { 
     b = path.bead(iPart,0);
     for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {  
@@ -91,5 +92,6 @@ void Move::setPerm( const int permType , int* perm , int* iPerm , const int i , 
       iPerm[i] = i;
       iPerm[j] = j;
       iPerm[k] = k;
+      break;
   }
 }

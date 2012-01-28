@@ -21,28 +21,18 @@ int main (int argc, char* argv[])
   cout << "\nRunning simulation " << nLineSkip << " from " << inputFile << " ( " << inputFileLabel << " ) ...\n\n";
 
   // Inputs
-  unsigned int nPart; // number of particles
-  unsigned int nD; // dimension
-  unsigned int nBead; // number of time slices
-  double beta; // inverse temperature
-  double lambda; // hbar^2 / 2m
+  unsigned int nPart, nD, nBead; // number of particles, dimensions, time slices
+  double beta, lambda, L; // Beta, lambda, Box Size
   double duration; // duration of simulation
+  int nStep, block, blockOut; // Frequency of Block Output
   bool fermi; // 0 - Boson, 1 - Fermion
   int halfspace; // -1 - Negative Halfspace, 1 - Positive Halfspace
   int nodeType; // 0 - Exact Nodes, 1 - High T Nodes, 2 - Low T Nodes
-  double L; // Box Size
 
   for (unsigned int iLine = 0; iLine < nLineSkip; iLine += 1) {
-    inputStream >> nPart;
-    inputStream >> nD;
-    inputStream >> nBead;
-    inputStream >> beta;
-    inputStream >> lambda;
-    inputStream >> duration;
-    inputStream >> fermi;
-    inputStream >> halfspace;
-    inputStream >> nodeType;
-    inputStream >> L;
+    inputStream >> nPart >> nD >> nBead >> beta >> lambda >> L;
+    inputStream >> duration >> nStep >> block >> blockOut;
+    inputStream >> fermi >> halfspace >> nodeType;
   }
   inputStream.close();
 
@@ -50,8 +40,12 @@ int main (int argc, char* argv[])
 
   // Output Settings to Screen
   cout << scientific << setprecision(4);
-  cout << "\nSIMULATION SETTINGS::\n";
-  cout << "\nDuration (s): " << duration << "\nBeta: " << beta << "\nLambda: " << lambda << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead << "\nDTau: " << tau << "\nOmega: " << omega << "\nFermions?(1/0): " << fermi << "\nL: " << L << endl;
+  cout << "\nSIMULATION SETTINGS::\n" 
+       << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead 
+       << "\nBeta: " << beta << "\nLambda: " << lambda << "\nL: " << L 
+       << "\nDuration (s): " << duration << "\nnStep: " << nStep << "\nBlock Size: " << block << "\nBlock Output: " << blockOut
+       << "\nFermions?(1/0): " << fermi << "\nHalfspace(1/0): " << halfspace << "\nNode Type(1/0): " << nodeType 
+       << endl;
 
   ///////////////////////////
   /* Initialize Simulation */
@@ -76,7 +70,7 @@ int main (int argc, char* argv[])
 
   // Equilibrate Moves
   for (vector<Move*>::const_iterator move = sim.moves.begin(); move != sim.moves.end(); ++move) {
-    //(*move) -> Equilibrate();
+    (*move) -> Equilibrate();
   }
 
   ////////////////////////////
@@ -84,23 +78,17 @@ int main (int argc, char* argv[])
   ////////////////////////////
 
   // Form Output String
-  char outputFormat[] = "-%d-%d-%d-%g-%g-%d-%d-%d-%d.dat";
-  char outputFile[sizeof outputFormat];
-  sprintf(outputFile,outputFormat,nPart,nD,nBead,beta,duration,fermi,halfspace,nodeType,L);
-  string outputSuffix(outputFile);
-
-  // Blocking
-  int block = 1000;
-  int blockOut = 100*block;
+  stringstream outputSuffix;
+  outputSuffix << "-" << nPart << "-" << nD << "-" << nBead << "-" << beta << "-" << duration << "-" << fermi << "-" << halfspace << "-" << nodeType << "-" << L;
 
   // Permutation type
   int pType;
 
   // Observables
   // ( path , outputSuffix , outputLabel , skip , block )
-  sim.observables.push_back( new Energy(sim.path,outputSuffix,"Energy",1,block) );
-  //sim.observables.push_back( new R(sim.path,outputSuffix,"R",1,block) );
-  //sim.observables.push_back( new R2(sim.path,outputSuffix,"R2",1,block) );
+  sim.observables.push_back( new Energy(sim.path,outputSuffix.str(),"Energy",2,block) );
+  //sim.observables.push_back( new R(sim.path,outputSuffix.str(),"R",1,block) );
+  //sim.observables.push_back( new R2(sim.path,outputSuffix.str(),"R2",1,block) );
 
   ////////////////////////
   /* Main Loop Settings */
@@ -120,7 +108,7 @@ int main (int argc, char* argv[])
 
   // Monte Carlo Steps
   int iStep = 0;
-  while (timeDif < duration) {
+  while (timeDif < duration || iStep < nStep) {
 
     // Make Move
     for (vector<Move*>::const_iterator move = sim.moves.begin(); move != sim.moves.end(); ++move) {
@@ -128,11 +116,9 @@ int main (int argc, char* argv[])
     }
 
     // Make Measurements
-
-    pType = sim.path.getPType(); // Get the current permutation configuration
-
     for (vector<Observable*>::const_iterator observable = sim.observables.begin(); observable != sim.observables.end(); ++observable) {
       if (!(iStep % (*observable) -> skip)) {
+        pType = sim.path.getPType(); // Get the current permutation configuration
         (*observable) -> Accumulate(pType); // Accumulate Measurements
         if (!(iStep % (*observable) -> block)) {
           (*observable) -> Output(); // Output Block
@@ -142,7 +128,6 @@ int main (int argc, char* argv[])
     }
 
     // Print block information to screen
-
     if (!(iStep % blockOut)) {
       time (&end);
       timeDif = difftime (end,start);

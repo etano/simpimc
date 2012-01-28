@@ -33,7 +33,7 @@ public:
     std::cout << "\nOutputting " << observableLabel << " data to " << outputFile << "." << endl;
     trace.open (outputFile.c_str(), ios::out | ios::trunc);
 
-    oneOverNbeadBlock = 1.0/(path.nBead * block * 1.0);
+    oneOverNbeadBlock = skip*1.0/(path.nBead * block * 1.0);
     Output();
     Print();
   }

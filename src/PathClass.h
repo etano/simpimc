@@ -33,11 +33,14 @@ public:
   const bool useNodeDist;
   const double L;
   const double oneOverL;
+  const bool trap;
+  double omega;
 
   // Calculated Global Constants
   double tau;
   unsigned int nPermType;
   double oneOverLamTau, oneOver4LamTau, oneOver4LamTau2, nPartnBeadnDOver2Tau, halfTauOmega2, halfOmega2;
+  unsigned int maxLevel;
 
   // Permutation Counter
   int getPType();
@@ -50,7 +53,7 @@ public:
   // Print things
   void printPerm();
   void printBeads();
-  
+
   // Beads
   field<Bead*> bead;
 
@@ -150,13 +153,5 @@ inline void Path::restoreR( std::vector<Bead*>& affBeads )
   }
 }
 
-// Put R in the Box
-inline void Path::PutInBox( vec& r )
-{
-  for (unsigned int iD = 0; iD < nD; iD++) {
-    double n = -floor(r(iD) * oneOverL + 0.5);
-    r(iD) += n * L;
-  }
-}
 
 #endif

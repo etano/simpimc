@@ -14,9 +14,9 @@ public:
   // Constructor
   Bisect( Path& pathIn , RNG& rngIn , double perAcceptDesiredIn , int nEqSweepIn , int nEqStepIn , int moveSkipIn )
     : Move( pathIn , rngIn , perAcceptDesiredIn , nEqSweepIn , nEqStepIn , moveSkipIn )
-  { 
+  {
     moveLabel = "Bisect";
-    stepSize = 3.0;
+    stepSize = floor(log(path.nBead/2.0)/log(2));
   }
 
   virtual void MakeMove();
