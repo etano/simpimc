@@ -283,16 +283,9 @@ double PermBisect::constructPermTable( const int bead0 , const int bead1 , const
   Bead *b0[path.nPart], *b1[path.nPart];
   int b1ip, b1jp, b1kp, n = 0;
 
-  if(rollOver) {
-    for (unsigned int i = 0; i < path.nPart; i += 1) {
-      b0[i] = path.bead(i,bead0);
-      b1[i] = b0[i] -> nextB(nBisectBeads);
-    }
-  } else {
-    for (unsigned int i = 0; i < path.nPart; i += 1) {
-      b0[i] = path.bead(i,bead0);
-      b1[i] = path.bead(i,bead1);
-    }
+  for (unsigned int i = 0; i < path.nPart; i += 1) {
+    b0[i] = path.bead(i,bead0);
+    b1[i] = b0[i] -> nextB(nBisectBeads);
   }
 
   for (unsigned int permType = 0; permType < path.nPermType; permType += 1) {
@@ -312,13 +305,13 @@ double PermBisect::constructPermTable( const int bead0 , const int bead1 , const
             // Calculate weight
             diff = 0.0;
             dr = b0[i] -> r - b1[perm[b1ip]] -> r;
-            path.PutInBox(dr);
+            //path.PutInBox(dr);
             diff += dot( dr , dr );
             dr = b0[j] -> r - b1[perm[b1jp]] -> r;
-            path.PutInBox(dr);
+            //path.PutInBox(dr);
             diff += dot( dr , dr );
             dr = b0[k] -> r - b1[perm[b1kp]] -> r;
-            path.PutInBox(dr);
+            //path.PutInBox(dr);
             diff += dot( dr , dr );
 
             permTable(n) = exp(-diff*cofactor);
@@ -336,63 +329,63 @@ double PermBisect::constructPermTable( const int bead0 , const int bead1 , const
 int PermBisect::selectPerm( int* permParts , double permTot )
 {
   double permSubTot = 0.0;
-  double x = rng.unifRand(0.0,permTot);  
+  double x = rng.unifRand(0.0,permTot);
   int n = 0;
   for (unsigned int permType = 0; permType < path.nPermType; permType += 1) {
     for (unsigned int i = 0; i < path.nPart; i += 1) {
       for (unsigned int j = 0; j < path.nPart; j += 1) {
-        for (unsigned int k = 0; k < path.nPart; k += 1) {   
+        for (unsigned int k = 0; k < path.nPart; k += 1) {
           permSubTot += permTable(n);
           if (x < permSubTot) {
             permParts[0] = i;
             permParts[1] = j;
             permParts[2] = k;
             return permType;
-          }          
+          }
           n += 1;
         }
       }
     }
-  }  
-  
-  // In case something goes wrong  
+  }
+
+  // In case something goes wrong
   std::cout << "selectPerm Messed Up!" << " " << permTot << " " << x << " ";
-  
+
   return 0;
 }
 
 // Permute Paths (3 atoms at a time)
 unsigned int PermBisect::permuteb( Bead *b[3] , int permType )
-{  
+{
   // permuation holders
-  int perm[3], iPerm[3];  
+  int perm[3], iPerm[3];
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
     perm[iPart] = iPart;
     iPerm[iPart] = iPart;
   }
-  
+
   // Get permutation type
   if (permType < 0) {
-    if (path.fermi) permType = rng.unifRand(3)-1;  // Fermions 
-    else permType = rng.unifRand(6)-1;  // Bosons    
+    if (path.fermi) permType = rng.unifRand(3)-1;  // Fermions
+    else permType = rng.unifRand(6)-1;  // Bosons
   }
-  path.permCount(permType,0) += 1;   
-  
+  path.permCount(permType,0) += 1;
+
   // Set permutation type
   setPerm(permType,perm,iPerm,0,1,2);
 
   // Assign permutation
-  Bead *Pb[3], *iPb[3];  
+  Bead *Pb[3], *iPb[3];
   for (unsigned int i = 0; i < 3; i += 1) {
     Pb[i] = b[perm[i]];
     iPb[i] = b[iPerm[i]];
   }
-  
+
   // Execute the permutation
   for (unsigned int i = 0; i < 3; i += 1) {
     b[i] -> prev -> next = Pb[i];
     b[i] -> prev = iPb[i] -> prevC;
-  }  
-    
+  }
+
   return permType;
 }
