@@ -91,8 +91,20 @@ int PermBisect::DoPermBisect()
 
         VA[iLevel] += path.getV(beadB[i])*skip;
 
+        vec ac = beadC[i] -> r - beadA[i] -> r;
+        path.PutInBox(ac);
         rng.normRand(dr, 0, sigma);
-        beadB[i] -> r = 0.5*(beadA[i] -> r + beadC[i] -> r) + dr;
+        path.PutInBox(dr);
+        beadB[i] -> r = beadA[i] -> r + 0.5*ac + dr;
+        path.PutInBox(beadB[i] -> r);
+//////////////////////////////////////////////////////////////
+// This is incorrect for PBC's. It works without permutations
+// because the particles don't have to see each other so 
+// adding like this doesn't matter.
+//
+// UPDATE: Works much better now, but not perfect. Need to 
+// look more at what PIMC++ is doing.
+//////////////////////////////////////////////////////////////
 
         VB[iLevel] += path.getV(beadB[i])*skip;
 
@@ -305,13 +317,13 @@ double PermBisect::constructPermTable( const int bead0 , const int bead1 , const
             // Calculate weight
             diff = 0.0;
             dr = b0[i] -> r - b1[perm[b1ip]] -> r;
-            //path.PutInBox(dr);
+            path.PutInBox(dr);
             diff += dot( dr , dr );
             dr = b0[j] -> r - b1[perm[b1jp]] -> r;
-            //path.PutInBox(dr);
+            path.PutInBox(dr);
             diff += dot( dr , dr );
             dr = b0[k] -> r - b1[perm[b1kp]] -> r;
-            //path.PutInBox(dr);
+            path.PutInBox(dr);
             diff += dot( dr , dr );
 
             permTable(n) = exp(-diff*cofactor);

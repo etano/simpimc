@@ -60,7 +60,7 @@ int main (int argc, char* argv[])
   //////////////////////////
 
   // ( path , rng ,  perAcceptDesired , nEqSweeps , nEqSteps , moveSkip )
-  //sim.moves.push_back(new Bisect(sim.path,sim.rng,0.5,10,1000,1));
+  sim.moves.push_back(new Bisect(sim.path,sim.rng,0.5,10,1000,1));
   sim.moves.push_back(new PermBisect(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceBead(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceParticle(sim.path,sim.rng,0.5,10,1000,1));
