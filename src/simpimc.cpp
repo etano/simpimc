@@ -28,11 +28,11 @@ int main (int argc, char* argv[])
   bool fermi; // 0 - Boson, 1 - Fermion
   int halfspace; // -1 - Negative Halfspace, 1 - Positive Halfspace
   int nodeType; // 0 - Exact Nodes, 1 - High T Nodes, 2 - Low T Nodes
-
+  bool useNodeDist; // 0 - No, 1 - Yes
   for (unsigned int iLine = 0; iLine < nLineSkip; iLine += 1) {
     inputStream >> nPart >> nD >> nBead >> beta >> lambda >> L;
     inputStream >> duration >> nStep >> block >> blockOut;
-    inputStream >> fermi >> halfspace >> nodeType;
+    inputStream >> fermi >> halfspace >> nodeType >> useNodeDist;
   }
   inputStream.close();
 
@@ -44,14 +44,13 @@ int main (int argc, char* argv[])
        << "\nN: " << nPart << "\nD: " << nD << "\nM: " << nBead 
        << "\nBeta: " << beta << "\nLambda: " << lambda << "\nL: " << L 
        << "\nDuration (s): " << duration << "\nnStep: " << nStep << "\nBlock Size: " << block << "\nBlock Output: " << blockOut
-       << "\nFermions?(1/0): " << fermi << "\nHalfspace(1/0): " << halfspace << "\nNode Type(1/0): " << nodeType 
+       << "\nFermions?(1/0): " << fermi << "\nHalfspace(1/0): " << halfspace << "\nNode Type(1/0): " << nodeType << "\nUse Node Distance(1/0): " << useNodeDist
        << endl;
 
   ///////////////////////////
   /* Initialize Simulation */
   ///////////////////////////
 
-  int useNodeDist = 0;
   if(!fermi) useNodeDist = 0;
   Simulation sim(nPart,nD,nBead,beta,lambda,fermi,halfspace,nodeType,useNodeDist,L);
 
@@ -79,7 +78,9 @@ int main (int argc, char* argv[])
 
   // Form Output String
   stringstream outputSuffix;
-  outputSuffix << "-" << nPart << "-" << nD << "-" << nBead << "-" << beta << "-" << duration << "-" << fermi << "-" << halfspace << "-" << nodeType << "-" << L;
+  outputSuffix << "-" << nPart << "-" << nD << "-" << nBead << "-" << beta << "-" << lambda << "-" << L
+               << "-" << duration << "-" << nStep << "-" << block << "-" << blockOut
+               << "-" << fermi << "-" << halfspace << "-" << nodeType << "-" << useNodeDist;
 
   // Permutation type
   int pType;

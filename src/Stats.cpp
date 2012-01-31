@@ -48,6 +48,17 @@ double getError( const std::vector<double>& data ) {
   return sqrt(kappa*var/N);
 }
 
+double jackKnife( const std::vector<double>& data ) {
+  int N = data.size();
+  double tot = 0.0;
+  for (unsigned int i = 0; i < N; i++) {
+    std::vector<double> dataNew = data;
+    dataNew.erase(dataNew.begin()+i);
+    tot += getMean(dataNew)/N;
+  }
+  return tot;
+}
+
 void statsEnergy ( const char* energyFile , unsigned int nType , unsigned int nBlock ) {
 
   std::ifstream energyTrace;
@@ -90,7 +101,7 @@ void statsEnergy ( const char* energyFile , unsigned int nType , unsigned int nB
   std::cout << "T: " << getMean(KEtotvec) << " (" << getError(KEtotvec) << ")" << endl;
   std::cout << "V: " << getMean(VEtotvec) << " (" << getError(VEtotvec) << ")" << endl;
   std::cout << "N: " << getMean(NEtotvec) << " (" << getError(NEtotvec) << ")" << endl;
-
+  //std::cout << "JackKnife: " << jackKnife(Etotvec) << endl;
   std::cout << "\nEnergy Per Permutation Configuration, (E, T, V, N):\n";
   for (unsigned int iType = 0; iType < nType; iType += 1) {
     std::cout << getMean(Evec[iType]) << " " << getMean(KEvec[iType]) << " " << getMean(VEvec[iType]) << " " << getMean(NEvec[iType]) << endl;

@@ -108,13 +108,26 @@ double Energy::getNE()
 {
   if(!path.useNodeDist) return 0;
 
-  double xi, tot;
+  for (unsigned int iPart = 0; iPart < path.nPart; iPart++) {
+    for (unsigned int iBead = 0; iBead < path.nBead; iBead++) {
+      path.updateNodeDistance(iPart,iBead);
+    }
+  }
 
+  double xi, tot;
   tot = 0.0;
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
     for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
-      xi = (path.bead(iPart,iBead) -> nDist)*(path.bead(iPart,iBead) -> next -> nDist)*path.oneOverLamTau;
-      tot += xi/(path.tau*(exp(xi) - 1.0));
+      double nD1 = path.bead(iPart,iBead) -> nDist;
+      double nD2 = path.bead(iPart,iBead) -> next -> nDist;
+      double nD1nD2 = nD1 * nD2;
+      if (!nD1) {
+        nD1nD2 = nD2 * nD2;
+      } else if (!nD2) {
+        nD1nD2 = nD1 * nD1;
+      }
+      xi = nD1nD2*path.oneOverLamTau;
+      tot += xi/(path.tau*expm1(xi));
     }
   }
 

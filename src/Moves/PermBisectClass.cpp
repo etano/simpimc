@@ -94,9 +94,9 @@ int PermBisect::DoPermBisect()
         vec ac = beadC[i] -> r - beadA[i] -> r;
         path.PutInBox(ac);
         rng.normRand(dr, 0, sigma);
-        path.PutInBox(dr);
+        //path.PutInBox(dr);
         beadB[i] -> r = beadA[i] -> r + 0.5*ac + dr;
-        path.PutInBox(beadB[i] -> r);
+
 //////////////////////////////////////////////////////////////
 // This is incorrect for PBC's. It works without permutations
 // because the particles don't have to see each other so 
@@ -156,22 +156,20 @@ int PermBisect::DoPermBisect()
   if(path.fermi) {
     // Check constraint
     if(rollOver) {
-      for (unsigned int iBead = 1; iBead < path.nBead; iBead += 1) {
-        if(!path.checkConstraint(iBead)) {
+      if(!path.checkConstraint(0)) {
 
-          // Restore original coordinates
-          path.restoreR(affBeads);
+        // Restore original coordinates
+        path.restoreR(affBeads);
 
-          // Restore permutation record
-          for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-            path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
-            path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
-          }
-
-          assignParticleLabels();
-
-          return 0;
+        // Restore permutation record
+        for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
+          path.bead(iPart,path.bL(bead1)) -> restorePartRecord();
+          path.bead(iPart,path.bL(bead1-1)) -> restorePartRecord();
         }
+
+        assignParticleLabels();
+
+        return 0;
       }
     } else {
       for(beadA[0] = beadI[0]; beadA[0] != beadF[0]; beadA[0] = beadA[0] -> next) {
@@ -301,9 +299,9 @@ double PermBisect::constructPermTable( const int bead0 , const int bead1 , const
   }
 
   for (unsigned int permType = 0; permType < path.nPermType; permType += 1) {
-    for (unsigned int i = 0; i < path.nPart; i += 1) {
-      for (unsigned int j = 0; j < path.nPart; j += 1) {
-        for (unsigned int k = 0; k < path.nPart; k += 1) {
+    for (unsigned int i = 0; i < path.nPart-2; i += 1) {
+      for (unsigned int j = i+1; j < path.nPart-1; j += 1) {
+        for (unsigned int k = j+1; k < path.nPart; k += 1) {
           if (i == j || j == k || i == k) {
             permTable(n) = 0.0;
           } else {
@@ -344,9 +342,9 @@ int PermBisect::selectPerm( int* permParts , double permTot )
   double x = rng.unifRand(0.0,permTot);
   int n = 0;
   for (unsigned int permType = 0; permType < path.nPermType; permType += 1) {
-    for (unsigned int i = 0; i < path.nPart; i += 1) {
-      for (unsigned int j = 0; j < path.nPart; j += 1) {
-        for (unsigned int k = 0; k < path.nPart; k += 1) {
+    for (unsigned int i = 0; i < path.nPart-2; i += 1) {
+      for (unsigned int j = i+1; j < path.nPart-1; j += 1) {
+        for (unsigned int k = j+1; k < path.nPart; k += 1) {
           permSubTot += permTable(n);
           if (x < permSubTot) {
             permParts[0] = i;

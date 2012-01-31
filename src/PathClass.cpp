@@ -55,8 +55,9 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   seps.zeros(nPart,nPart);
 
   // Set up cofactors for nodal calculations
-  cf1.set_size(3,nBead);
-  cf2.set_size(3,nBead);
+  cf1.zeros(3,nBead);
+  cf2.zeros(3,nBead);
+  cf3.zeros(3,nBead);
 
   switch (nodeType){
     case 1:
@@ -66,11 +67,10 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
       }
       break;
     default:
-      cf1(0,0) = 0;
-      cf2(0,0) = 0;
       for (unsigned int iBead = 1; iBead < nBead; iBead += 1) {
-        cf1(0,iBead) = omega/sinh(iBead*tau*omega);
-        cf2(0,iBead) = cosh(iBead*tau*omega);
+        cf1(0,iBead) = pow((omega/(2.0*pi*sinh(iBead*tau*omega))),nD/2.0);
+        cf2(0,iBead) = -omega/(2.0*sinh(iBead*tau*omega));
+        cf3(0,iBead) = cosh(iBead*tau*omega);
       }
       break;
   }
@@ -90,7 +90,8 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   gradRho.zeros(nPart,nPart);
   for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
     for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
-      bead(iPart,iBead) -> nDist = 1.50;
+      //bead(iPart,iBead) -> nDist = 1.50;
+      updateNodeDistance(iPart,iBead);
     }
   }
 

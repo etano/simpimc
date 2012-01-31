@@ -32,10 +32,10 @@ int Bisect::DoBisect( const int iPart )
   // Figure out which time slices' nodes are affected
   unsigned int nodeBead0, nodeBead1;
   if(rollOver) {
-    nodeBead0 = 1;
+    nodeBead0 = 0;
     nodeBead1 = path.nBead;
   } else {
-    nodeBead0 = bead0 + 1;
+    nodeBead0 = bead0;
     nodeBead1 = bead1;
   }
 
@@ -43,8 +43,10 @@ int Bisect::DoBisect( const int iPart )
   double N0(0.0);
   if(path.useNodeDist) {
     for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
+      path.updateRho(iBead);
       for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
-        path.bead(jPart,iBead) -> storeNodeDistance();  // Store old nodal distances
+        path.updateNodeDistance(jPart,iBead);
+        //path.bead(jPart,iBead) -> storeNodeDistance();  // Store old nodal distances
         N0 += path.getN(jPart,iBead);  // Calculate old nodal action
       }
     }
@@ -75,9 +77,9 @@ int Bisect::DoBisect( const int iPart )
       vec ac = beadC -> r - beadA -> r;
       path.PutInBox(ac);
       rng.normRand(dr, 0, sigma);
-      path.PutInBox(dr);
+      //path.PutInBox(dr);
       beadB -> r = beadA -> r + 0.5*ac + dr;
-      path.PutInBox(beadB -> r);
+
 //////////////////////////////////////////////////////////////
 // This is incorrect for PBC's. It works without permutations
 // because the particles don't have to see each other so 
@@ -131,12 +133,12 @@ int Bisect::DoBisect( const int iPart )
       // Restore coordinates
       path.restoreR(affBeads); 
 
-      // Restore nodal distances
-      for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
-        for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
-          path.bead(jPart,iBead) -> restoreNodeDistance();
-        }
-      }
+      //// Restore nodal distances
+      //for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
+      //  for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
+      //    path.bead(jPart,iBead) -> restoreNodeDistance();
+      //  }
+      //}
       return 0;
     }
   }

@@ -17,27 +17,28 @@ void Path::updateNodeDistance( const int iPart , const int iBead )
 {
   double rmag, r0mag, diff;
 
-  //if(!iBead) bead(iPart,iBead) -> nDist = 0.0; // <<<<<<--------------------Verify
-  //else {
+  if(!iBead) bead(iPart,iBead) -> nDist = 0.0; // <<<<<<--------------------Verify
+  else {
     gradRho = rho.slice(iBead);
     switch (nodeType){
-      case 1:         
+      case 1:
         for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
           dr = (bead(iPart,iBead) -> r) - (bead(jPart,0) -> r);
+          PutInBox(dr);
           diff = norm( dr , 2 );
           gradRho(iPart,jPart) = cf2(1,iBead) * diff * rho(iPart,jPart,iBead);
-        }    
+        }
         break;
       default:
         for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
           rmag = norm( bead(iPart,iBead) -> r , 2 );
           r0mag = norm( bead(jPart,0) -> r , 2 );
-          gradRho(iPart,jPart) = cf1(0,iBead) * (r0mag - rmag*cf2(0,iBead)) * rho(iPart,jPart,iBead);
-        }    
-        break;  
+          gradRho(iPart,jPart) = -2.0 * cf2(0,iBead) * (r0mag - rmag*cf3(0,iBead)) * rho(iPart,jPart,iBead);
+        }
+        break;
     }
     bead(iPart,iBead) -> nDist = std::abs( det(rho.slice(iBead)) / det(gradRho) );
-
+  }
 }
 
 // Update Nodal Distances
@@ -50,13 +51,14 @@ void Path::updateNodeDistance( std::vector<Bead*>& beads )
 // Update Rho
 void Path::updateRho ( const int iBead )
 {
-  double sum, diff;
+  double sum, prod, diff;
 
   switch (nodeType){
     case 1:
       for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
         for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
           dr = (bead(iPart,iBead) -> r) - (bead(jPart,0) -> r);
+          PutInBox(dr);
           diff = dot( dr , dr );
           rho(iPart,jPart,iBead) = exp( cf1(1,iBead) * diff );
         }
@@ -65,8 +67,9 @@ void Path::updateRho ( const int iBead )
     default:
       for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
         for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
-          sum = dot( bead(iPart,0) -> r , bead(jPart,iBead) -> r );
-          rho(iPart,jPart,iBead) = exp( cf1(0,iBead) * sum );
+          sum = dot( bead(iPart,0)->r , bead(iPart,0)->r ) + dot( bead(jPart,iBead)->r , bead(jPart,iBead)->r );
+          prod = dot( bead(iPart,0)->r , bead(jPart,iBead)->r );
+          rho(iPart,jPart,iBead) = cf1(0,iBead)*exp(cf2(0,iBead)*(cf3(0,iBead)*sum - 2.*prod));
         }
       }
       break;
@@ -74,7 +77,6 @@ void Path::updateRho ( const int iBead )
 
 }
 
-// Check the Constraint 
 bool Path::checkConstraint( const int iBead )
 {
   int sign = 1.0; // <<<<<<--------------------FIX
@@ -87,7 +89,7 @@ bool Path::checkConstraint( const int iBead )
     }
   } else { // Non-reference bead moves
     updateRho(iBead); // Update rho
-    detRho[iBead] = det(rho.slice(iBead));
+    detRho(iBead) = det(rho.slice(iBead));
     if ( detRho(iBead)*sign < 0.0 ) return 0;
   }
 

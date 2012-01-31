@@ -26,7 +26,7 @@ public:
     stepSize = floor(log(path.nBead/2.0)/log(2));
 
     // Initiate permutation table
-    permTable.zeros( path.nPermType * path.nPart * path.nPart * path.nPart );
+    permTable.zeros( path.nPermType * path.nPart * (path.nPart-1) * (path.nPart-2) );
   }
 
   virtual void MakeMove();

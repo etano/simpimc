@@ -146,7 +146,18 @@ double Path::getVext( Bead *b )
 double Path::getN( const int iPart , const int iBead )
 {
   if (!useNodeDist) return 0;
-  return -log(1.0 - exp(-(bead(iPart,iBead) -> nDist)*(bead(iPart,iBead) -> next -> nDist)*oneOverLamTau));
+  double nD1 = bead(iPart,iBead) -> nDist;
+  double nD2 = bead(iPart,iBead) -> next -> nDist;
+  double nD1nD2 = nD1 * nD2;
+  if (!nD1) {
+    nD1nD2 = nD2 * nD2;
+  } else if (!nD2) {
+    nD1nD2 = nD1 * nD1;
+  }
+  double factor = -log1p(-exp(-nD1nD2*oneOverLamTau));
+  //if(isinf(factor) || isnan(factor))
+  //  std::cerr << factor << " " << iPart << " " << iBead << " " << nD1 << " " << nD2 << " " << nD1nD2 << " " << -nD1nD2*oneOverLamTau << endl;
+  return factor;
 }
 
 // Get Single Bead Nodal Action

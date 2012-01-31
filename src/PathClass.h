@@ -16,7 +16,7 @@ private:
   cube rho, rhoC;
   mat gradRho;
   vec detRho;
-  mat cf1, cf2;
+  mat cf1, cf2, cf3;
 protected:
   // protected things
 public:
