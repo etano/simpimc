@@ -1,3 +1,2 @@
-sho
-2 2 32 10.0 0.5 0 60 0 100 10000 1 1 0 1
-# N, D, M, Beta, Lambda, L, Duration, nSteps (set one to zero), Block Size, Block Output, Fermions (0/1), half space (0/1), nodeType (0/1), useNodeDist (0/1)
+2 1 64 5.0 0.5 0 0 5000000 1000 100000 10 1000 1 1 0 1
+# N, D, M, Beta, Lambda, L, Duration, nSteps (set one to zero), Block Size, Block Output, nEqSweep, nEqStep, Fermions (0/1), half space (0/1), nodeType (0/1), useNodeDist (0/1)
