@@ -154,9 +154,9 @@ double Path::getN( const int iPart , const int iBead )
   } else if (!nD2) {
     nD1nD2 = nD1 * nD1;
   }
-  double factor = -log1p(-exp(-nD1nD2*oneOverLamTau));
-  //if(isinf(factor) || isnan(factor))
-  //  std::cerr << factor << " " << iPart << " " << iBead << " " << nD1 << " " << nD2 << " " << nD1nD2 << " " << -nD1nD2*oneOverLamTau << endl;
+  //double factor = -log1p(-exp(-0.5*nD1nD2*oneOverLamTau));
+  //double factor = -log1p(-nD1nD2*oneOverLamTau);
+  double factor = -log1p(-exp(-nD1*nD2*oneOverLamTau));
   return factor;
 }
 

@@ -69,7 +69,7 @@ int Bisect::DoBisect( const int iPart )
 
     beadA = beadI;
     while(beadA != beadF) {
-      beadB = beadA -> nextB(skip); 
+      beadB = beadA -> nextB(skip);
       beadC = beadB -> nextB(skip);
 
       VA[iLevel] += path.getV(beadB)*skip;
@@ -77,19 +77,8 @@ int Bisect::DoBisect( const int iPart )
       vec ac = beadC -> r - beadA -> r;
       path.PutInBox(ac);
       rng.normRand(dr, 0, sigma);
-      //path.PutInBox(dr);
+      path.PutInBox(dr);
       beadB -> r = beadA -> r + 0.5*ac + dr;
-
-//////////////////////////////////////////////////////////////
-// This is incorrect for PBC's. It works without permutations
-// because the particles don't have to see each other so 
-// adding like this doesn't matter.
-//
-// UPDATE: Works much better now, but not perfect. Need to 
-// look more at what PIMC++ is doing.
-//////////////////////////////////////////////////////////////
-      //rng.normRand(dr, 0, sigma);
-      //beadB -> r = 0.5 * (beadA -> r + beadC -> r) + dr;
 
       VB[iLevel] += path.getV(beadB)*skip;
 

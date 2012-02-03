@@ -126,6 +126,8 @@ double Energy::getNE()
       } else if (!nD2) {
         nD1nD2 = nD1 * nD1;
       }
+      //xi = 0.5*nD1nD2*path.oneOverLamTau;
+      //tot += xi/(path.tau*(xi-1));
       xi = nD1nD2*path.oneOverLamTau;
       tot += xi/(path.tau*expm1(xi));
     }

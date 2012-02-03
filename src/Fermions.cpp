@@ -17,28 +17,36 @@ void Path::updateNodeDistance( const int iPart , const int iBead )
 {
   double rmag, r0mag, diff;
 
-  if(!iBead) bead(iPart,iBead) -> nDist = 0.0; // <<<<<<--------------------Verify
-  else {
-    gradRho = rho.slice(iBead);
-    switch (nodeType){
-      case 1:
-        for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
-          dr = (bead(iPart,iBead) -> r) - (bead(jPart,0) -> r);
-          PutInBox(dr);
-          diff = norm( dr , 2 );
-          gradRho(iPart,jPart) = cf2(1,iBead) * diff * rho(iPart,jPart,iBead);
-        }
-        break;
-      default:
-        for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
-          rmag = norm( bead(iPart,iBead) -> r , 2 );
-          r0mag = norm( bead(jPart,0) -> r , 2 );
-          gradRho(iPart,jPart) = -2.0 * cf2(0,iBead) * (r0mag - rmag*cf3(0,iBead)) * rho(iPart,jPart,iBead);
-        }
-        break;
-    }
-    bead(iPart,iBead) -> nDist = std::abs( det(rho.slice(iBead)) / det(gradRho) );
+  if (!iPart) {
+    vec dr = (bead(iPart,iBead) -> r - bead(iPart+1,iBead) -> r);
+    bead(iPart,iBead) -> nDist = std::abs(norm(dr,2));
+  } else {
+    vec dr = (bead(iPart,iBead) -> r - bead(iPart-1,iBead) -> r);
+    bead(iPart,iBead) -> nDist = std::abs(norm(dr,2));
   }
+
+  //if(!iBead) bead(iPart,iBead) -> nDist = 0.0; // <<<<<<--------------------Verify
+  //else {
+  //  gradRho = rho.slice(iBead);
+  //  switch (nodeType){
+  //    case 1:
+  //      for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
+  //        dr = (bead(iPart,iBead) -> r) - (bead(jPart,0) -> r);
+  //        PutInBox(dr);
+  //        diff = norm( dr , 2 );
+  //        gradRho(iPart,jPart) = cf2(1,iBead) * diff * rho(iPart,jPart,iBead);
+  //      }
+  //      break;
+  //    default:
+  //      for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
+  //        rmag = norm( bead(iPart,iBead) -> r , 2 );
+  //        r0mag = norm( bead(jPart,0) -> r , 2 );
+  //        gradRho(iPart,jPart) = -2.0 * cf2(0,iBead) * (r0mag - rmag*cf3(0,iBead)) * rho(iPart,jPart,iBead);
+  //      }
+  //      break;
+  //  }
+  //  bead(iPart,iBead) -> nDist = std::abs( det(rho.slice(iBead)) / det(gradRho) );
+  //}
 }
 
 // Update Nodal Distances
@@ -94,6 +102,10 @@ bool Path::checkConstraint( const int iBead )
   }
 
   return 1;
+  //if (bead(0,iBead) -> r[0] >= bead(1,iBead) -> r[0])
+  //  return 0;
+  //else
+  //  return 1;
 }
 
 // Check the Constraint 
