@@ -2,47 +2,41 @@
 
 void Energy::Accumulate( const int iType )
 {
-  KE = getKE(); // Kinetic Energy
-  VE = getVE(); // Potential Energy
-  NE = getNE(); // Nodal Energy
-  E = KE + VE + NE; // Total Energy
-
-  Etot(iType) += E; // Add up total energy
-  KEtot(iType) += KE; // Add up total Kinetic energy
-  VEtot(iType) += VE; // Add up total Potential energy
-  NEtot(iType) += NE; // Add up total Nodal energy
+  KE(iType) += getKE(); // Add up total Kinetic energy
+  VE(iType) += getVE(); // Add up total Potential energy
+  NE(iType) += getNE(); // Add up total Nodal energy
+  E(iType) = KE(iType) + VE(iType) + NE(iType); // Add up total energy
 }
 
 void Energy::Output()
 {
-  E = 0.0;
-  KE = 0.0;
-  VE = 0.0;
-  NE = 0.0;
-
-  Etot *= oneOverNbeadBlock;
-  KEtot *= oneOverNbeadBlock;
-  VEtot *= oneOverNbeadBlock;
-  NEtot *= oneOverNbeadBlock;
+  E *= oneOverNbeadBlock;
+  KE *= oneOverNbeadBlock;
+  VE *= oneOverNbeadBlock;
+  NE *= oneOverNbeadBlock;
 
   for (unsigned int iType = 0; iType < path.nType; iType += 1) {
-    trace << Etot(iType) << " " << KEtot(iType) << " " << VEtot(iType) << " " << NEtot(iType) << " ";
-    E += Etot(iType);
-    KE += KEtot(iType);
-    VE += VEtot(iType);
-    NE += NEtot(iType);
+    trace << E(iType) << " " << KE(iType) << " " << VE(iType) << " " << NE(iType) << " ";
   }
-  trace << E << " " << KE << " " << VE << " " << NE << endl;
+  trace << sum(E) << " " << sum(KE) << " " << sum(VE) << " " << sum(NE) << endl;
 
-  Etot.zeros();
-  KEtot.zeros();
-  VEtot.zeros();
-  NEtot.zeros();
+  Etot += sum(E);
+  KEtot += sum(KE);
+  VEtot += sum(VE);
+  NEtot += sum(NE);
+
+  E.zeros();
+  KE.zeros();
+  VE.zeros();
+  NE.zeros();
 }
 
 void Energy::Print()
 {
-  std::cout << "\nE: " << E << "\nKE: " << KE << "\nVE: " << VE << "\nNE: " << NE << endl; 
+  std::cout << "E: " << Etot/nBlock << endl
+            << "KE: " << KEtot/nBlock << endl
+            << "VE: " << VEtot/nBlock << endl
+            << "NE: " << NEtot/nBlock << endl;
 }
 
 void Energy::Stats()

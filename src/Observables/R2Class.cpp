@@ -2,34 +2,35 @@
 
 void R2::Accumulate( const int pType )
 {
-  R2temp.zeros();
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
     for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1) {
-      R2temp(iPart) += dot( path.bead(iPart,iBead) -> r , path.bead(iPart,iBead) -> r ); // Add up R2
+      R2block(pType,iPart) += dot( path.bead(iPart,iBead)->r , path.bead(iPart,iBead)->r ); // Add up R2
     }
-    R2tot(pType,iPart) += R2temp(iPart); // Sum total R2
-  }  
+  }
 }
 
 void R2::Output()
 {
+  R2block *= oneOverNbeadBlock;
   for (unsigned int iType = 0; iType < path.nType; iType += 1) {
     for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-      trace << R2tot(iType,iPart) * oneOverNbeadBlock << " ";
+      trace << R2block(iType,iPart) << " ";
     }
   }
-  trace << endl;
 
-  R2tot.zeros();
+  for (unsigned int iPart = 0; iPart < path.nPart; iPart++) {
+    R2tot(iPart) += sum(R2block.col(iPart));
+  }
+
+  trace << endl;
+  R2block.zeros();
 }
 
 void R2::Print()
 {
-  std::cout << "\nR2: ";
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-    std::cout << endl << iPart << " : " << R2temp(iPart); 
+    std::cout << iPart << " : " << R2tot(iPart)/nBlock << endl;
   }
-  std::cout << endl;
 }
 
 void R2::Stats()

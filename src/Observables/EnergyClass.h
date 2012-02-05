@@ -5,10 +5,9 @@
 
 class Energy : public Observable
 {
-private: 
-  vec Etot, KEtot, VEtot, NEtot;
-  double E, KE, VE, NE;
-
+private:
+  vec E, KE, VE, NE;
+  double Etot, KEtot, VEtot, NEtot;
   vec dr;
 
   // Energy Observables
@@ -16,17 +15,17 @@ private:
   double getVE();
   double getVEint();
   double getVEext();
-  double getNE();  
+  double getNE();
 protected:
 public:
   Energy( Path& pathIn , std::string outputSuffixIn , std::string observableLabelIn , unsigned int skipIn , unsigned int blockIn )
     : Observable( pathIn , outputSuffixIn , observableLabelIn , skipIn , blockIn )
-  { 
-    Etot.zeros(path.nType);
-    KEtot.zeros(path.nType);
-    VEtot.zeros(path.nType);
-    NEtot.zeros(path.nType);
-    dr.set_size(path.nD);
+  {
+    E.zeros(path.nType);
+    KE.zeros(path.nType);
+    VE.zeros(path.nType);
+    NE.zeros(path.nType);
+    dr.zeros(path.nD);
   }
 
   virtual void Accumulate( const int iType );
