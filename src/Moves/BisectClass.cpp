@@ -43,10 +43,10 @@ int Bisect::DoBisect( const int iPart )
   double N0(0.0);
   if(path.useNodeDist) {
     for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
-      path.updateRho(iBead);
+      //path.updateRho(iBead);
       for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
-        path.updateNodeDistance(jPart,iBead);
-        //path.bead(jPart,iBead) -> storeNodeDistance();  // Store old nodal distances
+        //path.updateNodeDistance(jPart,iBead);
+        path.bead(jPart,iBead) -> storeNodeDistance();  // Store old nodal distances
         N0 += path.getN(jPart,iBead);  // Calculate old nodal action
       }
     }
@@ -122,12 +122,12 @@ int Bisect::DoBisect( const int iPart )
       // Restore coordinates
       path.restoreR(affBeads); 
 
-      //// Restore nodal distances
-      //for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
-      //  for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
-      //    path.bead(jPart,iBead) -> restoreNodeDistance();
-      //  }
-      //}
+      // Restore nodal distances
+      for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
+        for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
+          path.bead(jPart,iBead) -> restoreNodeDistance();
+        }
+      }
       return 0;
     }
   }
