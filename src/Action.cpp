@@ -156,7 +156,7 @@ double Path::getN( const int iPart , const int iBead )
   }
   //double factor = -log1p(-exp(-0.5*nD1nD2*oneOverLamTau));
   //double factor = -log1p(-nD1nD2*oneOverLamTau);
-  double factor = -log1p(-exp(-nD1*nD2*oneOverLamTau));
+  double factor = -log1p(-exp(-nD1nD2*oneOverLamTau));
   return factor;
 }
 

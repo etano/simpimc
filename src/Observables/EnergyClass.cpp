@@ -88,7 +88,7 @@ double Energy::getVEext()
 
   if(path.trap) {
     for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
-      for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {\
+      for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
         tot += dot( path.bead(iPart,iBead) -> r , path.bead(iPart,iBead) -> r );
       }
     }

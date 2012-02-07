@@ -17,12 +17,20 @@ void Path::updateNodeDistance( const int iPart , const int iBead )
 {
   double rmag, r0mag, diff;
 
-  if (!iPart) {
-    vec dr = (bead(iPart,iBead) -> r - bead(iPart+1,iBead) -> r);
-    bead(iPart,iBead) -> nDist = std::abs(norm(dr,2));
-  } else {
-    vec dr = (bead(iPart,iBead) -> r - bead(iPart-1,iBead) -> r);
-    bead(iPart,iBead) -> nDist = std::abs(norm(dr,2));
+  if (nPart > 1) {
+    if (!iPart) {
+      vec dr1 = (bead(iPart,iBead) -> r - bead(iPart+1,iBead) -> r);
+      vec dr2 = (bead(iPart,iBead) -> r - bead(nPart-1,iBead) -> r);
+      bead(iPart,iBead) -> nDist = std::min(norm(dr1,2),norm(dr2,2));
+    } else if(iPart==nPart-1) {
+      vec dr1 = (bead(iPart,iBead) -> r - bead(0,iBead) -> r);
+      vec dr2 = (bead(iPart,iBead) -> r - bead(iPart-1,iBead) -> r);
+      bead(iPart,iBead) -> nDist = std::min(norm(dr1,2),norm(dr2,2));
+    } else {
+      vec dr1 = (bead(iPart,iBead) -> r - bead(iPart+1,iBead) -> r);
+      vec dr2 = (bead(iPart,iBead) -> r - bead(iPart-1,iBead) -> r);
+      bead(iPart,iBead) -> nDist = std::min(norm(dr1,2),norm(dr2,2));
+    }
   }
 
   //if(!iBead) bead(iPart,iBead) -> nDist = 0.0; // <<<<<<--------------------Verify
@@ -60,6 +68,7 @@ void Path::updateNodeDistance( std::vector<Bead*>& beads )
 void Path::updateRho ( const int iBead )
 {
   double sum, prod, diff;
+  int sliceDiff = int(std::min(double(iBead),double(nBead-iBead)));
 
   switch (nodeType){
     case 1:
@@ -68,7 +77,7 @@ void Path::updateRho ( const int iBead )
           dr = (bead(iPart,iBead) -> r) - (bead(jPart,0) -> r);
           PutInBox(dr);
           diff = dot( dr , dr );
-          rho(iPart,jPart,iBead) = exp( cf1(1,iBead) * diff );
+          rho(iPart,jPart,iBead) = exp( cf1(1,sliceDiff) * diff );
         }
       }
       break;
@@ -77,7 +86,7 @@ void Path::updateRho ( const int iBead )
         for (unsigned int jPart = 0; jPart < nPart; jPart += 1) {
           sum = dot( bead(iPart,0)->r , bead(iPart,0)->r ) + dot( bead(jPart,iBead)->r , bead(jPart,iBead)->r );
           prod = dot( bead(iPart,0)->r , bead(jPart,iBead)->r );
-          rho(iPart,jPart,iBead) = cf1(0,iBead)*exp(cf2(0,iBead)*(cf3(0,iBead)*sum - 2.*prod));
+          rho(iPart,jPart,iBead) = cf1(0,sliceDiff)*exp(cf2(0,sliceDiff)*(cf3(0,sliceDiff)*sum - 2.*prod));
         }
       }
       break;
@@ -87,25 +96,29 @@ void Path::updateRho ( const int iBead )
 
 bool Path::checkConstraint( const int iBead )
 {
-  int sign = 1.0; // <<<<<<--------------------FIX
+  //int sign = 1.0; // <<<<<<--------------------FIX
+  //if (!iBead) { // Reference bead moves
+  //  for (unsigned int jBead = 1; jBead < nBead; jBead += 1) { 
+  //    updateRho(jBead); // Update rho
+  //    detRho(jBead) = det(rho.slice(jBead));
+  //    if ( detRho(jBead)*sign < 0.0 ) return 0;
+  //  }
+  //} else { // Non-reference bead moves
+  //  updateRho(iBead); // Update rho
+  //  detRho(iBead) = det(rho.slice(iBead));
+  //  if ( detRho(iBead)*sign < 0.0 ) return 0;
+  //}
+  //return 1;
 
-  if (!iBead) { // Reference bead moves
-    for (unsigned int jBead = 1; jBead < nBead; jBead += 1) { 
-      updateRho(jBead); // Update rho
-      detRho(jBead) = det(rho.slice(jBead));
-      if ( detRho(jBead)*sign < 0.0 ) return 0;
+  if (nPart > 1) {
+    for (unsigned int iPart = 1; iPart < nPart; iPart += 1) {
+      if (bead(iPart,iBead) -> r[0] < bead(iPart-1,iBead) -> r[0])
+        return 0;
     }
-  } else { // Non-reference bead moves
-    updateRho(iBead); // Update rho
-    detRho(iBead) = det(rho.slice(iBead));
-    if ( detRho(iBead)*sign < 0.0 ) return 0;
+    return 1;
+  } else {
+    return 1;
   }
-
-  return 1;
-  //if (bead(0,iBead) -> r[0] >= bead(1,iBead) -> r[0])
-  //  return 0;
-  //else
-  //  return 1;
 }
 
 // Check the Constraint 

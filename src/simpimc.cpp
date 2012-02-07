@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
   /* Initialize Simulation */
   ///////////////////////////
 
-  if(!fermi) useNodeDist = 0;
+  if(!fermi||nPart<2) useNodeDist = 0;
   Simulation sim(nPart,nD,nBead,beta,lambda,fermi,halfspace,nodeType,useNodeDist,L);
 
   //////////////////////////

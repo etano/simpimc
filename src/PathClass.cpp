@@ -17,7 +17,7 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   maxLevel = int(log2(nBead))-1;
 
   // Initiate bead looping
-  bL.set_size(2*nBead);  
+  bL.set_size(2*nBead);
   for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
     bL(iBead) = iBead;
     bL(iBead + nBead) = bL(iBead);
@@ -37,15 +37,15 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
     bead(iPart,0) -> prev = bead(iPart,nBead-1);
     for (unsigned int iBead = 1; iBead < nBead; iBead += 1) {
       bead(iPart,iBead) -> next = bead(iPart,bL(iBead+1));
-      bead(iPart,iBead) -> prev = bead(iPart,iBead-1);    
+      bead(iPart,iBead) -> prev = bead(iPart,iBead-1);
     }
   }
 
   // Set permutation types
   if (fermi) nPermType = 3;
-  else nPermType = 6; 
+  else nPermType = 6;
   iCount.zeros(nPart);
-  pCount.zeros(nPart); 
+  pCount.zeros(nPart);
   setPType();
 
   // Initiate permutation counter

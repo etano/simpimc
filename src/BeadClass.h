@@ -17,10 +17,10 @@ public:
   {
     self = this;
     r.zeros(nD);
-    r.fill(0.01*p);
+    r.fill(0.1*p);
     storeR();
-  }  
-  
+  }
+
   void store();
   void restore();
   void storeR();
@@ -35,7 +35,7 @@ public:
 
   unsigned int p;
   unsigned int b;
-  double nDist, nDistC;  
+  double nDist, nDistC;
   vec r, rC;
   Bead *self;
   Bead *next, *nextC;
