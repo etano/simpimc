@@ -13,6 +13,7 @@ int Bisect::DoBisect( const int iPart )
 {
   unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   unsigned int nLevel = int(stepSize);
+  //nLevel = 1;
   unsigned int nBisectBeads = pow(2,nLevel); // Number of beads in bisection
   unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
@@ -29,28 +30,29 @@ int Bisect::DoBisect( const int iPart )
     beadA -> storeR();
   }
 
+  path.allAction(path.storeRp); // Store coordinates
   // Figure out which time slices' nodes are affected
   unsigned int nodeBead0, nodeBead1;
-  if(rollOver) {
+  //if(rollOver) {
     nodeBead0 = 0;
     nodeBead1 = path.nBead;
-  } else {
-    nodeBead0 = bead0;
-    nodeBead1 = bead1;
-  }
-
-  // Old nodal action
-  double N0(0.0);
-  if(path.useNodeDist) {
-    for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
-      //path.updateRho(iBead);
-      for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
-        //path.updateNodeDistance(jPart,iBead);
-        path.bead(jPart,iBead) -> storeNodeDistance();  // Store old nodal distances
-        N0 += path.getN(jPart,iBead);  // Calculate old nodal action
-      }
-    }
-  }
+  //} else {
+  //  nodeBead0 = bead0;
+  //  nodeBead1 = bead1;
+  //}
+  //
+  //// Old nodal action
+  //double N0(0.0);
+  //if(path.useNodeDist) {
+  //  for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
+  //    //path.updateRho(iBead);
+  //    for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
+  //      //path.updateNodeDistance(jPart,iBead);
+  //      //path.bead(jPart,iBead) -> storeNodeDistance();  // Store old nodal distances
+  //      N0 += path.getN(jPart,iBead);  // Calculate old nodal action
+  //    }
+  //  }
+  //}
 
   // Perform the bisection (move exactly through kinetic action)
   int skip;
@@ -72,7 +74,7 @@ int Bisect::DoBisect( const int iPart )
       beadB = beadA -> nextB(skip);
       beadC = beadB -> nextB(skip);
 
-      VA[iLevel] += path.getV(beadB)*skip;
+      VA[iLevel] += path.getV(beadB)*skip + path.getNSlice(beadB->b,skip);
 
       vec ac = beadC -> r - beadA -> r;
       path.PutInBox(ac);
@@ -80,7 +82,7 @@ int Bisect::DoBisect( const int iPart )
       path.PutInBox(dr);
       beadB -> r = beadA -> r + 0.5*ac + dr;
 
-      VB[iLevel] += path.getV(beadB)*skip;
+      VB[iLevel] += path.getV(beadB)*skip + path.getNSlice(beadB->b,skip);
 
       beadA = beadC;
     }
@@ -106,31 +108,31 @@ int Bisect::DoBisect( const int iPart )
     }
   }
 
-  double N1(0.0);
-  if(path.useNodeDist) {
-    // New nodal action
-    for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
-      for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
-        path.updateNodeDistance(jPart,iBead);  // Update nodal distances
-        N1 += path.getN(jPart,iBead);  // Calculate new nodal action
-      }
-    }
+  //double N1(0.0);
+  //if(path.useNodeDist) {
+  //  // New nodal action
+  //  for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
+  //    for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
+  //      //path.updateNodeDistance(jPart,iBead);  // Update nodal distances
+  //      N1 += path.getN(jPart,iBead);  // Calculate new nodal action
+  //    }
+  //  }
 
-    // Sample nodal action
-    if ((N0 - N1) < log(rng.unifRand()))  {
+  //  // Sample nodal action
+  //  if ((N0 - N1) < log(rng.unifRand()))  {
 
-      // Restore coordinates
-      path.restoreR(affBeads); 
+  //    // Restore coordinates
+  //    path.restoreR(affBeads);
 
-      // Restore nodal distances
-      for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
-        for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
-          path.bead(jPart,iBead) -> restoreNodeDistance();
-        }
-      }
-      return 0;
-    }
-  }
+  //    //// Restore nodal distances
+  //    //for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
+  //    //  for (unsigned int jPart = 0; jPart < path.nPart; jPart += 1) {
+  //    //    path.bead(jPart,iBead) -> restoreNodeDistance();
+  //    //  }
+  //    //}
+  //    return 0;
+  //  }
+  //}
 
   // Move Accepted
   return 1;

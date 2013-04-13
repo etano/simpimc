@@ -94,7 +94,7 @@ double Energy::getVEext()
     }
   }
 
-  return path.halfOmega2 * tot;
+  return path.halfOmega2 * path.onePlus3Tau2Omega2Over12 * tot;
 }
 
 // Get Nodal Energy
@@ -102,9 +102,10 @@ double Energy::getNE()
 {
   if(!path.useNodeDist) return 0;
 
+  //path.mode = 1;
   //for (unsigned int iPart = 0; iPart < path.nPart; iPart++) {
   //  for (unsigned int iBead = 0; iBead < path.nBead; iBead++) {
-  //    path.updateNodeDistance(iPart,iBead);
+  //    path.updateNodeDistance(path.bead(iPart,iBead));
   //  }
   //}
 
@@ -120,10 +121,11 @@ double Energy::getNE()
       } else if (!nD2) {
         nD1nD2 = nD1 * nD1;
       }
-      //xi = 0.5*nD1nD2*path.oneOverLamTau;
-      //tot += xi/(path.tau*(xi-1));
-      xi = nD1nD2*path.oneOverLamTau;
+      //xi = nD1nD2*path.oneOverLamTau;
+      xi = 0.5*nD1nD2*path.oneOverLamTau;
       tot += xi/(path.tau*expm1(xi));
+      if (isnan(tot))
+        std::cerr << tot << endl;
     }
   }
 

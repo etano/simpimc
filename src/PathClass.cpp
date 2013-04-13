@@ -12,6 +12,8 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   omega = 1.0;
   halfTauOmega2 = 0.5*tau*omega*omega;
   halfOmega2 = 0.5*omega*omega;
+  onePlusTau2Omega2Over12 = 1.0 + (tau*tau*omega*omega/12.0);
+  onePlus3Tau2Omega2Over12 = 1.0 + (3.0*tau*tau*omega*omega/12.0);
 
   // Maximum Bisection Level
   maxLevel = int(log2(nBead))-1;
@@ -90,7 +92,6 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   gradRho.zeros(nPart,nPart);
   for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
     for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
-      //bead(iPart,iBead) -> nDist = 1.50;
       updateNodeDistance(iPart,iBead);
     }
   }

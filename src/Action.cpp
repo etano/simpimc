@@ -131,12 +131,16 @@ double Path::getVint( Bead *b1 , Bead *b2 )
   return 0;
 }
 
-// Get External Potential Action
+// Get External Potential Action (w/ LB Correction)
 double Path::getVext( Bead *b )
 {
   if(trap) {
-    dr = b -> r;
-    return halfTauOmega2 * dot( dr , dr );
+    if(mode) {
+      dr = b -> r;
+    } else {
+      dr = b -> rC;
+    }
+    return halfTauOmega2 * onePlusTau2Omega2Over12 * dot( dr , dr );
   } else {
     return 0;
   }
@@ -146,18 +150,72 @@ double Path::getVext( Bead *b )
 double Path::getN( const int iPart , const int iBead )
 {
   if (!useNodeDist) return 0;
+  updateNodeDistance(bead(iPart,iBead));
+  updateNodeDistance(bead(iPart,iBead)->next);
   double nD1 = bead(iPart,iBead) -> nDist;
   double nD2 = bead(iPart,iBead) -> next -> nDist;
+  double nD1nD2 = nD1 * nD2;
+  //if (!nD1) {
+  //  nD1nD2 = nD2 * nD2;
+  //  cerr << "nD1" << endl;
+  //} else if (!nD2) {
+  //  nD1nD2 = nD1 * nD1;
+  //  cerr << "nD2" << endl;
+  //}
+  //double factor = -log1p(-exp(-0.5*nD1nD2*oneOverLamTau));
+  //double factor = -log1p(-nD1nD2*oneOverLamTau);
+  double factor = -log1p(-exp(-0.5*nD1nD2*oneOverLamTau));
+  return factor;
+}
+
+// Get Time Slice Nodal Action
+double Path::getNSlice( const int iBead , const int skip )
+{
+  if (!useNodeDist) return 0;
+  double N = 0;
+  for (unsigned int iPart = 0; iPart < nPart; iPart++) {
+    N += getN(iPart,iBead,skip);
+  }
+  return N;
+}
+
+// Get Single Bead Nodal Action
+double Path::getN( const int iPart , const int iBead , const int skip )
+{
+  if (!useNodeDist) return 0;
+  Bead *b1, *b2;
+  b1 = bead(iPart,iBead);
+  b2 = bead(iPart,iBead)->nextB(skip);
+  double nD1, nD2;
+  if (!mode) {
+    updateNodeDistance(b1);
+    updateNodeDistance(b2);
+    nD1 = b1->nDistC;
+    nD2 = b2->nDistC;
+  } else {
+    nD1 = b1->nDist;
+    nD2 = b2->nDist;
+  }
+  if (nD1 < 0.0 || nD2 < 0.0) {
+    return 1e100;
+  }
   double nD1nD2 = nD1 * nD2;
   if (!nD1) {
     nD1nD2 = nD2 * nD2;
   } else if (!nD2) {
     nD1nD2 = nD1 * nD1;
   }
-  //double factor = -log1p(-exp(-0.5*nD1nD2*oneOverLamTau));
-  //double factor = -log1p(-nD1nD2*oneOverLamTau);
-  double factor = -log1p(-exp(-nD1nD2*oneOverLamTau));
-  return factor;
+  double N = 0.0;
+  //N += -log1p(-exp(-nD1nD2*oneOverLamTau/skip));
+  N += -log1p(-exp(-0.5*nD1nD2*oneOverLamTau/skip));
+
+  return N;
+}
+
+// Get Single Bead Nodal Action
+double Path::getN( Bead *b , int skip )
+{
+  return getN( b->p , b->b , skip );
 }
 
 // Get Single Bead Nodal Action

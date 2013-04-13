@@ -54,18 +54,14 @@ void Bead::move( vec& dr )
 Bead* Bead::nextB( unsigned int n )
 {
   Bead *bead = this;
-  
   for (unsigned int i = 0; i < n; i += 1) bead = bead -> next;
-  
   return bead;
 }
 
 Bead* Bead::prevB( unsigned int n )
 {
   Bead *bead = this;
-  
   for (unsigned int i = 0; i < n; i += 1) bead = bead -> prev;
-  
   return bead;
 }
 

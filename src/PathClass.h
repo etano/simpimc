@@ -39,7 +39,7 @@ public:
   // Calculated Global Constants
   double tau;
   unsigned int nPermType;
-  double oneOverLamTau, oneOver4LamTau, oneOver4LamTau2, nPartnBeadnDOver2Tau, halfTauOmega2, halfOmega2;
+  double oneOverLamTau, oneOver4LamTau, oneOver4LamTau2, nPartnBeadnDOver2Tau, halfTauOmega2, halfOmega2, onePlusTau2Omega2Over12, onePlus3Tau2Omega2Over12;
   unsigned int maxLevel;
 
   // Permutation Counter
@@ -74,8 +74,8 @@ public:
   void restoreRho( const int iBead );
   void updateRho( const int iBead );
   void updateNodeDistance( const int iPart , const int iBead );
-  void updateNodeDistance( Bead *b );
   void updateNodeDistance( std::vector<Bead*>& beads );
+  void updateNodeDistance( Bead *b );
   bool checkConstraint( const int iBead );
   bool checkConstraint( std::vector<int>& slices );
 
@@ -99,6 +99,12 @@ public:
   double getN( const int iPart , const int iBead );
   double getN( Bead *b );
   double getN( std::vector<Bead*>& beads );
+  double getN( Bead *b , int skip );
+  double getN( const int iPart , const int iBead , int skip );
+  double getNSlice( const int iBead , const int skip );
+
+  // Mode (use copy or true)
+  bool mode;
 
   // Tables
   ivec bL;

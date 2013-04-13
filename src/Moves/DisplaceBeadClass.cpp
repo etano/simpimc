@@ -18,6 +18,7 @@ int DisplaceBead::DoDisplaceBead( const int iPart , const int iBead )
   // Store coordinates
   b -> storeR();
 
+  path.mode = 0;
   double V0 = path.getV(b);  // Calculate old potential action 
   double K0 = path.getK(b);  // Calculate old kinetic action
   double A0 = V0 + K0;   // Total old action
@@ -26,6 +27,7 @@ int DisplaceBead::DoDisplaceBead( const int iPart , const int iBead )
   rng.unifRand(dr, stepSize);
   b -> move(dr);
 
+  path.mode = 1;
   double V1 = path.getV(b);  // Calculate new potential action
   double K1 = path.getK(b);  // Calculate new kinetic action
   double A1 = V1 + K1;   // Total new action

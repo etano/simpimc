@@ -2,9 +2,9 @@
 
 void Move::Equilibrate()
 {
-  for (unsigned int iEqSweep = 0; iEqSweep < nEqSweep; iEqSweep += 1)  {    
+  for (unsigned int iEqSweep = 0; iEqSweep < nEqSweep; iEqSweep += 1)  {
     resetCounters();
-    for (unsigned int iEqStep = 0; iEqStep < nEqStep; iEqStep += 1)  {        
+    for (unsigned int iEqStep = 0; iEqStep < nEqStep; iEqStep += 1)  {
       MakeMove();
     }
     perAccept = getPerAccept();  // Percentage accepted
@@ -32,9 +32,9 @@ void Move::assignParticleLabels()
 {
   Bead *b;
 
-  for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  { 
+  for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
     b = path.bead(iPart,0);
-    for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {  
+    for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
       path.bead(iPart,iBead) = b;
       path.bead(iPart,iBead) -> p = iPart;
       b = b -> next;
@@ -45,7 +45,7 @@ void Move::assignParticleLabels()
 void Move::setPerm( const int permType , int* perm , int* iPerm , const int i , const int j , const int k ) {
   // All 3 particle exchanges (first 1-2 for fermions and bosons, last 3-5 for bosons only, default is identity)
   switch (permType){
-    case 1:           
+    case 1:
       perm[i] = k;
       perm[j] = i;
       perm[k] = j;
@@ -56,12 +56,12 @@ void Move::setPerm( const int permType , int* perm , int* iPerm , const int i , 
     case 2:
       perm[i] = j;
       perm[j] = k;
-      perm[k] = i;  
+      perm[k] = i;
       iPerm[i] = k;
       iPerm[j] = i;
       iPerm[k] = j;
       break;
-    case 3:           
+    case 3:
       perm[i] = j;
       perm[j] = i;
       perm[k] = k;

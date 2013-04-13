@@ -89,6 +89,7 @@ int PermBisect::DoPermBisect()
         beadB[i] = beadA[i] -> nextB(skip);
         beadC[i] = beadB[i] -> nextB(skip);
 
+        path.mode = 0;
         VA[iLevel] += path.getV(beadB[i])*skip;
 
         vec ac = beadC[i] -> r - beadA[i] -> r;
@@ -106,6 +107,7 @@ int PermBisect::DoPermBisect()
 // look more at what PIMC++ is doing.
 //////////////////////////////////////////////////////////////
 
+        path.mode = 1;
         VB[iLevel] += path.getV(beadB[i])*skip;
 
         beadA[i] = beadC[i];

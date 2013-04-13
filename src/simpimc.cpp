@@ -61,10 +61,10 @@ int main (int argc, char* argv[])
 
   // ( path , rng ,  perAcceptDesired , nEqSweeps , nEqSteps , moveSkip )
   sim.moves.push_back(new Bisect(sim.path,sim.rng,0.5,nEqSweep,nEqStep,1));
-  //sim.moves.push_back(new PermBisect(sim.path,sim.rng,0.5,nEqSweeps,nEqSteps,1));
+  //sim.moves.push_back(new PermBisect(sim.path,sim.rng,0.5,nEqSweep,nEqStep,1));
   //sim.moves.push_back(new DisplaceBead(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new DisplaceParticle(sim.path,sim.rng,0.5,10,1000,1));
-  //sim.moves.push_back(new DisplaceAll(sim.path,sim.rng,0.5,10,1000,1));
+  sim.moves.push_back(new DisplaceAll(sim.path,sim.rng,0.5,nEqSweep,nEqStep,1000));
   //sim.moves.push_back(new Relabel(sim.path,sim.rng,0.5,10,1000,1));
   //sim.moves.push_back(new SimplePerm(sim.path,sim.rng,0.5,10,1000,1));
 
@@ -79,7 +79,8 @@ int main (int argc, char* argv[])
 
   // Form Output String
   stringstream outputSuffix;
-  outputSuffix << "-" << nPart << "-" << nD << "-" << nBead << "-" << beta << "-" << lambda << "-" << L
+  outputSuffix << "-" << inputFileLabel
+               << "-" << nPart << "-" << nD << "-" << nBead << "-" << beta << "-" << lambda << "-" << L
                << "-" << duration << "-" << nStep << "-" << block << "-" << blockOut << "-" << nEqSweep << "-" << nEqStep
                << "-" << fermi << "-" << halfspace << "-" << nodeType << "-" << useNodeDist;
 
