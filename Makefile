@@ -1,5 +1,5 @@
 CXX      = g++
-CXXFLAGS = -O3 -Wall -g -pg -I${HOME}/Projects/boost_1_48_0 -I/usr/bin/include
+CXXFLAGS = -O3 -Wall -g -pg -I/usr/bin/include
 LDFLAGS  = -larmadillo -lblas -llapack -msse4
 
 TARGET = simpimc
@@ -8,7 +8,7 @@ SRCS+=src/SimulationClass.cpp
 SRCS+=src/PathClass.cpp
 SRCS+=src/BeadClass.cpp
 SRCS+=src/Moves/MoveClass.cpp
-SRCS+=src/Moves/BisectClass.test.cpp
+SRCS+=src/Moves/BisectClass.cpp
 SRCS+=src/Moves/PermBisectClass.cpp
 SRCS+=src/Moves/DisplaceBeadClass.cpp
 SRCS+=src/Moves/DisplaceParticleClass.cpp

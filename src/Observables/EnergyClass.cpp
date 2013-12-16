@@ -124,7 +124,7 @@ double Energy::getNE()
       //xi = nD1nD2*path.oneOverLamTau;
       xi = 0.5*nD1nD2*path.oneOverLamTau;
       tot += xi/(path.tau*expm1(xi));
-      if (isnan(tot))
+      if (std::isnan(tot))
         std::cerr << tot << endl;
     }
   }
