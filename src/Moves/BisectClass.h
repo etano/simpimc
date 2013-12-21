@@ -5,21 +5,22 @@
 
 class Bisect : public Move
 {
-private: 
-  int DoBisect( const int iPart );
+private:
+  int DoBisect(const int iPart);
   std::vector<Bead*> affBeads;
 protected:
 
 public:
   // Constructor
-  Bisect( Path& pathIn , RNG& rngIn , double perAcceptDesiredIn , int nEqSweepIn , int nEqStepIn , int moveSkipIn )
-    : Move( pathIn , rngIn , perAcceptDesiredIn , nEqSweepIn , nEqStepIn , moveSkipIn )
+  Bisect(Path &tmpPath, RNG &tmpRNG, Input &in, IOClass &out)
+    : Move(tmpPath, tmpRNG, in, out)
   {
-    moveLabel = "Bisect";
     stepSize = floor(log(path.nBead/2.0)/log(2));
   }
 
+  // Make move
   virtual void MakeMove();
+  virtual void Write();
 };
 
 #endif

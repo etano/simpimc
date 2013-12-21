@@ -1,0 +1,34 @@
+--- CMakeLists.txt	2013-11-03 17:26:38.266957000 -0800
++++ /g/g15/brown281/src/armadillo-3.920.2/CMakeLists.txt	2013-10-13 19:55:59.000000000 -0700
+@@ -32,7 +32,7 @@
+ set(ARMA_USE_ATLAS   false)
+ set(ARMA_USE_BOOST   false)
+ set(ARMA_USE_HDF5    false)
+-set(ARMA_USE_WRAPPER false)
++set(ARMA_USE_WRAPPER true )
+ 
+ # NOTE:
+ # Set ARMA_USE_WRAPPER to false if you're getting linking errors when compiling your programs,
+@@ -99,10 +99,10 @@
+   else()
+     
+     include(ARMA_FindLAPACK)
+-    #include(ARMA_FindOpenBLAS)
++    include(ARMA_FindOpenBLAS)
+     include(ARMA_FindBLAS)
+-    #include(ARMA_FindCLAPACK)
+-    #include(ARMA_FindCBLAS)
++    include(ARMA_FindCLAPACK)
++    include(ARMA_FindCBLAS)
+     
+     message(STATUS "  LAPACK_FOUND = ${LAPACK_FOUND}")
+     message(STATUS "    BLAS_FOUND = ${BLAS_FOUND}")
+@@ -320,7 +320,7 @@
+   message(STATUS "CMAKE_SHARED_LINKER_FLAGS = ${CMAKE_SHARED_LINKER_FLAGS}")
+ endif()
+ 
+-add_library( armadillo STATIC src/wrap_libs )
++add_library( armadillo SHARED src/wrap_libs )
+ target_link_libraries( armadillo ${ARMA_LIBS} )
+ set_target_properties(armadillo PROPERTIES VERSION ${ARMA_MAJOR}.${ARMA_MINOR_ALT}.${ARMA_PATCH} SOVERSION ${ARMA_MAJOR})
+ 

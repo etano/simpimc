@@ -1,8 +1,9 @@
-#ifndef BROWNPIMC_H
-#define BROWNPIMC_H
+#ifndef SIMPIMC_H
+#define SIMPIMC_H
 
-#include "StandardLibraries.h" // Standard libraries
-#include "GlobalConstants.h"
+#include <iostream>
+#include "config.h"
+#include "Communication/Communication.h"
 #include "SimulationClass.h" // simulations class
 #include "BeadClass.h" // beads class
 #include "PathClass.h" // paths class

@@ -1,59 +1,56 @@
 #ifndef MoveClass_H
 #define MoveClass_H
 
-#include "../StandardLibraries.h"       // Standard libraries
-#include "../GlobalConstants.h"
+#include "../EventClass.h"
 #include "../PathClass.h"
-#include "../BeadClass.h"
-#include "../RNGClass.h"
+#include "../RNG/RNG.h"
+#include "../IO/InputFile.h"
+#include "../IO/IO.h"
 
-class Move
+class Move : public Event
 {
-private: 
+private:
 
 protected:
   // Path
   Path& path;
-  vec dr;
 
   // RNG
   RNG& rng;
+public:
+  // Constructor
+  Move(Path &tmpPath, RNG &tmpRNG, Input &in, IOClass &out)
+    : Event(), path(tmpPath), rng(tmpRNG)
+  {
+    Init(in);
+  }
+  void Init(Input &in);
 
-  // Permutation Functions
-  void assignParticleLabels();
-  void setPerm( const int permType , int* perm , int* iPerm , const int i , const int j , const int k );
+  // Moves
+  unsigned int moveSkip;
+  virtual void MakeMove() {};
+  inline void DoEvent() {MakeMove();}
 
   // Equilibration
   double perAcceptDesired;
   unsigned int nEqSweep;
   unsigned int nEqStep;
   double stepSize;
+  void Equilibrate();
 
   // Acceptance
   unsigned int nAttempt;
   unsigned int nAccept;
   double perAccept;
-public:
-  // Constructor
-  Move( Path& pathIn , RNG& rngIn , double perAcceptDesiredIn , int nEqSweepIn , int nEqStepIn , int moveSkipIn )
-    : path(pathIn) , rng(rngIn) , perAcceptDesired(perAcceptDesiredIn) , nEqSweep(nEqSweepIn) , nEqStep(nEqStepIn) , moveSkip(moveSkipIn) 
-  {
-    dr.set_size(path.nD);
-  }
-
-  // Label
-  const char* moveLabel;
-
-  // Moves
-  unsigned int moveSkip;
-  virtual void MakeMove() {};
-
-  // Equilibration
-  void Equilibrate();
-
-  // Acceptance
   void resetCounters();
   double getPerAccept();
+
+  // Write
+  virtual void Write() {};
+
+  // Permutation Functions
+  void assignParticleLabels();
+  void setPerm(const int permType, int* perm, int* iPerm, const int i, const int j, const int k);
 };
 
 #endif

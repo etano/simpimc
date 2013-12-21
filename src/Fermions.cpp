@@ -15,8 +15,11 @@ void Path::restoreRho( const int iBead )
 // Update Nodal Distances
 void Path::updateNodeDistance( const int iPart , const int iBead )
 {
-  double rmag, r0mag, diff;
+  bead(iPart,iBead) -> nDistC = 100.;
+  return;
 
+  double rmag, r0mag, diff;
+  Tvector dr(nD);
   if (nPart == 1) return;
 
   if (nD == 1) {
@@ -45,7 +48,6 @@ void Path::updateNodeDistance( const int iPart , const int iBead )
       bead(iPart,iBead) -> nDistC = dr;
     }
   } else {
-
     if(!iBead) bead(iPart,iBead) -> nDist = 0.0; // <<<<<<--------------------Verify
     else {
       gradRho = rho.slice(iBead);
@@ -110,6 +112,7 @@ void Path::updateRho ( const int iBead )
 {
   double sum, prod, diff;
   int sliceDiff = int(std::min(double(iBead),double(nBead-iBead)));
+  Tvector dr(nD);
 
   switch (nodeType){
     case 1:

@@ -46,7 +46,7 @@ void Bead::restoreNodeDistance()
   nDist = nDistC;
 }
 
-void Bead::move( vec& dr )
+void Bead::move( Tvector& dr )
 {
   r += dr;
 }

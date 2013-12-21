@@ -1,50 +1,69 @@
 #include "PathClass.h"
 
-Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double betaIn , const double lambdaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn , const double LIn )
-  : nPart(nPartIn) , nD(nDIn) , nBead(nBeadIn) , beta(betaIn) , lambda(lambdaIn) , fermi(fermiIn) , halfspace(halfspaceIn) , nodeType(nodeTypeIn) , useNodeDist(useNodeDistIn) , L(LIn) , oneOverL(1.0/LIn) , trap(!L)
+void Path::Init(Input &in, IOClass &out)
 {
+  nD = in.get<int>("Input.System.nD");
+  nBead = in.get<int>("Input.System.nBead");
+  beta = in.get<RealType>("Input.System.beta");
+  L = in.get<RealType>("Input.System.L");
+  trap = in.get<int>("Input.System.trap", 0);
+
+  //!!!!!!!!!!
+  useNodeDist = 0;
+
+  // Initialize Particles
+  nPart = 0;
+  vector<Input> speciesInput = in.getObjectList("Input.Particles");
+  nSpecies = speciesInput.size();
+  for (int iS=0; iS<nSpecies; iS+=1) {
+    speciesList.push_back(new Species(speciesInput[iS],nBead,nD));
+    nPart += speciesList[iS]->nPart;
+  }
+
   // Constants
-  tau = beta/(1.0*nBead);
-  oneOverLamTau = 1.0/(1.0*lambda*tau);
-  oneOver4LamTau = 1.0/(4.0*lambda*tau);
-  oneOver4LamTau2 = 1.0/(4.0*lambda*tau*tau);
-  nPartnBeadnDOver2Tau = (1.0*nPart*nBead*nD)/(2.0*tau);
-  omega = 1.0;
+  tau = beta/(1.*nBead);
+  //iLamTau = 1./(1.*speciesList[0]->lambda*tau);
+  //i4LamTau = 1./(4.*speciesList[0]->lambda*tau);
+  //i4LamTau2 = 1./(4.*speciesList[0]->lambda*tau*tau);
+  nPartnBeadnDOver2Tau = (1.*nPart*nBead*nD)/(2.*tau);
+  omega = 1.;
   halfTauOmega2 = 0.5*tau*omega*omega;
   halfOmega2 = 0.5*omega*omega;
-  onePlusTau2Omega2Over12 = 1.0 + (tau*tau*omega*omega/12.0);
-  onePlus3Tau2Omega2Over12 = 1.0 + (3.0*tau*tau*omega*omega/12.0);
+  onePlusTau2Omega2Over12 = 1. + (tau*tau*omega*omega/12.);
+  onePlus3Tau2Omega2Over12 = 1. + (3.*tau*tau*omega*omega/12.);
 
   // Maximum Bisection Level
   maxLevel = int(log2(nBead))-1;
 
   // Initiate bead looping
   bL.set_size(2*nBead);
-  for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
-    bL(iBead) = iBead;
-    bL(iBead + nBead) = bL(iBead);
+  for (unsigned int iB = 0; iB < nBead; iB += 1) {
+    bL(iB) = iB;
+    bL(iB + nBead) = bL(iB);
   }
 
   // Initiate beads
   bead.set_size(nPart,nBead);
-  for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-    for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
-      bead(iPart,iBead) = new Bead(nD,iPart,iBead);
+  for (unsigned int iS=0; iS<nSpecies; iS+=1) {
+    for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP+=1) {
+      for (unsigned int iB=0; iB<nBead; iB+=1) {
+        bead(iS*speciesList[iS]->nPart + iP,iB) = new Bead(nD,*speciesList[iS],iP,iB);
+      }
     }
   }
 
   // Initiate bead connections
-  for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-    bead(iPart,0) -> next = bead(iPart,1);
-    bead(iPart,0) -> prev = bead(iPart,nBead-1);
-    for (unsigned int iBead = 1; iBead < nBead; iBead += 1) {
-      bead(iPart,iBead) -> next = bead(iPart,bL(iBead+1));
-      bead(iPart,iBead) -> prev = bead(iPart,iBead-1);
+  for (unsigned int iP = 0; iP < nPart; iP += 1) {
+    bead(iP,0) -> next = bead(iP,1);
+    bead(iP,0) -> prev = bead(iP,nBead-1);
+    for (unsigned int iB = 1; iB < nBead; iB += 1) {
+      bead(iP,iB) -> next = bead(iP,bL(iB+1));
+      bead(iP,iB) -> prev = bead(iP,iB-1);
     }
   }
 
   // Set permutation types
-  if (fermi) nPermType = 3;
+  if (speciesList[0]->fermi) nPermType = 3;
   else nPermType = 6;
   iCount.zeros(nPart);
   pCount.zeros(nPart);
@@ -61,18 +80,18 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   cf2.zeros(3,nBead);
   cf3.zeros(3,nBead);
 
-  switch (nodeType){
+  switch (0){
     case 1:
-      for (unsigned int iBead = 1; iBead < nBead; iBead += 1) {
-        cf1(1,iBead) = -1.0/(4.0*lambda*iBead*tau);
-        cf2(1,iBead) = -2.0/(4.0*lambda*iBead*tau);
+      for (unsigned int iB = 1; iB < nBead; iB += 1) {
+        cf1(1,iB) = -1.0/(4.0*speciesList[0]->lambda*iB*tau);
+        cf2(1,iB) = -2.0/(4.0*speciesList[0]->lambda*iB*tau);
       }
       break;
     default:
-      for (unsigned int iBead = 1; iBead < nBead; iBead += 1) {
-        cf1(0,iBead) = pow((omega/(2.0*pi*sinh(iBead*tau*omega))),nD/2.0);
-        cf2(0,iBead) = -omega/(2.0*sinh(iBead*tau*omega));
-        cf3(0,iBead) = cosh(iBead*tau*omega);
+      for (unsigned int iB = 1; iB < nBead; iB += 1) {
+        cf1(0,iB) = pow((omega/(2.0*pi*sinh(iB*tau*omega))),nD/2.0);
+        cf2(0,iB) = -omega/(2.0*sinh(iB*tau*omega));
+        cf3(0,iB) = cosh(iB*tau*omega);
       }
       break;
   }
@@ -80,9 +99,9 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
   // Initiate rho, rhoC
   rho.zeros(nPart,nPart,nBead);
   rhoC.zeros(nPart,nPart,nBead);
-  for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
-    updateRho(iBead);
-    storeRho(iBead);
+  for (unsigned int iB = 0; iB < nBead; iB += 1) {
+    updateRho(iB);
+    storeRho(iB);
   }
 
   // Initiate detRho
@@ -90,9 +109,9 @@ Path::Path( const int nPartIn, const int nDIn , const int nBeadIn, const double 
 
   // Initiate gradRho
   gradRho.zeros(nPart,nPart);
-  for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-    for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
-      updateNodeDistance(iPart,iBead);
+  for (unsigned int iP = 0; iP < nPart; iP += 1) {
+    for (unsigned int iB = 0; iB < nBead; iB += 1) {
+      updateNodeDistance(iP,iB);
     }
   }
 
@@ -119,18 +138,18 @@ int Path::getPType()
 
   // Count up each permutation type
   pCount.zeros();
-  for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-    iCount(iPart) = 0;
-    xPart = iPart;
-    while ((bead(xPart,nBead-1) -> next -> p) != iPart) {
-      iCount(iPart) += 1;
+  for (unsigned int iP = 0; iP < nPart; iP += 1) {
+    iCount(iP) = 0;
+    xPart = iP;
+    while ((bead(xPart,nBead-1) -> next -> p) != iP) {
+      iCount(iP) += 1;
       xPart = (bead(xPart,nBead-1) -> next -> p);
     }
-    pCount(iCount(iPart)) += 1; // Bin values by number of exchanges
+    pCount(iCount(iP)) += 1; // Bin values by number of exchanges
   }
 
-  for (unsigned int iPart = 0; iPart < nPart; iPart += 1) 
-    pCount(iPart) = pCount(iPart)/(iPart+1); // Normalize values
+  for (unsigned int iP = 0; iP < nPart; iP += 1) 
+    pCount(iP) = pCount(iP)/(iP+1); // Normalize values
 
   iType = 0;
   while (iType < nType) {
@@ -207,30 +226,19 @@ void Path::setPType()
 // Print out permutation configuration
 void Path::printPerm()
 {
-  for (unsigned int iPart = 0; iPart < nPart; iPart += 1)
-    std::cout << bead(iPart,nBead-1) -> self -> p << " " << bead(iPart,nBead-1) -> next -> p << "\n";
+  for (unsigned int iP = 0; iP < nPart; iP += 1)
+    std::cout << bead(iP,nBead-1) -> self -> p << " " << bead(iP,nBead-1) -> next -> p << "\n";
   std::cout << "\n";
 }
 
 // Print out bead positions
 void Path::printBeads ()
 {
-  for (unsigned int iPart = 0; iPart < nPart; iPart += 1) {
-    for (unsigned int iBead = 0; iBead < nBead; iBead += 1) {
-      std::cout << iPart << " " << iBead << " " << bead(iPart,iBead) -> r << "\n";
+  for (unsigned int iP = 0; iP < nPart; iP += 1) {
+    for (unsigned int iB = 0; iB < nBead; iB += 1) {
+      std::cout << iP << " " << iB << " " << bead(iP,iB) -> r << "\n";
     }
     std::cout << "\n";
   }
   std::cout << "\n";
-}
-
-// Put R in the Box
-void Path::PutInBox( vec& r )
-{
-  if(!trap) {
-    for (unsigned int iD = 0; iD < nD; iD++) {
-      double n = -floor(r(iD) * oneOverL + 0.5);
-      r(iD) += n * L;
-    }
-  }
 }

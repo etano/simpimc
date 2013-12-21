@@ -1,5 +1,9 @@
 #include "BisectClass.h"
 
+void Bisect::Write()
+{
+}
+
 void Bisect::MakeMove()
 {
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
@@ -57,14 +61,16 @@ int Bisect::DoBisect( const int iPart )
   // Perform the bisection (move exactly through kinetic action)
   int skip;
   double tauEff, sigma, sigma2;
+  double lambda = beadI->species.lambda;
   double VA[nLevel], VB[nLevel], dA[nLevel+1], dAold;
   dA[nLevel] = 0.0;
   dAold = 0.0;
   Bead *beadB, *beadC;
+  cout << path.getK() << endl;
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
     skip = pow(2,iLevel);
     tauEff = path.tau*skip;
-    sigma2 = path.lambda*tauEff;
+    sigma2 = lambda*tauEff;
     sigma = sqrt(sigma2);
     VA[iLevel] = 0.0;
     VB[iLevel] = 0.0;
@@ -76,8 +82,9 @@ int Bisect::DoBisect( const int iPart )
 
       VA[iLevel] += path.getV(beadB)*skip + path.getNSlice(beadB->b,skip);
 
-      vec ac = beadC -> r - beadA -> r;
+      Tvector ac = beadC -> r - beadA -> r;
       path.PutInBox(ac);
+      Tvector dr(path.nD);
       rng.normRand(dr, 0, sigma);
       path.PutInBox(dr);
       beadB -> r = beadA -> r + 0.5*ac + dr;
@@ -98,7 +105,7 @@ int Bisect::DoBisect( const int iPart )
   }
 
   // Check constraint
-  if(path.fermi) {
+  if(path.speciesList[iPart]->fermi) {
     for (unsigned int iBead = nodeBead0; iBead < nodeBead1; iBead += 1) {
       if(!path.checkConstraint(iBead)) {
         // Restore coordinates

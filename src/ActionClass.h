@@ -1,12 +1,11 @@
-#ifndef ObservableClass_H
-#define ObservableClass_H
+#ifndef ActionClass_H
+#define ActionClass_H
 
-#include "../EventClass.h"
 #include "../PathClass.h"
 #include "../IO/InputFile.h"
 #include "../IO/IO.h"
 
-class Observable : public Event
+class Action
 {
 private:
 
@@ -19,23 +18,20 @@ protected:
   IOClass &out;
 
   bool FirstTime;
-  unsigned int nMeasure;
 public:
   // Constructor
-  Observable(Path &tmpPath, Input &tmpIn, IOClass &tmpOut)
-    : Event(), path(tmpPath), in(tmpIn), out(tmpOut)
+  Action(Path &tmpPath, Input &tmpIn, IOClass &tmpOut)
+    : path(tmpPath), in(tmpIn), out(tmpOut)
   {
     Name = in.get<string>("Name");
     out.CreateGroup(Name);
     FirstTime = 1;
-    nMeasure = 0;
   }
 
   // Functions
-  inline void DoEvent() { Accumulate(); };
   virtual void Init() {};
-  virtual void Accumulate() {};
-  virtual void Reset() {};
+  virtual void DActionDBeta() {};
+  virtual void Action() {};
   virtual void Write() {};
 };
 

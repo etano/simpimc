@@ -1,74 +1,105 @@
 #include "EnergyClass.h"
 
-void Energy::Accumulate( const int iType )
+void Energy::Init()
 {
-  KE(iType) += getKE(); // Add up total Kinetic energy
-  VE(iType) += getVE(); // Add up total Potential energy
-  NE(iType) += getNE(); // Add up total Nodal energy
-  E(iType) = KE(iType) + VE(iType) + NE(iType); // Add up total energy
+  Reset();
 }
 
-void Energy::Output()
+void Energy::Reset()
 {
-  E *= oneOverNbeadBlock;
-  KE *= oneOverNbeadBlock;
-  VE *= oneOverNbeadBlock;
-  NE *= oneOverNbeadBlock;
+  nMeasure = 0;
+  E = KE = VE = NE = 0.;
+}
 
-  for (unsigned int iType = 0; iType < path.nType; iType += 1) {
-    trace << E(iType) << " " << KE(iType) << " " << VE(iType) << " " << NE(iType) << " ";
+void Energy::Accumulate()
+{
+  KE += getKE(); // Add up total Kinetic energy
+  VE += getVE(); // Add up total Potential energy
+  NE += getNE(); // Add up total Nodal energy
+  E = KE + VE + NE; // Add up total energy
+  nMeasure += 1;
+}
+
+void Energy::Write()
+{
+  RealType norm = 1./(path.nBead*nMeasure);
+  E *= norm;
+  KE *= norm;
+  VE *= norm;
+  NE *= norm;
+
+  if (FirstTime) {
+    FirstTime = 0;
+    out.CreateExtendableDataSet("/"+Name+"/", "Total", E);
+    out.CreateExtendableDataSet("/"+Name+"/", "Kinetic", KE);
+    out.CreateExtendableDataSet("/"+Name+"/", "Potential", VE);
+    out.CreateExtendableDataSet("/"+Name+"/", "Nodal", NE);
+  } else {
+    out.AppendDataSet("/"+Name+"/", "Total", E);
+    out.AppendDataSet("/"+Name+"/", "Kinetic", KE);
+    out.AppendDataSet("/"+Name+"/", "Potential", VE);
+    out.AppendDataSet("/"+Name+"/", "Nodal", NE);
   }
-  trace << sum(E) << " " << sum(KE) << " " << sum(VE) << " " << sum(NE) << endl;
 
-  Etot += sum(E);
-  KEtot += sum(KE);
-  VEtot += sum(VE);
-  NEtot += sum(NE);
-
-  E.zeros();
-  KE.zeros();
-  VE.zeros();
-  NE.zeros();
-}
-
-void Energy::Print()
-{
-  std::cout << "E: " << Etot/nBlock << endl
-            << "KE: " << KEtot/nBlock << endl
-            << "VE: " << VEtot/nBlock << endl
-            << "NE: " << NEtot/nBlock << endl;
-}
-
-void Energy::Stats()
-{
-  statsEnergy( outputFile.c_str() , path.nType , nBlock );
+  Reset();
 }
 
 // Get Kinetic Energy
-double Energy::getKE()
+RealType Energy::getKE()
 {
-  double tot = 0.0;  
-  for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
-    for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
-      dr = path.bead(iPart,iBead) -> r - (path.bead(iPart,iBead) -> next -> r);
-      path.PutInBox( dr );
-      tot += dot( dr , dr );
+  int nImages = 0;
+
+  RealType tot = 0.;
+  Tvector dr(path.nD);
+  for (int iP=0; iP<path.nPart; iP+=1) {
+    RealType i4LambdaTau = 1./(4.*path.bead(iP,0)->species.lambda*path.tau);
+    for (int iB=0; iB<path.nBead; iB+=1) {
+      dr = path.bead(iP,iB)->r - path.bead(iP,iB)->next->r;
+      path.PutInBox(dr);
+      RealType gaussProd = 1.;
+      Tvector gaussSum, numSum;
+      gaussSum.zeros(path.nD);
+      numSum.zeros(path.nD);
+      for (int iD=0; iD<path.nD; iD++) {
+        for (int image=-nImages; image<=nImages; image++) {
+          RealType dist = dr(iD) + (RealType)image*path.L;
+          RealType dist2i4LambdaTau = dist*dist*i4LambdaTau;
+          RealType expPart = exp(-dist2i4LambdaTau);
+          gaussSum(iD) += expPart;
+          numSum(iD) += -(dist2i4LambdaTau/path.tau)*expPart;
+        }
+        gaussProd *= gaussSum(iD);
+      }
+      RealType scalarNumSum = 0.;
+      for (int iD=0; iD<path.nD; iD++) {
+        Tvector numProd;
+        numProd.ones(path.nD);
+        for (int jD=0; jD<path.nD; jD++) {
+          if (iD != jD)
+            numProd(iD) *= gaussSum(jD);
+          else
+            numProd(iD) *= numSum(jD);
+        }
+        scalarNumSum += numProd(iD);
+      }
+      tot += scalarNumSum/gaussProd;
     }
   }
 
-  return path.nPartnBeadnDOver2Tau - path.oneOver4LamTau2 * tot;
+  return path.nPartnBeadnDOver2Tau + tot;
+
 }
 
 // Get Potential Energy
-inline double Energy::getVE()
+inline RealType Energy::getVE()
 {
   return getVEext() + getVEint();
 }
 
 // Get Interaction Potential Energy
-double Energy::getVEint()
+RealType Energy::getVEint()
 {
-  double tot = 0.0;
+  RealType tot = 0.0;
 
   for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
     for (unsigned int iPart = 0; iPart < path.nPart-1; iPart += 1)  {
@@ -82,9 +113,9 @@ double Energy::getVEint()
 }
 
 // Get External Potential Energy
-double Energy::getVEext()
+RealType Energy::getVEext()
 {
-  double tot = 0.0;
+  RealType tot = 0.0;
 
   if(path.trap) {
     for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
@@ -98,7 +129,7 @@ double Energy::getVEext()
 }
 
 // Get Nodal Energy
-double Energy::getNE()
+RealType Energy::getNE()
 {
   if(!path.useNodeDist) return 0;
 
@@ -109,20 +140,20 @@ double Energy::getNE()
   //  }
   //}
 
-  double xi, tot;
+  RealType xi, tot;
   tot = 0.0;
   for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1)  {
     for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1)  {
-      double nD1 = path.bead(iPart,iBead) -> nDist;
-      double nD2 = path.bead(iPart,iBead) -> next -> nDist;
-      double nD1nD2 = nD1 * nD2;
+      RealType nD1 = path.bead(iPart,iBead) -> nDist;
+      RealType nD2 = path.bead(iPart,iBead) -> next -> nDist;
+      RealType nD1nD2 = nD1 * nD2;
       if (!nD1) {
         nD1nD2 = nD2 * nD2;
       } else if (!nD2) {
         nD1nD2 = nD1 * nD1;
       }
-      //xi = nD1nD2*path.oneOverLamTau;
-      xi = 0.5*nD1nD2*path.oneOverLamTau;
+      //xi = nD1nD2*path.iLamTau;
+      xi = 0.5*nD1nD2/(path.bead(iPart,iBead)->species.lambda*path.tau);
       tot += xi/(path.tau*expm1(xi));
       if (std::isnan(tot))
         std::cerr << tot << endl;

@@ -1,9 +1,11 @@
 #ifndef PathClass_H
 #define PathClass_H
 
-#include "StandardLibraries.h"       // Standard libraries
+#include "config.h"       // Standard libraries
+#include "SpeciesClass.h"
 #include "BeadClass.h"
-#include "GlobalConstants.h"
+#include "IO/InputFile.h"
+#include "IO/IO.h"
 
 typedef void (Bead::*BeadMemFn)();
 
@@ -13,41 +15,47 @@ class Path
 {
 private:
   // Rho Variables
-  cube rho, rhoC;
-  mat gradRho;
-  vec detRho;
-  mat cf1, cf2, cf3;
+  arma::cube rho, rhoC;
+  Tmatrix gradRho;
+  Tvector detRho;
+  Tmatrix cf1, cf2, cf3;
 protected:
   // protected things
 public:
   // Constructor
-  Path( const int nPartIn , const int nDIn , const int nBeadIn, const double betaIn , const double lambdaIn , const int fermiIn , const int halfspaceIn , const int nodeTypeIn , const int useNodeDistIn , const double LIn );
+  Path() {};
+  void Init(Input &in, IOClass &out);
 
   // Given Global Constants
-  const unsigned int nPart, nD, nBead;
-  const double beta;
-  const double lambda;
-  const bool fermi;
-  const int halfspace;
-  const int nodeType;
-  const bool useNodeDist;
-  const double L;
-  const double oneOverL;
-  const bool trap;
-  double omega;
+  unsigned int nPart, nD, nBead;
+  RealType beta;
+  RealType L, iL;
+
+  // Species
+  unsigned int nSpecies;
+  vector<Species*> speciesList;
+
+  // Trapping potential
+  bool trap;
+  RealType omega;
+
+  // Fermions
+  int halfspace;
+  int nodeType;
+  bool useNodeDist;
 
   // Calculated Global Constants
-  double tau;
+  RealType tau;
   unsigned int nPermType;
-  double oneOverLamTau, oneOver4LamTau, oneOver4LamTau2, nPartnBeadnDOver2Tau, halfTauOmega2, halfOmega2, onePlusTau2Omega2Over12, onePlus3Tau2Omega2Over12;
+  RealType nPartnBeadnDOver2Tau, halfTauOmega2, halfOmega2, onePlusTau2Omega2Over12, onePlus3Tau2Omega2Over12;
   unsigned int maxLevel;
 
   // Permutation Counter
   int getPType();
   void setPType();
-  imat permCount;
-  imat pType;
-  ivec iCount, pCount;
+  Imatrix permCount;
+  Imatrix pType;
+  Ivector iCount, pCount;
   unsigned int nType;
 
   // Print things
@@ -55,7 +63,7 @@ public:
   void printBeads();
 
   // Beads
-  field<Bead*> bead;
+  arma::field<Bead*> bead;
 
   // Bead Iterator
   std::vector<Bead*>::const_iterator beadIter;
@@ -66,49 +74,48 @@ public:
   BeadMemFn storeRp, restoreRp, storePartRecordp, restorePartRecordp, storeNodeDistancep, restoreNodeDistancep;
   void beadAction( Bead *b , BeadMemFn p );
   void beadsAction( std::vector<Bead*>& beads , BeadMemFn p );
-  void partAction( int iPart , BeadMemFn p );
+  void partAction( int iP , BeadMemFn p );
   void allAction( BeadMemFn p );
 
   // Rho Functions
-  void storeRho( const int iBead );
-  void restoreRho( const int iBead );
-  void updateRho( const int iBead );
-  void updateNodeDistance( const int iPart , const int iBead );
+  void storeRho( const int iB );
+  void restoreRho( const int iB );
+  void updateRho( const int iB );
+  void updateNodeDistance( const int iP , const int iB );
   void updateNodeDistance( std::vector<Bead*>& beads );
   void updateNodeDistance( Bead *b );
-  bool checkConstraint( const int iBead );
+  bool checkConstraint( const int iB );
   bool checkConstraint( std::vector<int>& slices );
 
   // Difference Vector
-  vec dr;
+  void Dr(Bead* b0, Bead* b1, Tvector &dr);
 
   // Periodic Boundary Conditions
-  void PutInBox( vec& r );
+  void PutInBox( Tvector& r );
 
   // Action Functions
-  double getK();
-  double getK( const int iPart );
-  double getK( const int iPart , const int iBead );
-  double getK( Bead *bi );
-  double getV();
-  double getV( const unsigned int iPart );
-  double getV( const unsigned int iPart , const int iBead );
-  double getV( Bead *bi );
-  double getVint( Bead *b1 , Bead *b2 );
-  double getVext( Bead *b );
-  double getN( const int iPart , const int iBead );
-  double getN( Bead *b );
-  double getN( std::vector<Bead*>& beads );
-  double getN( Bead *b , int skip );
-  double getN( const int iPart , const int iBead , int skip );
-  double getNSlice( const int iBead , const int skip );
+  RealType getK();
+  RealType getK(const int iP);
+  RealType getK(int b0, int b1, vector<int> &particles, int level);
+  RealType getV();
+  RealType getV( const unsigned int iP );
+  RealType getV( const unsigned int iP , const int iB );
+  RealType getV( Bead *bi );
+  RealType getVint( Bead *b1 , Bead *b2 );
+  RealType getVext( Bead *b );
+  RealType getN( const int iP , const int iB );
+  RealType getN( Bead *b );
+  RealType getN( std::vector<Bead*>& beads );
+  RealType getN( Bead *b , int skip );
+  RealType getN( const int iP , const int iB , int skip );
+  RealType getNSlice( const int iB , const int skip );
 
   // Mode (use copy or true)
   bool mode;
 
   // Tables
-  ivec bL;
-  mat seps;
+  Ivector bL;
+  Tmatrix seps;
 
   // Bad Number Counts
   unsigned int infCount, nanCount, errCount;
@@ -121,10 +128,10 @@ inline void Path::beadAction( Bead *b , BeadMemFn p )
 }
 
 // Single particle action
-inline void Path::partAction( int iPart , BeadMemFn p )
+inline void Path::partAction( int iP , BeadMemFn p )
 {
-  for (unsigned int iBead = 0; iBead < nBead; iBead ++)
-    CALL_MEMBER_FN(*bead(iPart,iBead),p)();
+  for (unsigned int iB = 0; iB < nBead; iB ++)
+    CALL_MEMBER_FN(*bead(iP,iB),p)();
 }
 
 // Bead set action
@@ -137,9 +144,20 @@ inline void Path::beadsAction( std::vector<Bead*>& beads , BeadMemFn p )
 // Whole system action
 inline void Path::allAction( BeadMemFn p )
 {
-  for (unsigned int iPart = 0; iPart < nPart; iPart ++) {
-    for (unsigned int iBead = 0; iBead < nBead; iBead ++)
-      CALL_MEMBER_FN(*bead(iPart,iBead),p)();
+  for (unsigned int iP = 0; iP < nPart; iP ++) {
+    for (unsigned int iB = 0; iB < nBead; iB ++)
+      CALL_MEMBER_FN(*bead(iP,iB),p)();
+  }
+}
+
+// Put R in the Box
+inline void Path::PutInBox( Tvector& r )
+{
+  if(!trap) {
+    for (unsigned int iD = 0; iD < nD; iD++) {
+      RealType n = -floor(r(iD) * iL + 0.5);
+      r(iD) += n * L;
+    }
   }
 }
 
@@ -159,5 +177,11 @@ inline void Path::restoreR( std::vector<Bead*>& affBeads )
   }
 }
 
+// Get dr
+inline void Path::Dr(Bead* b0, Bead* b1, Tvector &dr)
+{
+  dr = b0->r - b1->r;
+  PutInBox(dr);
+}
 
 #endif

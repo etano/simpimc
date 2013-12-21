@@ -1,7 +1,7 @@
 #ifndef STATS_H
 #define STATS_H
 
-#include "StandardLibraries.h"
+#include "config.h"
 
 double getMean ( const std::vector<double>& data );
 

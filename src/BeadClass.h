@@ -1,25 +1,27 @@
 #ifndef BeadClass_H
 #define BeadClass_H
 
-#include "StandardLibraries.h"       // Standard libraries
-#include "GlobalConstants.h"
+#include "config.h"
+#include "SpeciesClass.h"
 
 class Bead
 {
-private:   
+private:
   unsigned int nD;
 protected:
-  
+
 public:
   // Constructor
-  Bead( unsigned int nDIn , unsigned int pIn , unsigned int bIn )
-    : nD(nDIn) , p(pIn) , b(bIn)
+  Bead(unsigned int tmpND, Species &tmpSpecies, unsigned int tmpP, unsigned int tmpB)
+    : nD(tmpND), species(tmpSpecies), p(tmpP), b(tmpB)
   {
     self = this;
     r.zeros(nD);
     r.fill(0.1*p);
     storeR();
   }
+
+  Species &species;
 
   void store();
   void restore();
@@ -29,14 +31,14 @@ public:
   void restorePartRecord();
   void storeNodeDistance();
   void restoreNodeDistance();
-  void move( vec& dr );
+  void move( Tvector& dr );
   Bead* nextB( unsigned int n );
   Bead* prevB( unsigned int n );
 
   unsigned int p;
   unsigned int b;
-  double nDist, nDistC;
-  vec r, rC;
+  RealType nDist, nDistC;
+  Tvector r, rC;
   Bead *self;
   Bead *next, *nextC;
   Bead *prev, *prevC;
