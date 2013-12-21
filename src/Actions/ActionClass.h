@@ -25,13 +25,14 @@ public:
   {
     Name = in.get<string>("Name");
     out.CreateGroup(Name);
-    FirstTime = 1;
   }
+
+  string Name;
 
   // Functions
   virtual void Init() {};
-  virtual void DActionDBeta() {};
-  virtual void Action() {};
+  virtual RealType DActionDBeta() {};
+  virtual RealType Action() {};
   virtual void Write() {};
 };
 

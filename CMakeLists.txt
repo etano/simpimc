@@ -10,11 +10,11 @@ SET(CMAKE_VERBOSE_MAKEFILE OFF)
 #-------------------------------------------------------------------
 
 SET(PRECISION double) #double float
-SET(USE_MPI TRUE)
-SET(USE_OPENMP TRUE)
+SET(USE_MPI FALSE)
+SET(USE_OPENMP FALSE)
 SET(QMC_BUILD_STATIC FALSE)
 SET(NDIM 2)
-SET(COMPILER_MAKE "INTEL") # INTEL, GNU, or IBM
+SET(COMPILER_MAKE "CLANG") # INTEL, GNU, or IBM
 
 #-------------------------------------------------------------------
 # Compilers
@@ -76,6 +76,24 @@ IF(${COMPILER_MAKE} MATCHES "GNU")
 
   SET(CMAKE_CXX_FLAGS "${GNU_C_FLAGS}")
   SET(CMAKE_C_FLAGS "${GNU_C_FLAGS}")
+ENDIF()
+
+IF(${COMPILER_MAKE} MATCHES "CLANG")
+  IF(USE_MPI)
+    SET(CMAKE_C_COMPILER mpicc)
+    SET(CMAKE_CXX_COMPILER mpicxx)
+  ELSE()
+    SET(CMAKE_C_COMPILER clang)
+    SET(CMAKE_CXX_COMPILER clang)
+  ENDIF()
+
+  SET(CLANG_C_FLAGS "-w")
+  IF(USE_OPENMP)
+    SET(CLANG_C_FLAGS "${CLANG_C_FLAGS} -fopenmp")
+  ENDIF(USE_OPENMP)
+
+  SET(CMAKE_CXX_FLAGS "${CLANG_C_FLAGS}")
+  SET(CMAKE_C_FLAGS "${CLANG_C_FLAGS}")
 ENDIF()
 
 SET(COMMON_FLAGS "-O3 -g -DNDIM=${NDIM}")
@@ -186,7 +204,7 @@ LINK_DIRECTORIES(${HDF5_LIB_DIR})
 # Create target
 SET (TEMPLATE_SRCS src/main.cpp
   src/Communication/Communication.cpp
-  src/IO/InputFile.cpp
+  src/IO/InputClass.cpp
   src/SimulationClass.cpp
   src/PathClass.cpp
   src/AlgorithmClass.cpp
@@ -195,13 +213,15 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/SpeciesClass.cpp
   src/Action.cpp
   src/Stats.cpp
+  src/Actions/ActionClass.cpp
+  src/Actions/KineticClass.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
   src/BeadClass.cpp
   src/Fermions.cpp
-  src/RNG/RNG.cpp
+  src/RNG/RNGClass.cpp
   src/RNG/sfmt.cpp
   src/RNG/mersenne.cpp
   src/RNG/userintf.cpp

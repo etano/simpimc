@@ -3,9 +3,9 @@
 
 #include "../EventClass.h"
 #include "../PathClass.h"
-#include "../RNG/RNG.h"
-#include "../IO/InputFile.h"
-#include "../IO/IO.h"
+#include "../RNG/RNGClass.h"
+#include "../IO/InputClass.h"
+#include "../IO/IOClass.h"
 
 class Move : public Event
 {

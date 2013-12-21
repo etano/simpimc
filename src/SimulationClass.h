@@ -4,9 +4,9 @@
 #include <iostream>
 #include "config.h"
 #include "Communication/Communication.h"
-#include "IO/InputFile.h"
-#include "IO/IO.h"
-#include "RNG/RNG.h" // RNG class
+#include "IO/InputClass.h"
+#include "IO/IOClass.h"
+#include "RNG/RNGClass.h" // RNG class
 #include "PathClass.h" // paths class
 #include "AlgorithmClass.h" // paths class
 

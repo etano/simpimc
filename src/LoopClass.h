@@ -2,7 +2,7 @@
 #define LoopClass_H
 
 #include "EventClass.h"
-#include "IO/InputFile.h"
+#include "IO/InputClass.h"
 
 class Loop : public Event
 {

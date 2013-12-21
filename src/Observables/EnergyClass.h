@@ -2,22 +2,17 @@
 #define EnergyClass_H
 
 #include "ObservableClass.h"
+#include "../Actions/ActionClass.h"
 
 class Energy : public Observable
 {
 private:
-  RealType E, KE, VE, NE;
-
-  // Energy Observables
-  RealType getKE();
-  RealType getVE();
-  RealType getVEint();
-  RealType getVEext();
-  RealType getNE();
+  vector<Action*> &actionList;
+  vector<RealType> Es;
 protected:
 public:
-  Energy(Path &tmpPath, Input &in, IOClass &out)
-    : Observable(tmpPath, in, out)
+  Energy(Path &tmpPath, vector<Action*> &tmpActionList, Input &in, IOClass &out)
+    : actionlist(tmpActionList), Observable(tmpPath, in, out)
   {
     Init();
   }

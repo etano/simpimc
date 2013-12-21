@@ -1,4 +1,4 @@
-#include "InputFile.h"
+#include "InputClass.h"
 
 // Loads settings structure from the specified XML file
 void Input::load(const std::string &filename)

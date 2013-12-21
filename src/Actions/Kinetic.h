@@ -19,8 +19,8 @@ public:
 
   // Functions
   virtual void Init();
-  virtual void DActionDBeta();
-  virtual void Action(int slice1, int slice2, const Array<int,1> &activeParticles, int level);
+  virtual RealType DActionDBeta();
+  virtual RealType Action(int slice1, int slice2, const Array<int,1> &activeParticles, int level);
   virtual void Write();
 };
 

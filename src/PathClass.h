@@ -4,8 +4,8 @@
 #include "config.h"       // Standard libraries
 #include "SpeciesClass.h"
 #include "BeadClass.h"
-#include "IO/InputFile.h"
-#include "IO/IO.h"
+#include "IO/InputClass.h"
+#include "IO/IOClass.h"
 
 typedef void (Bead::*BeadMemFn)();
 

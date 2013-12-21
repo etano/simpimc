@@ -2,8 +2,8 @@
 #define WriteClass_H
 
 #include "EventClass.h"
-#include "IO/InputFile.h"
-#include "IO/IO.h"
+#include "IO/InputClass.h"
+#include "IO/IOClass.h"
 
 class Write : public Event
 {

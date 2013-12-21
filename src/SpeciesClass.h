@@ -2,7 +2,7 @@
 #define SpeciesClass_H
 
 #include "config.h"       // Standard libraries
-#include "IO/InputFile.h"
+#include "IO/InputClass.h"
 
 class Species
 {

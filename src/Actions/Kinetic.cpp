@@ -5,7 +5,7 @@ void Kinetic::Init()
   nImages = in.get<int>("nImages");
 }
 
-void Kinetic::DActionDBeta()
+RealType Kinetic::DActionDBeta()
 {
   RealType tot = 0.;
   Tvector dr;

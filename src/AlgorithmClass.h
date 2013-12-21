@@ -3,17 +3,19 @@
 
 #include <iostream>
 #include "config.h"
-#include "IO/InputFile.h"
-#include "IO/IO.h"
-#include "PathClass.h" // paths class
-#include "RNG/RNG.h" // RNG class
-#include "Moves/MoveClass.h" // moves class
-#include "Moves/BisectClass.h" // moves class
-#include "Observables/ObservableClass.h" // observables class
-#include "Observables/EnergyClass.h" // observables class
+#include "PathClass.h"
 #include "LoopClass.h"
 #include "EventClass.h"
 #include "WriteClass.h"
+#include "IO/InputClass.h"
+#include "IO/IOClass.h"
+#include "RNG/RNGClass.h"
+#include "Actions/ActionClass.h"
+#include "Actions/KineticClass.h"
+#include "Moves/MoveClass.h"
+#include "Moves/BisectClass.h"
+#include "Observables/ObservableClass.h"
+#include "Observables/EnergyClass.h"
 
 class Algorithm
 {
