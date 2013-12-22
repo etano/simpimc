@@ -24,7 +24,7 @@ public:
     : path(tmpPath), in(tmpIn), out(tmpOut)
   {
     Name = in.get<string>("Name");
-    out.CreateGroup(Name);
+    out.CreateGroup("Actions/"+Name);
   }
 
   string Name;

@@ -25,7 +25,7 @@ void Energy::Write()
   RealType norm = 1./(path.nBead*nMeasure);
   RealType E = 0.;
   for (int i=0; i<actionList.size(); ++i) {
-    Es[i] /= norm;
+    Es[i] *= norm;
     E += Es[i];
   }
 

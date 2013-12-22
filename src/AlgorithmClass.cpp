@@ -9,6 +9,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   path.Init(in, out);
 
   // Initialize Actions
+  out.CreateGroup("Actions");
   vector<Input> actionInputs = in.getObjectList("Input.Actions");
   for (int i=0; i<actionInputs.size(); ++i) {
     string type = actionInputs[i].get<string>("Type");
