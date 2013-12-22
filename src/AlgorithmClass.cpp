@@ -15,6 +15,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
     string type = actionInputs[i].get<string>("Type");
     if (type == "Kinetic")
       actions.push_back(new Kinetic(path,actionInputs[i],out));
+    else if (type == "Trap")
+      actions.push_back(new Trap(path,actionInputs[i],out));
     else
       std::cerr << "Warning: Unrecognized Action, " << type << endl;
   }

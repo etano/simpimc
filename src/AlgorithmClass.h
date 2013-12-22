@@ -12,6 +12,7 @@
 #include "RNG/RNGClass.h"
 #include "Actions/ActionClass.h"
 #include "Actions/KineticClass.h"
+#include "Actions/TrapClass.h"
 #include "Moves/MoveClass.h"
 #include "Moves/BisectClass.h"
 #include "Observables/ObservableClass.h"

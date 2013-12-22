@@ -215,6 +215,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Stats.cpp
   src/Actions/ActionClass.cpp
   src/Actions/KineticClass.cpp
+  src/Actions/TrapClass.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp
   src/Observables/ObservableClass.cpp
