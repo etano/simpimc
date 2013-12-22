@@ -43,7 +43,7 @@ RealType Kinetic::DActionDBeta()
     }
   }
 
-  return path.nPartnBeadnDOver2Tau + tot;
+  return (path.nPart*path.nBead*path.nD/(2.*path.tau)) + tot;
 }
 
 RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)

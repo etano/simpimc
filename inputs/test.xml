@@ -33,6 +33,11 @@
       <Type>Kinetic</Type>
       <nImages>0</nImages>
     </Action>
+    <Action>
+      <Name>Trap</Name>
+      <Type>Trap</Type>
+      <omega>1.</omega>
+    </Action>
   </Actions>
 
   <Moves>
