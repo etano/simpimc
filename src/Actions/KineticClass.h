@@ -20,7 +20,7 @@ public:
   // Functions
   virtual void Init();
   virtual RealType DActionDBeta();
-  virtual RealType Action(int slice1, int slice2, const Array<int,1> &activeParticles, int level);
+  virtual RealType GetAction(int b0, int b1, vector<int> &particles, int level);
   virtual void Write();
 };
 

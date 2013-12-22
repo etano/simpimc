@@ -12,7 +12,7 @@ private:
 protected:
 public:
   Energy(Path &tmpPath, vector<Action*> &tmpActionList, Input &in, IOClass &out)
-    : actionlist(tmpActionList), Observable(tmpPath, in, out)
+    : actionList(tmpActionList), Observable(tmpPath, in, out)
   {
     Init();
   }

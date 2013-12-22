@@ -27,6 +27,14 @@
     </Species>
   </Particles>
 
+  <Actions>
+    <Action>
+      <Name>Kinetic</Name>
+      <Type>Kinetic</Type>
+      <nImages>0</nImages>
+    </Action>
+  </Actions>
+
   <Moves>
     <Move>
       <Name>Bisect1</Name>

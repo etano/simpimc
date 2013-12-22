@@ -10,11 +10,11 @@ SET(CMAKE_VERBOSE_MAKEFILE OFF)
 #-------------------------------------------------------------------
 
 SET(PRECISION double) #double float
-SET(USE_MPI FALSE)
-SET(USE_OPENMP FALSE)
+SET(USE_MPI TRUE)
+SET(USE_OPENMP TRUE)
 SET(QMC_BUILD_STATIC FALSE)
 SET(NDIM 2)
-SET(COMPILER_MAKE "CLANG") # INTEL, GNU, or IBM
+SET(COMPILER_MAKE "INTEL") # INTEL, GNU, or IBM
 
 #-------------------------------------------------------------------
 # Compilers

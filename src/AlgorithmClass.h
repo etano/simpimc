@@ -29,6 +29,9 @@ public:
   std::vector<Event*> events;
   Loop mainLoop;
 
+  // Actions
+  std::vector<Action*> actions;
+
   // Datastructure
   Path path;
 

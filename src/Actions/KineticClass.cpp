@@ -1,4 +1,4 @@
-#include "Kinetic.h"
+#include "KineticClass.h"
 
 void Kinetic::Init()
 {
@@ -7,6 +7,7 @@ void Kinetic::Init()
 
 RealType Kinetic::DActionDBeta()
 {
+  cout << "HI" << endl;
   RealType tot = 0.;
   Tvector dr;
   for (int iP=0; iP<path.nPart; iP+=1) {
@@ -42,11 +43,12 @@ RealType Kinetic::DActionDBeta()
       tot += scalarNumSum/gaussProd;
     }
   }
+  cout << "HI" << tot << endl;
 
   return path.nPartnBeadnDOver2Tau + tot;
 }
 
-RealType Kinetic::Action(int b0, int b1, vector<int> &particles, int level);
+RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
 {
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
@@ -59,7 +61,7 @@ RealType Kinetic::Action(int b0, int b1, vector<int> &particles, int level);
       for (int iB=b0; iB<b1; iB+=skip) {
         path.Dr(path.bead(iP,iB),path.bead(iP,iB)->nextB(skip),dr);
         RealType gaussProd = 1.;
-        for (int iD=0; iD<nD; iD++) {
+        for (int iD=0; iD<path.nD; iD++) {
           RealType gaussSum = 0.;
           for (int image=-nImages; image<=nImages; image++) {
             RealType dist = dr(iD) + (RealType)image*path.L;
@@ -75,7 +77,7 @@ RealType Kinetic::Action(int b0, int b1, vector<int> &particles, int level);
   return tot;
 }
 
-void Kinetic::Write();
+void Kinetic::Write()
 {
 
 }

@@ -1,4 +1,4 @@
-#include "RNG.h"
+#include "RNGClass.h"
 
 // All functions have been inlined
 

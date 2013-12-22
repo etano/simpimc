@@ -2,8 +2,8 @@
 #define ActionClass_H
 
 #include "../PathClass.h"
-#include "../IO/InputFile.h"
-#include "../IO/IO.h"
+#include "../IO/InputClass.h"
+#include "../IO/IOClass.h"
 
 class Action
 {
@@ -32,7 +32,7 @@ public:
   // Functions
   virtual void Init() {};
   virtual RealType DActionDBeta() {};
-  virtual RealType Action() {};
+  virtual RealType GetAction(int b0, int b1, vector<int> &particles, int level) {};
   virtual void Write() {};
 };
 

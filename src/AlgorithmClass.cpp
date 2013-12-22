@@ -10,7 +10,6 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
 
   // Initialize Actions
   vector<Input> actionInputs = in.getObjectList("Input.Actions");
-  vector<Action*> actions;
   for (int i=0; i<actionInputs.size(); ++i) {
     string type = actionInputs[i].get<string>("Type");
     if (type == "Kinetic")
