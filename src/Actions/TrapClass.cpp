@@ -1,11 +1,11 @@
-#include "KineticClass.h"
+#include "TrapClass.h"
 
-void Kinetic::Init()
+void Trap::Init()
 {
-  nImages = in.get<int>("nImages");
+  omega = in.get<RealType>("omega");
 }
 
-RealType Kinetic::DActionDBeta()
+RealType Trap::DActionDBeta()
 {
   RealType tot = 0.;
   Tvector dr;
@@ -46,7 +46,7 @@ RealType Kinetic::DActionDBeta()
   return path.nPartnBeadnDOver2Tau + tot;
 }
 
-RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
+RealType Trap::GetAction(int b0, int b1, vector<int> &particles, int level)
 {
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
@@ -75,7 +75,7 @@ RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
   return tot;
 }
 
-void Kinetic::Write()
+void Trap::Write()
 {
 
 }
