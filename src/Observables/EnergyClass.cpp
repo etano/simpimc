@@ -1,6 +1,6 @@
 #include "EnergyClass.h"
 
-void Energy::Init()
+void Energy::Init(Input &in)
 {
   Es.resize(actionList.size());
   Reset();
@@ -29,15 +29,15 @@ void Energy::Write()
     E += Es[i];
   }
 
-  if (FirstTime) {
-    FirstTime = 0;
-    out.CreateExtendableDataSet("/"+name+"/", "Total", E);
+  if (firstTime) {
+    firstTime = 0;
+    out.CreateExtendableDataSet("/Observables/"+name+"/", "Total", E);
     for (int i=0; i<actionList.size(); ++i)
-      out.CreateExtendableDataSet("/"+name+"/", actionList[i]->name, Es[i]);
+      out.CreateExtendableDataSet("/Observables/"+name+"/", actionList[i]->name, Es[i]);
   } else {
-    out.AppendDataSet("/"+name+"/", "Total", E);
+    out.AppendDataSet("/Observables/"+name+"/", "Total", E);
     for (int i=0; i<actionList.size(); ++i)
-      out.AppendDataSet("/"+name+"/", actionList[i]->name, Es[i]);
+      out.AppendDataSet("/Observables/"+name+"/", actionList[i]->name, Es[i]);
   }
 
   Reset();

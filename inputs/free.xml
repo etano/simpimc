@@ -10,7 +10,7 @@
     <Action name="Kinetic" type="Kinetic" nImages="0" />
   </Actions>
   <Moves>
-    <Move name="Bisect" type="Bisect" />
+    <Move name="Bisect" type="Bisect" maxLevel="2" />
   </Moves>
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />

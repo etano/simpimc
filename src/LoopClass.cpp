@@ -45,9 +45,7 @@ void Loop::DoEvent()
 {
   vector<Event*>::iterator iter;
   for (int i=0; i<nSteps; i++) {
-    //cout << i << " ";
     for (iter=events.begin(); iter!=events.end(); ++iter) {
-      //cout << (*iter)->name << endl;
       (*iter)->DoEvent();
     }
   }

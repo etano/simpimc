@@ -29,6 +29,12 @@ public:
     return in;
   }
 
+  inline string getString()
+  {
+    string xmlString = string(xNode.createXMLString(true));
+    return xmlString;
+  }
+
   template <class T>
   inline T getAttribute(string name)
   {

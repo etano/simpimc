@@ -22,6 +22,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   }
 
   // Initialize Moves
+  out.CreateGroup("Moves");
   vector<Input> moveInputs = in.getChild("Moves").getChildList("Move");
   for (int i=0; i<moveInputs.size(); ++i) {
     string type = moveInputs[i].getAttribute<string>("type");
@@ -32,6 +33,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   }
 
   // Initialize Observables
+  out.CreateGroup("Observables");
   vector<Input> observableInputs = in.getChild("Observables").getChildList("Observable");
   for (int i=0; i<observableInputs.size(); ++i) {
     string type = observableInputs[i].getAttribute<string>("type");
@@ -53,10 +55,6 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
 
 void Algorithm::Run()
 {
-  ////////////////////////
-  /* Main Loop Settings */
-  ////////////////////////
-
   // Set up time loop
   time_t start, end;
   time (&start);

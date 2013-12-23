@@ -13,47 +13,36 @@ class Move : public Event
 private:
 
 protected:
-  // Path
   Path& path;
-
-  // RNG
   RNG& rng;
+  IOClass& out;
 
   vector<Action*> &actionList;
 public:
   // Constructor
-  Move(Path &tmpPath, RNG &tmpRNG, vector<Action*> &tmpActionList,  Input &in, IOClass &out)
-    : Event(), path(tmpPath), rng(tmpRNG), actionList(tmpActionList)
+  Move(Path &tmpPath, RNG &tmpRNG, vector<Action*> &tmpActionList,  Input &in, IOClass &tmpOut)
+    : Event(), path(tmpPath), rng(tmpRNG), actionList(tmpActionList), out(tmpOut)
   {
-    Init(in);
+    name = in.getAttribute<string>("name");
+    out.CreateGroup("Moves/"+name);
+    firstTime = 1;
+    Reset();
   }
-  void Init(Input &in);
 
   // Moves
-  unsigned int moveSkip;
+  inline void DoEvent() { MakeMove(); }
+  virtual void Init(Input &in) {};
   virtual void MakeMove() {};
-  inline void DoEvent() {MakeMove();}
-
-  // Equilibration
-  RealType perAcceptDesired;
-  unsigned int nEqSweep;
-  unsigned int nEqStep;
-  RealType stepSize;
-  void Equilibrate();
 
   // Acceptance
-  unsigned int nAttempt;
-  unsigned int nAccept;
-  RealType perAccept;
-  void resetCounters();
+  int timeSpent;
+  bool firstTime;
+  unsigned int nAttempt, nAccept;
   RealType getPerAccept();
+  void Reset();
 
   // Write
-  virtual void Write() {};
-
-  // Permutation Functions
-  void assignParticleLabels();
-  void setPerm(const int permType, int* perm, int* iPerm, const int i, const int j, const int k);
+  void Write();
 };
 
 #endif

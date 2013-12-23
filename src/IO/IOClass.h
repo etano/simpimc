@@ -8,7 +8,11 @@ class IOClass
 {
 public:
   H5::H5File file;
-  inline void load(H5::H5File tmpFile) { file = tmpFile; }
+  inline void load(std::string& outputPrefix)
+  {
+    H5::H5File outFile(outputPrefix+".h5", H5F_ACC_TRUNC);
+    file = outFile;
+  }
 
   /// Gets for HDF5 traits
   // Get type

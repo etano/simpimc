@@ -1,6 +1,6 @@
 #include "TrapClass.h"
 
-void Trap::Init()
+void Trap::Init(Input &in)
 {
   omega = in.getAttribute<RealType>("omega");
 }

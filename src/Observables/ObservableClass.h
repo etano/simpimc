@@ -11,29 +11,26 @@ class Observable : public Event
 private:
 
 protected:
-  // Path
   Path& path;
-
-  // IO
-  Input &in;
   IOClass &out;
 
-  bool FirstTime;
-  unsigned int nMeasure;
 public:
   // Constructor
-  Observable(Path &tmpPath, Input &tmpIn, IOClass &tmpOut)
-    : Event(), path(tmpPath), in(tmpIn), out(tmpOut)
+  Observable(Path &tmpPath, Input &in, IOClass &tmpOut)
+    : Event(), path(tmpPath), out(tmpOut)
   {
     name = in.getAttribute<string>("name");
-    out.CreateGroup(name);
-    FirstTime = 1;
+    out.CreateGroup("Observables/"+name);
+    firstTime = 1;
     nMeasure = 0;
   }
 
+  bool firstTime;
+  int nMeasure, timeSpent;
+
   // Functions
   inline void DoEvent() { Accumulate(); };
-  virtual void Init() {};
+  virtual void Init(Input &in) {};
   virtual void Accumulate() {};
   virtual void Reset() {};
   virtual void Write() {};

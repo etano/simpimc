@@ -15,12 +15,13 @@ public:
   Bisect(Path &tmpPath, RNG &tmpRNG, vector<Action*> &actionList, Input &in, IOClass &out)
     : Move(tmpPath, tmpRNG, actionList, in, out)
   {
-    stepSize = floor(log(path.nBead/2.0)/log(2));
+    Init(in);
   }
 
-  // Make move
+  int maxLevel;
+
+  virtual void Init(Input &in);
   virtual void MakeMove();
-  virtual void Write();
 };
 
 #endif

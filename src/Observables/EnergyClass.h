@@ -14,10 +14,10 @@ public:
   Energy(Path &tmpPath, vector<Action*> &tmpActionList, Input &in, IOClass &out)
     : actionList(tmpActionList), Observable(tmpPath, in, out)
   {
-    Init();
+    Init(in);
   }
 
-  virtual void Init();
+  virtual void Init(Input &in);
   virtual void Reset();
   virtual void Accumulate();
   virtual void Write();

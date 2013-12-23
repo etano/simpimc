@@ -2,13 +2,12 @@
 
 void Simulation::SetupIO(string inFile)
 {
-  // In
+  // Input
   in.load(inFile);
 
-  // Out
+  // Output
   string outputPrefix = in.getChild("IO").getAttribute<string>("outputPrefix");
-  H5::H5File outFile(outputPrefix+".h5", H5F_ACC_TRUNC);
-  out.load(outFile);
+  out.load(outputPrefix);
 }
 
 void Simulation::BuildMPIModel()

@@ -1,31 +1,32 @@
 #include "BisectClass.h"
 
-void Bisect::Write()
+void Bisect::Init(Input &in)
 {
+  maxLevel = in.getAttribute<int>("maxLevel");
 }
 
 void Bisect::MakeMove()
 {
-  for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-    nAccept += DoBisect(iPart);
+  for (unsigned int iP = 0; iP < path.nPart; iP += 1) {
+    nAccept += DoBisect(iP);
     nAttempt++;
   }
 }
 
 // Bisection Move
-int Bisect::DoBisect( const int iPart )
+int Bisect::DoBisect(const int iP)
 {
   unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
-  unsigned int nLevel = int(stepSize);
+  unsigned int nLevel = maxLevel;
   //nLevel = 1;
   unsigned int nBisectBeads = pow(2,nLevel); // Number of beads in bisection
   unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
   vector<int> particles;
-  particles.push_back(iPart);
+  particles.push_back(iP);
 
   // Set up pointers
-  Bead *beadI = path(iPart,bead0);
+  Bead *beadI = path(iP,bead0);
   Bead *beadF = beadI -> nextB(nBisectBeads);
 
   // Store coordinates

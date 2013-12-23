@@ -14,14 +14,13 @@ protected:
   Path& path;
 
   // IO
-  Input &in;
   IOClass &out;
 
   bool FirstTime;
 public:
   // Constructor
-  Action(Path &tmpPath, Input &tmpIn, IOClass &tmpOut)
-    : path(tmpPath), in(tmpIn), out(tmpOut)
+  Action(Path &tmpPath, Input &in, IOClass &tmpOut)
+    : path(tmpPath), out(tmpOut)
   {
     name = in.getAttribute<string>("name");
     out.CreateGroup("Actions/"+name);
@@ -30,7 +29,7 @@ public:
   string name;
 
   // Functions
-  virtual void Init() {};
+  virtual void Init(Input &in) {};
   virtual RealType DActionDBeta() {};
   virtual RealType GetAction(int b0, int b1, vector<int> &particles, int level) {};
   virtual void Write() {};

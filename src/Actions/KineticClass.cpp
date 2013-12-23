@@ -1,8 +1,9 @@
 #include "KineticClass.h"
 
-void Kinetic::Init()
+void Kinetic::Init(Input &in)
 {
   nImages = in.getAttribute<int>("nImages");
+  out.Write("/Actions/"+name+"/nImages", nImages);
 }
 
 RealType Kinetic::DActionDBeta()
