@@ -25,7 +25,7 @@ void Move::resetCounters()
   nAttempt = 0;
 }
 
-double Move::getPerAccept()
+RealType Move::getPerAccept()
 {
   perAccept = (nAccept*1.) / (nAttempt*1.);  // Percentage accepted
   return perAccept;

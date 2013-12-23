@@ -3,14 +3,14 @@
 void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
 {
 
-  string outputPrefix = in.getNode("IO").getAttribute<string>("outputPrefix");
+  string outputPrefix = in.getChild("IO").getAttribute<string>("outputPrefix");
 
   // Initialize Path
   path.Init(in, out);
 
   // Initialize Actions
   out.CreateGroup("Actions");
-  vector<Input> actionInputs = in.getNode("Actions").getNodeList("Action");
+  vector<Input> actionInputs = in.getChild("Actions").getChildList("Action");
   for (int i=0; i<actionInputs.size(); ++i) {
     string type = actionInputs[i].getAttribute<string>("type");
     if (type == "Kinetic")
@@ -22,7 +22,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   }
 
   // Initialize Moves
-  vector<Input> moveInputs = in.getNode("Moves").getNodeList("Move");
+  vector<Input> moveInputs = in.getChild("Moves").getChildList("Move");
   for (int i=0; i<moveInputs.size(); ++i) {
     string type = moveInputs[i].getAttribute<string>("type");
     if (type == "Bisect")
@@ -32,7 +32,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   }
 
   // Initialize Observables
-  vector<Input> observableInputs = in.getNode("Observables").getNodeList("Observable");
+  vector<Input> observableInputs = in.getChild("Observables").getChildList("Observable");
   for (int i=0; i<observableInputs.size(); ++i) {
     string type = observableInputs[i].getAttribute<string>("type");
     if (type == "Energy")
@@ -45,7 +45,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   events.push_back(new Write(out,events));
 
   // Initialize Algorithm
-  vector<Input> loopList = in.getNode("Algorithm").getNodeList("Loop");
+  vector<Input> loopList = in.getChild("Algorithm").getChildList("Loop");
   for (int i=0; i<loopList.size(); ++i)
     mainLoop.Init(loopList[i],events);
 }
@@ -61,7 +61,7 @@ void Algorithm::Run()
   time_t start, end;
   time (&start);
   time (&end);
-  double timeDif = difftime (end,start);
+  RealType timeDif = difftime (end,start);
 
   mainLoop.DoEvent();
 }

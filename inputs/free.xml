@@ -3,23 +3,18 @@
   <IO outputPrefix="test" />
   <Parallel procsPerGroup="1" />
   <System nD="3" nBead="10" beta="1.0" L="10.0" PBC="1" />
-
   <Particles>
     <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
   </Particles>
-
   <Actions>
     <Action name="Kinetic" type="Kinetic" nImages="0" />
   </Actions>
-
   <Moves>
     <Move name="Bisect" type="Bisect" />
   </Moves>
-
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />
   </Observables>
-
   <Algorithm>
     <Loop nStep="10">
       <Loop nStep="1000">
@@ -31,5 +26,4 @@
       <Write />
     </Loop>
   </Algorithm>
-
 </Input>

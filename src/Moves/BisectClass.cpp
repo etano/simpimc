@@ -38,9 +38,9 @@ int Bisect::DoBisect( const int iPart )
 
   // Perform the bisection (move exactly through kinetic action)
   int skip;
-  double tauEff, sigma, sigma2;
-  double lambda = beadI->species.lambda;
-  double VA[nLevel], VB[nLevel], dA[nLevel+1], dAold;
+  RealType tauEff, sigma, sigma2;
+  RealType lambda = beadI->species.lambda;
+  RealType VA[nLevel], VB[nLevel], dA[nLevel+1], dAold;
   dA[nLevel] = 0.0;
   dAold = 0.0;
   Bead *beadB, *beadC;

@@ -35,18 +35,18 @@ public:
   inline void DoEvent() {MakeMove();}
 
   // Equilibration
-  double perAcceptDesired;
+  RealType perAcceptDesired;
   unsigned int nEqSweep;
   unsigned int nEqStep;
-  double stepSize;
+  RealType stepSize;
   void Equilibrate();
 
   // Acceptance
   unsigned int nAttempt;
   unsigned int nAccept;
-  double perAccept;
+  RealType perAccept;
   void resetCounters();
-  double getPerAccept();
+  RealType getPerAccept();
 
   // Write
   virtual void Write() {};

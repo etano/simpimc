@@ -22,7 +22,7 @@ public:
 
   inline string getName() { return string(xNode.getName()); }
 
-  inline Input getNode(string name)
+  inline Input getChild(string name)
   {
     Input in;
     in.xNode = xNode.getChildNode(name.c_str());
@@ -50,7 +50,7 @@ public:
       return convertConstChar<T>(i);
   }
 
-  inline vector<Input> getNodeList(string name) {
+  inline vector<Input> getChildList(string name) {
     vector<Input> ins;
     int n = xNode.nChildNode(name.c_str());
     for (int i=0; i<n; i++) {
