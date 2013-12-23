@@ -31,13 +31,13 @@ void Energy::Write()
 
   if (FirstTime) {
     FirstTime = 0;
-    out.CreateExtendableDataSet("/"+Name+"/", "Total", E);
+    out.CreateExtendableDataSet("/"+name+"/", "Total", E);
     for (int i=0; i<actionList.size(); ++i)
-      out.CreateExtendableDataSet("/"+Name+"/", actionList[i]->Name, Es[i]);
+      out.CreateExtendableDataSet("/"+name+"/", actionList[i]->name, Es[i]);
   } else {
-    out.AppendDataSet("/"+Name+"/", "Total", E);
+    out.AppendDataSet("/"+name+"/", "Total", E);
     for (int i=0; i<actionList.size(); ++i)
-      out.AppendDataSet("/"+Name+"/", actionList[i]->Name, Es[i]);
+      out.AppendDataSet("/"+name+"/", actionList[i]->name, Es[i]);
   }
 
   Reset();

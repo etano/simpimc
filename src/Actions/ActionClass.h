@@ -23,11 +23,11 @@ public:
   Action(Path &tmpPath, Input &tmpIn, IOClass &tmpOut)
     : path(tmpPath), in(tmpIn), out(tmpOut)
   {
-    Name = in.get<string>("Name");
-    out.CreateGroup("Actions/"+Name);
+    name = in.getAttribute<string>("name");
+    out.CreateGroup("Actions/"+name);
   }
 
-  string Name;
+  string name;
 
   // Functions
   virtual void Init() {};

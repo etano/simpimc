@@ -2,18 +2,18 @@
 
 void Path::Init(Input &in, IOClass &out)
 {
-  nD = in.get<int>("Input.System.nD");
-  nBead = in.get<int>("Input.System.nBead");
-  beta = in.get<RealType>("Input.System.beta");
-  L = in.get<RealType>("Input.System.L");
-  PBC = in.get<int>("Input.System.PBC", 1);
+  nD = in.getNode("System").getAttribute<int>("nD");
+  nBead = in.getNode("System").getAttribute<int>("nBead");
+  beta = in.getNode("System").getAttribute<RealType>("beta");
+  L = in.getNode("System").getAttribute<RealType>("L");
+  PBC = in.getNode("System").getAttribute<int>("PBC", 1);
 
   // Constants
   tau = beta/(1.*nBead);
 
   // Initialize Particles
   nPart = 0;
-  vector<Input> speciesInput = in.getObjectList("Input.Particles");
+  vector<Input> speciesInput = in.getNode("Particles").getNodeList("Species");
   nSpecies = speciesInput.size();
   for (int iS=0; iS<nSpecies; iS+=1) {
     speciesList.push_back(new Species(speciesInput[iS],nBead,nD));

@@ -2,7 +2,7 @@
 
 void Move::Init(Input &in)
 {
-  Name = in.get<string>("Name");
+  name = in.getAttribute<string>("name");
 }
 
 void Move::Equilibrate()
@@ -15,7 +15,7 @@ void Move::Equilibrate()
     stepSize *= 1.0 - perAcceptDesired + perAccept; // Recalculate step size
     if (stepSize > path.maxLevel) stepSize = path.maxLevel;
   }
-  std::cout << Name << ": " << stepSize << ", Percent Accepted: " << perAccept << "\n";
+  std::cout << name << ": " << stepSize << ", Percent Accepted: " << perAccept << "\n";
   resetCounters();
 }
 

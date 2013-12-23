@@ -2,7 +2,7 @@
 
 void Kinetic::Init()
 {
-  nImages = in.get<int>("nImages");
+  nImages = in.getAttribute<int>("nImages");
 }
 
 RealType Kinetic::DActionDBeta()

@@ -2,75 +2,76 @@
 #define INPUTFILE_H
 
 #include <string>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/foreach.hpp>
 #include "../config.h"
+#include "xmlParser.h"
+
+template <class T>
+inline T convertConstChar(const char * val) { return val; }
+template <>
+inline string convertConstChar(const char * val) { return string(val); }
+template <>
+inline RealType convertConstChar(const char * val) { return atof(val); }
+template <>
+inline int convertConstChar(const char * val) { return atoi(val); }
 
 class Input
 {
 public:
-  void load(const std::string &filename);
-  string val;
-  boost::property_tree::ptree pt;
+  void load(const string &filename);
+  XMLNode xNode;
+
+  inline string getName() { return string(xNode.getName()); }
+
+  inline Input getNode(string name)
+  {
+    Input in;
+    in.xNode = xNode.getChildNode(name.c_str());
+    return in;
+  }
 
   template <class T>
-  inline T get(string name) { return pt.get<T>(name); }
+  inline T getAttribute(string name)
+  {
+    const char* i = xNode.getAttribute(name.c_str());
+    if (i == NULL) {
+      cerr << "ERROR: " << name << " not found in input!" << endl;
+      abort();
+    } else
+      return convertConstChar<T>(i);
+  }
 
   template <class T>
-  inline T get(string name, T deflt) { return pt.get<T>(name,deflt); }
-
-  template <class T>
-  inline T getValue() { return pt.get_value<T>(); }
-
-  inline string getKey() { return val; }
-
-  template <class T>
-  inline std::vector<T> getList(string name) {
-    vector<T> vals;
-    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(name))
-      vals.push_back(v.second.data());
-    return vals;
+  inline T getAttribute(string name, T deflt)
+  {
+    const char* i = xNode.getAttribute(name.c_str());
+    if (i == NULL)
+      return deflt;
+    else
+      return convertConstChar<T>(i);
   }
 
-  inline vector<Input> getObjectList(string name) {
-    vector<Input> vals;
-    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(name)) {
-      Input tmpIn;
-      tmpIn.pt = v.second;
-      vals.push_back(tmpIn);
+  inline vector<Input> getNodeList(string name) {
+    vector<Input> ins;
+    int n = xNode.nChildNode(name.c_str());
+    for (int i=0; i<n; i++) {
+      Input in;
+      in.xNode = xNode.getChildNode(name.c_str(), i);
+      ins.push_back(in);
     }
-    return vals;
+    return ins;
   }
 
-  inline void convertToVector(vector<pair<string,string> > &v) {
-    boost::property_tree::ptree::const_iterator end = pt.end();
-    for (boost::property_tree::ptree::const_iterator it = pt.begin(); it != end; ++it) {
-      Input tmpIn;
-      v.push_back(make_pair(it->first,it->second.get_value<std::string>()));
-      tmpIn.pt = it->second;
-      tmpIn.convertToVector(v);
+  inline vector<Input> getChildList() {
+    vector<Input> ins;
+    int n = xNode.nChildNode();
+    for (int i=0; i<n; i++) {
+      Input in;
+      in.xNode = xNode.getChildNode(i);
+      ins.push_back(in);
     }
+    return ins;
   }
 
-  inline void getInList(vector<Input*> &inList) {
-    boost::property_tree::ptree::const_iterator end = pt.end();
-    for (boost::property_tree::ptree::const_iterator it = pt.begin(); it != end; ++it) {
-      Input *tmpIn = new Input();
-      tmpIn->val = it->first;
-      tmpIn->pt = it->second;
-      inList.push_back(tmpIn);
-    }
-  }
-
-  inline Input getObject(string parent, string child) {
-    Input tmpIn;
-    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(parent)) {
-      if (v.first == child)
-        tmpIn.pt = v.second;
-    }
-    return tmpIn;
-  }
 
 };
 

@@ -1,67 +1,34 @@
 <Input>
-  <Seed>12345</Seed>
-
-  <IO>
-    <OutputPrefix>test</OutputPrefix>
-  </IO>
-
-  <Parallel>
-    <ProcsPerGroup>1</ProcsPerGroup>
-  </Parallel>
-
-  <System>
-    <nD>3</nD>
-    <nBead>10</nBead>
-    <beta>1.0</beta>
-    <L>10.0</L>
-    <PBC>1</PBC>
-  </System>
+  <RNG seed="12345" />
+  <IO outputPrefix="test" />
+  <Parallel procsPerGroup="1" />
+  <System nD="3" nBead="10" beta="1.0" L="10.0" PBC="1" />
 
   <Particles>
-    <Species>
-      <Name>e</Name>
-      <Type>e</Type>
-      <nPart>1</nPart>
-      <lambda>0.5</lambda>
-      <fermi>0</fermi>
-    </Species>
+    <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
   </Particles>
 
   <Actions>
-    <Action>
-      <Name>Kinetic</Name>
-      <Type>Kinetic</Type>
-      <nImages>0</nImages>
-    </Action>
+    <Action name="Kinetic" type="Kinetic" nImages="0" />
   </Actions>
 
   <Moves>
-    <Move>
-      <Name>Bisect</Name>
-      <Type>Bisect</Type>
-    </Move>
+    <Move name="Bisect" type="Bisect" />
   </Moves>
 
   <Observables>
-    <Observable>
-      <Name>Energy</Name>
-      <Type>Energy</Type>
-      <skip>1</skip>
-    </Observable>
+    <Observable name="Energy" type="Energy" skip="1" />
   </Observables>
 
   <Algorithm>
-    <Loop>
-      <nStep>1000</nStep>
-      <Loop>
-        <nStep>1000</nStep>
-        <Loop>
-          <nStep>10</nStep>
-          <Move>Bisect</Move>
+    <Loop nStep="10">
+      <Loop nStep="1000">
+        <Loop nStep="10">
+          <Move name="Bisect" />
         </Loop>
-        <Observable>Energy</Observable>
+        <Observable name="Energy" />
       </Loop>
-      <Write></Write>
+      <Write />
     </Loop>
   </Algorithm>
 

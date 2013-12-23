@@ -20,7 +20,7 @@ public:
   Write(IOClass &tmpOut, vector<Event*> &tmpEvents)
     : Event(), Out(tmpOut), events(tmpEvents)
   {
-    Name = "Write";
+    name = "Write";
   }
 
   // Functions

@@ -2,7 +2,7 @@
 
 void Trap::Init()
 {
-  omega = in.get<RealType>("omega");
+  omega = in.getAttribute<RealType>("omega");
 }
 
 RealType Trap::DActionDBeta()

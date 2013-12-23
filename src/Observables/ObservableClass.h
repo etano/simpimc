@@ -25,8 +25,8 @@ public:
   Observable(Path &tmpPath, Input &tmpIn, IOClass &tmpOut)
     : Event(), path(tmpPath), in(tmpIn), out(tmpOut)
   {
-    Name = in.get<string>("Name");
-    out.CreateGroup(Name);
+    name = in.getAttribute<string>("name");
+    out.CreateGroup(name);
     FirstTime = 1;
     nMeasure = 0;
   }

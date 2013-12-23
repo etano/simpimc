@@ -3,16 +3,16 @@
 void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
 {
 
-  string outputPrefix = in.get<string>("Input.IO.OutputPrefix");
+  string outputPrefix = in.getNode("IO").getAttribute<string>("outputPrefix");
 
   // Initialize Path
   path.Init(in, out);
 
   // Initialize Actions
   out.CreateGroup("Actions");
-  vector<Input> actionInputs = in.getObjectList("Input.Actions");
+  vector<Input> actionInputs = in.getNode("Actions").getNodeList("Action");
   for (int i=0; i<actionInputs.size(); ++i) {
-    string type = actionInputs[i].get<string>("Type");
+    string type = actionInputs[i].getAttribute<string>("type");
     if (type == "Kinetic")
       actions.push_back(new Kinetic(path,actionInputs[i],out));
     else if (type == "Trap")
@@ -22,9 +22,9 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   }
 
   // Initialize Moves
-  vector<Input> moveInputs = in.getObjectList("Input.Moves");
+  vector<Input> moveInputs = in.getNode("Moves").getNodeList("Move");
   for (int i=0; i<moveInputs.size(); ++i) {
-    string type = moveInputs[i].get<string>("Type");
+    string type = moveInputs[i].getAttribute<string>("type");
     if (type == "Bisect")
       events.push_back(new Bisect(path,rng,actions,moveInputs[i],out));
     else
@@ -32,9 +32,9 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   }
 
   // Initialize Observables
-  vector<Input> observableInputs = in.getObjectList("Input.Observables");
+  vector<Input> observableInputs = in.getNode("Observables").getNodeList("Observable");
   for (int i=0; i<observableInputs.size(); ++i) {
-    string type = observableInputs[i].get<string>("Type");
+    string type = observableInputs[i].getAttribute<string>("type");
     if (type == "Energy")
       events.push_back(new Energy(path,actions,observableInputs[i],out));
     else
@@ -45,7 +45,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   events.push_back(new Write(out,events));
 
   // Initialize Algorithm
-  vector<Input> loopList = in.getObjectList("Input.Algorithm");
+  vector<Input> loopList = in.getNode("Algorithm").getNodeList("Loop");
   for (int i=0; i<loopList.size(); ++i)
     mainLoop.Init(loopList[i],events);
 }

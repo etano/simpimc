@@ -6,14 +6,14 @@ void Simulation::SetupIO(string inFile)
   in.load(inFile);
 
   // Out
-  string outputPrefix = in.get<std::string>("Input.IO.OutputPrefix");
+  string outputPrefix = in.getNode("IO").getAttribute<string>("outputPrefix");
   H5::H5File outFile(outputPrefix+".h5", H5F_ACC_TRUNC);
   out.load(outFile);
 }
 
 void Simulation::BuildMPIModel()
 {
-  procsPerGroup = in.get<int>("Input.Parallel.ProcsPerGroup", 1);
+  procsPerGroup = in.getNode("Parallel").getAttribute<int>("procsPerGroup",1);
   int N = WorldComm.NumProcs();
   assert ((N % procsPerGroup) == 0);
   int nGroups = N/procsPerGroup;
@@ -39,9 +39,9 @@ void Simulation::BuildMPIModel()
 void Simulation::Run()
 {
 #if USE_MPI
-  int seed = in.get<int>("Input.Seed",(int)time(0)*(WorldComm.MyProc()+1));
+  int seed = in.getNode("RNG").getAttribute<int>("Seed",(int)time(0)*(WorldComm.MyProc()+1));
 #else
-  int seed = in.get<int>("Input.Seed",(int)time(0));
+  int seed = in.getNode("RNG").getAttribute<int>("Seed",(int)time(0));
 #endif
   RNG rng(seed);
   algorithm.Init(in, out, rng);

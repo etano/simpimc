@@ -13,7 +13,7 @@ public:
   // Constructor
   Event() {}
 
-  string Name;
+  string name;
   virtual void DoEvent() {};
   virtual void Write() {};
 };
