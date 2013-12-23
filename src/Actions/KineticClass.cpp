@@ -10,9 +10,9 @@ RealType Kinetic::DActionDBeta()
   RealType tot = 0.;
   Tvector dr;
   for (int iP=0; iP<path.nPart; iP+=1) {
-    RealType i4LambdaTau = 1./(4.*path.bead(iP,0)->species.lambda*path.tau);
+    RealType i4LambdaTau = 1./(4.*path(iP,0)->species.lambda*path.tau);
     for (int iB=0; iB<path.nBead; iB+=1) {
-      path.Dr(path.bead(iP,iB),path.bead(iP,iB)->next,dr);
+      path.Dr(path(iP,iB),path(iP,iB)->next,dr);
       RealType gaussProd = 1.;
       Tvector gaussSum, numSum;
       gaussSum.zeros(path.nD);
@@ -48,6 +48,7 @@ RealType Kinetic::DActionDBeta()
 
 RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
 {
+  return 0.;
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
   RealType tot = 0.;
@@ -57,7 +58,7 @@ RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
     if (lambda != 0) {
       RealType i4LambdaTau = 1./(4.*lambda*levelTau);
       for (int iB=b0; iB<b1; iB+=skip) {
-        path.Dr(path.bead(iP,iB),path.bead(iP,iB)->nextB(skip),dr);
+        path.Dr(path(iP,iB),path(iP,iB)->nextB(skip),dr);
         RealType gaussProd = 1.;
         for (int iD=0; iD<path.nD; iD++) {
           RealType gaussSum = 0.;

@@ -1,0 +1,68 @@
+<Input>
+  <Seed>12345</Seed>
+
+  <IO>
+    <OutputPrefix>test</OutputPrefix>
+  </IO>
+
+  <Parallel>
+    <ProcsPerGroup>1</ProcsPerGroup>
+  </Parallel>
+
+  <System>
+    <nD>3</nD>
+    <nBead>10</nBead>
+    <beta>1.0</beta>
+    <L>10.0</L>
+    <PBC>1</PBC>
+  </System>
+
+  <Particles>
+    <Species>
+      <Name>e</Name>
+      <Type>e</Type>
+      <nPart>1</nPart>
+      <lambda>0.5</lambda>
+      <fermi>0</fermi>
+    </Species>
+  </Particles>
+
+  <Actions>
+    <Action>
+      <Name>Kinetic</Name>
+      <Type>Kinetic</Type>
+      <nImages>0</nImages>
+    </Action>
+  </Actions>
+
+  <Moves>
+    <Move>
+      <Name>Bisect</Name>
+      <Type>Bisect</Type>
+    </Move>
+  </Moves>
+
+  <Observables>
+    <Observable>
+      <Name>Energy</Name>
+      <Type>Energy</Type>
+      <skip>1</skip>
+    </Observable>
+  </Observables>
+
+  <Algorithm>
+    <Loop>
+      <nStep>1000</nStep>
+      <Loop>
+        <nStep>1000</nStep>
+        <Loop>
+          <nStep>10</nStep>
+          <Move>Bisect</Move>
+        </Loop>
+        <Observable>Energy</Observable>
+      </Loop>
+      <Write></Write>
+    </Loop>
+  </Algorithm>
+
+</Input>

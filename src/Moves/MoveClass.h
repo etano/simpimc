@@ -6,6 +6,7 @@
 #include "../RNG/RNGClass.h"
 #include "../IO/InputClass.h"
 #include "../IO/IOClass.h"
+#include "../Actions/ActionClass.h"
 
 class Move : public Event
 {
@@ -17,10 +18,12 @@ protected:
 
   // RNG
   RNG& rng;
+
+  vector<Action*> &actionList;
 public:
   // Constructor
-  Move(Path &tmpPath, RNG &tmpRNG, Input &in, IOClass &out)
-    : Event(), path(tmpPath), rng(tmpRNG)
+  Move(Path &tmpPath, RNG &tmpRNG, vector<Action*> &tmpActionList,  Input &in, IOClass &out)
+    : Event(), path(tmpPath), rng(tmpRNG), actionList(tmpActionList)
   {
     Init(in);
   }

@@ -11,7 +11,7 @@ RealType Trap::DActionDBeta()
 
   for (unsigned int iP=0; iP<path.nPart; iP+=1) {
     for (unsigned int iB=0; iB<path.nBead; iB+=1) {
-      tot += dot(path.bead(iP,iB)->r, path.bead(iP,iB)->r);
+      tot += dot(path(iP,iB)->r, path(iP,iB)->r);
     }
   }
 
@@ -27,14 +27,14 @@ RealType Trap::GetAction(int b0, int b1, vector<int> &particles, int level)
     for (int iB=b0; iB<b1; iB+=skip) {
       Tvector dr(path.nD);
       if(path.mode)
-        dr = path.bead(iP,iB)->r;
+        dr = path(iP,iB)->r;
       else
-        dr = path.bead(iP,iB)->rC;
+        dr = path(iP,iB)->rC;
       tot += dot(dr, dr);
     }
   }
 
-  return 0.5*levelTau*omega*omega*(1. + levelTau*levelTau*omega*omega/12.)*tot;
+  return 0.5*levelTau*omega*omega*(1. + path.tau*path.tau*omega*omega/12.)*tot;
 }
 
 void Trap::Write()

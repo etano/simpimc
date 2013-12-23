@@ -26,7 +26,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   for (int i=0; i<moveInputs.size(); ++i) {
     string type = moveInputs[i].get<string>("Type");
     if (type == "Bisect")
-      events.push_back(new Bisect(path,rng,moveInputs[i],out));
+      events.push_back(new Bisect(path,rng,actions,moveInputs[i],out));
     else
       std::cerr << "Warning: Unrecognized Move, " << type << endl;
   }

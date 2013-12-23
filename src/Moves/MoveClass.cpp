@@ -36,11 +36,11 @@ void Move::assignParticleLabels()
 {
   Bead *b;
 
-  for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-    b = path.bead(iPart,0);
-    for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1) {
-      path.bead(iPart,iBead) = b;
-      path.bead(iPart,iBead) -> p = iPart;
+  for (unsigned int iP = 0; iP < path.nPart; iP += 1) {
+    b = path.bead(iP,0);
+    for (unsigned int iB = 0; iB < path.nBead; iB += 1) {
+      path.bead(iP,iB) = b;
+      path.bead(iP,iB) -> p = iP;
       b = b -> next;
     }
   }

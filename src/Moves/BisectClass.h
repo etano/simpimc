@@ -12,8 +12,8 @@ protected:
 
 public:
   // Constructor
-  Bisect(Path &tmpPath, RNG &tmpRNG, Input &in, IOClass &out)
-    : Move(tmpPath, tmpRNG, in, out)
+  Bisect(Path &tmpPath, RNG &tmpRNG, vector<Action*> &actionList, Input &in, IOClass &out)
+    : Move(tmpPath, tmpRNG, actionList, in, out)
   {
     stepSize = floor(log(path.nBead/2.0)/log(2));
   }

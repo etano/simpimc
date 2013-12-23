@@ -203,25 +203,22 @@ LINK_DIRECTORIES(${HDF5_LIB_DIR})
 
 # Create target
 SET (TEMPLATE_SRCS src/main.cpp
-  src/Communication/Communication.cpp
-  src/IO/InputClass.cpp
-  src/SimulationClass.cpp
-  src/PathClass.cpp
   src/AlgorithmClass.cpp
+  src/BeadClass.cpp
   src/LoopClass.cpp
-  src/WriteClass.cpp
+  src/PathClass.cpp
+  src/SimulationClass.cpp
   src/SpeciesClass.cpp
-  src/Action.cpp
-  src/Stats.cpp
+  src/WriteClass.cpp
   src/Actions/ActionClass.cpp
   src/Actions/KineticClass.cpp
   src/Actions/TrapClass.cpp
+  src/Communication/Communication.cpp
+  src/IO/InputClass.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
-  src/BeadClass.cpp
-  src/Fermions.cpp
   src/RNG/RNGClass.cpp
   src/RNG/sfmt.cpp
   src/RNG/mersenne.cpp
