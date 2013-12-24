@@ -39,12 +39,14 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
     string type = observableInputs[i].getAttribute<string>("type");
     if (type == "Energy")
       events.push_back(new Energy(path,actions,observableInputs[i],out));
+    else if (type == "Time")
+      events.push_back(new Time(path,events,observableInputs[i],out));
     else
       std::cerr << "WARNING: Unrecognized observable, " << type << endl;
   }
 
   // Initialize Write
-  events.push_back(new Write(out,events));
+  events.push_back(new Writes(out,events));
 
   // Initialize Algorithm
   vector<Input> loopList = in.getChild("Algorithm").getChildList("Loop");
@@ -55,11 +57,5 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
 
 void Algorithm::Run()
 {
-  // Set up time loop
-  time_t start, end;
-  time (&start);
-  time (&end);
-  RealType timeDif = difftime (end,start);
-
   mainLoop.DoEvent();
 }

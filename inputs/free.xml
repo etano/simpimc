@@ -14,14 +14,16 @@
   </Moves>
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />
+    <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
-    <Loop nStep="10">
-      <Loop nStep="1000">
-        <Loop nStep="10">
+    <Loop nStep="2">
+      <Loop nStep="20">
+        <Loop nStep="200">
           <Move name="Bisect" />
         </Loop>
         <Observable name="Energy" />
+        <Observable name="Time" />
       </Loop>
       <Write />
     </Loop>

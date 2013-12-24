@@ -216,6 +216,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Moves/BisectClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
+  src/Observables/TimeClass.cpp
   src/RNG/RNGClass.cpp
   src/RNG/sfmt.cpp
   src/RNG/mersenne.cpp

@@ -14,6 +14,7 @@ public:
   Event() {}
 
   string name;
+  long timeSpent;
   virtual void DoEvent() {};
   virtual void Write() {};
 };

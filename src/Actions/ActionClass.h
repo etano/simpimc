@@ -1,11 +1,12 @@
 #ifndef ActionClass_H
 #define ActionClass_H
 
+#include "../EventClass.h"
 #include "../PathClass.h"
 #include "../IO/InputClass.h"
 #include "../IO/IOClass.h"
 
-class Action
+class Action : public Event
 {
 private:
 
@@ -33,6 +34,7 @@ public:
   virtual RealType DActionDBeta() {};
   virtual RealType GetAction(int b0, int b1, vector<int> &particles, int level) {};
   virtual void Write() {};
+  void DoEvent() {};
 };
 
 #endif

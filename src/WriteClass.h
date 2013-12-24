@@ -1,11 +1,11 @@
-#ifndef WriteClass_H
-#define WriteClass_H
+#ifndef WritesClass_H
+#define WritesClass_H
 
 #include "EventClass.h"
 #include "IO/InputClass.h"
 #include "IO/IOClass.h"
 
-class Write : public Event
+class Writes : public Event
 {
 private:
 
@@ -17,7 +17,7 @@ protected:
   vector<Event*> &events;
 public:
   // Constructor
-  Write(IOClass &tmpOut, vector<Event*> &tmpEvents)
+  Writes(IOClass &tmpOut, vector<Event*> &tmpEvents)
     : Event(), Out(tmpOut), events(tmpEvents)
   {
     name = "Write";
@@ -25,6 +25,7 @@ public:
 
   // Functions
   void DoEvent();
+  virtual void Write() {};
 };
 
 #endif

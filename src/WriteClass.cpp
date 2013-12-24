@@ -1,6 +1,6 @@
 #include "WriteClass.h"
 
-void Write::DoEvent()
+void Writes::DoEvent()
 {
   vector<Event*>::iterator iter;
   for (iter=events.begin(); iter!=events.end(); ++iter) {

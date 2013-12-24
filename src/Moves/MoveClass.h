@@ -30,12 +30,19 @@ public:
   }
 
   // Moves
-  inline void DoEvent() { MakeMove(); }
+  inline void DoEvent() {
+    struct timeval time;
+    gettimeofday(&time, NULL); // Start Time
+    long totalTime = (time.tv_sec * 1000) + (time.tv_usec / 1000);
+    MakeMove();
+    gettimeofday(&time, NULL); //END-TIME
+    totalTime = (((time.tv_sec * 1000) + (time.tv_usec / 1000)) - totalTime);
+    timeSpent += totalTime;
+  }
   virtual void Init(Input &in) {};
   virtual void MakeMove() {};
 
   // Acceptance
-  int timeSpent;
   bool firstTime;
   unsigned int nAttempt, nAccept;
   RealType getPerAccept();

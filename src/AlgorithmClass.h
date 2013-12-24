@@ -17,6 +17,7 @@
 #include "Moves/BisectClass.h"
 #include "Observables/ObservableClass.h"
 #include "Observables/EnergyClass.h"
+#include "Observables/TimeClass.h"
 
 class Algorithm
 {
@@ -35,7 +36,6 @@ public:
 
   // Datastructure
   Path path;
-
 };
 
 #endif
