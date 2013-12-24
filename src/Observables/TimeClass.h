@@ -8,7 +8,7 @@ class Time : public Observable
 {
 private:
   vector<Event*> &eventList;
-  vector<RealType> eventTimes;
+  RealType start, end;
 protected:
 public:
   Time(Path &tmpPath, vector<Event*> &tmpEventList, Input &in, IOClass &out)

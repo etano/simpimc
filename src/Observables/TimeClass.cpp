@@ -2,43 +2,40 @@
 
 void Time::Init(Input &in)
 {
-  eventTimes.resize(eventList.size());
+  struct timeval time;
+  gettimeofday(&time, NULL); //END-TIME
+  end = time.tv_sec + (time.tv_usec / 1000000.);
   Reset();
+
 }
 
 void Time::Reset()
 {
-  for (int i=0; i<eventTimes.size(); ++i) {
-    eventTimes[i] = 0.;
+  for (int i=0; i<eventList.size(); ++i)
     eventList[i]->timeSpent = 0;
-  }
 
   struct timeval time;
   gettimeofday(&time, NULL); // Start Time
-  timeSpent = (time.tv_sec * 1000) + (time.tv_usec / 1000);
+  start = time.tv_sec + (time.tv_usec / 1000000.);
+  timeSpent += start - end;
 }
 
 void Time::Accumulate()
 {
-  for (int i=0; i<eventTimes.size(); ++i)
-    eventTimes[i] += eventList[i]->timeSpent;
-  struct timeval time;
-  gettimeofday(&time, NULL); //END-TIME
-  timeSpent = (((time.tv_sec * 1000) + (time.tv_usec / 1000)) - timeSpent);
-  //cout << timeSpent << endl;
 }
 
 void Time::Write()
 {
   struct timeval time;
   gettimeofday(&time, NULL); //END-TIME
-  timeSpent = (((time.tv_sec * 1000) + (time.tv_usec / 1000)) - timeSpent);
-  //cout << eventTimes[0] << " " << timeSpent << endl;
+  end = time.tv_sec + (time.tv_usec / 1000000.);
+  RealType totalTime = end - start;
   RealType norm = 1.;
-  //if (timeSpent != 0)
-  //  norm /= timeSpent;
+  if (totalTime != 0)
+    norm /= totalTime;
+  vector<RealType> eventTimes(eventList.size());
   for (int i=0; i<eventTimes.size(); ++i)
-    eventTimes[i] *= norm;
+    eventTimes[i] = eventList[i]->timeSpent * norm;
 
   if (firstTime) {
     firstTime = 0;

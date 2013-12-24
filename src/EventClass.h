@@ -11,10 +11,10 @@ protected:
 
 public:
   // Constructor
-  Event() {}
+  Event() { timeSpent = 0.; }
 
   string name;
-  long timeSpent;
+  RealType timeSpent;
   virtual void DoEvent() {};
   virtual void Write() {};
 };

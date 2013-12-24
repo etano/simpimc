@@ -33,11 +33,11 @@ public:
   inline void DoEvent() {
     struct timeval time;
     gettimeofday(&time, NULL); // Start Time
-    long totalTime = (time.tv_sec * 1000) + (time.tv_usec / 1000);
+    RealType start = time.tv_sec + (time.tv_usec / 1000000.);
     MakeMove();
     gettimeofday(&time, NULL); //END-TIME
-    totalTime = (((time.tv_sec * 1000) + (time.tv_usec / 1000)) - totalTime);
-    timeSpent += totalTime;
+    RealType end = time.tv_sec + (time.tv_usec / 1000000.);
+    timeSpent += end - start;
   }
   virtual void Init(Input &in) {};
   virtual void MakeMove() {};
