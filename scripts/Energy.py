@@ -15,7 +15,7 @@ for fname in sys.argv[1:]:
 
   for EName in ENames:
     try:
-      Es = f['Energy/'+EName][StartCut:]
+      Es = f['Observables/Energy/'+EName][StartCut:]
       EStats[EName].append(Stats.stats(Es))
     except:
       pass

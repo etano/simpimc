@@ -7,10 +7,6 @@
 #include "IO/InputClass.h"
 #include "IO/IOClass.h"
 
-typedef void (Bead::*BeadMemFn)();
-
-#define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
-
 class Path
 {
 private:
@@ -50,7 +46,11 @@ public:
   inline Bead* operator() (int iP, int iB);
   inline void storeR(vector<Bead*> &affBeads);
   inline void restoreR(vector<Bead*> &affBeads);
+  Tvector& GetR(Bead* b);
+  void Dr(Tvector &r0, Tvector &r1, Tvector &dr);
+  void Dr(Bead* b0, Tvector &r1, Tvector &dr);
   void Dr(Bead* b0, Bead* b1, Tvector &dr);
+  void RBar(Bead* b0, Bead* b1, Tvector &rBar);
 
   // Periodic Boundary Condition
   bool PBC;
@@ -58,6 +58,7 @@ public:
 
   // Mode (use copy or true)
   bool mode;
+  inline void SetMode(int m) { mode = m; };
 };
 
 inline Bead* Path::operator() (int iP, int iB)
@@ -93,10 +94,38 @@ inline void Path::restoreR(vector<Bead*>& affBeads)
 }
 
 // Get dr
+inline void Path::RBar(Bead* b0, Bead* b1, Tvector &rBar)
+{
+  Dr(b0, b1, rBar);
+  rBar = GetR(b1) + 0.5*rBar;
+}
+
+// Get r
+inline Tvector& Path::GetR(Bead* b)
+{
+  if (mode)
+    return (b->r);
+  else
+    return (b->rC);
+}
+
+// Get dr
+inline void Path::Dr(Tvector &r0, Tvector &r1, Tvector &dr)
+{
+  dr = r0 - r1;
+  PutInBox(dr);
+}
+
+// Get dr
+inline void Path::Dr(Bead* b0, Tvector &r1, Tvector &dr)
+{
+  Dr(GetR(b0), r1, dr);
+}
+
+// Get dr
 inline void Path::Dr(Bead* b0, Bead* b1, Tvector &dr)
 {
-  dr = b0->r - b1->r;
-  PutInBox(dr);
+  Dr(GetR(b0), GetR(b1), dr);
 }
 
 #endif

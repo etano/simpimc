@@ -30,6 +30,9 @@ void Path::Init(Input &in, IOClass &out)
     beadLoop(iB + nBead) = beadLoop(iB);
   }
 
+  // Initiate mode
+  SetMode(1);
+
   // Initiate beads
   bead.set_size(nPart,nBead);
   for (unsigned int iS=0; iS<nSpecies; iS+=1)

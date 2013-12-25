@@ -49,7 +49,6 @@ RealType Kinetic::DActionDBeta()
 
 RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
 {
-  return 0.;
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
   RealType tot = 0.;
