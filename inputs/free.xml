@@ -17,7 +17,7 @@
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
-    <Loop nStep="10">
+    <Loop nStep="100">
       <Loop nStep="100">
         <Loop nStep="1000">
           <Move name="Bisect" />
