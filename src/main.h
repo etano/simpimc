@@ -2,8 +2,8 @@
 #define MAIN_H
 
 #include <iostream>
-#include "config.h"
-#include "Communication/Communication.h"
+#include "Utils/config.h"
+#include "Utils/Communication/Communication.h"
 #include "SimulationClass.h"
 
 #endif

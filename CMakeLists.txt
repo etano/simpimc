@@ -209,19 +209,19 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Actions/ActionClass.cpp
   src/Actions/KineticClass.cpp
   src/Actions/TrapClass.cpp
-  src/Communication/Communication.cpp
-  src/IO/InputClass.cpp
-  src/IO/xmlParser.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/TimeClass.cpp
-  src/RNG/RNGClass.cpp
-  src/RNG/sfmt.cpp
-  src/RNG/mersenne.cpp
-  src/RNG/userintf.cpp
-  src/RNG/stoc1.cpp)
+  src/Utils/Communication/Communication.cpp
+  src/Utils/IO/InputClass.cpp
+  src/Utils/IO/xmlParser.cpp
+  src/Utils/RNG/RNGClass.cpp
+  src/Utils/RNG/sfmt.cpp
+  src/Utils/RNG/mersenne.cpp
+  src/Utils/RNG/userintf.cpp
+  src/Utils/RNG/stoc1.cpp)
 ADD_EXECUTABLE(simpimc ${TEMPLATE_SRCS})
 TARGET_LINK_LIBRARIES(simpimc ${LAPACK_LIBS} ${ARMA_LIBS} ${HDF5_LIBS})
 

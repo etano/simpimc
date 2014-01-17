@@ -1,7 +1,7 @@
 #ifndef EventClass_H
 #define EventClass_H
 
-#include "config.h"       // Standard libraries
+#include "Utils/config.h"       // Standard libraries
 
 class Event
 {

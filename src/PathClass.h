@@ -1,11 +1,11 @@
 #ifndef PathClass_H
 #define PathClass_H
 
-#include "config.h"       // Standard libraries
 #include "SpeciesClass.h"
 #include "BeadClass.h"
-#include "IO/InputClass.h"
-#include "IO/IOClass.h"
+#include "Utils/config.h"
+#include "Utils/IO/InputClass.h"
+#include "Utils/IO/IOClass.h"
 
 class Path
 {

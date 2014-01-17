@@ -1,8 +1,8 @@
 #ifndef SpeciesClass_H
 #define SpeciesClass_H
 
-#include "config.h"       // Standard libraries
-#include "IO/InputClass.h"
+#include "Utils/config.h"       // Standard libraries
+#include "Utils/IO/InputClass.h"
 
 class Species
 {

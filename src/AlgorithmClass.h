@@ -2,14 +2,14 @@
 #define AlgorithmClass_H
 
 #include <iostream>
-#include "config.h"
 #include "PathClass.h"
 #include "LoopClass.h"
 #include "EventClass.h"
 #include "WriteClass.h"
-#include "IO/InputClass.h"
-#include "IO/IOClass.h"
-#include "RNG/RNGClass.h"
+#include "Utils/config.h"
+#include "Utils/IO/InputClass.h"
+#include "Utils/IO/IOClass.h"
+#include "Utils/RNG/RNGClass.h"
 #include "Actions/ActionClass.h"
 #include "Actions/KineticClass.h"
 #include "Actions/TrapClass.h"

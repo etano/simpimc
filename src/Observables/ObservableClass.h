@@ -3,8 +3,8 @@
 
 #include "../EventClass.h"
 #include "../PathClass.h"
-#include "../IO/InputClass.h"
-#include "../IO/IOClass.h"
+#include "../Utils/IO/InputClass.h"
+#include "../Utils/IO/IOClass.h"
 
 class Observable : public Event
 {
