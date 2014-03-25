@@ -16,7 +16,7 @@ public:
 
   void Init(Input &In, vector<Event*> &eventList);
   void ReadLoop(Input &In, vector<Event*> &eventList);
-  Event* Loop::FindEvent(string name, vector<Event*> &eventList);
+  Event* FindEvent(string name, vector<Event*> &eventList);
   void DoEvent();
 
   int nSteps;

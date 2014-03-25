@@ -31,10 +31,10 @@ public:
   // Functions
   inline void DoEvent() {
     struct timeval time;
-    gettimeofday(&time, NULL); // Start Time
+    //gettimeofday(&time, NULL); // Start Time
     RealType start = time.tv_sec + (time.tv_usec / 1000000.);
     Accumulate();
-    gettimeofday(&time, NULL); //END-TIME
+    //gettimeofday(&time, NULL); //END-TIME
     RealType end = time.tv_sec + (time.tv_usec / 1000000.);
     timeSpent += end - start;
   }
