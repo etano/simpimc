@@ -1,17 +1,18 @@
 <Input>
   <RNG seed="12345" />
-  <IO outputPrefix="SHO" />
+  <IO outputPrefix="H" />
   <Parallel procsPerGroup="1" />
-  <System nD="1" nBead="32" beta="10.0" L="100.0" PBC="0" />
+  <System nD="3" nBead="1000" beta="40.0" L="100.0" PBC="0" />
   <Particles>
     <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
+    <Species name="p" type="p" nPart="1" lambda="0.000272308907224" fermi="0" />
   </Particles>
   <Actions>
     <Action name="Kinetic" type="Kinetic" nImages="0" />
-    <Action name="HarmonicTrap" type="HarmonicTrap" nOrder="4" nImages="0" species="e" omega="1." maxLevel="0" />
+    <Action name="Coulomb" type="Coulomb" nOrder="4" nImages="0" speciesA="e" speciesB="p" Z1Z2="-1" maxLevel="0" />
   </Actions>
   <Moves>
-    <Move name="BisectE" type="Bisect" particles="e" maxLevel="2" />
+    <Move name="BisectE" type="Bisect" species="e" maxLevel="4" />
   </Moves>
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />

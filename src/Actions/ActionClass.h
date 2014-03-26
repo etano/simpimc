@@ -24,10 +24,11 @@ public:
     : path(tmpPath), out(tmpOut)
   {
     name = in.getAttribute<string>("name");
+    type = in.getAttribute<string>("type");
     out.CreateGroup("Actions/"+name);
   }
 
-  string name;
+  string name, type;
 
   // Functions
   virtual void Init(Input &in) {};

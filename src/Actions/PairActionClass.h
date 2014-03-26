@@ -1,23 +1,22 @@
-#ifndef TrapClass_H
-#define TrapClass_H
+#ifndef PairActionClass_H
+#define PairActionClass_H
 
 #include "ActionClass.h"
 
-class Trap : public Action
+class PairAction : public Action
 {
 private:
   int nImages;
   int nOrder;
-  RealType omega;
-  string species;
-  int iSpecies;
-  int offset;
+  string speciesA, speciesB;
+  int iSpeciesA, iSpeciesB;
+  int offsetA, offsetB;
   int maxLevel;
 protected:
 
 public:
   // Constructor
-  Trap(Path &path, Input &in, IOClass &out)
+  PairAction(Path &path, Input &in, IOClass &out)
     : Action(path,in,out)
   {
     Init(in);

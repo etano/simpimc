@@ -8,7 +8,8 @@
 class Writes : public Event
 {
 private:
-
+  int iBlock;
+  RealType initial, start, end;
 protected:
   // Output
   IOClass &Out;
@@ -21,6 +22,11 @@ public:
     : Event(), Out(tmpOut), events(tmpEvents)
   {
     name = "Write";
+    iBlock = 0;
+    struct timeval time;
+    gettimeofday(&time, NULL); // Start Time
+    initial = time.tv_sec + (time.tv_usec / 1000000.);
+    end = time.tv_sec + (time.tv_usec / 1000000.);
   }
 
   // Functions

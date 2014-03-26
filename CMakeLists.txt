@@ -207,7 +207,9 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/SpeciesClass.cpp
   src/WriteClass.cpp
   src/Actions/ActionClass.cpp
+  src/Actions/CoulombClass.cpp
   src/Actions/KineticClass.cpp
+  src/Actions/PairActionClass.cpp
   src/Actions/TrapClass.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp

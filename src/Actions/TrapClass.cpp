@@ -2,7 +2,19 @@
 
 void Trap::Init(Input &in)
 {
+  nImages = in.getAttribute<int>("nImages");
+  nOrder = in.getAttribute<int>("nOrder");
   omega = in.getAttribute<RealType>("omega");
+  species = in.getAttribute<string>("species");
+  for (unsigned int iS=0; iS<path.nSpecies; iS+=1) {
+    if (path.speciesList[iS]->name == species)
+      iSpecies = iS;
+  }
+
+  out.Write("/Actions/"+name+"/nImages", nImages);
+  out.Write("/Actions/"+name+"/nOrder", nOrder);
+  out.Write("/Actions/"+name+"/omega", omega);
+  out.Write("/Actions/"+name+"/iSpecies", iSpecies);
 }
 
 RealType Trap::DActionDBeta()
@@ -20,6 +32,8 @@ RealType Trap::DActionDBeta()
 
 RealType Trap::GetAction(int b0, int b1, vector<int> &particles, int level)
 {
+  if (level > maxLevel)
+    return 0.;
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
   RealType tot = 0.;

@@ -3,7 +3,7 @@
 void Time::Init(Input &in)
 {
   struct timeval time;
-  //gettimeofday(&time, NULL); //END-TIME
+  gettimeofday(&time, NULL); //END-TIME
   end = time.tv_sec + (time.tv_usec / 1000000.);
   Reset();
 
@@ -15,7 +15,7 @@ void Time::Reset()
     eventList[i]->timeSpent = 0;
 
   struct timeval time;
-  //gettimeofday(&time, NULL); // Start Time
+  gettimeofday(&time, NULL); // Start Time
   start = time.tv_sec + (time.tv_usec / 1000000.);
   timeSpent += start - end;
 }
@@ -27,7 +27,7 @@ void Time::Accumulate()
 void Time::Write()
 {
   struct timeval time;
-  //gettimeofday(&time, NULL); //END-TIME
+  gettimeofday(&time, NULL); //END-TIME
   end = time.tv_sec + (time.tv_usec / 1000000.);
   RealType totalTime = end - start;
   RealType norm = 1.;

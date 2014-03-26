@@ -51,100 +51,102 @@ int Bisect::DoBisect(const int iP)
     RealType sigma2 = lambda*levelTau;
     RealType sigma = sqrt(sigma2);
 
-    //RealType oldLogSampleProb = 0.;
-    //RealType newLogSampleProb = 0.;
-    //RealType oldAction = 0.;
-    //RealType newAction = 0.;
-
-    //beadA = beadI;
-    //while(beadA != beadF) {
-    //  beadB = beadA->nextB(skip);
-    //  beadC = beadB->nextB(skip);
-
-    //  // Old sampling
-    //  path.SetMode(0);
-    //  Tvector rBarOld(path.nD);
-    //  path.RBar(beadC, beadA, rBarOld);
-    //  Tvector deltaOld(path.nD);
-    //  path.Dr(beadB, rBarOld, deltaOld);
-
-    //  // Old action
-    //  for (int i=0; i<actionList.size(); ++i)
-    //    oldAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
-
-    //  // New sampling
-    //  path.SetMode(1);
-    //  Tvector rBarNew(path.nD);
-    //  path.RBar(beadC, beadA, rBarNew);
-    //  Tvector deltaNew(path.nD);
-    //  rng.normRand(deltaNew, 0, sigma);
-    //  path.PutInBox(deltaNew);
-    //  beadB->r = rBarNew + deltaNew;
-
-    //  // New action
-    //  for (int i=0; i<actionList.size(); ++i)
-    //    newAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
-
-    //  // Get sampling probs
-    //  int numImages = 0; /// asfdljasd;lfjas;dlfjalskdfj
-    //  RealType gaussProdOld = 1.;
-    //  RealType gaussProdNew = 1.;
-    //  for (int iD=0; iD<path.nD; iD++) {
-    //    RealType gaussSumOld = 0.;
-    //    RealType gaussSumNew = 0.;
-    //    for (int image=-numImages; image<=numImages; image++) {
-    //      RealType distOld = deltaOld(iD) + (RealType)image*path.L;
-    //      RealType distNew = deltaNew(iD) + (RealType)image*path.L;
-    //      gaussSumOld += exp(-0.5*distOld*distOld/sigma2);
-    //      gaussSumNew += exp(-0.5*distNew*distNew/sigma2);
-    //    }
-    //    gaussProdOld *= gaussSumOld;
-    //    gaussProdNew *= gaussSumNew;
-    //  }
-    //  oldLogSampleProb += prefactorOfSampleProb + log(gaussProdOld);
-    //  newLogSampleProb += prefactorOfSampleProb + log(gaussProdNew);
-
-    //  beadA = beadC;
-    //}
-
-    //RealType logSampleRatio = -newLogSampleProb + oldLogSampleProb;
-    //RealType currActionChange = newAction - oldAction;
-    //RealType logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
-
-    //if (logAcceptProb < log(rng.unifRand())) { // Reject if true
-    //  path.restoreR(affBeads);
-    //  return 0;
-    //}
-
-    //prevActionChange = currActionChange;
+    RealType oldLogSampleProb = 0.;
+    RealType newLogSampleProb = 0.;
+    RealType oldAction = 0.;
+    RealType newAction = 0.;
 
     beadA = beadI;
     while(beadA != beadF) {
       beadB = beadA->nextB(skip);
       beadC = beadB->nextB(skip);
 
-      //for (int i=0; i<actionList.size(); ++i)
-      //  vOld += actionList[i]->GetAction(beadB->b, beadB->b+skip, particles, iLevel);
+      // Old sampling
+      path.SetMode(0);
+      Tvector rBarOld(path.nD);
+      path.RBar(beadC, beadA, rBarOld);
+      Tvector deltaOld(path.nD);
+      path.Dr(beadB, rBarOld, deltaOld);
 
-      Tvector ac(path.nD);
-      path.Dr(beadC,beadA,ac);
-      Tvector dr(path.nD);
-      rng.normRand(dr, 0, sigma);
-      path.PutInBox(dr);
-      beadB->r = beadA->r + 0.5*ac + dr;
+      // Old action
+      for (int i=0; i<actionList.size(); ++i)
+        oldAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
 
-      //for (int i=0; i<actionList.size(); ++i)
-      //  vNew += actionList[i]->GetAction(beadB->b, beadB->b+skip, particles, iLevel);
+      // New sampling
+      path.SetMode(1);
+      Tvector rBarNew(path.nD);
+      path.RBar(beadC, beadA, rBarNew);
+      Tvector deltaNew(path.nD);
+      rng.normRand(deltaNew, 0, sigma);
+      path.PutInBox(deltaNew);
+      beadB->r = rBarNew + deltaNew;
+
+      // New action
+      for (int i=0; i<actionList.size(); ++i)
+        newAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
+
+      // Get sampling probs
+      int numImages = 0; /// asfdljasd;lfjas;dlfjalskdfj
+      RealType gaussProdOld = 1.;
+      RealType gaussProdNew = 1.;
+      for (int iD=0; iD<path.nD; iD++) {
+        RealType gaussSumOld = 0.;
+        RealType gaussSumNew = 0.;
+        for (int image=-numImages; image<=numImages; image++) {
+          RealType distOld = deltaOld(iD) + (RealType)image*path.L;
+          RealType distNew = deltaNew(iD) + (RealType)image*path.L;
+          gaussSumOld += exp(-0.5*distOld*distOld/sigma2);
+          gaussSumNew += exp(-0.5*distNew*distNew/sigma2);
+        }
+        gaussProdOld *= gaussSumOld;
+        gaussProdNew *= gaussSumNew;
+      }
+      oldLogSampleProb += prefactorOfSampleProb + log(gaussProdOld);
+      newLogSampleProb += prefactorOfSampleProb + log(gaussProdNew);
 
       beadA = beadC;
     }
 
-    dA[iLevel] = vNew - vOld;
-    dAold = 0.5*(dAold + dA[iLevel+1]);
-    if ((-dA[iLevel] + dAold) < log(rng.unifRand())) {
+    RealType logSampleRatio = -newLogSampleProb + oldLogSampleProb;
+    RealType currActionChange = newAction - oldAction;
+    RealType logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
+
+    if (logAcceptProb < log(rng.unifRand())) { // Reject if true
       path.restoreR(affBeads);
       return 0;
     }
+
+    prevActionChange = currActionChange;
+
+    //beadA = beadI;
+    //while(beadA != beadF) {
+    //  beadB = beadA->nextB(skip);
+    //  beadC = beadB->nextB(skip);
+
+    //  for (int i=0; i<actionList.size(); ++i)
+    //    if (actionList[i]->type != "Kinetic")
+    //      vOld += actionList[i]->GetAction(beadB->b, beadB->b+skip, particles, iLevel);
+
+    //  Tvector ac(path.nD);
+    //  path.Dr(beadC,beadA,ac);
+    //  Tvector dr(path.nD);
+    //  rng.normRand(dr, 0, sigma);
+    //  path.PutInBox(dr);
+    //  beadB->r = beadA->r + 0.5*ac + dr;
+
+    //  for (int i=0; i<actionList.size(); ++i)
+    //    if (actionList[i]->type != "Kinetic")
+    //      vNew += actionList[i]->GetAction(beadB->b, beadB->b+skip, particles, iLevel);
+
+    //  beadA = beadC;
+    //}
+
+    //dA[iLevel] = vNew - vOld;
+    //dAold = 0.5*(dAold + dA[iLevel+1]);
+    //if ((-dA[iLevel] + dAold) < log(rng.unifRand())) {
+    //  path.restoreR(affBeads);
+    //  return 0;
+    //}
   }
 
   // Move Accepted

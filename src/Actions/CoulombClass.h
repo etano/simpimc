@@ -1,23 +1,23 @@
-#ifndef TrapClass_H
-#define TrapClass_H
+#ifndef CoulombClass_H
+#define CoulombClass_H
 
 #include "ActionClass.h"
 
-class Trap : public Action
+class Coulomb : public Action
 {
 private:
   int nImages;
   int nOrder;
-  RealType omega;
-  string species;
-  int iSpecies;
-  int offset;
+  RealType Z1Z2;
+  string speciesA, speciesB;
+  int iSpeciesA, iSpeciesB;
+  int offsetA, offsetB;
   int maxLevel;
 protected:
 
 public:
   // Constructor
-  Trap(Path &path, Input &in, IOClass &out)
+  Coulomb(Path &path, Input &in, IOClass &out)
     : Action(path,in,out)
   {
     Init(in);

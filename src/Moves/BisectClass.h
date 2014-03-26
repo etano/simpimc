@@ -6,6 +6,10 @@
 class Bisect : public Move
 {
 private:
+  string species;
+  int iSpecies;
+  int offset;
+
   int DoBisect(const int iPart);
   std::vector<Bead*> affBeads;
 protected:

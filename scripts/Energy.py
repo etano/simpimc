@@ -5,7 +5,7 @@ import Stats
 
 StartCut = 1
 
-ENames = ['Kinetic']
+ENames = ['Kinetic','Coulomb','Total']
 EStats = {}
 for EName in ENames:
   EStats[EName] = []

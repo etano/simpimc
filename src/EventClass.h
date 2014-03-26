@@ -2,6 +2,7 @@
 #define EventClass_H
 
 #include "Utils/config.h"       // Standard libraries
+#include <sys/time.h>
 
 class Event
 {
