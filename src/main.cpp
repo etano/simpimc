@@ -16,8 +16,7 @@ int main(int argc, char** argv)
   }
 
   Simulation sim;
-  sim.SetupIO(inFile);
-  sim.BuildMPIModel();
+  sim.SetupSimulation(inFile);
   sim.Run();
 
   COMM::Finalize();

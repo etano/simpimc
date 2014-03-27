@@ -19,16 +19,14 @@ public:
   // IO
   Input in;
   IOClass out;
-  void SetupIO(string inFile);
 
   // MPI setup
   CommunicatorClass WorldComm; // This is the global MPIWORLD communicator.
   CommunicatorClass InterComm; // This is for communication between the rank 0 procs of each walker group.
   CommunicatorClass IntraComm; // This is for commmunication between procs within a walker group.
-  void BuildMPIModel();
   int procsPerGroup;
 
-  // Run
+  void SetupSimulation(string inFile);
   void Run();
 
   // Algorithm
