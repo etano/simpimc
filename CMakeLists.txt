@@ -1,4 +1,4 @@
-PROJECT(ARMA_TEST)
+PROJECT(SIMPIMC)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
@@ -14,7 +14,7 @@ SET(USE_MPI TRUE)
 SET(USE_OPENMP TRUE)
 SET(QMC_BUILD_STATIC FALSE)
 SET(NDIM 3)
-SET(COMPILER_MAKE "GNU") # INTEL, GNU, or IBM
+SET(COMPILER_MAKE "INTEL") # INTEL, GNU, or IBM
 
 #-------------------------------------------------------------------
 # Compilers
