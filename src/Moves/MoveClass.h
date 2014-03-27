@@ -20,7 +20,7 @@ protected:
   vector<Action*> &actionList;
 public:
   // Constructor
-  Move(Path &tmpPath, RNG &tmpRNG, vector<Action*> &tmpActionList,  Input &in, IOClass &tmpOut)
+  Move(Path &tmpPath, RNG &tmpRNG, vector<Action*> &tmpActionList, Input &in, IOClass &tmpOut)
     : Event(), path(tmpPath), rng(tmpRNG), actionList(tmpActionList), out(tmpOut)
   {
     name = in.getAttribute<string>("name");
