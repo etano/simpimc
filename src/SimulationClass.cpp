@@ -30,9 +30,10 @@ void Simulation::SetupSimulation(string inFile)
 
   // Output
   stringstream tmpSS;
-  tmpSS << in.getChild("IO").getAttribute<string>("outputPrefix") << "." << myGroup;
-  string outputPrefix = tmpSS.str();
-  out.load(outputPrefix);
+  tmpSS << in.getChild("IO").getAttribute<string>("outputPrefix") << "." << myGroup << ".h5";
+  string output = tmpSS.str();
+  out.load(output);
+  out.create();
 }
 
 void Simulation::Run()

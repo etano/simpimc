@@ -2,6 +2,10 @@
 #define PairActionClass_H
 
 #include "ActionClass.h"
+#include <einspline/multi_bspline.h>
+#include <einspline/bspline.h>
+#include <einspline/multi_nubspline.h>
+#include <einspline/nubspline.h>
 
 class PairAction : public Action
 {
@@ -12,6 +16,8 @@ private:
   int iSpeciesA, iSpeciesB;
   int offsetA, offsetB;
   int maxLevel;
+
+  void ReadFile(string fileName);
 protected:
 
 public:
@@ -22,11 +28,20 @@ public:
     Init(in);
   }
 
+  // Data
+  NUgrid* grid;
+  Tvector V, taus, tmpUkjArray, tmpdUkjdBetaArray;
+  arma::field<multi_NUBspline_1d_d*> Ukj, dUkjdBeta;
+
   // Functions
   virtual void Init(Input &in);
   virtual RealType DActionDBeta();
   virtual RealType GetAction(int b0, int b1, vector<int> &particles, int level);
   virtual void Write();
+
+  // Pair actions
+  void UdUVsqz(RealType s, RealType q, RealType z, int level, RealType &U, RealType &dU, RealType &V);
+  void Usqz(RealType s, RealType q, RealType z, int level, RealType &U);
 };
 
 #endif

@@ -8,24 +8,17 @@ void Coulomb::Init(Input &in)
   speciesA = in.getAttribute<string>("speciesA");
   speciesB = in.getAttribute<string>("speciesB");
   maxLevel = in.getAttribute<int>("maxLevel");
-  int offset = 0;
-  for (unsigned int iS=0; iS<path.nSpecies; iS+=1) {
-    if (path.speciesList[iS]->name == speciesA) {
-      iSpeciesA = iS;
-      offsetA = offset;
-    }
-    if (path.speciesList[iS]->name == speciesB) {
-      iSpeciesB = iS;
-      offsetB = offset;
-    }
-    offset += path.speciesList[iS]->nPart;
-  }
+  GetOffset(speciesA,iSpeciesA,offsetA);
+  GetOffset(speciesB,iSpeciesB,offsetB);
 
+  string fileName = "hello";
+
+  out.Write("/Actions/"+name+"/file", fileName);
   out.Write("/Actions/"+name+"/nImages", nImages);
   out.Write("/Actions/"+name+"/nOrder", nOrder);
   out.Write("/Actions/"+name+"/Z1Z2", Z1Z2);
-  out.Write("/Actions/"+name+"/iSpeciesA", iSpeciesA);
-  out.Write("/Actions/"+name+"/iSpeciesB", iSpeciesB);
+  out.Write("/Actions/"+name+"/speciesA", speciesA);
+  out.Write("/Actions/"+name+"/speciesB", speciesB);
 }
 
 RealType Coulomb::DActionDBeta()

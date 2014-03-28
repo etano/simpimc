@@ -18,6 +18,10 @@ protected:
   IOClass &out;
 
   bool FirstTime;
+
+  // Find species offset
+  void GetOffset(string species, int &iSpecies, int &offset);
+
 public:
   // Constructor
   Action(Path &tmpPath, Input &in, IOClass &tmpOut)
