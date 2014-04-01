@@ -34,75 +34,109 @@ void PairAction::ReadFile(string fileName)
   tmpSS2 << "/dUkjdBeta" << nOrder;
   string dUkjdBetaStr = tmpSS2.str();
 
-  // Read in grid
+  // Read in and create grid
   RealType rStart, rEnd;
   int nGrid;
   string gridType;
   in.Read(UkjStr + "/Grid/Start", rStart);
-  in.Read(UkjStr + "/Grid/Start", rEnd);
+  in.Read(UkjStr + "/Grid/End", rEnd);
   in.Read(UkjStr + "/Grid/NumGridPoints", nGrid);
   in.Read(UkjStr + "/Grid/Type", gridType);
-
-  // Create grid
   grid = create_log_grid(rStart, rEnd, nGrid);
 
+  // Read in taus
+  nTau = maxLevel + 1;
+  taus.set_size(nTau);
+  in.Read(UkjStr + "/Taus", taus);
+  bool tauFound = 0;
+  for (int iTau=0; iTau<nTau; iTau++)
+    if (abs(taus(iTau)-path.tau) < 1.0e-6)
+      tauFound = 1;
+  if (!tauFound) {
+    cerr << "ERROR: tau of " << path.tau << " not found." << endl;
+    cerr << "Possible taus: " << taus << endl;
+    exit(1);
+  }
+
   // Read in potential
-  V.set_size(nGrid);
+  Tvector V(nGrid);
   in.Read("/Potential/Data", V);
 
   // Determine number of values for k,j sum
-  int nVal = 1;
-  for (int i=0; i<nOrder; ++i)
-    nVal += 2+i;
-  int nTau = maxLevel+1;
+  nVal = 1;
+  for (int i = 1; i <= nOrder; ++i)
+    nVal += 1+i;
 
   // Read in Ukj
-  Tcube tmpUkj(nGrid,nVal,nTau);
+  Tcube tmpUkj(nVal,nGrid,nTau);
   in.Read(UkjStr + "/Data", tmpUkj);
 
+  // Boundary conditions
+  BCtype_d xBC = {NATURAL, FLAT}; // HACK: Is this correct?
+
   // Spline Ukj
-  Tcube tmpUkj2(nGrid,nVal+1,nTau);
+  Tcube tmpUkj2(nVal+1,nGrid,nTau);
   for(int iTau=0; iTau<nTau; iTau++) {
     for (int iGrid=0; iGrid<nGrid-1; ++iGrid) {
-      tmpUkj2(iGrid,0,iTau) = V(iGrid);
+      tmpUkj2(0,iGrid,iTau) = V(iGrid);
       for (int iVal=1; iVal<nVal+1; ++iVal)
-        tmpUkj2(iGrid,iVal,iTau) = tmpUkj(iGrid,iVal-1,iTau);
+        tmpUkj2(iVal,iGrid,iTau) = tmpUkj(iVal-1,iGrid,iTau);
     }
-    for (int iVal=1; iVal<nVal+1; ++iVal)
-      tmpUkj2(nGrid-1,iVal,iTau) = 0.;
+    //for (int iVal=1; iVal<nVal+1; ++iVal)
+    //  tmpUkj2(iVal,nGrid-1,iTau) = 0.;
   }
-  double startDerv(5.0e30), endDerv(0.);
-  BCtype_d xBC = {DERIV1, FLAT, startDerv, endDerv};
+
   Ukj.set_size(nTau);
   for(int iTau=0; iTau<nTau; iTau++) {
     Ukj(iTau) = create_multi_NUBspline_1d_d(grid, xBC, nVal+1);
-    set_multi_NUBspline_1d_d(Ukj(iTau), nVal+1, tmpUkj2.slice(iTau).memptr());
+    for (int iVal=0; iVal<nVal+1; ++iVal) {
+      Tvector tmpV(nGrid);
+      for (int iGrid=0; iGrid<nGrid; ++iGrid)
+        tmpV(iGrid) = tmpUkj2(iVal,iGrid,iTau);
+      set_multi_NUBspline_1d_d(Ukj(iTau), iVal, tmpV.memptr());
+    }
   }
 
   // Read in dUkjdBeta
-  Tcube tmpdUkjdBeta(nGrid,nVal,maxLevel+1);
+  Tcube tmpdUkjdBeta(nVal,nGrid,nTau);
   in.Read(dUkjdBetaStr + "/Data", tmpdUkjdBeta);
 
   // Spline dUkjdBeta
-  Tcube tmpdUkjdBeta2(nGrid,nVal+1,nTau);
+  Tcube tmpdUkjdBeta2(nVal+1,nGrid,nTau);
   for(int iTau=0; iTau<nTau; iTau++) {
     for (int iGrid=0; iGrid<nGrid-1; ++iGrid) {
-      tmpdUkjdBeta2(iGrid,0,iTau) = V(iGrid);
+      tmpdUkjdBeta2(0,iGrid,iTau) = V(iGrid);
       for (int iVal=1; iVal<nVal+1; ++iVal)
-        tmpdUkjdBeta2(iGrid,iVal,iTau) = tmpdUkjdBeta(iGrid,iVal-1,iTau);
+        tmpdUkjdBeta2(iVal,iGrid,iTau) = tmpdUkjdBeta(iVal-1,iGrid,iTau);
     }
-    for (int iVal=1; iVal<nVal+1; ++iVal)
-      tmpdUkjdBeta2(nGrid-1,iVal,iTau) = 0.;
+    //for (int iVal=1; iVal<nVal+1; ++iVal)
+    //  tmpdUkjdBeta2(iVal,nGrid-1,iTau) = 0.;
   }
   dUkjdBeta.set_size(nTau);
   for(int iTau=0; iTau<nTau; iTau++) {
     dUkjdBeta(iTau) = create_multi_NUBspline_1d_d(grid, xBC, nVal+1);
-    set_multi_NUBspline_1d_d(dUkjdBeta(iTau), nVal+1, tmpdUkjdBeta2.slice(iTau).memptr());
+    for (int iVal=0; iVal<nVal+1; ++iVal) {
+      Tvector tmpV(nGrid);
+      for (int iGrid=0; iGrid<nGrid; ++iGrid)
+        tmpV(iGrid) = tmpdUkjdBeta2(iVal,iGrid,iTau);
+      set_multi_NUBspline_1d_d(dUkjdBeta(iTau), iVal, tmpV.memptr());
+    }
   }
 
-  // Read in taus
-  taus.set_size(maxLevel+1);
-  in.Read(UkjStr + "/Taus", taus);
+  RealType U, dU, v;
+  RealType x(0.0), end(3.0);
+  while (x<=end) {
+    CalcUdUVsqz(0,x,0,0,U,dU,v);
+    cout << x << " " << U << " " << dU << " " << v << endl;
+    x += 0.1;
+  }
+  Tvector r;
+  r.zeros(path.nD);
+  Tvector rP;
+  rP.zeros(path.nD);
+  rP(0) = 0.5;
+  CalcUdUVr(r,rP,0,U,dU,v);
+  cout << " " << U << " " << dU << " " << v << endl;
 
 }
 
@@ -113,8 +147,13 @@ RealType PairAction::DActionDBeta()
   for (int iP=offsetA; iP<offsetA+path.speciesList[iSpeciesA]->nPart; ++iP) {
     for (int jP=offsetB; jP<offsetB+path.speciesList[iSpeciesB]->nPart; ++jP) {
       for (int iB=0; iB<path.nBead; iB+=1) {
-        path.Dr(path(iP,iB),path(jP,iB),dr);
-        tot += 1/sqrt(dot(dr,dr));
+        int jB = iB + 1;
+        Tvector r, rP;
+        path.Dr(path(iP,iB),path(jP,iB),r);
+        path.Dr(path(iP,jB),path(jP,jB),rP);
+        RealType U, dU, V;
+        CalcUdUVr(r,rP,0,U,dU,V);
+        tot += dU;
         //RealType sum = 0.;
         //for (int iD=0; iD<path.nD; iD++) {
         //  for (int image=-nImages; image<=nImages; image++) {
@@ -140,6 +179,7 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
   Tvector dr;
   for (int iP=0; iP<particles.size(); ++iP) {
     for (int iB=b0; iB<b1; iB+=skip) {
+      int jB = iB + skip;
       int iS = 0;
       int offset = 0;
       if (path(iP,iB)->species.name == speciesA) {
@@ -151,8 +191,12 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
       } else
         cerr << "ERROR: Unrecognized species in PairAction action." << endl;
       for (int jP=offset; jP<offset+path.speciesList[iS]->nPart; ++jP) {
-        path.Dr(path(iP,iB),path(jP,iB),dr);
-        tot += levelTau*1/sqrt(dot(dr,dr));
+        Tvector r, rP;
+        path.Dr(path(iP,iB),path(jP,iB),r);
+        path.Dr(path(iP,jB),path(jP,jB),rP);
+        RealType U;
+        CalcUr(r,rP,level,U);
+        tot += U;
         //RealType gaussProd = 1.;
         //for (int iD=0; iD<path.nD; iD++) {
         //  RealType gaussSum = 0.;
@@ -175,33 +219,50 @@ void PairAction::Write()
 
 }
 
+/// Calculate the U(r,r') value when given r and r' and the level 
+/*! \f[\frac{u_0(r;\tau)+u_0(r';\tau)}{2}+\sum_{k=1}^n 
+  \sum_{j=1}^k u_{kj}(q;\tau)z^{2j}s^{2(k-j)}\f]   */
+void PairAction::CalcUdUVr(Tvector& r, Tvector& rP, int level, RealType &U, RealType &dU, RealType &V)
+{
+  Tvector tmp;
+  RealType rMag = mag(r);
+  RealType rPMag = mag(rP);
+
+  RealType q = (rMag + rPMag)/2.;
+  Tvector dr;
+  path.Dr(r,rP,dr);
+  RealType s = mag(dr);
+  RealType z = rMag - rPMag;
+
+  return CalcUdUVsqz(s, q, z, level, U, dU, V);
+}
+
 /// Calculate the U(s,q,z) value when given s,q,z and the level 
 /*! \f[\frac{u_0(r;\tau)+u_0(r';\tau)}{2}+\sum_{k=1}^n 
   \sum_{j=1}^k u_{kj}(q;\tau)z^{2j}s^{2(k-j)}\f]   */
-void PairAction::UdUVsqz(RealType s, RealType q, RealType z, int level, RealType &U, RealType &dU, RealType &V)
+void PairAction::CalcUdUVsqz(RealType s, RealType q, RealType z, int level, RealType &U, RealType &dU, RealType &V)
 {
   RealType r = q + 0.5*z;
   RealType rPrime = q - 0.5*z;
 
   // Limits
-  //RealType rMax = grid->End;
-  //if (r > rMax)
-  //  r = rMax;
-  //if (rPrime > rMax)
-  //  rPrime = rMax;
-  //RealType rmin = grid->Start;
-  //if (rPrime < rmin)
-  //  rPrime = rmin;
-  //if(r < rmin)
-  //  r = rmin;
+  RealType rMax = grid->end;
+  if (r > rMax)
+    r = rMax;
+  if (rPrime > rMax)
+    rPrime = rMax;
+  RealType rmin = grid->start;
+  if (rPrime < rmin)
+    rPrime = rmin;
+  if(r < rmin)
+    r = rmin;
 
   // This is the endpoint action
-  Tvector rVals(nOrder+2), rPrimeVals(nOrder+2);
+  Tvector rVals(nVal+1), rPrimeVals(nVal+1);
   eval_multi_NUBspline_1d_d(Ukj(level),r,rVals.memptr());
   eval_multi_NUBspline_1d_d(Ukj(level),rPrime,rPrimeVals.memptr());
   V = 0.5*(rVals(0) + rPrimeVals(0));
   U = 0.5*(rVals(1) + rPrimeVals(1));
-
   eval_multi_NUBspline_1d_d(dUkjdBeta(level),r,rVals.memptr());
   eval_multi_NUBspline_1d_d(dUkjdBeta(level),rPrime,rPrimeVals.memptr());
   dU = 0.5*(rVals(1) + rPrimeVals(1));
@@ -210,9 +271,8 @@ void PairAction::UdUVsqz(RealType s, RealType q, RealType z, int level, RealType
   dU += V;
 
   // Add in off-diagonal terms
-  //if (s > 0.0 && q<rMax) {
-  if (s > 0.0) {
-    Tvector UqVals(nOrder+2), dUqVals(nOrder+2);
+  if (s > 0.0 && q<rMax) {
+    Tvector UqVals(nVal+1), dUqVals(nVal+1);
     eval_multi_NUBspline_1d_d(Ukj(level),q,UqVals.memptr());
     eval_multi_NUBspline_1d_d(dUkjdBeta(level),q,dUqVals.memptr());
     RealType zsquared = z*z;
@@ -224,8 +284,8 @@ void PairAction::UdUVsqz(RealType s, RealType q, RealType z, int level, RealType
       RealType currS = Sto2k;
       for (int j=0; j<=k; j++){
         // indexing into the 2darray
-        RealType Ucof = tmpUkjArray(k*(k+1)/2+j+1);
-        RealType dUcof = tmpdUkjdBetaArray(k*(k+1)/2+j+1);
+        RealType Ucof = UqVals(k*(k+1)/2+j+1);
+        RealType dUcof = dUqVals(k*(k+1)/2+j+1);
         U += (Ucof)*Zto2j*currS;
         dU += (dUcof)*Zto2j*currS;
         Zto2j *= zsquared;
@@ -237,36 +297,51 @@ void PairAction::UdUVsqz(RealType s, RealType q, RealType z, int level, RealType
 
 }
 
+/// Calculate the U(r,r') value when given r and r' and the level 
+/*! \f[\frac{u_0(r;\tau)+u_0(r';\tau)}{2}+\sum_{k=1}^n 
+  \sum_{j=1}^k u_{kj}(q;\tau)z^{2j}s^{2(k-j)}\f]   */
+void PairAction::CalcUr(Tvector& r, Tvector& rP, int level, RealType &U)
+{
+  Tvector tmp;
+  RealType rMag = mag(r);
+  RealType rPMag = mag(rP);
+
+  RealType q = (rMag + rPMag)/2.;
+  Tvector dr = r-rP;
+  RealType s = mag(dr);
+  RealType z = rMag - rPMag;
+  CalcUsqz(s, q, z, level, U);
+}
+
 /// Calculate the U(s,q,z) value when given s,q,z and the level 
 /*! \f[\frac{u_0(r;\tau)+u_0(r';\tau)}{2}+\sum_{k=1}^n 
   \sum_{j=1}^k u_{kj}(q;\tau)z^{2j}s^{2(k-j)}\f]   */
-void PairAction::Usqz(RealType s, RealType q, RealType z, int level, RealType &U)
+void PairAction::CalcUsqz(RealType s, RealType q, RealType z, int level, RealType &U)
 {
   RealType r = q + 0.5*z;
   RealType rPrime = q - 0.5*z;
 
   // Limits
-  //if (r > grid->End)
-  //  r = grid->End;
-  //RealType rMax = grid->End;
-  //if (rPrime > rMax)
-  //  rPrime = rMax;
-  //RealType rMin = grid->Start;
-  //if (rPrime < rMin)
-  //  rPrime = rMin;
-  //if(r < rMin)
-  //  r = rMin;
+  RealType rMax = grid->end;
+  if (r > rMax)
+    r = rMax;
+  if (rPrime > rMax)
+    rPrime = rMax;
+  RealType rMin = grid->start;
+  if (rPrime < rMin)
+    rPrime = rMin;
+  if(r < rMin)
+    r = rMin;
 
   // This is the endpoint action
-  Tvector rVals(nOrder+2), rPrimeVals(nOrder+2), qVals(nOrder+2);
+  Tvector rVals(nVal+1), rPrimeVals(nVal+1), qVals(nVal+1);
   eval_multi_NUBspline_1d_d(Ukj(level),r,rVals.memptr());
   eval_multi_NUBspline_1d_d(Ukj(level),rPrime,rPrimeVals.memptr());
   U = 0.5*(rVals(1) + rPrimeVals(1));
 
   // Add in off-diagonal terms
-  //if (s>0.0 && q<rMax) {
-  if (s>0.0) {
-    Tvector UqVals(nOrder+2);
+  if (s>0.0 && q<rMax) {
+    Tvector UqVals(nVal+1);
     eval_multi_NUBspline_1d_d(Ukj(level),q,UqVals.memptr());
     RealType zsquared = z*z;
     RealType ssquared = s*s;
@@ -277,7 +352,7 @@ void PairAction::Usqz(RealType s, RealType q, RealType z, int level, RealType &U
       RealType currS = Sto2k;
       for (int j=0; j<=k; j++) {
         // indexing into the 2darray
-        RealType Ucof = tmpUkjArray(k*(k+1)/2 + (j+1));
+        RealType Ucof = UqVals(k*(k+1)/2 + (j+1));
         U += (Ucof)*Zto2j*currS;
         Zto2j *= zsquared;
         currS *= ssquaredinverse;
@@ -287,6 +362,4 @@ void PairAction::Usqz(RealType s, RealType q, RealType z, int level, RealType &U
   }
 
 }
-
-
 

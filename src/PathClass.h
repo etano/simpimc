@@ -30,6 +30,7 @@ public:
   // Species
   unsigned int nSpecies;
   vector<Species*> speciesList;
+  void GetSpeciesInfo(string species, int &iSpecies, int &offset);
 
   // Permutation Counter
   int getPType();
@@ -69,7 +70,7 @@ inline Bead* Path::operator() (int iP, int iB)
 // Put R in the Box
 inline void Path::PutInBox(Tvector& r)
 {
-  if(!PBC) {
+  if(PBC) {
     for (unsigned int iD = 0; iD < nD; iD++) {
       RealType n = -floor(r(iD)*iL + 0.5);
       r(iD) += n*L;

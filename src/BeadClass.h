@@ -17,7 +17,7 @@ public:
   {
     self = this;
     r.zeros(nD);
-    r.fill(0.1*p);
+    r.fill(0.5*p);
     storeR();
   }
 

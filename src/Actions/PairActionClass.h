@@ -16,6 +16,7 @@ private:
   int iSpeciesA, iSpeciesB;
   int offsetA, offsetB;
   int maxLevel;
+  int nVal, nTau;
 
   void ReadFile(string fileName);
 protected:
@@ -30,7 +31,7 @@ public:
 
   // Data
   NUgrid* grid;
-  Tvector V, taus, tmpUkjArray, tmpdUkjdBetaArray;
+  Tvector taus;
   arma::field<multi_NUBspline_1d_d*> Ukj, dUkjdBeta;
 
   // Functions
@@ -40,8 +41,10 @@ public:
   virtual void Write();
 
   // Pair actions
-  void UdUVsqz(RealType s, RealType q, RealType z, int level, RealType &U, RealType &dU, RealType &V);
-  void Usqz(RealType s, RealType q, RealType z, int level, RealType &U);
+  void CalcUdUVsqz(RealType s, RealType q, RealType z, int level, RealType &U, RealType &dU, RealType &V);
+  void CalcUdUVr(Tvector& r, Tvector& rP, int level, RealType &U, RealType &dU, RealType &V);
+  void CalcUsqz(RealType s, RealType q, RealType z, int level, RealType &U);
+  void CalcUr(Tvector& r, Tvector& rP, int level, RealType &U);
 };
 
 #endif

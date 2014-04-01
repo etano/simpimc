@@ -15,8 +15,11 @@ void Energy::Reset()
 
 void Energy::Accumulate()
 {
-  for (int i=0; i<actionList.size(); ++i)
+  vector<int> p;
+  p.push_back(0);
+  for (int i=0; i<actionList.size(); ++i) {
     Es[i] += actionList[i]->DActionDBeta();
+  }
   nMeasure += 1;
 }
 

@@ -38,7 +38,7 @@ void Path::Init(Input &in, IOClass &out)
   for (unsigned int iS=0; iS<nSpecies; iS+=1)
     for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP+=1)
       for (unsigned int iB=0; iB<nBead; iB+=1)
-        bead(iS*speciesList[iS]->nPart + iP,iB) = new Bead(nD,*speciesList[iS],iP,iB);
+        bead(iS*speciesList[iS]->nPart + iP,iB) = new Bead(nD,*speciesList[iS],iS*speciesList[iS]->nPart + iP,iB);
 
   // Initiate bead connections
   for (unsigned int iP = 0; iP < nPart; iP += 1) {
@@ -60,6 +60,34 @@ void Path::Init(Input &in, IOClass &out)
   // Initiate permutation counter
   permCount.zeros(nPermType,2);
 
+  // Initialize paths
+  string initType = in.getChild("Init").getAttribute<string>("type");
+  if (initType == "File") {
+    string fileName = in.getChild("Init").getAttribute<string>("name");
+    fstream initFile;
+    initFile.open(fileName.c_str(), std::ios_base::in);
+    for (int iB=0; iB<nBead; ++iB) {
+      for (int iP=0; iP<nPart; ++iP) {
+        initFile >> iB >> iP >> bead(iP,iB)->r(0) >> bead(iP,iB)->r(1) >> bead(iP,iB)->r(2);
+        bead(iP,iB) -> storeR();
+      }
+    }
+    initFile.close();
+  }
+
+}
+
+// Get species info
+void Path::GetSpeciesInfo(string species, int &iSpecies, int &offset)
+{
+  int tmpOffset = 0;
+  for (unsigned int iS=0; iS<nSpecies; iS+=1) {
+    if (speciesList[iS]->name == species) {
+      iSpecies = iS;
+      offset = tmpOffset;
+    }
+    tmpOffset += speciesList[iS]->nPart;
+  }
 }
 
 // Identify permuation state

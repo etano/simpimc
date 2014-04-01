@@ -3,13 +3,18 @@ import numpy as np
 import h5py as h5
 import Stats
 
-StartCut = 1
+try:
+  StartCut = int(sys.argv[1])
+  i = 2
+except:
+  StartCut = 0
+  i = 1
 
 ENames = ['Kinetic','Coulomb','Total']
 EStats = {}
 for EName in ENames:
   EStats[EName] = []
-for fname in sys.argv[1:]:
+for fname in sys.argv[i:]:
   print fname
   f = h5.File(fname,'r')
 

@@ -3,12 +3,14 @@
 void Bisect::Init(Input &in)
 {
   maxLevel = in.getAttribute<int>("maxLevel");
+  species = in.getAttribute<string>("species");
+  path.GetSpeciesInfo(species,iSpecies,offset);
 }
 
 void Bisect::MakeMove()
 {
-  for (unsigned int iP = 0; iP < path.nPart; iP += 1) {
-    nAccept += DoBisect(iP);
+  for (unsigned int iP=0; iP<path.speciesList[iSpecies]->nPart; iP+=1) {
+    nAccept += DoBisect(iSpecies*path.speciesList[iSpecies]->nPart + iP);
     nAttempt++;
   }
 }
@@ -24,6 +26,7 @@ int Bisect::DoBisect(const int iP)
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
   vector<int> particles;
   particles.push_back(iP);
+  //cout << "PARTICLE: " << iP << endl;
 
   // Set up pointers
   Bead *beadI = path(iP,bead0);
@@ -71,6 +74,7 @@ int Bisect::DoBisect(const int iP)
       // Old action
       for (int i=0; i<actionList.size(); ++i)
         oldAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
+      //cout << iLevel << " " << beadA->p << " " << beadA->b << " " << beadA->b + 2*skip << " " << oldAction << endl;
 
       // New sampling
       path.SetMode(1);
@@ -79,14 +83,16 @@ int Bisect::DoBisect(const int iP)
       Tvector deltaNew(path.nD);
       rng.normRand(deltaNew, 0, sigma);
       path.PutInBox(deltaNew);
+      //cout << deltaNew << endl;
       beadB->r = rBarNew + deltaNew;
 
       // New action
       for (int i=0; i<actionList.size(); ++i)
         newAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
+      //cout << iLevel << " " << beadA->p << " " << beadA->b << " " << beadA->b + 2*skip << " " << newAction << endl;
 
       // Get sampling probs
-      int numImages = 0; /// asfdljasd;lfjas;dlfjalskdfj
+      int numImages = 0; /// HACK asfdljasd;lfjas;dlfjalskdfj
       RealType gaussProdOld = 1.;
       RealType gaussProdNew = 1.;
       for (int iD=0; iD<path.nD; iD++) {
