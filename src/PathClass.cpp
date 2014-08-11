@@ -1,12 +1,13 @@
 #include "PathClass.h"
 
-void Path::Init(Input &in, IOClass &out)
+void Path::Init(Input &in, IOClass &out, RNG &rng)
 {
   nD = in.getChild("System").getAttribute<int>("nD");
   nBead = in.getChild("System").getAttribute<int>("nBead");
   beta = in.getChild("System").getAttribute<RealType>("beta");
   L = in.getChild("System").getAttribute<RealType>("L");
   PBC = in.getChild("System").getAttribute<int>("PBC", 1);
+  vol = pow(L,nD);
 
   // Constants
   tau = beta/(1.*nBead);
@@ -73,8 +74,13 @@ void Path::Init(Input &in, IOClass &out)
       }
     }
     initFile.close();
+  } else if (initType == "Random") {
+    for (int iB=0; iB<nBead; ++iB)
+      for (int iP=0; iP<nPart; ++iP) {
+        rng.unifRand(bead(iP,iB)->r);
+        bead(iP,iB) -> storeR();
+      }
   }
-
 }
 
 // Get species info

@@ -2,16 +2,16 @@
   <RNG seed="12345" />
   <IO outputPrefix="H" />
   <Parallel procsPerGroup="1" />
-  <System nD="3" nBead="160" beta="20.0" L="100.0" PBC="0" />
+  <System nD="3" nBead="320" beta="40.0" L="100.0" PBC="1" />
   <Particles>
     <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
     <Species name="p" type="p" nPart="1" lambda="0.0" fermi="0" />
   </Particles>
-  <Init type="File" name="positions.dat" />
+  <Init type="Default" />
   <Actions>
     <Action name="Kinetic" type="Kinetic" nImages="0" />
-    <Action name="Coulomb" type="PairAction" file="e-p.sq.h5" nOrder="3" nImages="0" speciesA="e" speciesB="p" Z1Z2="-1" maxLevel="0" />
-    <!--Action name="Coulomb" type="Coulomb" nOrder="2" nImages="0" speciesA="e" speciesB="p" Z1Z2="-1" maxLevel="0" /-->
+    <Action name="Coulomb" type="PairAction" file="e-p.lr.sq.h5" nOrder="3" nImages="0" speciesA="e" speciesB="p" Z1Z2="-1" maxLevel="0" useLongRange="1" />
+    <!--<Action name="Coulomb" type="Coulomb" nOrder="2" nImages="0" speciesA="e" speciesB="p" Z1Z2="-1" maxLevel="0" /-->
   </Actions>
   <Moves>
     <Move name="BisectE" type="Bisect" species="e" maxLevel="4" />

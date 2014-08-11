@@ -6,6 +6,7 @@
 #include "Utils/config.h"
 #include "Utils/IO/InputClass.h"
 #include "Utils/IO/IOClass.h"
+#include "Utils/RNG/RNGClass.h"
 
 class Path
 {
@@ -16,11 +17,11 @@ protected:
 public:
   // Constructor
   Path() {};
-  void Init(Input &in, IOClass &out);
+  void Init(Input &in, IOClass &out, RNG &rng);
 
   // Given Global Constants
   unsigned int nPart, nD, nBead;
-  RealType beta, L, iL;
+  RealType beta, L, iL, vol;
 
   // Calculated Global Constants
   RealType tau;
