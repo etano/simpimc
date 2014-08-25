@@ -52,15 +52,6 @@ public:
   void CalcUsqz(RealType s, RealType q, RealType z, int level, RealType &U);
   void CalcUr(Tvector& r, Tvector& rP, int level, RealType &U);
 
-  // Long Range
-  void CalcUlr(Tvector& r, Tvector& rp, int level, RealType &Ul);
-  void CalcdUlVlr(Tvector& r, Tvector& rp, int level, RealType &dUl, RealType &Vl);
-  bool fequals(RealType a, RealType b, RealType tol);
-  bool compare(pair<RealType,RealType> &a, pair<RealType,RealType> &b);
-  inline bool Include(Tvector& k);
-  void AddK(Tvector& k, Ivector& ki);
-  void SetupKs();
-
 };
 
 #endif

@@ -124,17 +124,6 @@ void PairAction::ReadFile(string fileName)
     }
   }
 
-  // Long Range
-  if (useLongRange) {
-    in.Read("LongRange/kcut", kCut);
-    kCut *= 3.; // HACK: Arbitrary, hard-coded in breakup.f of potgen
-    SetupKs();
-    Ukl.resize(uniqueKs.size()+1);
-    Tvector kVals(uniqueKs.size()+1);
-    in.Read("LongRange/u_k", Ukl);
-    in.Read("LongRange/kPoints", kVals);
-  }
-
   abort();
   RealType U, dU, v;
   RealType x(0.0), end(3.0);
@@ -153,171 +142,8 @@ void PairAction::ReadFile(string fileName)
 
 }
 
-bool PairAction::fequals(RealType a, RealType b, RealType tol)
-{
-  return abs(a-b) < tol;
-}
-
-inline bool PairAction::Include(Tvector& k)
-{
-  if (k[0] != 0.)
-    return true;
-  else {
-    if (path.nD > 1) {
-      if (k[1] != 0.)
-        return true;
-      else {
-        if (path.nD > 2) {
-          if (k[2] != 0.)
-            return true;
-          else
-            return false;
-        } else
-          return false;
-      }
-    } else
-      return false;
-  }
-}
-
-void PairAction::AddK(Tvector& k, Ivector& ki)
-{
-  if ((dot(k,k)<kCut*kCut) && Include(k)) {
-    ks.push_back(k);
-    kis.push_back(ki);
-    RealType magK = mag(k);
-    magKs.push_back(mag(k));
-
-    // Get unique values
-    bool foundK = false;
-    for (int i=0; i<uniqueKs.size(); i++) {
-      if (fequals(magK,uniqueKs[i].first,1e-5)) {
-        uniqueKs[i].second += 1;
-        foundK = true;
-      }
-    }
-    if (!foundK) {
-      pair<RealType,int> uniqueK;
-      uniqueK.first = magK;
-      uniqueK.second = 0;
-      uniqueKs.push_back(uniqueK);
-    }
-  }
-}
-
-void PairAction::SetupKs()
-{
-  RealType G = 2.0*M_PI/path.L;
-  RealType kMaxIndex = (int) ceil(1.1*kCut/G);
-
-  Tvector k(path.nD);
-  Ivector ki(path.nD);
-  for (int ix=-kMaxIndex; ix<=kMaxIndex; ix++) {
-    k[0] = ix*G;
-    ki[0] = ix + kMaxIndex;
-    if (path.nD > 1) {
-      for (int iy=-kMaxIndex; iy<=kMaxIndex; iy++) {
-        k[1] = iy*G;
-        ki[1] = iy + kMaxIndex;
-        if (path.nD > 2) {
-          for (int iz=-kMaxIndex; iz<=kMaxIndex; iz++) {
-            k[2] = iz*G;
-            ki[2] = iy + kMaxIndex;
-            AddK(k,ki);
-          }
-        } else {
-          AddK(k,ki);
-        }
-      }
-    } else {
-      AddK(k,ki);
-    }
-  }
-
-  sort(uniqueKs.begin(), uniqueKs.end());
-
-}
-
-bool PairAction::compare(pair<RealType,RealType> &a, pair<RealType,RealType> &b)
-{
-  return a.first > b.first;
-}
-
-void PairAction::Build_MultipleSpecies()
-{
-  for (int i=0; i<uniqueKs.size(); i++) {
-    RealType kMag = uniqueKs[i].first;
-    if (fequals(0.0,k,1e-10))
-      yk_zero(iPair) = pa.uk_long(i)/vol;
-    bool found = false;
-    for (int j=0; j<Path.kVecs.size(); j++) {
-      if (fequals(sqrt(blitz::dot(Path.kVecs(j),Path.kVecs(j))),k,1e-4)) {
-        Vlk(j) = Ukl(i)/vol;
-        found = true;
-
-        uk(j) = Vlong_k(j)*Path.tau;
-        duk(j) = Vlong_k(j);
-      }
-    }
-  }
-}
-
-void PairAction::CalcUlr(int slice1, int slice2, const Array<int,1> &activeParticles, int level)
-{
-  int skip = 1<<level;
-
-  set<int> speciesList;
-  for(int p=0; p<activeParticles.size(); p++) {
-    int ptcl = activeParticles(p);
-    int spec = Path.ParticleSpeciesNum(ptcl);
-    speciesList.insert(speciesList.begin(), spec);
-  }
-
-
-  int startSlice = slice1;
-  int endSlice = slice2-skip;
-  if (only_do_inclusive) {
-    startSlice = slice1+skip;
-    endSlice = slice2-skip;
-  }
-
-  double total = 0;
-  double factor = 1.0;
-  for (int ki=0; ki<Path.kVecs.size(); ki++) {
-    for (int slice=startSlice; slice<=endSlice; slice+=skip) {
-      for(set<int>::iterator it = speciesList.begin(); it!=speciesList.end(); it++) {
-        int species = *it;
-        double rhok2 = mag2(Path.Rho_k(slice,species,ki));
-        total +=  factor*rhok2*uk(PairIndex(species,species),ki);
-      }
-    }
-  }
-
-  // Cross-terms for Multiple Species
-  factor = 2.0;
-  for (int ki=0; ki<Path.kVecs.size(); ki++) {
-    for (int slice=startSlice; slice<=endSlice; slice+=skip) {
-      for (int species0=0; species0<Path.NumSpecies()-1; species0++) {
-        for (int species1=species0+1; species1<Path.NumSpecies(); species1++) {
-          double rhok2 = mag2(Path.Rho_k(slice,species0,ki),Path.Rho_k(slice,species1,ki));
-          total += factor*rhok2*uk(PairIndex(species0,species1),ki);
-        }
-      }
-    }
-  }
-
-  gettimeofday(&end, &tz);
-  TimeSpent += (double)(end.tv_sec-start.tv_sec) + 1.0e-6*(double)(end.tv_usec-start.tv_usec);
-
-  return total;
-}
-
-
 RealType PairAction::DActionDBeta()
 {
-  if (useLongRange)
-    UpdateRhoks();
-
   RealType tot = 0.;
   Tvector dr;
   for (int iP=offsetA; iP<offsetA+path.speciesList[iSpeciesA]->nPart; ++iP) {
@@ -349,8 +175,6 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
 {
   if (level > maxLevel)
     return 0.;
-  if (useLongRange)
-    UpdateRhoks(b0, b1, particles, level);
 
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
@@ -517,12 +341,6 @@ void PairAction::CalcUr(Tvector& r, Tvector& rP, int level, RealType &U)
   RealType z = rMag - rPMag;
   CalcUsqz(s, q, z, level, U);
 
-  // Long Range
-  if (useLongRange) {
-    RealType Ul;
-    CalcUlr(r, rP, level, Ul);
-    U += Ul;
-  }
 }
 
 /// Calculate the U(r,r'), dU(r,r'), and V(r,r') value when given r and r' and the level 
@@ -539,24 +357,5 @@ void PairAction::CalcUdUVr(Tvector& r, Tvector& rP, int level, RealType &U, Real
   RealType s = mag(dr);
   RealType z = rMag - rPMag;
   CalcUdUVsqz(s, q, z, level, U, dU, V);
-
-  // Long Range
-  if (useLongRange) {
-    RealType dUl, Vl;
-    CalcdUlVlr(r, rP, level, dUl, Vl);
-    dU += dUl;
-    V += Vl;
-  }
-}
-
-/// Calculate U_{l}(r,r') value when given r and r' and the level
-void PairAction::CalcUlr(Tvector& r, Tvector& rp, int level, RealType &Ul)
-{
-
-}
-
-/// Calculate the dU(r,r') and V(r,r') value when given r and r' and the level 
-void PairAction::CalcdUlVlr(Tvector& r, Tvector& rp, int level, RealType &dUl, RealType &Vl)
-{
 
 }
