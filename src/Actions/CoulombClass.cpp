@@ -11,14 +11,14 @@ void Coulomb::Init(Input &in)
   GetOffset(speciesA,iSpeciesA,offsetA);
   GetOffset(speciesB,iSpeciesB,offsetB);
 
-  string fileName = "hello";
+  //string fileName = "hello";
 
-  out.Write("/Actions/"+name+"/file", fileName);
-  out.Write("/Actions/"+name+"/nImages", nImages);
-  out.Write("/Actions/"+name+"/nOrder", nOrder);
-  out.Write("/Actions/"+name+"/Z1Z2", Z1Z2);
-  out.Write("/Actions/"+name+"/speciesA", speciesA);
-  out.Write("/Actions/"+name+"/speciesB", speciesB);
+  //out.Write("/Actions/"+name+"/file", fileName);
+  //out.Write("/Actions/"+name+"/nImages", nImages);
+  //out.Write("/Actions/"+name+"/nOrder", nOrder);
+  //out.Write("/Actions/"+name+"/Z1Z2", Z1Z2);
+  //out.Write("/Actions/"+name+"/speciesA", speciesA);
+  //out.Write("/Actions/"+name+"/speciesB", speciesB);
 }
 
 RealType Coulomb::DActionDBeta()

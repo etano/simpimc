@@ -21,7 +21,7 @@ public:
 
   // Given Global Constants
   unsigned int nPart, nD, nBead;
-  RealType beta, L, iL;
+  RealType beta, L, iL, vol;
 
   // Calculated Global Constants
   RealType tau;

@@ -10,6 +10,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
     L = in.getChild("System").getAttribute<RealType>("L");
   else
     L = 0.;
+  vol = pow(L,nD);
 
   // Constants
   tau = beta/(1.*nBead);
@@ -89,7 +90,6 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
         bead(iP,iB) -> storeR();
     }
   }
-
 }
 
 // Get species info

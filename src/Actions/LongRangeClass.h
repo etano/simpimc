@@ -1,35 +1,29 @@
-#ifndef PairActionClass_H
-#define PairActionClass_H
+#ifndef LongRangeClass_H
+#define LongRangeClass_H
 
 #include "ActionClass.h"
 #include <einspline/multi_bspline.h>
 #include <einspline/bspline.h>
 #include <einspline/multi_nubspline.h>
 #include <einspline/nubspline.h>
-#include <algorithm>
 
-class PairAction : public Action
+class LongRange : public Action
 {
 private:
-  int nImages, nOrder, nVal, nTau, maxLevel;
+  int nImages;
+  int nOrder;
   string speciesA, speciesB;
-  int iSpeciesA, iSpeciesB, offsetA, offsetB;
-
-  // Long Range
-  int useLongRange;
-  RealType kCut;
-  Tvector Ukl, dUkl;
-  vector<Tvector> ks;
-  vector<RealType> magKs;
-  vector< pair<RealType,int> > uniqueKs;
-  vector<Ivector> kis;
+  int iSpeciesA, iSpeciesB;
+  int offsetA, offsetB;
+  int maxLevel;
+  int nVal, nTau;
 
   void ReadFile(string fileName);
 protected:
 
 public:
   // Constructor
-  PairAction(Path &path, Input &in, IOClass &out)
+  LongRange(Path &path, Input &in, IOClass &out)
     : Action(path,in,out)
   {
     Init(in);
@@ -51,16 +45,6 @@ public:
   void CalcUdUVr(Tvector& r, Tvector& rP, int level, RealType &U, RealType &dU, RealType &V);
   void CalcUsqz(RealType s, RealType q, RealType z, int level, RealType &U);
   void CalcUr(Tvector& r, Tvector& rP, int level, RealType &U);
-
-  // Long Range
-  void CalcUlr(Tvector& r, Tvector& rp, int level, RealType &Ul);
-  void CalcdUlVlr(Tvector& r, Tvector& rp, int level, RealType &dUl, RealType &Vl);
-  bool fequals(RealType a, RealType b, RealType tol);
-  bool compare(pair<RealType,RealType> &a, pair<RealType,RealType> &b);
-  inline bool Include(Tvector& k);
-  void AddK(Tvector& k, Ivector& ki);
-  void SetupKs();
-
 };
 
 #endif

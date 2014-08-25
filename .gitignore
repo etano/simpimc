@@ -5,7 +5,17 @@ tags
 *.o
 *.lo
 *.plo
+*.pyc
 *.out
+*.h5
+*.dat
+*.vk
+*.in
+*.PairAction
+*.bf
+*.ch
+*.dg
+*.dm
 data
 simpimc
 bin/
