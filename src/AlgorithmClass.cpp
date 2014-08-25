@@ -6,7 +6,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   string outputPrefix = in.getChild("IO").getAttribute<string>("outputPrefix");
 
   // Initialize Path
-  path.Init(in, out);
+  path.Init(in, out, rng);
 
   // Initialize Actions
   out.CreateGroup("Actions");

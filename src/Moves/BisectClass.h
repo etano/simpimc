@@ -9,6 +9,7 @@ private:
   string species;
   int iSpecies;
   int offset;
+  int nImages;
 
   int DoBisect(const int iPart);
   std::vector<Bead*> affBeads;

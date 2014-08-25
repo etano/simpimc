@@ -2,7 +2,10 @@
 
 void Kinetic::Init(Input &in)
 {
-  nImages = in.getAttribute<int>("nImages");
+  if (path.PBC)
+    nImages = in.getAttribute<int>("nImages");
+  else
+    nImages = 0;
   //out.Write("/Actions/"+name+"/nImages", nImages);
 }
 

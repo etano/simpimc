@@ -1,12 +1,15 @@
 #include "PathClass.h"
 
-void Path::Init(Input &in, IOClass &out)
+void Path::Init(Input &in, IOClass &out, RNG &rng)
 {
   nD = in.getChild("System").getAttribute<int>("nD");
   nBead = in.getChild("System").getAttribute<int>("nBead");
   beta = in.getChild("System").getAttribute<RealType>("beta");
-  L = in.getChild("System").getAttribute<RealType>("L");
   PBC = in.getChild("System").getAttribute<int>("PBC", 1);
+  if (PBC)
+    L = in.getChild("System").getAttribute<RealType>("L");
+  else
+    L = 0.;
 
   // Constants
   tau = beta/(1.*nBead);
@@ -68,11 +71,23 @@ void Path::Init(Input &in, IOClass &out)
     initFile.open(fileName.c_str(), std::ios_base::in);
     for (int iB=0; iB<nBead; ++iB) {
       for (int iP=0; iP<nPart; ++iP) {
-        initFile >> iB >> iP >> bead(iP,iB)->r(0) >> bead(iP,iB)->r(1) >> bead(iP,iB)->r(2);
+        initFile >> iB >> iP;
+        for (int iD=0; iD<nD; ++iD)
+          initFile >> bead(iP,iB)->r(iD);
         bead(iP,iB) -> storeR();
       }
     }
     initFile.close();
+  } else if (initType == "Random") {
+    for (int iP=0; iP<nPart; ++iP) {
+      for (int iD=0; iD<nD; ++iD) {
+        RealType tmpRand = rng.unifRand();
+        for (int iB=0; iB<nBead; ++iB)
+          bead(iP,iB)->r(iD) = tmpRand;
+      }
+      for (int iB=0; iB<nBead; ++iB)
+        bead(iP,iB) -> storeR();
+    }
   }
 
 }

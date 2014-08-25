@@ -3,6 +3,10 @@
 void Bisect::Init(Input &in)
 {
   maxLevel = in.getAttribute<int>("maxLevel");
+  if (path.PBC)
+    nImages = in.getAttribute<int>("nImages");
+  else
+    nImages = 0;
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies,offset);
 }
@@ -92,13 +96,12 @@ int Bisect::DoBisect(const int iP)
       //cout << iLevel << " " << beadA->p << " " << beadA->b << " " << beadA->b + 2*skip << " " << newAction << endl;
 
       // Get sampling probs
-      int numImages = 0; /// HACK asfdljasd;lfjas;dlfjalskdfj
       RealType gaussProdOld = 1.;
       RealType gaussProdNew = 1.;
       for (int iD=0; iD<path.nD; iD++) {
         RealType gaussSumOld = 0.;
         RealType gaussSumNew = 0.;
-        for (int image=-numImages; image<=numImages; image++) {
+        for (int image=-nImages; image<=nImages; image++) {
           RealType distOld = deltaOld(iD) + (RealType)image*path.L;
           RealType distNew = deltaNew(iD) + (RealType)image*path.L;
           gaussSumOld += exp(-0.5*distOld*distOld/sigma2);
