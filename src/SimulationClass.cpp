@@ -46,5 +46,7 @@ void Simulation::Run()
   RNG rng(seed);
   algorithm.Init(in, out, rng);
   algorithm.Run();
+
+  cout << "Done." << endl;
 }
 

@@ -13,8 +13,8 @@ void Bisect::Init(Input &in)
 
 void Bisect::MakeMove()
 {
-  for (unsigned int iP=0; iP<path.speciesList[iSpecies]->nPart; iP+=1) {
-    nAccept += DoBisect(iSpecies*path.speciesList[iSpecies]->nPart + iP);
+  for (unsigned int iP=offset; iP<offset+path.speciesList[iSpecies]->nPart; iP++) {
+    nAccept += DoBisect(iP);
     nAttempt++;
   }
 }
@@ -36,13 +36,14 @@ int Bisect::DoBisect(const int iP)
   Bead *beadI = path(iP,bead0);
   Bead *beadF = beadI -> nextB(nBisectBeads);
 
-  // Store coordinates
+  // Store coordinates and rho K
   Bead *beadA;
   affBeads.clear();
   for(beadA = beadI; beadA != beadF; beadA = beadA -> next) {
     affBeads.push_back(beadA);
     beadA->storeR();
   }
+  path.storeRhoK(affBeads);
 
   // Perform the bisection (move exactly through kinetic action)
   RealType vOld, vNew, dA[nLevel+1], dAold;
@@ -65,8 +66,8 @@ int Bisect::DoBisect(const int iP)
 
     beadA = beadI;
     while(beadA != beadF) {
-      beadB = beadA->nextB(skip);
-      beadC = beadB->nextB(skip);
+      beadB = path(iP,beadA->b+skip);//beadA->nextB(skip);
+      beadC =  path(iP,beadB->b+skip);//beadB->nextB(skip);
 
       // Old sampling
       path.SetMode(0);
@@ -122,6 +123,7 @@ int Bisect::DoBisect(const int iP)
 
     if (logAcceptProb < log(rng.unifRand())) { // Reject if true
       path.restoreR(affBeads);
+      path.restoreRhoK(affBeads);
       return 0;
     }
 

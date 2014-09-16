@@ -19,8 +19,10 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
       actions.push_back(new Kinetic(path,actionInputs[i],out));
     else if (type == "HarmonicTrap")
       actions.push_back(new Trap(path,actionInputs[i],out));
-    else if (type == "PairAction")
-      actions.push_back(new PairAction(path,actionInputs[i],out));
+    else if (type == "DavidPairAction")
+      actions.push_back(new DavidPairAction(path,actionInputs[i],out));
+    else if (type == "IlkkaPairAction")
+      actions.push_back(new IlkkaPairAction(path,actionInputs[i],out));
     else
       std::cerr << "Warning: Unrecognized Action, " << type << endl;
   }

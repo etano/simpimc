@@ -15,6 +15,7 @@ SET(USE_OPENMP TRUE)
 SET(QMC_BUILD_STATIC FALSE)
 SET(NDIM 3)
 SET(COMPILER_MAKE "CLANG") # INTEL, GNU, or IBM
+SET(DEBUG TRUE)
 
 #-------------------------------------------------------------------
 # Compilers
@@ -96,7 +97,10 @@ IF(${COMPILER_MAKE} MATCHES "CLANG")
   SET(CMAKE_C_FLAGS "${CLANG_C_FLAGS}")
 ENDIF()
 
-SET(COMMON_FLAGS "-O3 -g -DNDIM=${NDIM}")
+SET(COMMON_FLAGS "-O3 -DNDIM=${NDIM}")
+IF(DEBUG)
+  SET(COMMON_FLAGS "${COMMON_FLAGS} -pg")
+ENDIF(DEBUG)
 IF(USE_MPI)
   SET(COMMON_FLAGS "${COMMON_FLAGS} -DUSE_MPI")
 ENDIF(USE_MPI)
@@ -217,6 +221,8 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Actions/CoulombClass.cpp
   src/Actions/KineticClass.cpp
   src/Actions/PairActionClass.cpp
+  src/Actions/DavidPairActionClass.cpp
+  src/Actions/IlkkaPairActionClass.cpp
   src/Actions/TrapClass.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp

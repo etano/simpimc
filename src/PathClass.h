@@ -7,6 +7,7 @@
 #include "Utils/IO/InputClass.h"
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
+#include "Utils/Algorithm/Algorithm.h"
 
 class Path
 {
@@ -61,6 +62,25 @@ public:
   // Mode (use copy or true)
   bool mode;
   inline void SetMode(int m) { mode = m; };
+  inline bool GetMode() { return mode; };
+
+  // k vectors and rho_k
+  vector<Tvector> ks;
+  vector<Ivector> kIndices;
+  vector<Cvector> C;
+  vector<RealType> magKs;
+  Ccube rhoK, rhoKC;
+  Tvector kBox;
+  RealType kC;
+  void SetupKs(RealType kCut);
+  Ivector maxKIndex;
+  void UpdateRhoK(int b0, int b1, vector<int> &particles, int level);
+  void UpdateRhoK();
+  inline Ccube& GetRhoK();
+  void CalcRhoKs(int iB, string species);
+  inline bool Include(Tvector &k, RealType kCut);
+  inline void storeRhoK(vector<Bead*>& affBeads);
+  inline void restoreRhoK(vector<Bead*>& affBeads);
 };
 
 inline Bead* Path::operator() (int iP, int iB)
@@ -72,7 +92,7 @@ inline Bead* Path::operator() (int iP, int iB)
 inline void Path::PutInBox(Tvector& r)
 {
   if(PBC) {
-    for (unsigned int iD = 0; iD < nD; iD++) {
+    for (unsigned int iD=0; iD<nD; iD++) {
       RealType n = -floor(r(iD)*iL + 0.5);
       r(iD) += n*L;
     }
@@ -128,6 +148,28 @@ inline void Path::Dr(Bead* b0, Tvector &r1, Tvector &dr)
 inline void Path::Dr(Bead* b0, Bead* b1, Tvector &dr)
 {
   Dr(GetR(b0), GetR(b1), dr);
+}
+
+// Store rhoK
+inline void Path::storeRhoK(vector<Bead*>& affBeads)
+{
+  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter) {
+    int iB = (*beadIter)->b;
+    int iS = (*beadIter)->species.iS;
+    for (int iK=0; iK<kIndices.size(); iK++)
+      rhoKC(iB,iS,iK) = rhoK(iB,iS,iK);
+  }
+}
+
+// Restore rhoK
+inline void Path::restoreRhoK(vector<Bead*>& affBeads)
+{
+  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter) {
+    int iB = (*beadIter)->b;
+    int iS = (*beadIter)->species.iS;
+    for (int iK=0; iK<kIndices.size(); iK++)
+      rhoK(iB,iS,iK) = rhoKC(iB,iS,iK);
+  }
 }
 
 #endif

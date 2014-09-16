@@ -32,7 +32,7 @@ public:
   // Data
   NUgrid* grid;
   Tvector taus;
-  arma::field<multi_NUBspline_1d_d*> Ukj, dUkjdBeta;
+  field<multi_NUBspline_1d_d*> Ukj, dUkjdBeta;
 
   // Functions
   virtual void Init(Input &in);

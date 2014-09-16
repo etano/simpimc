@@ -17,8 +17,9 @@ public:
   {
     self = this;
     r.zeros(nD);
-    r.fill(0.5*p);
+    r(0) = 0.5*(p - 1.);
     storeR();
+    s = species.iS;
   }
 
   Species &species;
@@ -37,6 +38,7 @@ public:
 
   unsigned int p;
   unsigned int b;
+  unsigned int s;
   RealType nDist, nDistC;
   Tvector r, rC;
   Bead *self;

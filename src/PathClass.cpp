@@ -20,7 +20,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   vector<Input> speciesInput = in.getChild("Particles").getChildList("Species");
   nSpecies = speciesInput.size();
   for (int iS=0; iS<nSpecies; iS+=1) {
-    speciesList.push_back(new Species(speciesInput[iS],nBead,nD));
+    speciesList.push_back(new Species(speciesInput[iS],iS,nBead,nD));
     nPart += speciesList[iS]->nPart;
   }
 
@@ -68,28 +68,54 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   string initType = in.getChild("Init").getAttribute<string>("type");
   if (initType == "File") {
     string fileName = in.getChild("Init").getAttribute<string>("name");
+    bool allBeads = in.getChild("Init").getAttribute<bool>("allBeads",false);
     fstream initFile;
     initFile.open(fileName.c_str(), std::ios_base::in);
-    for (int iB=0; iB<nBead; ++iB) {
-      for (int iP=0; iP<nPart; ++iP) {
-        initFile >> iB >> iP;
+    for (int iP=0; iP<nPart; ++iP) {
+      if (allBeads) {
+        for (int iB=0; iB<nBead; ++iB) {
+          initFile >> iP >> iB;
+          for (int iD=0; iD<nD; ++iD)
+            initFile >> bead(iP,iB)->r(iD);
+          bead(iP,iB)->storeR();
+        }
+      } else {
+        initFile >> iP;
+        Tvector r(nD);
         for (int iD=0; iD<nD; ++iD)
-          initFile >> bead(iP,iB)->r(iD);
-        bead(iP,iB) -> storeR();
+          initFile >> r(iD);
+        for (int iB=0; iB<nBead; ++iB) {
+          bead(iP,iB)->r = r;
+          bead(iP,iB)->storeR();
+        }
       }
     }
     initFile.close();
   } else if (initType == "Random") {
     for (int iP=0; iP<nPart; ++iP) {
       for (int iD=0; iD<nD; ++iD) {
-        RealType tmpRand = rng.unifRand();
-        for (int iB=0; iB<nBead; ++iB)
+        for (int iB=0; iB<nBead; ++iB) {
+          RealType tmpRand = rng.unifRand();
           bead(iP,iB)->r(iD) = tmpRand;
+        }
       }
       for (int iB=0; iB<nBead; ++iB)
-        bead(iP,iB) -> storeR();
+        bead(iP,iB)->storeR();
     }
   }
+   // for (int iP=0; iP<nPart; ++iP) {
+   //   for (int iB=0; iB<nBead; ++iB) {
+   //     cout << iP << " " << iB << " ";
+   //     for (int iD=0; iD<nD; ++iD) {
+   //        cout << bead(iP,iB)->r(iD) << " ";
+   //     }
+   //     cout << endl;
+   //   }
+   // }
+
+   // Reset kCut
+   kC = 0.;
+
 }
 
 // Get species info
@@ -104,6 +130,203 @@ void Path::GetSpeciesInfo(string species, int &iSpecies, int &offset)
     tmpOffset += speciesList[iS]->nPart;
   }
 }
+
+// Avoid negative and 0 k vectors
+inline bool Path::Include(Tvector &k, RealType kCut)
+{
+  RealType k2 = dot(k,k);
+  if (k2 < kCut*kCut && k2 != 0.) {
+    if(k(0) > 0.)
+      return true;
+    else if (nD >= 2 && (k(0) == 0. && k(1) > 0.))
+      return true;
+    else if (nD >= 3 && (k(0) == 0. && k(1) == 0. && k(2) > 0.))
+      return true;
+    else
+      return false;
+  } else
+    return false;
+}
+
+// Setup universal k vectors according to k cutoff value
+// Note that this can be made more general with combinations + permutations
+void Path::SetupKs(RealType kCut)
+{
+  if (kCut <= kC)
+    return;
+  else {
+    ks.clear();
+    kIndices.clear();
+    magKs.clear();
+  }
+
+  // Calculate k box
+  kBox.set_size(nD);
+  for (int iD=0; iD<nD; iD++)
+    kBox(iD) = 2.*M_PI/L;
+
+  // Calculate max k index based on k cutoff
+  maxKIndex.set_size(nD);
+  for (int iD=0; iD<nD; iD++)
+    maxKIndex(iD) = (int) ceil(1.1*kCut/kBox(iD));
+
+  // Set up C vector
+  C.resize(nD);
+  for (int iD=0; iD<nD; iD++)
+    C[iD].set_size(2*maxKIndex(iD)+1);
+
+  // Generate all possible combinations and permutations of k indices
+  vector<int> indices;
+  for (int iD=0; iD<nD; iD++)
+    for (int i=-maxKIndex(iD); i<=maxKIndex(iD); i++)
+      indices.push_back(i);
+  vector< vector<int> > tmpKIndices;
+  genCombPermK(tmpKIndices, indices, nD, false, true);
+
+  // Iterate through indices, form k vectors, and include only those that should be included
+  for (int iK=0; iK<tmpKIndices.size(); iK++) {
+    Tvector k(nD);
+    Ivector ki(nD);
+    for (int iD=0; iD<nD; iD++) {
+      k(iD) = tmpKIndices[iK][iD]*kBox(iD);
+      ki(iD) = maxKIndex(iD) + tmpKIndices[iK][iD];
+    }
+    if (Include(k, kCut)) {
+      ks.push_back(k);
+      kIndices.push_back(ki);
+      magKs.push_back(sqrt(dot(k,k)));
+    }
+  }
+
+  cout << "kCut: " << kCut << ", # k vecs: " << ks.size() << endl;
+
+  // Resize rhoK
+  rhoK.set_size(nBead,nSpecies,ks.size());
+  rhoKC.set_size(nBead,nSpecies,ks.size());
+  UpdateRhoK();
+
+}
+
+inline Ccube& Path::GetRhoK()
+{
+  if (mode)
+    return (rhoK);
+  else
+    return (rhoKC);
+}
+
+void Path::CalcRhoKs(int iB, string species)
+{
+  // Retrieve old or new rho k
+  Ccube &tmpRhoK = GetRhoK();
+
+  // Get species info
+  int iS, offset;
+  GetSpeciesInfo(species,iS,offset);
+
+  // Zero out rho_k array
+  for (int iK=0; iK<kIndices.size(); iK++)
+    tmpRhoK(beadLoop[iB],iS,iK) = 0.;
+
+  // Calculate rho_k values
+  for (int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
+    Tvector r = GetR((*this)(iP,iB));
+    for (int iD=0; iD<nD; iD++) {
+      ComplexType tmpC;
+      RealType phi = r(iD)*kBox(iD);
+      tmpC = ComplexType(cos(phi), sin(phi));
+      C[iD](maxKIndex(iD)) = 1.;
+      for (int iK=1; iK<=maxKIndex(iD); iK++) {
+        C[iD](maxKIndex(iD)+iK) = tmpC * C[iD](maxKIndex[iD]+iK-1);
+        C[iD](maxKIndex(iD)-iK) = conj(C[iD](maxKIndex[iD]+iK));
+      }
+    }
+    for (int iK=0; iK<kIndices.size(); iK++) {
+      ComplexType factor = 1;
+      for (int iD=0; iD<nD; iD++)
+        factor *= C[iD](kIndices[iK](iD));
+      tmpRhoK(beadLoop[iB],iS,iK) += factor;
+    }
+  }
+}
+
+// Update all rho k values
+void Path::UpdateRhoK()
+{
+  bool tmpMode = GetMode();
+  SetMode(0);
+  for (int iB=0; iB<nBead; iB++) {
+    for (int iS=0; iS<nSpecies; iS++)
+      CalcRhoKs(iB, speciesList[iS]->name);
+  }
+  rhoK = rhoKC;
+
+  SetMode(tmpMode);
+}
+
+// Update rho k values for specific particles and slices
+void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
+{
+  bool tmpMode = GetMode();
+  int skip = 1<<level;
+
+  // Update C values of changed particles
+  for (int iP=0; iP<particles.size(); iP++) {
+    int p = particles[iP];
+    int iS = bead(p,0)->species.iS;
+    for (int iB=b0; iB<=b1; iB+=skip) {
+      // Reset new to old
+      for (int iK=0; iK<kIndices.size(); iK++)
+        rhoK(beadLoop[iB],iS,iK) = rhoKC(beadLoop[iB],iS,iK);
+
+      // Add in new values
+      SetMode(1);
+      Tvector rNew = GetR((*this)(p,iB));
+      for (int iD=0; iD<nD; iD++) {
+        ComplexType tmpC;
+        RealType phi = rNew(iD)*kBox(iD);
+        tmpC = ComplexType(cos(phi), sin(phi));
+        C[iD](maxKIndex(iD)) = 1.;
+        for (int iK=1; iK<=maxKIndex(iD); iK++) {
+          C[iD](maxKIndex(iD)+iK) = tmpC * C[iD](maxKIndex[iD]+iK-1);
+          C[iD](maxKIndex(iD)-iK) = conj(C[iD](maxKIndex[iD]+iK));
+        }
+      }
+      for (int iK=0; iK<kIndices.size(); iK++) {
+        Ivector &ki = kIndices[iK];
+        ComplexType factor = 1.;
+        for (int iD=0; iD<nD; iD++)
+          factor *= C[iD](ki(iD));
+        rhoK(beadLoop[iB],iS,iK) += factor;
+      }
+
+      // Subtract out old values
+      SetMode(0);
+      Tvector rOld = GetR((*this)(p,iB));
+      for (int iD=0; iD<nD; iD++) {
+        ComplexType tmpC;
+        RealType phi = rOld(iD)*kBox(iD);
+        tmpC = ComplexType(cos(phi), sin(phi));
+        C[iD](maxKIndex(iD)) = 1.;
+        for (int iK=1; iK<=maxKIndex(iD); iK++) {
+          C[iD](maxKIndex(iD)+iK) = tmpC * C[iD](maxKIndex[iD]+iK-1);
+          C[iD](maxKIndex(iD)-iK) = conj(C[iD](maxKIndex[iD]+iK));
+        }
+      }
+      for (int iK=0; iK<kIndices.size(); iK++) {
+        Ivector &ki = kIndices[iK];
+        ComplexType factor = 1.;
+        for (int iD=0; iD<nD; iD++)
+          factor *= C[iD](ki(iD));
+        rhoK(beadLoop[iB],iS,iK) -= factor;
+      }
+    }
+  }
+
+  SetMode(tmpMode);
+
+}
+
 
 // Identify permuation state
 int Path::getPType()

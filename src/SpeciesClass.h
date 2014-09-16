@@ -12,13 +12,15 @@ protected:
 
 public:
   // Constructor
-  Species(Input &in, int nBead, int nD)
+  Species(Input &in, int tmpIS, int nBead, int nD)
+    : iS(tmpIS)
   {
     Init(in, nBead, nD);
   };
   void Init(Input &in, int nBead, int nD);
 
   // Details
+  int iS; // index
   string name, type;
 
   // Given Global Constants

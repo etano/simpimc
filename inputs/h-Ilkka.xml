@@ -1,8 +1,8 @@
 <Input>
-  <!--RNG seed="12345" /-->
+  <RNG seed="1409033395" />
   <IO outputPrefix="H" />
   <Parallel procsPerGroup="1" />
-  <System nD="3" nBead="320" beta="40.0" L="100.0" PBC="0" />
+  <System nD="3" nBead="320" beta="40.0" L="1000.0" PBC="0" />
   <Particles>
     <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
     <Species name="p" type="p" nPart="1" lambda="0.0" fermi="0" />
@@ -10,7 +10,7 @@
   <Init type="Default" />
   <Actions>
     <Action name="Kinetic" type="Kinetic" nImages="0" />
-    <Action name="Coulomb" type="DavidPairAction" file="e-p.sr.sq.h5" nOrder="3" nImages="0" speciesA="e" speciesB="p" maxLevel="0" useLongRange="0" />
+    <Action name="Coulomb" type="IlkkaPairAction" file="e-p.h5" nOrder="-1" nImages="0" speciesA="e" speciesB="p" maxLevel="0" useLongRange="0" />
     <!--<Action name="Coulomb" type="Coulomb" nOrder="2" nImages="0" speciesA="e" speciesB="p" Z1Z2="-1" maxLevel="0" /-->
   </Actions>
   <Moves>
