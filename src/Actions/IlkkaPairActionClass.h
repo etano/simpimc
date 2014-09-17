@@ -34,7 +34,7 @@ public:
   NUBspline_2d_d *u_xy_spline, *du_xy_spline;
 
   // Constants
-  RealType uLong_r0, uLong_k0, duLong_r0, duLong_k0, duLong_k_r0, vLong_r0, vLong_k0, vLong_k_r0;
+  RealType uLong_r0, uLong_k0, duLong_r0, duLong_k0, vLong_r0, vLong_k0;
   RealType kCutoff;
 
   // Functions
@@ -43,11 +43,10 @@ public:
   // Pair actions
   virtual RealType CalcV(Tvector& rVec, Tvector& rPVec, int level);
   virtual RealType CalcVLong();
-  virtual RealType CalcU(Tvector& rVec, Tvector& rPVec, int level);
+  virtual RealType CalcU(RealType &r, RealType &rP, RealType &s, int level);
   virtual RealType CalcULong(int b0, int b1, vector<int> &particles, int level);
-  virtual RealType CalcdUdBeta(Tvector& rVec, Tvector& rPVec, int level);
+  virtual RealType CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level);
   virtual RealType CalcdUdBetaLong();
-  RealType CalcLong_k_r0(Tvector& long_k);
 
 };
 

@@ -114,11 +114,11 @@ void DavidPairAction::ReadFile(string fileName)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-RealType DavidPairAction::CalcU(Tvector& rVec, Tvector& rPVec, int level)
+RealType DavidPairAction::CalcU(RealType &r, RealType &rP, RealType &s, int level)
 {
   // Constants
-  RealType r, rP, q, s, z, x, y;
-  GetConstants(rVec, rPVec, r, rP, q, s, z, x, y);
+  RealType q = 0.5*(r + rP);
+  RealType z = r - rP;
 
   // Limits
   RealType rMin, rMax;
@@ -158,11 +158,11 @@ RealType DavidPairAction::CalcU(Tvector& rVec, Tvector& rPVec, int level)
 }
 
 /// Calculate the U(r,r'), dU(r,r'), and V(r,r') value when given r and r' and the level 
-RealType DavidPairAction::CalcdUdBeta(Tvector& rVec, Tvector& rPVec, int level)
+RealType DavidPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level)
 {
   // Constants
-  RealType r, rP, q, s, z, x, y;
-  GetConstants(rVec, rPVec, r, rP, q, s, z, x, y);
+  RealType q = 0.5*(r + rP);
+  RealType z = r - rP;
 
   // Limits
   RealType rMin, rMax;

@@ -14,8 +14,8 @@ SET(USE_MPI TRUE)
 SET(USE_OPENMP TRUE)
 SET(QMC_BUILD_STATIC FALSE)
 SET(NDIM 3)
-SET(COMPILER_MAKE "CLANG") # INTEL, GNU, or IBM
-SET(DEBUG TRUE)
+SET(COMPILER_MAKE "GNU") # INTEL, GNU, or IBM
+SET(DEBUG FALSE)
 
 #-------------------------------------------------------------------
 # Compilers

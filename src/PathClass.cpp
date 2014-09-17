@@ -158,6 +158,7 @@ void Path::SetupKs(RealType kCut)
     ks.clear();
     kIndices.clear();
     magKs.clear();
+    kC = kCut;
   }
 
   // Calculate k box
@@ -226,7 +227,7 @@ void Path::CalcRhoKs(int iB, string species)
 
   // Zero out rho_k array
   for (int iK=0; iK<kIndices.size(); iK++)
-    tmpRhoK(beadLoop[iB],iS,iK) = 0.;
+    tmpRhoK(beadLoop(iB),iS,iK) = 0.;
 
   // Calculate rho_k values
   for (int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
@@ -245,7 +246,7 @@ void Path::CalcRhoKs(int iB, string species)
       ComplexType factor = 1;
       for (int iD=0; iD<nD; iD++)
         factor *= C[iD](kIndices[iK](iD));
-      tmpRhoK(beadLoop[iB],iS,iK) += factor;
+      tmpRhoK(beadLoop(iB),iS,iK) += factor;
     }
   }
 }
@@ -277,7 +278,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
     for (int iB=b0; iB<=b1; iB+=skip) {
       // Reset new to old
       for (int iK=0; iK<kIndices.size(); iK++)
-        rhoK(beadLoop[iB],iS,iK) = rhoKC(beadLoop[iB],iS,iK);
+        rhoK(beadLoop(iB),iS,iK) = rhoKC(beadLoop(iB),iS,iK);
 
       // Add in new values
       SetMode(1);
@@ -297,7 +298,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
         ComplexType factor = 1.;
         for (int iD=0; iD<nD; iD++)
           factor *= C[iD](ki(iD));
-        rhoK(beadLoop[iB],iS,iK) += factor;
+        rhoK(beadLoop(iB),iS,iK) += factor;
       }
 
       // Subtract out old values
@@ -318,7 +319,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
         ComplexType factor = 1.;
         for (int iD=0; iD<nD; iD++)
           factor *= C[iD](ki(iD));
-        rhoK(beadLoop[iB],iS,iK) -= factor;
+        rhoK(beadLoop(iB),iS,iK) -= factor;
       }
     }
   }

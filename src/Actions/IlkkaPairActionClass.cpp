@@ -29,11 +29,10 @@ void IlkkaPairAction::ReadFile(string fileName)
     in.Read("u/diag/uLong_k0",uLong_k0);
 
     // Build k vectors
-    uLong_k.set_size(path.magKs.size());
-
+    uLong_k.zeros(path.magKs.size());
     for (int iK=0; iK<path.magKs.size(); ++iK) {
       for (int iK_u=0; iK_u<k_u.size(); ++iK_u) {
-        if (fequal(path.magKs[iK],k_u(iK_u),1.e-10))
+        if (fequal(path.magKs[iK],k_u(iK_u),1.e-8))
           uLong_k(iK) = tmpULong_k(iK_u);
       }
     }
@@ -75,10 +74,10 @@ void IlkkaPairAction::ReadFile(string fileName)
     in.Read("du/diag/duLong_k0",duLong_k0);
 
     // Build k vectors
-    duLong_k.set_size(path.magKs.size());
+    duLong_k.zeros(path.magKs.size());
     for (int iK=0; iK<path.magKs.size(); ++iK) {
       for (int iK_du=0; iK_du<k_du.size(); ++iK_du) {
-        if (fequal(path.magKs[iK],k_du(iK_du),1.e-10))
+        if (fequal(path.magKs[iK],k_du(iK_du),1.e-8))
           duLong_k(iK) = tmpDULong_k(iK_du);
       }
     }
@@ -126,10 +125,10 @@ void IlkkaPairAction::ReadFile(string fileName)
     in.Read("v/diag/vLong_k0",vLong_k0);
 
     // Build k vectors
-    vLong_k.set_size(path.magKs.size());
+    vLong_k.zeros(path.magKs.size());
     for (int iK=0; iK<path.magKs.size(); ++iK) {
       for (int iK_v=0; iK_v<k_v.size(); ++iK_v) {
-        if (fequal(path.magKs[iK],k_v(iK_v),1.e-10))
+        if (fequal(path.magKs[iK],k_v(iK_v),1.e-8))
           vLong_k(iK) = tmpVLong_k(iK_v);
       }
     }
@@ -149,17 +148,13 @@ void IlkkaPairAction::ReadFile(string fileName)
   if (iSpeciesA == iSpeciesB) { // homologous
     duLong_k0 *= 0.25*N1*N1*path.nBead;
     duLong_r0 *= -0.5*N1*path.nBead;
-    duLong_k_r0 = N1*path.nBead*CalcLong_k_r0(duLong_k);
     vLong_k0 *= 0.25*N1*N1*path.nBead;
     vLong_r0 *= -0.5*N1*path.nBead;
-    vLong_k_r0 = N1*path.nBead*CalcLong_k_r0(vLong_k);
   } else { // heterologous
     duLong_k0 *= 0.5*N1*N2*path.nBead;
     duLong_r0 *= 0.*path.nBead;
-    duLong_k_r0 = 0.;
     vLong_k0 *= 0.5*N1*N2*path.nBead;
     vLong_r0 *= 0.*path.nBead;
-    vLong_k_r0 = 0.;
   }
 
 }
@@ -194,11 +189,12 @@ RealType IlkkaPairAction::CalcV(Tvector& rVec, Tvector& rPVec, int level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-RealType IlkkaPairAction::CalcU(Tvector& rVec, Tvector& rPVec, int level)
+RealType IlkkaPairAction::CalcU(RealType &r, RealType &rP, RealType &s, int level)
 {
   // Constants
-  RealType r, rP, q, s, z, x, y;
-  GetConstants(rVec, rPVec, r, rP, q, s, z, x, y);
+  RealType q = 0.5*(r + rP);
+  RealType x = q + 0.5*s;
+  RealType y = q - 0.5*s;
 
   // Calculate U
   RealType U = 0.;
@@ -222,11 +218,12 @@ RealType IlkkaPairAction::CalcU(Tvector& rVec, Tvector& rPVec, int level)
 }
 
 /// Calculate the dU(r,r') value when given r and r' and the level 
-RealType IlkkaPairAction::CalcdUdBeta(Tvector& rVec, Tvector& rPVec, int level)
+RealType IlkkaPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level)
 {
   // Constants
-  RealType r, rP, q, s, z, x, y;
-  GetConstants(rVec, rPVec, r, rP, q, s, z, x, y);
+  RealType q = 0.5*(r + rP);
+  RealType x = q + 0.5*s;
+  RealType y = q - 0.5*s;
 
   // Calculate dU
   RealType dU = 0.;
@@ -252,9 +249,6 @@ RealType IlkkaPairAction::CalcdUdBeta(Tvector& rVec, Tvector& rPVec, int level)
 /// Calculate the ULong value
 RealType IlkkaPairAction::CalcVLong()
 {
-  if (path.speciesList[iSpeciesA]->nPart == 1 && (iSpeciesA == iSpeciesB))
-    return vLong_k_r0 + vLong_k0 + vLong_r0;
-
   // Sum over k vectors
   RealType tot = 0.;
   for (int iB=0; iB<path.nBead; iB++) {
@@ -262,7 +256,7 @@ RealType IlkkaPairAction::CalcVLong()
     if (iSpeciesB != iSpeciesA)
       path.CalcRhoKs(iB,path.speciesList[iSpeciesB]->name);
     for (int iK=0; iK<path.ks.size(); iK++) {
-      RealType rhok2 = cmag2(path.rhoK(path.beadLoop[iB],iSpeciesA,iK),path.rhoK(path.beadLoop[iB],iSpeciesB,iK));
+      RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA,iK),path.rhoK(path.beadLoop(iB),iSpeciesB,iK));
       tot += rhok2*vLong_k(iK);
     }
   }
@@ -276,9 +270,6 @@ RealType IlkkaPairAction::CalcVLong()
 /// Calculate the ULong value
 RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int level)
 {
-  if (particles.size() == 1 && (iSpeciesA == iSpeciesB))
-    return 0.;
-
   // Update rho k if looking at changed positions
   if (path.mode == 1)
     path.UpdateRhoK(b0, b1, particles, level);
@@ -286,10 +277,12 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
   // Sum over k vectors
   int skip = 1<<level;
   RealType tot = 0.;
-  for (int iB=b0; iB<=b1; iB+=skip) {
-    for (int iK=0; iK<path.ks.size(); iK++) {
-      RealType rhok2 = cmag2(path.rhoK(path.beadLoop[iB],iSpeciesA,iK),path.rhoK(path.beadLoop[iB],iSpeciesB,iK));
-      tot += rhok2*uLong_k(iK);
+  for (int iK=0; iK<path.ks.size(); iK++) {
+    if (path.magKs[iK] < kCut) {
+      for (int iB=b0; iB<=b1; iB+=skip) {
+        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA,iK),path.rhoK(path.beadLoop(iB),iSpeciesB,iK));
+        tot += rhok2*uLong_k(iK);
+      }
     }
   }
 
@@ -302,32 +295,19 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
 /// Calculate the dUdBetaLong value
 RealType IlkkaPairAction::CalcdUdBetaLong()
 {
-  if (path.speciesList[iSpeciesA]->nPart == 1 && (iSpeciesA == iSpeciesB))
-    return duLong_k_r0 + duLong_k0 + duLong_r0;
-
   // Sum over k vectors
   RealType tot = 0.;
-  for (int iB=0; iB<path.nBead; iB++) {
-    for (int iK=0; iK<path.ks.size(); iK++) {
-      RealType rhok2 = cmag2(path.rhoK(path.beadLoop[iB],iSpeciesA,iK),path.rhoK(path.beadLoop[iB],iSpeciesB,iK));
-      tot += duLong_k(iK)*rhok2;
+  for (int iK=0; iK<path.ks.size(); iK++) {
+    if (path.magKs[iK] < kCut) {
+      for (int iB=0; iB<path.nBead; iB++) {
+        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA,iK),path.rhoK(path.beadLoop(iB),iSpeciesB,iK));
+        tot += duLong_k(iK)*rhok2;
+      }
     }
   }
 
   if (iSpeciesB != iSpeciesA)
     tot *= 2.;
 
-  return tot;// + duLong_k0 + duLong_r0;
+  return tot + duLong_k0 + duLong_r0;
 }
-
-/// Calculate the lim_{r->0} long_k value
-RealType IlkkaPairAction::CalcLong_k_r0(Tvector &long_k)
-{
-  // Sum over k vectors
-  RealType tot = 0.;
-  for (int iK=0; iK<path.ks.size(); iK++)
-    tot += long_k(iK);
-
-  return tot;
-}
-
