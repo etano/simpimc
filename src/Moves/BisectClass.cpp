@@ -3,6 +3,9 @@
 void Bisect::Init(Input &in)
 {
   maxLevel = in.getAttribute<int>("maxLevel");
+  int maxPossibleLevel = floor(log2(path.nBead));
+  if (maxLevel > maxPossibleLevel)
+    cout << "Warning: maxLevel > maxPossibleLevel!" << endl;
   if (path.PBC)
     nImages = in.getAttribute<int>("nImages");
   else
@@ -85,7 +88,6 @@ int Bisect::DoBisect(const int iP)
       // Old action
       for (int i=0; i<actionList.size(); ++i)
         oldAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
-      //cout << iLevel << " " << beadA->p << " " << beadA->b << " " << beadA->b + 2*skip << " " << oldAction << endl;
 
       // New sampling
       path.SetMode(1);
@@ -99,7 +101,6 @@ int Bisect::DoBisect(const int iP)
       // New action
       for (int i=0; i<actionList.size(); ++i)
         newAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
-      //cout << iLevel << " " << beadA->p << " " << beadA->b << " " << beadA->b + 2*skip << " " << newAction << endl;
 
       // Get sampling probs
       RealType gaussProdOld = 1.;

@@ -42,10 +42,13 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
 
   // Initiate beads
   bead.set_size(nPart,nBead);
-  for (unsigned int iS=0; iS<nSpecies; iS+=1)
-    for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP+=1)
+  for (int iS=0; iS<nSpecies; iS+=1) {
+    int offset;
+    GetSpeciesInfo(speciesList[iS]->name,iS,offset);
+    for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP+=1)
       for (unsigned int iB=0; iB<nBead; iB+=1)
-        bead(iS*speciesList[iS]->nPart + iP,iB) = new Bead(nD,*speciesList[iS],iS*speciesList[iS]->nPart + iP,iB);
+        bead(iP,iB) = new Bead(nD,*speciesList[iS],iP,iB);
+  }
 
   // Initiate bead connections
   for (unsigned int iP = 0; iP < nPart; iP += 1) {
@@ -96,14 +99,12 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
     initFile.close();
   } else if (initType == "Random") {
     for (int iP=0; iP<nPart; ++iP) {
-      for (int iD=0; iD<nD; ++iD) {
-        for (int iB=0; iB<nBead; ++iB) {
-          RealType tmpRand = rng.unifRand();
+      RealType tmpRand = rng.unifRand();
+      for (int iB=0; iB<nBead; ++iB) {
+        for (int iD=0; iD<nD; ++iD)
           bead(iP,iB)->r(iD) = tmpRand;
-        }
-      }
-      for (int iB=0; iB<nBead; ++iB)
         bead(iP,iB)->storeR();
+      }
     }
   }
 
