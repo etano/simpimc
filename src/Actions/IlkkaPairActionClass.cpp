@@ -51,6 +51,7 @@ void IlkkaPairAction::ReadFile(string fileName)
   x_u_grid = create_general_grid(x_u.memptr(), x_u.size());
   y_u_grid = create_general_grid(y_u.memptr(), y_u.size());
   u_xy_spline = create_NUBspline_2d_d(x_u_grid, y_u_grid, xBC, xBC, u_xy.memptr());
+
   if (useLongRange) {
     r_u_grid = create_general_grid(r_u.memptr(), r_u.size());
     uLong_r_spline = create_NUBspline_1d_d(r_u_grid, xBC, uLong_r.memptr());
@@ -251,13 +252,12 @@ RealType IlkkaPairAction::CalcVLong()
 {
   // Sum over k vectors
   RealType tot = 0.;
-  for (int iB=0; iB<path.nBead; iB++) {
-    path.CalcRhoKs(iB,path.speciesList[iSpeciesA]->name);
-    if (iSpeciesB != iSpeciesA)
-      path.CalcRhoKs(iB,path.speciesList[iSpeciesB]->name);
-    for (int iK=0; iK<path.ks.size(); iK++) {
-      RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA,iK),path.rhoK(path.beadLoop(iB),iSpeciesB,iK));
-      tot += rhok2*vLong_k(iK);
+  for (int iK=0; iK<path.ks.size(); iK++) {
+    if (path.magKs[iK] < kCut) {
+      for (int iB=0; iB<path.nBead; iB++) {
+        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA,iK),path.rhoK(path.beadLoop(iB),iSpeciesB,iK));
+        tot += rhok2*vLong_k(iK);
+      }
     }
   }
 
@@ -272,7 +272,7 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
 {
   // Update rho k if looking at changed positions
   if (path.mode == 1)
-    path.UpdateRhoK(b0, b1, particles, level);
+    path.UpdateRhoKP(b0, b1, particles, level);
 
   // Sum over k vectors
   int skip = 1<<level;
@@ -295,6 +295,7 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
 /// Calculate the dUdBetaLong value
 RealType IlkkaPairAction::CalcdUdBetaLong()
 {
+
   // Sum over k vectors
   RealType tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {

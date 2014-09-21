@@ -30,7 +30,6 @@ int Bisect::DoBisect(const int iP)
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
   vector<int> particles;
   particles.push_back(iP);
-  //cout << "PARTICLE: " << iP << endl;
 
   // Set up pointers
   Bead *beadI = path(iP,bead0);
@@ -44,6 +43,7 @@ int Bisect::DoBisect(const int iP)
     beadA->storeR();
   }
   path.storeRhoK(affBeads);
+  //affBeads.clear();
 
   // Perform the bisection (move exactly through kinetic action)
   RealType vOld, vNew, dA[nLevel+1], dAold;
@@ -66,8 +66,14 @@ int Bisect::DoBisect(const int iP)
 
     beadA = beadI;
     while(beadA != beadF) {
-      beadB = path(iP,beadA->b+skip);//beadA->nextB(skip);
-      beadC =  path(iP,beadB->b+skip);//beadB->nextB(skip);
+      // Set beads
+      beadB = beadA->nextB(skip);
+      beadC = beadB->nextB(skip);
+
+      // Keep track of only the beads that actually change
+      //affBeads.push_back(beadB);
+      //beadB->storeR();
+      //path.storeRhoK(beadB);
 
       // Old sampling
       path.SetMode(0);
@@ -88,7 +94,6 @@ int Bisect::DoBisect(const int iP)
       Tvector deltaNew(path.nD);
       rng.normRand(deltaNew, 0, sigma);
       path.PutInBox(deltaNew);
-      //cout << deltaNew << endl;
       beadB->r = rBarNew + deltaNew;
 
       // New action

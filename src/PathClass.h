@@ -55,6 +55,7 @@ public:
   void Dr(Bead* b0, Bead* b1, Tvector &dr);
   void RBar(Bead* b0, Bead* b1, Tvector &rBar);
   void DrDrPDrrP(int b0, int b1, int p0, int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r0, Tvector &r1, Tvector &dr);
+  void PrintPath();
 
   // Periodic Boundary Condition
   bool PBC;
@@ -71,17 +72,23 @@ public:
   vector<Cvector> C;
   vector<RealType> magKs;
   Ccube rhoK, rhoKC;
+  vector<Ccube> rhoKP, rhoKPC;
   Tvector kBox;
   RealType kC;
-  void SetupKs(RealType kCut);
   Ivector maxKIndex;
-  void UpdateRhoK(int b0, int b1, vector<int> &particles, int level);
+  void InitRhoK();
   void UpdateRhoK();
-  inline Ccube& GetRhoK();
-  void CalcRhoKs(int iB, string species);
+  void UpdateRhoK(int b0, int b1, vector<int> &particles, int level);
+  void UpdateRhoKP(int b0, int b1, vector<int> &particles, int level);
+  void CalcC(Tvector &r);
+  void AddRhoKP(Ccube& tmpRhoK, int iP, int iB, int iS, int pm);
+  void CalcRhoKP(Ccube& tmpRhoK, int iP, int iB, int iS);
+  void SetupKs(RealType kCut);
   inline bool Include(Tvector &k, RealType kCut);
+  inline void storeRhoK(Bead* b);
   inline void storeRhoK(vector<Bead*>& affBeads);
   inline void restoreRhoK(vector<Bead*>& affBeads);
+  inline void restoreRhoK(Bead* b);
 };
 
 inline Bead* Path::operator() (int iP, int iB)
@@ -92,28 +99,31 @@ inline Bead* Path::operator() (int iP, int iB)
 // Put R in the Box
 inline void Path::PutInBox(Tvector& r)
 {
-  if(PBC) {
-    for (unsigned int iD=0; iD<nD; iD++) {
-      RealType n = -floor(r(iD)*iL + 0.5);
-      r(iD) += n*L;
-    }
-  }
+  Tvector n(NDIM);
+  n(0) = -nearbyint(r(0)*iL);
+  r(0) += n(0)*L;
+#if NDIM>1
+  n(1) = -nearbyint(r(1)*iL);
+  r(1) += n(1)*L;
+#endif
+#if NDIM>2
+  n(2) = -nearbyint(r(2)*iL);
+  r(2) += n(2)*L;
+#endif
 }
 
 // Store R
 inline void Path::storeR(vector<Bead*>& affBeads)
 {
-  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter) {
+  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
     (*beadIter) -> storeR();
-  }
 }
 
 // Restore R
 inline void Path::restoreR(vector<Bead*>& affBeads)
 {
-  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter) {
+  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
     (*beadIter) -> restoreR();
-  }
 }
 
 // Get dr
@@ -148,31 +158,28 @@ inline void Path::DrDrPDrrP(int b0, int b1, int p0, int p1, RealType &rMag, Real
   rP = GetR(bead(p1,b1)) - GetR(bead(p0,b1));
 
   Tvector n(NDIM), m(NDIM);
-#if NDIM==3
   n(0) = -nearbyint(r(0)*iL);
-  n(1) = -nearbyint(r(1)*iL);
-  n(2) = -nearbyint(r(2)*iL);
   r(0) += n(0)*L;
-  r(1) += n(1)*L;
-  r(2) += n(2)*L;
   m(0) = nearbyint((r(0)-rP(0))*iL);
-  m(1) = nearbyint((r(1)-rP(1))*iL);
-  m(2) = nearbyint((r(2)-rP(2))*iL);
   rP(0) += m(0)*L;
+#if NDIM>1
+  n(1) = -nearbyint(r(1)*iL);
+  r(1) += n(1)*L;
+  m(1) = nearbyint((r(1)-rP(1))*iL);
   rP(1) += m(1)*L;
+#endif
+#if NDIM>2
+  n(2) = -nearbyint(r(2)*iL);
+  r(2) += n(2)*L;
+  m(2) = nearbyint((r(2)-rP(2))*iL);
   rP(2) += m(2)*L;
 #endif
-  rMag = sqrt(dot(r,r));
-  rPMag = sqrt(dot(rP,rP));
+  rMag = mag(r);
+  rPMag = mag(rP);
+
   rrP = r - rP;
-  Tvector l(NDIM);
-  l(0) = -nearbyint((r(0)-rP(0))*iL);
-  l(1) = -nearbyint((r(1)-rP(1))*iL);
-  l(2) = -nearbyint((r(2)-rP(2))*iL);
-  rrP(0) += l(0)*L;
-  rrP(1) += l(1)*L;
-  rrP(2) += l(2)*L;
-  rrPMag = sqrt(dot(rrP,rrP));
+  PutInBox(rrP);
+  rrPMag = mag(rrP);
 }
 
 // Get dr
@@ -188,25 +195,39 @@ inline void Path::Dr(Bead* b0, Bead* b1, Tvector &dr)
 }
 
 // Store rhoK
+inline void Path::storeRhoK(Bead* b)
+{
+  int iB = b->b;
+  int iS = b->species.iS;
+  int iP = b->p;
+  rhoKC.tube(iB,iS) = rhoK.tube(iB,iS);
+  rhoKPC[iP].tube(iB,iS) = rhoKP[iP].tube(iB,iS);
+}
+
+// Restore rhoK
+inline void Path::restoreRhoK(Bead* b)
+{
+  int iB = b->b;
+  int iS = b->species.iS;
+  int iP = b->p;
+  rhoK.tube(iB,iS) = rhoKC.tube(iB,iS);
+  rhoKP[iP].tube(iB,iS) = rhoKPC[iP].tube(iB,iS);
+}
+
+// Store rhoK
 inline void Path::storeRhoK(vector<Bead*>& affBeads)
 {
-  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter) {
-    int iB = (*beadIter)->b;
-    int iS = (*beadIter)->species.iS;
-    for (int iK=0; iK<kIndices.size(); iK++)
-      rhoKC(iB,iS,iK) = rhoK(iB,iS,iK);
-  }
+  if (kC > 0)
+    for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
+      storeRhoK((*beadIter));
 }
 
 // Restore rhoK
 inline void Path::restoreRhoK(vector<Bead*>& affBeads)
 {
-  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter) {
-    int iB = (*beadIter)->b;
-    int iS = (*beadIter)->species.iS;
-    for (int iK=0; iK<kIndices.size(); iK++)
-      rhoK(iB,iS,iK) = rhoKC(iB,iS,iK);
-  }
+  if (kC > 0)
+    for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
+      restoreRhoK((*beadIter));
 }
 
 #endif
