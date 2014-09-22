@@ -255,7 +255,7 @@ RealType IlkkaPairAction::CalcVLong()
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=0; iB<path.nBead; iB++) {
-        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA,iK),path.rhoK(path.beadLoop(iB),iSpeciesB,iK));
+        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA)(iK),path.rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += rhok2*vLong_k(iK);
       }
     }
@@ -280,7 +280,7 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=b0; iB<=b1; iB+=skip) {
-        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA,iK),path.rhoK(path.beadLoop(iB),iSpeciesB,iK));
+        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA)(iK),path.rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += rhok2*uLong_k(iK);
       }
     }
@@ -301,7 +301,7 @@ RealType IlkkaPairAction::CalcdUdBetaLong()
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=0; iB<path.nBead; iB++) {
-        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA,iK),path.rhoK(path.beadLoop(iB),iSpeciesB,iK));
+        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA)(iK),path.rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += duLong_k(iK)*rhok2;
       }
     }

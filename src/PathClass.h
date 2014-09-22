@@ -71,8 +71,7 @@ public:
   vector<Ivector> kIndices;
   vector<Cvector> C;
   vector<RealType> magKs;
-  Ccube rhoK, rhoKC;
-  vector<Ccube> rhoKP, rhoKPC;
+  arma::field<Cvector> rhoK, rhoKC, rhoKP, rhoKPC;
   Tvector kBox;
   RealType kC;
   Ivector maxKIndex;
@@ -81,8 +80,8 @@ public:
   void UpdateRhoK(int b0, int b1, vector<int> &particles, int level);
   void UpdateRhoKP(int b0, int b1, vector<int> &particles, int level);
   void CalcC(Tvector &r);
-  void AddRhoKP(Ccube& tmpRhoK, int iP, int iB, int iS, int pm);
-  void CalcRhoKP(Ccube& tmpRhoK, int iP, int iB, int iS);
+  void AddRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm);
+  void CalcRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS);
   void SetupKs(RealType kCut);
   inline bool Include(Tvector &k, RealType kCut);
   inline void storeRhoK(Bead* b);
@@ -200,8 +199,8 @@ inline void Path::storeRhoK(Bead* b)
   int iB = b->b;
   int iS = b->species.iS;
   int iP = b->p;
-  rhoKC.tube(iB,iS) = rhoK.tube(iB,iS);
-  rhoKPC[iP].tube(iB,iS) = rhoKP[iP].tube(iB,iS);
+  rhoKC(iB,iS) = rhoK(iB,iS);
+  rhoKPC(iB,iS,iP) = rhoKP(iB,iS,iP);
 }
 
 // Restore rhoK
@@ -210,8 +209,8 @@ inline void Path::restoreRhoK(Bead* b)
   int iB = b->b;
   int iS = b->species.iS;
   int iP = b->p;
-  rhoK.tube(iB,iS) = rhoKC.tube(iB,iS);
-  rhoKP[iP].tube(iB,iS) = rhoKPC[iP].tube(iB,iS);
+  rhoK(iB,iS) = rhoKC(iB,iS);
+  rhoKP(iB,iS,iP) = rhoKPC(iB,iS,iP);
 }
 
 // Store rhoK

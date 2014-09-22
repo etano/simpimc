@@ -217,21 +217,27 @@ void Path::SetupKs(RealType kCut)
 // Update all rho k values
 void Path::InitRhoK()
 {
+
   // Resize rhoK
-  rhoK.set_size(nBead,nSpecies,ks.size());
-  rhoKC.set_size(nBead,nSpecies,ks.size());
-  rhoKP.resize(nPart);
-  rhoKPC.resize(nPart);
-  for (int iP=0; iP<nPart; ++iP) {
-    rhoKP[iP].set_size(nBead,nSpecies,ks.size());
-    rhoKPC[iP].set_size(nBead,nSpecies,ks.size());
-  }
+  rhoK.set_size(nBead,nSpecies);
+  rhoKC.set_size(nBead,nSpecies);
+  rhoKP.set_size(nBead,nSpecies,nPart);
+  rhoKPC.set_size(nBead,nSpecies,nPart);
 
   bool tmpMode = GetMode();
   SetMode(0);
 
   // Zero out rho_k array
-  rhoKC.zeros();
+  for (int iB=0; iB<nBead; iB++) {
+    for (int iS=0; iS<nSpecies; iS++) {
+      rhoK(iB,iS).zeros(kIndices.size());
+      rhoKC(iB,iS).zeros(kIndices.size());
+      for (int iP=0; iP<nPart; ++iP) {
+        rhoKP(iB,iS,iP).zeros(kIndices.size());
+        rhoKPC(iB,iS,iP).zeros(kIndices.size());
+      }
+    }
+  }
 
   // Calculate rho_k's
   for (int iB=0; iB<nBead; iB++) {
@@ -242,15 +248,13 @@ void Path::InitRhoK()
 
       // Calculate rho_kp values
       for (int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-        CalcRhoKP(rhoKPC[iP],iP,iB,iS);
-        for (int iK=0; iK<kIndices.size(); iK++)
-          rhoKC(iB,iS,iK) += rhoKPC[iP](iB,iS,iK);
+        CalcRhoKP(rhoKPC,iP,iB,iS);
+        rhoKC(iB,iS) += rhoKPC(iB,iS,iP);
       }
     }
   }
   rhoK = rhoKC;
-  for (int iP=0; iP<nPart; iP++)
-    rhoKP[iP] = rhoKPC[iP];
+  rhoKP = rhoKPC;
 
   SetMode(tmpMode);
 }
@@ -258,20 +262,19 @@ void Path::InitRhoK()
 // Update all rho k values
 void Path::UpdateRhoK()
 {
-  // Zero out rho_k array
-  rhoK.zeros();
-
   // Calculate rho_k's HACK SEE IF WE CAN DO THIS INLINE
   for (int iB=0; iB<nBead; iB++) {
     for (int iS=0; iS<nSpecies; iS++) {
+      // Zero out rho_k array
+      rhoK(iB,iS).zeros();
+
       // Get species info
       int offset;
       GetSpeciesInfo(speciesList[iS]->name,iS,offset);
 
       // Calculate rho_kp values
       for (int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-        for (int iK=0; iK<kIndices.size(); iK++)
-          rhoK(iB,iS,iK) += rhoKP[iP](iB,iS,iK);
+        rhoK(iB,iS) += rhoKP(iB,iS,iP);
       }
     }
   }
@@ -297,8 +300,7 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
   for (int s=0; s<species.size(); s++) {
     int iS = species[s];
     for (int iB=b0; iB<=b1; iB+=skip)
-      for (int iK=0; iK<kIndices.size(); iK++)
-        rhoK(beadLoop(iB),iS,iK) = rhoKC(beadLoop(iB),iS,iK);
+      rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS);
   }
 
   // Update C values of changed particles
@@ -308,11 +310,10 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
     for (int iB=b0; iB<=b1; iB+=skip) {
       // Calculate new values
       SetMode(1);
-      CalcRhoKP(rhoKP[iP],iP,iB,iS);
+      CalcRhoKP(rhoKP,iP,iB,iS);
 
       // Add in new values and subtract out old values
-      for (int iK=0; iK<kIndices.size(); iK++)
-        rhoK(beadLoop(iB),iS,iK) += rhoKP[iP](beadLoop(iB),iS,iK) - rhoKPC[iP](beadLoop(iB),iS,iK);
+      rhoK(beadLoop(iB),iS) += rhoKP(beadLoop(iB),iS,iP) - rhoKPC(beadLoop(iB),iS,iP);
 
     }
   }
@@ -339,8 +340,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
   for (int s=0; s<species.size(); s++) {
     int iS = species[s];
     for (int iB=b0; iB<=b1; iB+=skip)
-      for (int iK=0; iK<kIndices.size(); iK++)
-        rhoK(beadLoop(iB),iS,iK) = rhoKC(beadLoop(iB),iS,iK);
+      rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS);
   }
 
   // Update C values of changed particles
@@ -378,7 +378,7 @@ void Path::CalcC(Tvector &r)
 }
 
 // Add rho_k for a single particle
-void Path::AddRhoKP(Ccube& tmpRhoK, int iP, int iB, int iS, int pm)
+void Path::AddRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
 {
   Tvector r = GetR((*this)(iP,iB));
   CalcC(r);
@@ -387,12 +387,12 @@ void Path::AddRhoKP(Ccube& tmpRhoK, int iP, int iB, int iS, int pm)
     ComplexType factor = pm;
     for (int iD=0; iD<nD; iD++)
       factor *= C[iD](ki(iD));
-    tmpRhoK(beadLoop(iB),iS,iK) += factor;
+    tmpRhoK(beadLoop(iB),iS)(iK) += factor;
   }
 }
 
 // Calc rho_k for a single particle
-void Path::CalcRhoKP(Ccube& tmpRhoK, int iP, int iB, int iS)
+void Path::CalcRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS)
 {
   Tvector r = GetR((*this)(iP,iB));
   CalcC(r);
@@ -401,7 +401,7 @@ void Path::CalcRhoKP(Ccube& tmpRhoK, int iP, int iB, int iS)
     ComplexType factor = 1.;
     for (int iD=0; iD<nD; iD++)
       factor *= C[iD](ki(iD));
-    tmpRhoK(beadLoop(iB),iS,iK) = factor;
+    tmpRhoK(beadLoop(iB),iS,iP)(iK) = factor;
   }
 }
 
