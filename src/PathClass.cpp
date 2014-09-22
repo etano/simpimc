@@ -77,26 +77,31 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
     bool allBeads = in.getChild("Init").getAttribute<bool>("allBeads",false);
     fstream initFile;
     initFile.open(fileName.c_str(), std::ios_base::in);
-    for (int iP=0; iP<nPart; ++iP) {
-      if (allBeads) {
-        for (int iB=0; iB<nBead; ++iB) {
-          initFile >> iP >> iB;
+    if (!initFile.fail()) {
+      for (int iP=0; iP<nPart; ++iP) {
+        if (allBeads) {
+          for (int iB=0; iB<nBead; ++iB) {
+            initFile >> iP >> iB;
+            for (int iD=0; iD<nD; ++iD)
+              initFile >> bead(iP,iB)->r(iD);
+            bead(iP,iB)->storeR();
+          }
+        } else {
+          initFile >> iP;
+          Tvector r(nD);
           for (int iD=0; iD<nD; ++iD)
-            initFile >> bead(iP,iB)->r(iD);
-          bead(iP,iB)->storeR();
-        }
-      } else {
-        initFile >> iP;
-        Tvector r(nD);
-        for (int iD=0; iD<nD; ++iD)
-          initFile >> r(iD);
-        for (int iB=0; iB<nBead; ++iB) {
-          bead(iP,iB)->r = r;
-          bead(iP,iB)->storeR();
+            initFile >> r(iD);
+          for (int iB=0; iB<nBead; ++iB) {
+            bead(iP,iB)->r = r;
+            bead(iP,iB)->storeR();
+          }
         }
       }
+      initFile.close();
+    } else {
+      cout << "ERROR: Init file '" << fileName << "' does not exist." << endl;
+      exit(1);
     }
-    initFile.close();
   } else if (initType == "Random") {
     for (int iP=0; iP<nPart; ++iP) {
       RealType tmpRand = rng.unifRand();
