@@ -180,9 +180,9 @@ void Path::SetupKs(RealType kCut)
     maxKIndex(iD) = (int) ceil(1.1*kCut/kBox(iD));
 
   // Set up C vector
-  C.resize(nD);
+  C.set_size(nD);
   for (int iD=0; iD<nD; iD++)
-    C[iD].set_size(2*maxKIndex(iD)+1);
+    C(iD).set_size(2*maxKIndex(iD)+1);
 
   // Generate all possible combinations and permutations of k indices
   vector<int> indices;
@@ -369,16 +369,16 @@ void Path::CalcC(Tvector &r)
     ComplexType tmpC;
     RealType phi = r(iD)*kBox(iD);
     tmpC = ComplexType(cos(phi), sin(phi));
-    C[iD](maxKIndex(iD)) = 1.;
+    C(iD)(maxKIndex(iD)) = 1.;
     for (int iK=1; iK<=maxKIndex(iD); iK++) {
-      C[iD](maxKIndex(iD)+iK) = tmpC * C[iD](maxKIndex[iD]+iK-1);
-      C[iD](maxKIndex(iD)-iK) = conj(C[iD](maxKIndex[iD]+iK));
+      C(iD)(maxKIndex(iD)+iK) = tmpC * C(iD)(maxKIndex(iD)+iK-1);
+      C(iD)(maxKIndex(iD)-iK) = conj(C(iD)(maxKIndex(iD)+iK));
     }
   }
 }
 
 // Add rho_k for a single particle
-void Path::AddRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
+void Path::AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
 {
   Tvector r = GetR((*this)(iP,iB));
   CalcC(r);
@@ -386,13 +386,13 @@ void Path::AddRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS, int p
     Ivector &ki = kIndices[iK];
     ComplexType factor = pm;
     for (int iD=0; iD<nD; iD++)
-      factor *= C[iD](ki(iD));
+      factor *= C(iD)(ki(iD));
     tmpRhoK(beadLoop(iB),iS)(iK) += factor;
   }
 }
 
 // Calc rho_k for a single particle
-void Path::CalcRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS)
+void Path::CalcRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS)
 {
   Tvector r = GetR((*this)(iP,iB));
   CalcC(r);
@@ -400,7 +400,7 @@ void Path::CalcRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS)
     Ivector &ki = kIndices[iK];
     ComplexType factor = 1.;
     for (int iD=0; iD<nD; iD++)
-      factor *= C[iD](ki(iD));
+      factor *= C(iD)(ki(iD));
     tmpRhoK(beadLoop(iB),iS,iP)(iK) = factor;
   }
 }

@@ -250,12 +250,15 @@ RealType IlkkaPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, in
 /// Calculate the ULong value
 RealType IlkkaPairAction::CalcVLong()
 {
+  // Get rho k
+  field<Cvector>& rhoK(path.GetRhoK());
+
   // Sum over k vectors
   RealType tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=0; iB<path.nBead; iB++) {
-        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA)(iK),path.rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+        RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += rhok2*vLong_k(iK);
       }
     }
@@ -274,13 +277,16 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
   if (path.mode == 1)
     path.UpdateRhoKP(b0, b1, particles, level);
 
+  // Get rho k
+  field<Cvector>& rhoK(path.GetRhoK());
+
   // Sum over k vectors
   int skip = 1<<level;
   RealType tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=b0; iB<=b1; iB+=skip) {
-        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA)(iK),path.rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+        RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += rhok2*uLong_k(iK);
       }
     }
@@ -295,13 +301,15 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
 /// Calculate the dUdBetaLong value
 RealType IlkkaPairAction::CalcdUdBetaLong()
 {
+  // Get rho k
+  field<Cvector>& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   RealType tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=0; iB<path.nBead; iB++) {
-        RealType rhok2 = cmag2(path.rhoK(path.beadLoop(iB),iSpeciesA)(iK),path.rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+        RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += duLong_k(iK)*rhok2;
       }
     }

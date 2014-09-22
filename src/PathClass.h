@@ -43,7 +43,7 @@ public:
   unsigned int nType;
 
   // Beads
-  arma::field<Bead*> bead;
+  field<Bead*> bead;
   vector<Bead*>::const_iterator beadIter;
   Ivector beadLoop;
   inline Bead* operator() (int iP, int iB);
@@ -69,9 +69,9 @@ public:
   // k vectors and rho_k
   vector<Tvector> ks;
   vector<Ivector> kIndices;
-  vector<Cvector> C;
   vector<RealType> magKs;
-  arma::field<Cvector> rhoK, rhoKC, rhoKP, rhoKPC;
+  field<Cvector> C;
+  field<Cvector> rhoK, rhoKC, rhoKP, rhoKPC;
   Tvector kBox;
   RealType kC;
   Ivector maxKIndex;
@@ -79,9 +79,10 @@ public:
   void UpdateRhoK();
   void UpdateRhoK(int b0, int b1, vector<int> &particles, int level);
   void UpdateRhoKP(int b0, int b1, vector<int> &particles, int level);
+  inline field<Cvector>& GetRhoK();
   void CalcC(Tvector &r);
-  void AddRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm);
-  void CalcRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS);
+  void AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm);
+  void CalcRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS);
   void SetupKs(RealType kCut);
   inline bool Include(Tvector &k, RealType kCut);
   inline void storeRhoK(Bead* b);
@@ -191,6 +192,15 @@ inline void Path::Dr(Bead* b0, Tvector &r1, Tvector &dr)
 inline void Path::Dr(Bead* b0, Bead* b1, Tvector &dr)
 {
   Dr(GetR(b0), GetR(b1), dr);
+}
+
+// Get rhoK
+inline field<Cvector>& Path::GetRhoK()
+{
+  if (mode)
+    return (rhoK);
+  else
+    return (rhoKC);
 }
 
 // Store rhoK
