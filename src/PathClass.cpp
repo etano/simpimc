@@ -383,7 +383,7 @@ void Path::CalcC(Tvector &r)
 }
 
 // Add rho_k for a single particle
-void Path::AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
+void Path::AddRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
 {
   Tvector r = GetR((*this)(iP,iB));
   CalcC(r);
@@ -397,7 +397,7 @@ void Path::AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
 }
 
 // Calc rho_k for a single particle
-void Path::CalcRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS)
+void Path::CalcRhoKP(arma::field<Cvector>& tmpRhoK, int iP, int iB, int iS)
 {
   Tvector r = GetR((*this)(iP,iB));
   CalcC(r);

@@ -18,7 +18,7 @@ public:
   // Data
   NUgrid* grid;
   Tvector taus;
-  field<multi_NUBspline_1d_d*> Ukj, dUkjdBeta;
+  arma::field<multi_NUBspline_1d_d*> Ukj, dUkjdBeta;
 
   // Functions
   virtual void ReadFile(string fileName);
