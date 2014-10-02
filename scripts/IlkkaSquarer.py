@@ -157,27 +157,24 @@ def Breakup(particles,potential,squarer,breakup,objects):
                 elif o['type'] == 0:
                     paPrefix = 'v'
                 paGroup = f.create_group(paPrefix)
-    
+
                 # Write out diagonal PA
                 paSubgroup = paGroup.create_group('diag')
-                paArray = loadtxt(paPrefix+'d.'+str(paIndex)+'.r.txt', comments='#')
+                paArray = loadtxt(paPrefix+'d.'+str(paIndex)+'.txt', comments='#')
+                paSubgroup.create_dataset('r',data=paArray[:,0])
+                paSubgroup.create_dataset('nr',data=len(paArray[:,0]))
+                paSubgroup.create_dataset(paPrefix+'_r',data=paArray[:,1])
                 if o['breakup'] != 2:
+                    paArray = loadtxt(paPrefix+'d.'+str(paIndex)+'.r.txt', comments='#')
                     paSubgroup.create_dataset(paPrefix+'Long_r0',data=[paArray[0,1]])
-                    paSubgroup.create_dataset('r',data=paArray[1:,0])
-                    paSubgroup.create_dataset('nr',data=len(paArray[1:,0]))
-                    paSubgroup.create_dataset(paPrefix+'Short_r',data=paArray[1:,1])
-                    paArray = loadtxt(paPrefix+'d.'+str(paIndex)+'.txt', comments='#')
-                    paSubgroup.create_dataset(paPrefix+'_r',data=paArray[:,1])
+                    paSubgroup.create_dataset('rLong',data=paArray[1:,0])
+                    paSubgroup.create_dataset('nrLong',data=len(paArray[1:,0]))
+                    paSubgroup.create_dataset(paPrefix+'Long_r',data=paArray[1:,1])
                     paArray = loadtxt(paPrefix+'d.'+str(paIndex)+'.k.txt', comments='#')
                     paSubgroup.create_dataset(paPrefix+'Long_k0',data=[paArray[0,1]])
                     paSubgroup.create_dataset('k',data=paArray[:,0])
                     paSubgroup.create_dataset('nk',data=len(paArray[:,0]))
                     paSubgroup.create_dataset(paPrefix+'Long_k',data=paArray[:,1])
-                else:
-                    paSubgroup.create_dataset('r',data=paArray[:,0])
-                    paSubgroup.create_dataset('nr',data=len(paArray[:,0]))
-                    paSubgroup.create_dataset(paPrefix+'Short_r',data=paArray[:,1])
-                    paSubgroup.create_dataset(paPrefix+'_r',data=paArray[:,1])
     
                 # Write out off diagonal PA
                 if o['type'] != 0:
