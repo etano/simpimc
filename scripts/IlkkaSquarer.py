@@ -18,7 +18,7 @@ def GenIlkkaSquarerInput(particles,squarer):
     f.write('%f 0\n' % (squarer['tau'])) # tau, 0 or temperature, 1
     f.write('5000 100000\n') # of blocks, # of MC steps in a block
     f.write('Squaring %i %i 1\n' % (squarer['nGrid'],squarer['nSquare'])) # text, grid points, # of squaring steps
-    f.write('Box %f %f %f\n' % (squarer['L'],squarer['L'],squarer['L'])) # text, box dimensions in atomic units (Bohr radius)
+    f.write('Box %f %f %f\n' % (squarer['rCut'],squarer['rCut'],squarer['rCut'])) # text, box dimensions in atomic units (Bohr radius)
     f.write('NumOfImages 0\n') # # of images
     f.write('DisplaceMove 0 0.0\n') # text, 0 if not used (1 if used), 0.1 would mean 10 percent of moves are displace moves
     f.write('Estimator 1\n') # 0=IK_type (atoms and if all quantum particles), 1=thermal estimator

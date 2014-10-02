@@ -152,7 +152,7 @@ def Breakup(units,particles,potential,squarer,breakup,objects):
                 f = open('v.'+str(paIndex)+'.r.txt','w')
                 rs = GenGrid(potential)
                 for r in rs:
-                    f.write('%.10E %.10E %.10E\n' % (r,Z1*Z2/r,0.0))
+                    f.write('%.10E %.10E %.10E\n' % (r,potential['function'](Z1,Z2,r),0.))
                 f.close()
 
             # Write .dm and .in file for squarer
@@ -175,9 +175,12 @@ def Breakup(units,particles,potential,squarer,breakup,objects):
             rData = loadtxt('v.'+str(paIndex)+'.r.txt')
             count = 0
             g.write('\n  ')
-            for [r,VLong] in rData:
+            for [r,V] in rData:
                 if r != 0.:
-                    g.write('%.10E'%(potential['function'](Z1,Z2,r) - VLong)+'  ')
+                    if objects[0]['breakup'] != 2:
+                        g.write('%.10E'%(potential['function'](Z1,Z2,r) - VLong)+'  ')
+                    else:
+                        g.write('%.10E'%(V)+'  ')
                     count += 1
                     if count % 5 == 0:
                         g.write('\n  ')
