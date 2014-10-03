@@ -9,7 +9,7 @@ void PermBisect::MakeMove()
   nAttempt++;
 }
 
-// Make a bisecting permutation move of 3 particles 
+// Make a bisecting permutation move of 3 particles
 int PermBisect::DoPermBisect()
 {
   if(path.nPart < 3) return 0; // Can only do 3 particle permuations
@@ -17,7 +17,7 @@ int PermBisect::DoPermBisect()
   unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
-  double permTot0 = constructPermTable(bead0,bead1,nBisectBeads,rollOver); // Permutation weight table
+  RealType permTot0 = constructPermTable(bead0,bead1,nBisectBeads,rollOver); // Permutation weight table
 
   int permParts[3], permType;
   permType = selectPerm(permParts,permTot0); // Select Permutation
@@ -26,11 +26,11 @@ int PermBisect::DoPermBisect()
   Bead *beadA[3], *beadB[3], *beadC[3], *beadI[3], *beadF[3];
   for (unsigned int i = 0; i < 3; i += 1) {
     beadI[i] = path.bead(permParts[i],bead0);
-    beadF[i] = beadI[i] -> nextB(nBisectBeads);
+    beadF[i] = beadI[i]->nextB(nBisectBeads);
   }
 
   // Old nodal action
-  double N0(0.0), N1(0.0);
+  RealType N0(0.0), N1(0.0);
   if(path.useNodeDist) {
     if(rollOver) {
       N0 = 0.0;
@@ -72,9 +72,9 @@ int PermBisect::DoPermBisect()
 
   // Perform bisection. Move exactly through free action
   int skip;
-  double tauEff, sigma;
-  double VA[nLevel], VB[nLevel], dA[nLevel+1];
-  double dAold = 0.0;
+  RealType tauEff, sigma;
+  RealType VA[nLevel], VB[nLevel], dA[nLevel+1];
+  RealType dAold = 0.0;
   dA[nLevel] = 0.0;
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) { 
     skip = pow(2,iLevel);
@@ -134,7 +134,7 @@ int PermBisect::DoPermBisect()
 
   // Construct Permutation Table
   assignParticleLabels();
-  double permTot1 = constructPermTable(bead0,bead1,nBisectBeads,rollOver);
+  RealType permTot1 = constructPermTable(bead0,bead1,nBisectBeads,rollOver);
 
   //if(permType) std::cout << permType << " " << permTot0 << " " << permTot1 << endl;
   // Decide whether or not to accept whole bisection
@@ -252,52 +252,20 @@ int PermBisect::DoPermBisect()
   return 1;
 }
 
-//// Construct Permutation Table for 3 Particle Exchanges
-//void PermBisect::constructPermTable2( const int bead0 , const int nBisectBeads )
-//{
-//  int perm[path.nPart], iPerm[path.nPart];
-//  double cofactor = path.oneOver4LamTau/(1.0*nBisectBeads);
-//  double diff;
-//
-//  Bead *b0[path.nPart], *b1[path.nPart];
-//  int b0ip, b0jp, b1ip, b1jp;
-//
-//  for (unsigned int i = 0; i < path.nPart; i += 1) {
-//    b0[i] = path.bead(i,bead0);
-//    b1[i] = b0[i] -> nextB(nBisectBeads);
-//  }
-//
-//  for (unsigned int i = 0; i < path.nPart; i += 1) {
-//    for (unsigned int j = 0; j < path.nPart; j += 1) {
-//      b1ip = b1[i] -> p;
-//      b1jp = b1[j] -> p;
-//
-//      // Calculate weight
-//      dr = b0[i] -> r - b1[perm[b1ip]] -> r;
-//      path.PutInBox(dr);
-//      diff = dot(dr,dr);
-//      PT(i,j) = exp(-diff * cofactor);
-//    }
-//  }
-//
-//}
-//
-//double 
 
 // Construct Permutation Table for 3 Particle Exchanges
-double PermBisect::constructPermTable( const int bead0 , const int bead1 , const int nBisectBeads , const bool rollOver )
+RealType PermBisect::constructPermTable(const int bead0, const int bead1, const int nBisectBeads, const bool rollOver)
 {
-  int perm[path.nPart], iPerm[path.nPart];
-  double cofactor = path.oneOver4LamTau/(1.0*nBisectBeads);
-  double permTot = 0.0;
-  double diff;
+  Ivector perm(path.nPart), iPerm(path.nPart);
+  RealType cofactor = path.oneOver4LamTau/(1.0*nBisectBeads);
+  RealType permTot = 0.0;
 
-  Bead *b0[path.nPart], *b1[path.nPart];
+  field<*Bead> b0(path.nPart), b1(path.nPart);
   int b1ip, b1jp, b1kp, n = 0;
 
   for (unsigned int i = 0; i < path.nPart; i += 1) {
-    b0[i] = path.bead(i,bead0);
-    b1[i] = b0[i] -> nextB(nBisectBeads);
+    b0(i) = path.bead(i,bead0);
+    b1(i) = b0(i) -> nextB(nBisectBeads);
   }
 
   for (unsigned int permType = 0; permType < path.nPermType; permType += 1) {
@@ -307,24 +275,24 @@ double PermBisect::constructPermTable( const int bead0 , const int bead1 , const
           if (i == j || j == k || i == k) {
             permTable(n) = 0.0;
           } else {
-            b1ip = b1[i] -> p;
-            b1jp = b1[j] -> p;
-            b1kp = b1[k] -> p;
+            b1ip = b1(i)->p;
+            b1jp = b1(j)->p;
+            b1kp = b1(k)->p;
 
             // Set permutation
             setPerm(permType,perm,iPerm,b1ip,b1jp,b1kp);
 
             // Calculate weight
-            diff = 0.0;
-            dr = b0[i] -> r - b1[perm[b1ip]] -> r;
+            RealType diff = 0.;
+            dr = b0(i)->r - b1(perm(b1ip))->r;
             path.PutInBox(dr);
-            diff += dot( dr , dr );
-            dr = b0[j] -> r - b1[perm[b1jp]] -> r;
+            diff += dot(dr, dr);
+            dr = b0(j)->r - b1(perm(b1jp))->r;
             path.PutInBox(dr);
-            diff += dot( dr , dr );
-            dr = b0[k] -> r - b1[perm[b1kp]] -> r;
+            diff += dot(dr, dr);
+            dr = b0(k)->r - b1(perm(b1kp))->r;
             path.PutInBox(dr);
-            diff += dot( dr , dr );
+            diff += dot(dr , dr);
 
             permTable(n) = exp(-diff*cofactor);
             permTot += permTable(n);
@@ -338,10 +306,11 @@ double PermBisect::constructPermTable( const int bead0 , const int bead1 , const
   return permTot;
 }
 
-int PermBisect::selectPerm( int* permParts , double permTot )
+// Select permutation
+int PermBisect::selectPerm(int* permParts, RealType permTot)
 {
-  double permSubTot = 0.0;
-  double x = rng.unifRand(0.0,permTot);
+  RealType permSubTot = 0.;
+  RealType x = rng.unifRand(0.,permTot);
   int n = 0;
   for (unsigned int permType = 0; permType < path.nPermType; permType += 1) {
     for (unsigned int i = 0; i < path.nPart-2; i += 1) {
@@ -401,3 +370,35 @@ unsigned int PermBisect::permuteb( Bead *b[3] , int permType )
 
   return permType;
 }
+
+
+//// Construct Permutation Table for 3 Particle Exchanges
+//void PermBisect::constructPermTable2( const int bead0 , const int nBisectBeads )
+//{
+//  int perm[path.nPart], iPerm[path.nPart];
+//  RealType cofactor = path.oneOver4LamTau/(1.0*nBisectBeads);
+//  RealType diff;
+//
+//  Bead *b0[path.nPart], *b1[path.nPart];
+//  int b0ip, b0jp, b1ip, b1jp;
+//
+//  for (unsigned int i = 0; i < path.nPart; i += 1) {
+//    b0[i] = path.bead(i,bead0);
+//    b1[i] = b0[i] -> nextB(nBisectBeads);
+//  }
+//
+//  for (unsigned int i = 0; i < path.nPart; i += 1) {
+//    for (unsigned int j = 0; j < path.nPart; j += 1) {
+//      b1ip = b1[i] -> p;
+//      b1jp = b1[j] -> p;
+//
+//      // Calculate weight
+//      dr = b0[i] -> r - b1[perm[b1ip]] -> r;
+//      path.PutInBox(dr);
+//      diff = dot(dr,dr);
+//      PT(i,j) = exp(-diff * cofactor);
+//    }
+//  }
+//
+//}
+//
