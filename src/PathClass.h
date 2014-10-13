@@ -26,7 +26,6 @@ public:
 
   // Calculated Global Constants
   RealType tau;
-  unsigned int nPermType;
   unsigned int maxLevel;
 
   // Species
@@ -88,6 +87,9 @@ public:
   inline void storeRhoK(vector<Bead*>& affBeads);
   inline void restoreRhoK(vector<Bead*>& affBeads);
   inline void restoreRhoK(Bead* b);
+
+  // Nodes
+  int refBead;
 };
 
 inline Bead* Path::operator() (int iP, int iB)

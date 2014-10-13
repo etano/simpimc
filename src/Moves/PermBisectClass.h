@@ -10,7 +10,7 @@ private:
   int iSpecies;
   int offset;
   int nImages;
-  unsigned int nLevel, nBisectBeads, nPart, nPermPart;
+  unsigned int nLevel, nBisectBeads, nPart, nPermPart, nPermType;
   RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
 
   struct Cycle
@@ -27,11 +27,11 @@ private:
 
   int DoPermBisect();
   RealType constructPermTable(const int bead0, const int nBisectBeads);
+  void updatePermTable(const int bead0, const int nBisectBeads);
   void BuildCycles();
   int selectCycle(RealType permTot);
   void permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c);
   void assignParticleLabels();
-  void setPerm(Cycle& c);
   void Write();
 
   std::vector<Bead*> affBeads;

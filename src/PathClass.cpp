@@ -66,16 +66,21 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   // Initiate bead connections
   for (unsigned int iP = 0; iP < nPart; iP += 1) {
     bead(iP,0) -> next = bead(iP,1);
+    bead(iP,0) -> nextC = bead(iP,1);
     bead(iP,0) -> prev = bead(iP,nBead-1);
+    bead(iP,0) -> prevC = bead(iP,nBead-1);
     for (unsigned int iB = 1; iB < nBead; iB += 1) {
       bead(iP,iB) -> next = bead(iP,beadLoop(iB+1));
+      bead(iP,iB) -> nextC = bead(iP,beadLoop(iB+1));
       bead(iP,iB) -> prev = bead(iP,iB-1);
+      bead(iP,iB) -> prevC = bead(iP,iB-1);
     }
   }
 
+  // Initiate nodal things
+  refBead = 0;
+
   // Set permutation types
-  if (speciesList[0]->fermi) nPermType = 3;
-  else nPermType = 6;
   iCount.zeros(nPart);
   pCount.zeros(nPart);
   setPType();
@@ -179,7 +184,6 @@ inline bool Path::Include(Tvector &k, RealType kCut)
 }
 
 // Setup universal k vectors according to k cutoff value
-// Note that this can be made more general with combinations + permutations
 void Path::SetupKs(RealType kCut)
 {
   if (kCut <= kC)
