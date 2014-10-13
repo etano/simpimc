@@ -12,8 +12,8 @@ protected:
 
 public:
   // Constructor
-  Bead(unsigned int tmpND, Species &tmpSpecies, unsigned int tmpP, unsigned int tmpB)
-    : nD(tmpND), species(tmpSpecies), p(tmpP), b(tmpB)
+  Bead(unsigned int tmpND, Species &tmpSpecies, unsigned int tmpP, unsigned int tmpB, unsigned int tmpId)
+    : nD(tmpND), species(tmpSpecies), p(tmpP), b(tmpB), id(tmpId)
   {
     self = this;
     r.zeros(nD);
@@ -28,6 +28,10 @@ public:
   void restore();
   void storeR();
   void restoreR();
+  void storePrev();
+  void restorePrev();
+  void storeNext();
+  void restoreNext();
   void storePartRecord();
   void restorePartRecord();
   void storeNodeDistance();
@@ -39,6 +43,7 @@ public:
   unsigned int p;
   unsigned int b;
   unsigned int s;
+  unsigned int id;
   RealType nDist, nDistC;
   Tvector r, rC;
   Bead *self;

@@ -18,6 +18,7 @@
 #include "Actions/TrapClass.h"
 #include "Moves/MoveClass.h"
 #include "Moves/BisectClass.h"
+#include "Moves/PermBisectClass.h"
 #include "Observables/ObservableClass.h"
 #include "Observables/EnergyClass.h"
 #include "Observables/TimeClass.h"

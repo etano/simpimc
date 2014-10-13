@@ -15,7 +15,7 @@ SET(USE_OPENMP TRUE)
 SET(QMC_BUILD_STATIC FALSE)
 SET(NDIM 3)
 SET(COMPILER_MAKE "GNU") # INTEL, GNU, or IBM
-SET(DEBUG FALSE)
+SET(DEBUG TRUE)
 
 #-------------------------------------------------------------------
 # Compilers
@@ -111,10 +111,10 @@ IF(USE_OPENMP)
   SET(COMMON_FLAGS "${COMMON_FLAGS} -DUSE_OPENMP")
 ENDIF(USE_OPENMP)
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -msse3 ${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-std=c++11 -msse4 ${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
 SET(CMAKE_CXX_SOURCE_FILE_EXTENSIONS ,"cpp")
 
-SET(CMAKE_C_FLAGS "-std=c99 -msse3 ${CMAKE_C_FLAGS} ${COMMON_FLAGS}")
+SET(CMAKE_C_FLAGS "-std=c99 -msse4 ${CMAKE_C_FLAGS} ${COMMON_FLAGS}")
 SET(CMAKE_C_SOURCE_FILE_EXTENSIONS ,"c")
 
 IF(QMC_BUILD_STATIC)
@@ -248,6 +248,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Actions/TrapClass.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp
+  src/Moves/PermBisectClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/TimeClass.cpp

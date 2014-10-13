@@ -20,11 +20,14 @@ public:
     : Event(), path(tmpPath), out(tmpOut)
   {
     name = in.getAttribute<string>("name");
+    type = in.getAttribute<string>("type");
     out.CreateGroup("Observables/"+name);
+    out.Write("Observables/"+name+"/type",type);
     firstTime = 1;
     nMeasure = 0;
   }
 
+  string type;
   bool firstTime;
   int nMeasure;
 

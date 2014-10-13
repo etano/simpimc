@@ -10,6 +10,8 @@ private:
   int iSpecies;
   int offset;
   int nImages;
+  unsigned int nLevel, nBisectBeads;
+  RealType lambda;
 
   int DoBisect(const int iPart);
   std::vector<Bead*> affBeads;
@@ -22,8 +24,6 @@ public:
   {
     Init(in);
   }
-
-  int maxLevel;
 
   virtual void Init(Input &in);
   virtual void MakeMove();

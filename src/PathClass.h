@@ -37,7 +37,6 @@ public:
   // Permutation Counter
   int getPType();
   void setPType();
-  Imatrix permCount;
   Imatrix pType;
   Ivector iCount, pCount;
   unsigned int nType;

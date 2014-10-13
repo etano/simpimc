@@ -7,6 +7,7 @@ class Kinetic : public Action
 {
 private:
   int nImages;
+  RealType normalization;
 protected:
 
 public:

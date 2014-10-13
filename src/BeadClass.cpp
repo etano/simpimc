@@ -24,6 +24,26 @@ void Bead::restoreR()
   r = rC;
 }
 
+void Bead::storePrev()
+{
+  prevC = prev;
+}
+
+void Bead::restorePrev()
+{
+  prev = prevC;
+}
+
+void Bead::storeNext()
+{
+  nextC = next;
+}
+
+void Bead::restoreNext()
+{
+  next = nextC;
+}
+
 void Bead::storePartRecord()
 {
   nextC = next;

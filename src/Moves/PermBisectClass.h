@@ -6,30 +6,48 @@
 class PermBisect : public Move
 {
 private:
-  unsigned int nLevel;
-  unsigned int nBisectBeads;
-  Tvector permTable;
+  string species;
+  int iSpecies;
+  int offset;
+  int nImages;
+  unsigned int nLevel, nBisectBeads, nPart, nPermPart;
+  RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
+
+  struct Cycle
+  {
+    RealType weight, contribution;
+    int index, type;
+    Ivector perm, iPerm, part;
+  };
+  vector<Cycle*> cycles;
+  field<Cycle> all_cycles;
+  Tmatrix t;
+
+  Ivector permAttempt, permAccept;
 
   int DoPermBisect();
-  RealType constructPermTable(const int bead0, const int bead1, const int nBisectBeads, const bool rollOver);
-  int selectPerm(Ivector& permParts, RealType permTot);
-  unsigned int permuteb(field<*Bead> b, int permType);
+  RealType constructPermTable(const int bead0, const int nBisectBeads);
+  void BuildCycles();
+  int selectCycle(RealType permTot);
+  void permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c);
+  void assignParticleLabels();
+  void setPerm(Cycle& c);
+  void Write();
 
   std::vector<Bead*> affBeads;
 protected:
 
 public:
-  PermBisect(Path& pathIn, RNG& rngIn, RealType perAcceptDesiredIn, int nEqSweepIn, int nEqStepIn, int moveSkipIn)
-    : Move(pathIn, rngIn, perAcceptDesiredIn, nEqSweepIn, nEqStepIn, moveSkipIn )
+  // Constructor
+  PermBisect(Path &tmpPath, RNG &tmpRNG, vector<Action*> &actionList, Input &in, IOClass &out)
+    : Move(tmpPath, tmpRNG, actionList, in, out)
   {
-    moveLabel = "PermBisect";
-    stepSize = floor(log(path.nBead/2.0)/log(2));
-
-    // Initiate permutation table
-    permTable.zeros(path.nPermType * path.nPart * (path.nPart-1) * (path.nPart-2));
+    Init(in);
   }
 
+  virtual void Init(Input &in);
   virtual void MakeMove();
 };
+
 
 #endif

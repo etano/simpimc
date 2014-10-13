@@ -2,6 +2,7 @@
 
 void PairAction::Init(Input &in)
 {
+  // Read in things
   nImages = in.getAttribute<int>("nImages");
   nOrder = in.getAttribute<int>("nOrder");
   speciesA = in.getAttribute<string>("speciesA");
@@ -21,11 +22,16 @@ void PairAction::Init(Input &in)
   string fileName = in.getAttribute<string>("file");
   ReadFile(fileName);
 
-  //out.Write("Actions/"+name+"/file", fileName);
-  //out.Write("Actions/"+name+"/nImages", nImages);
-  //out.Write("Actions/"+name+"/nOrder", nOrder);
-  //out.Write("Actions/"+name+"/speciesA", speciesA);
-  //out.Write("Actions/"+name+"/speciesB", speciesB);
+  // Write things to file
+  out.Write("Actions/"+name+"/file", fileName);
+  out.Write("Actions/"+name+"/nImages", nImages);
+  out.Write("Actions/"+name+"/nOrder", nOrder);
+  out.Write("Actions/"+name+"/speciesA", speciesA);
+  out.Write("Actions/"+name+"/speciesB", speciesB);
+  out.Write("Actions/"+name+"/maxLevel", maxLevel);
+  out.Write("Actions/"+name+"/useLongRange", useLongRange);
+  if (useLongRange)
+    out.Write("Actions/"+name+"/kCut", kCut);
 }
 
 RealType PairAction::DActionDBeta()

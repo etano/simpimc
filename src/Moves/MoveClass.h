@@ -24,10 +24,14 @@ public:
     : Event(), path(tmpPath), rng(tmpRNG), actionList(tmpActionList), out(tmpOut)
   {
     name = in.getAttribute<string>("name");
+    type = in.getAttribute<string>("type");
     out.CreateGroup("Moves/"+name);
+    out.Write("Moves/"+name+"/type",type);
     firstTime = 1;
     Reset();
   }
+
+  string type;
 
   // Moves
   inline void DoEvent() {
@@ -49,7 +53,7 @@ public:
   void Reset();
 
   // Write
-  void Write();
+  virtual void Write();
 };
 
 #endif

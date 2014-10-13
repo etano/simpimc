@@ -30,9 +30,10 @@ public:
     name = in.getAttribute<string>("name");
     type = in.getAttribute<string>("type");
     out.CreateGroup("Actions/"+name);
+    out.Write("Actions/"+name+"/type",type);
   }
 
-  string name, type;
+  string type;
 
   // Functions
   virtual void Init(Input &in) {};

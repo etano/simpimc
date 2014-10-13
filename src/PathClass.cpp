@@ -2,10 +2,15 @@
 
 void Path::Init(Input &in, IOClass &out, RNG &rng)
 {
+  out.CreateGroup("System");
   nD = in.getChild("System").getAttribute<int>("nD");
+  out.Write("System/nD",nD);
   nBead = in.getChild("System").getAttribute<int>("nBead");
+  out.Write("System/nBead",nBead);
   beta = in.getChild("System").getAttribute<RealType>("beta");
+  out.Write("System/beta",beta);
   PBC = in.getChild("System").getAttribute<int>("PBC", 1);
+  out.Write("System/PBC",PBC);
   if (PBC) {
     L = in.getChild("System").getAttribute<RealType>("L");
     iL = 1./L;
@@ -14,18 +19,22 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
     iL = 0.;
   }
   vol = pow(L,nD);
+  out.Write("System/L",L);
 
   // Constants
   tau = beta/(1.*nBead);
+  out.Write("System/tau",tau);
 
   // Initialize Particles
-  nPart = 0;
+  out.CreateGroup("System/Particles");
   vector<Input> speciesInput = in.getChild("Particles").getChildList("Species");
   nSpecies = speciesInput.size();
+  nPart = 0;
   for (int iS=0; iS<nSpecies; iS+=1) {
-    speciesList.push_back(new Species(speciesInput[iS],iS,nBead,nD));
+    speciesList.push_back(new Species(speciesInput[iS],out,iS,nBead,nD));
     nPart += speciesList[iS]->nPart;
   }
+  out.Write("System/nPart",nPart);
 
   // Maximum Bisection Level
   maxLevel = int(log2(nBead))-1;
@@ -42,12 +51,16 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
 
   // Initiate beads
   bead.set_size(nPart,nBead);
+  unsigned int unique_id = 0;
   for (int iS=0; iS<nSpecies; iS+=1) {
     int offset;
     GetSpeciesInfo(speciesList[iS]->name,iS,offset);
-    for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP+=1)
-      for (unsigned int iB=0; iB<nBead; iB+=1)
-        bead(iP,iB) = new Bead(nD,*speciesList[iS],iP,iB);
+    for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
+      for (unsigned int iB=0; iB<nBead; iB++) {
+        bead(iP,iB) = new Bead(nD,*speciesList[iS],iP,iB,unique_id);
+        unique_id += 1;
+      }
+    }
   }
 
   // Initiate bead connections
@@ -67,14 +80,15 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   pCount.zeros(nPart);
   setPType();
 
-  // Initiate permutation counter
-  permCount.zeros(nPermType,2);
-
   // Initialize paths
+  out.CreateGroup("Init");
   string initType = in.getChild("Init").getAttribute<string>("type");
+  out.Write("Init/type",initType);
   if (initType == "File") {
     string fileName = in.getChild("Init").getAttribute<string>("name");
-    bool allBeads = in.getChild("Init").getAttribute<bool>("allBeads",false);
+    int allBeads = in.getChild("Init").getAttribute<bool>("allBeads",false);
+    out.Write("Init/fileName",fileName);
+    out.Write("Init/allBeads",allBeads);
     fstream initFile;
     initFile.open(fileName.c_str(), std::ios_base::in);
     if (!initFile.fail()) {
@@ -120,15 +134,18 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
 
 void Path::PrintPath()
 {
+  SetMode(0);
   for (int iP=0; iP<nPart; ++iP) {
     for (int iB=0; iB<nBead; ++iB) {
       cout << iP << " " << iB << " ";
+      Tvector r = GetR(bead(iP,iB));
       for (int iD=0; iD<nD; ++iD) {
-         cout << bead(iP,iB)->r(iD) << " ";
+         cout << r(iD) << " ";
       }
       cout << endl;
     }
   }
+  cout << endl;
 }
 
 // Get species info

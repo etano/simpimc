@@ -2,16 +2,20 @@
 
 void Bisect::Init(Input &in)
 {
-  maxLevel = in.getAttribute<int>("maxLevel");
+  nLevel = in.getAttribute<int>("nLevel");
   int maxPossibleLevel = floor(log2(path.nBead));
-  if (maxLevel > maxPossibleLevel)
-    cout << "Warning: maxLevel > maxPossibleLevel!" << endl;
+  if (nLevel > maxPossibleLevel)
+    cout << "Warning: nLevel > maxPossibleLevel!" << endl;
   if (path.PBC)
     nImages = in.getAttribute<int>("nImages");
   else
     nImages = 0;
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies,offset);
+
+  // Compute constants
+  lambda = path.speciesList[iSpecies]->lambda;
+  nBisectBeads = 1<<nLevel; // Number of beads in bisection
 }
 
 void Bisect::MakeMove()
@@ -26,9 +30,6 @@ void Bisect::MakeMove()
 int Bisect::DoBisect(const int iP)
 {
   unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
-  unsigned int nLevel = maxLevel;
-  //nLevel = 1;
-  unsigned int nBisectBeads = 1<<nLevel; // Number of beads in bisection
   unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
   vector<int> particles;
@@ -38,21 +39,16 @@ int Bisect::DoBisect(const int iP)
   Bead *beadI = path(iP,bead0);
   Bead *beadF = beadI -> nextB(nBisectBeads);
 
-  // Store coordinates and rho K
+  // Set which beads are affected by the move
   Bead *beadA;
   affBeads.clear();
-  for(beadA = beadI; beadA != beadF; beadA = beadA -> next) {
+  for(beadA = beadI; beadA != beadF; beadA = beadA -> next)
     affBeads.push_back(beadA);
-    beadA->storeR();
-  }
-  path.storeRhoK(affBeads);
-  //affBeads.clear();
 
   // Perform the bisection (move exactly through kinetic action)
   RealType vOld, vNew, dA[nLevel+1], dAold;
   dA[nLevel] = 0.0;
   dAold = 0.0;
-  RealType lambda = beadI->species.lambda;
   Bead *beadB, *beadC;
   RealType prevActionChange = 0.;
   RealType prefactorOfSampleProb = 0.;
@@ -134,38 +130,11 @@ int Bisect::DoBisect(const int iP)
     }
 
     prevActionChange = currActionChange;
-
-    //beadA = beadI;
-    //while(beadA != beadF) {
-    //  beadB = beadA->nextB(skip);
-    //  beadC = beadB->nextB(skip);
-
-    //  for (int i=0; i<actionList.size(); ++i)
-    //    if (actionList[i]->type != "Kinetic")
-    //      vOld += actionList[i]->GetAction(beadB->b, beadB->b+skip, particles, iLevel);
-
-    //  Tvector ac(path.nD);
-    //  path.Dr(beadC,beadA,ac);
-    //  Tvector dr(path.nD);
-    //  rng.normRand(dr, 0, sigma);
-    //  path.PutInBox(dr);
-    //  beadB->r = beadA->r + 0.5*ac + dr;
-
-    //  for (int i=0; i<actionList.size(); ++i)
-    //    if (actionList[i]->type != "Kinetic")
-    //      vNew += actionList[i]->GetAction(beadB->b, beadB->b+skip, particles, iLevel);
-
-    //  beadA = beadC;
-    //}
-
-    //dA[iLevel] = vNew - vOld;
-    //dAold = 0.5*(dAold + dA[iLevel+1]);
-    //if ((-dA[iLevel] + dAold) < log(rng.unifRand())) {
-    //  path.restoreR(affBeads);
-    //  return 0;
-    //}
   }
 
-  // Move Accepted
+  // Move Accepted, so copy new coordinates
+  path.storeR(affBeads);
+  path.storeRhoK(affBeads);
+
   return 1;
 }

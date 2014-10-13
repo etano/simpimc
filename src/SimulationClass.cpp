@@ -34,6 +34,12 @@ void Simulation::SetupSimulation(string inFile)
   string output = tmpSS.str();
   out.load(output);
   out.create();
+
+  // Write input data
+  out.CreateGroup("Input");
+  out.Write("Input/fileName",inFile);
+  string inString = in.getString();
+  out.Write("Input/contents",inString);
 }
 
 void Simulation::Run()
@@ -44,6 +50,8 @@ void Simulation::Run()
   int seed = in.getChild("RNG").getAttribute<int>("Seed",(int)time(0));
 #endif
   RNG rng(seed);
+  out.CreateGroup("RNG");
+  out.Write("RNG/seed",seed);
   algorithm.Init(in, out, rng);
   algorithm.Run();
 

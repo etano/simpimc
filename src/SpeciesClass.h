@@ -3,6 +3,7 @@
 
 #include "Utils/config.h"       // Standard libraries
 #include "Utils/IO/InputClass.h"
+#include "Utils/IO/IOClass.h"
 
 class Species
 {
@@ -12,12 +13,12 @@ protected:
 
 public:
   // Constructor
-  Species(Input &in, int tmpIS, int nBead, int nD)
+  Species(Input &in, IOClass &out, int tmpIS, int nBead, int nD)
     : iS(tmpIS)
   {
-    Init(in, nBead, nD);
+    Init(in, out, nBead, nD);
   };
-  void Init(Input &in, int nBead, int nD);
+  void Init(Input &in, IOClass &out, int nBead, int nD);
 
   // Details
   int iS; // index

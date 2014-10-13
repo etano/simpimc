@@ -11,7 +11,7 @@ int main(int argc, char** argv)
   if( argc == 2 )
     inFile = argv[1];
   else {
-    cout << "Usage: ./test InputFile\n";
+    cout << "Usage: simpimc InputFile.xml\n";
     return 1;
   }
 
