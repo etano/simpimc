@@ -20,24 +20,26 @@ void Bisect::Init(Input &in)
 
 void Bisect::MakeMove()
 {
-  for (unsigned int iP=offset; iP<offset+path.speciesList[iSpecies]->nPart; iP++) {
-    nAccept += DoBisect(iP);
-    nAttempt++;
-  }
+  nAccept += DoBisect();
+  nAttempt++;
 }
 
 // Bisection Move
-int Bisect::DoBisect(const int iP)
+int Bisect::DoBisect()
 {
+  unsigned int iP = offset + rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
   unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
-  unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
-  bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
-  vector<int> particles;
-  particles.push_back(iP);
+  unsigned int bead1 = bead0 + nBisectBeads;
 
   // Set up pointers
   Bead *beadI = path(iP,bead0);
   Bead *beadF = beadI -> nextB(nBisectBeads);
+
+  // Set which particles are affected by the move
+  vector<int> particles;
+  particles.push_back(iP);
+  if (beadF->p != iP) // fixme: may be overkill
+    particles.push_back(beadF->p);
 
   // Set which beads are affected by the move
   Bead *beadA;
@@ -52,6 +54,7 @@ int Bisect::DoBisect(const int iP)
   Bead *beadB, *beadC;
   RealType prevActionChange = 0.;
   RealType prefactorOfSampleProb = 0.;
+  Tvector rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
     int skip = 1<<iLevel; //pow(2,iLevel);
     RealType levelTau = path.tau*skip;
@@ -60,9 +63,6 @@ int Bisect::DoBisect(const int iP)
 
     RealType oldLogSampleProb = 0.;
     RealType newLogSampleProb = 0.;
-    RealType oldAction = 0.;
-    RealType newAction = 0.;
-
     beadA = beadI;
     while(beadA != beadF) {
       // Set beads
@@ -76,27 +76,15 @@ int Bisect::DoBisect(const int iP)
 
       // Old sampling
       path.SetMode(0);
-      Tvector rBarOld(path.nD);
       path.RBar(beadC, beadA, rBarOld);
-      Tvector deltaOld(path.nD);
       path.Dr(beadB, rBarOld, deltaOld);
-
-      // Old action
-      for (int i=0; i<actionList.size(); ++i)
-        oldAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
 
       // New sampling
       path.SetMode(1);
-      Tvector rBarNew(path.nD);
       path.RBar(beadC, beadA, rBarNew);
-      Tvector deltaNew(path.nD);
       rng.normRand(deltaNew, 0, sigma);
       path.PutInBox(deltaNew);
       beadB->r = rBarNew + deltaNew;
-
-      // New action
-      for (int i=0; i<actionList.size(); ++i)
-        newAction += actionList[i]->GetAction(beadA->b, beadA->b+2*skip, particles, iLevel);
 
       // Get sampling probs
       RealType gaussProdOld = 1.;
@@ -107,8 +95,8 @@ int Bisect::DoBisect(const int iP)
         for (int image=-nImages; image<=nImages; image++) {
           RealType distOld = deltaOld(iD) + (RealType)image*path.L;
           RealType distNew = deltaNew(iD) + (RealType)image*path.L;
-          gaussSumOld += exp(-0.5*distOld*distOld/sigma2);
-          gaussSumNew += exp(-0.5*distNew*distNew/sigma2);
+          gaussSumOld += path.fexp(-0.5*distOld*distOld/sigma2);
+          gaussSumNew += path.fexp(-0.5*distNew*distNew/sigma2);
         }
         gaussProdOld *= gaussSumOld;
         gaussProdNew *= gaussSumNew;
@@ -117,6 +105,21 @@ int Bisect::DoBisect(const int iP)
       newLogSampleProb += prefactorOfSampleProb + log(gaussProdNew);
 
       beadA = beadC;
+    }
+
+    // Calculate action change
+    RealType oldAction = 0.;
+    RealType newAction = 0.;
+    for (unsigned int iB=bead0; iB<bead1; iB+=2*skip) {
+      for (int iAction=0; iAction<actionList.size(); ++iAction) {
+        // Old action
+        path.SetMode(0);
+        oldAction += actionList[iAction]->GetAction(iB, iB+2*skip, particles, iLevel);
+
+        // New action
+        path.SetMode(1);
+        newAction += actionList[iAction]->GetAction(iB, iB+2*skip, particles, iLevel);
+      }
     }
 
     RealType logSampleRatio = -newLogSampleProb + oldLogSampleProb;

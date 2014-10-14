@@ -21,6 +21,9 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   vol = pow(L,nD);
   out.Write("System/L",L);
 
+  // Approximate with fast math
+  approximate = false;
+
   // Constants
   tau = beta/(1.*nBead);
   out.Write("System/tau",tau);

@@ -7,6 +7,8 @@ void Kinetic::Init(Input &in)
   else
     nImages = 0;
 
+  // todo: spline maybe?
+
   normalization = path.nBead*path.nD/(2.*path.tau);
   out.Write("/Actions/"+name+"/nImages", nImages);
 }
@@ -32,7 +34,7 @@ RealType Kinetic::DActionDBeta()
             for (int image=-nImages; image<=nImages; image++) {
               dist = dr(iD) + image*path.L;
               dist2i4LambdaTau = dist*dist*i4LambdaTau;
-              expPart = exp(-dist2i4LambdaTau);
+              expPart = path.fexp(-dist2i4LambdaTau);
               gaussSum(iD) += expPart;
               numSum(iD) += -(dist2i4LambdaTau/path.tau)*expPart;
             }
@@ -64,6 +66,7 @@ RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
   RealType levelTau = skip*path.tau;
   RealType tot = 0.;
   Tvector dr(path.nD);
+  Bead *beadA, *beadB, *beadC, *beadF;
   for (int p=0; p<particles.size(); ++p) {
     int iP = particles[p];
     int iS = path(iP,b0)->s;
@@ -71,18 +74,23 @@ RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
     if (!fequal(lambda,0.,1e-10)) {
       RealType i4LambdaTau = 1./(4.*lambda*levelTau);
       RealType gaussProd, gaussSum, dist;
-      for (int iB=b0; iB<b1; iB+=skip) {
-        path.Dr(path(iP,iB),path(iP,iB)->nextB(skip),dr);
-        gaussProd = 1.;
+      beadA = path(iP,b0);
+      beadF = path(iP,b0)->nextB(b1-b0);
+      while(beadA != beadF) {
+        beadB = beadA->nextB(skip);
+        path.Dr(beadA,beadB,dr);
+        gaussProd = 0.;
         for (int iD=0; iD<path.nD; iD++) {
           gaussSum = 0.;
           for (int image=-nImages; image<=nImages; image++) {
             dist = dr(iD) + image*path.L;
-            gaussSum += exp(-dist*dist*i4LambdaTau);
+            gaussSum += path.fexp(-dist*dist*i4LambdaTau);
           }
           gaussProd *= gaussSum;
         }
         tot -= log(gaussProd);
+
+        beadA = beadB;
       }
     }
   }

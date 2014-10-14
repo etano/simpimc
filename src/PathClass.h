@@ -8,6 +8,7 @@
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
 #include "Utils/Algorithm/Algorithm.h"
+#include "Utils/Algorithm/fastmath.h"
 
 class Path
 {
@@ -39,6 +40,10 @@ public:
   Imatrix pType;
   Ivector iCount, pCount;
   unsigned int nType;
+
+  // Fast math
+  bool approximate;
+  inline RealType fexp(RealType x) { if (approximate) { return fastexp(x); } else { return exp(x); } };
 
   // Beads
   field<Bead*> bead;

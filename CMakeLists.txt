@@ -97,7 +97,7 @@ IF(${COMPILER_MAKE} MATCHES "CLANG")
   SET(CMAKE_C_FLAGS "${CLANG_C_FLAGS}")
 ENDIF()
 
-SET(COMMON_FLAGS "-O3 -DNDIM=${NDIM}")
+SET(COMMON_FLAGS "-O3 -ffast-math -DNDIM=${NDIM}")
 IF(DEBUG)
   SET(COMMON_FLAGS "${COMMON_FLAGS} -pg")
 ELSE(DEBUG)
@@ -249,6 +249,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp
   src/Moves/PermBisectClass.cpp
+  src/Moves/PermBisectIterativeClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/TimeClass.cpp

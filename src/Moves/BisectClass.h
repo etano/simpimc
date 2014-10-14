@@ -13,7 +13,7 @@ private:
   unsigned int nLevel, nBisectBeads;
   RealType lambda;
 
-  int DoBisect(const int iPart);
+  int DoBisect();
   std::vector<Bead*> affBeads;
 protected:
 

@@ -1,6 +1,6 @@
-#include "PermBisectClass.h"
+#include "PermBisectIterativeClass.h"
 
-void PermBisect::Init(Input &in)
+void PermBisectIterative::Init(Input &in)
 {
   nLevel = in.getAttribute<int>("nLevel");
   int maxPossibleLevel = floor(log2(path.nBead));
@@ -11,7 +11,6 @@ void PermBisect::Init(Input &in)
   else
     nImages = 0;
   species = in.getAttribute<string>("species");
-  nPermPart = in.getAttribute<int>("nPermPart");
   epsilon = in.getAttribute<RealType>("epsilon",1.e-100);
   logEpsilon = log(epsilon);
 
@@ -27,90 +26,47 @@ void PermBisect::Init(Input &in)
   // Initiate permutation table
   t.zeros(nPart,nPart);
 
-  // Generate all cycles
-  BuildCycles();
-
   // Initiate acceptance ratio counters
-  permAttempt.zeros(nPermType);
-  permAccept.zeros(nPermType);
-}
-
-// Construct all cycles of particle exchanges
-void PermBisect::BuildCycles()
-{
-  // Generate possible cycles of nPermPart particles
-  vector<int> tmpPossCycle;
-  for (int i=0; i<nPermPart; ++i)
-    tmpPossCycle.push_back(i);
-  vector< vector<int> > tmpPossCycles;
-  genPerm(tmpPossCycles, tmpPossCycle);
-  nPermType = tmpPossCycles.size();
-  field<Cycle> possible_cycles;
-  possible_cycles.set_size(nPermType);
-  for (int i=0; i<nPermType; ++i) {
-    Imatrix iP(nPermPart,nPermPart);
-    iP.zeros();
-    possible_cycles(i).perm = tmpPossCycles[i];
-    for (int j=0; j<nPermPart; ++j)
-      for (int k=0; k<nPermPart; ++k)
-        if (tmpPossCycles[i][k] == j)
-          iP(j,k) = 1;
-    Ivector ic(tmpPossCycle);
-    ic = iP * ic;
-    possible_cycles(i).iPerm = ic;
-  }
-
-  // Run through permatation types
-  vector<int> tmpCycle;
-  for (int i=offset; i<offset+nPart; ++i)
-    tmpCycle.push_back(i);
-  vector< vector<int> > tmpCycles;
-  genCombPermK(tmpCycles, tmpCycle, nPermPart, false, false);
-  int nCycle = tmpCycles.size();
-  all_cycles.set_size(nPermType * nCycle);
-  int permIndex = 0;
-  for (unsigned int iPermType=0; iPermType<nPermType; iPermType++) {
-    for (int iCycle=0; iCycle<nCycle; ++iCycle) {
-      Cycle& c = all_cycles(permIndex);
-      c.type = iPermType;
-      c.index = permIndex;
-      c.part = tmpCycles[iCycle];
-      c.perm = possible_cycles(iPermType).perm;
-      c.iPerm = possible_cycles(iPermType).iPerm;
-      permIndex += 1;
-    }
-  }
-
+  permAttempt.zeros(nPart);
+  permAccept.zeros(nPart);
 }
 
 // Make the move
-void PermBisect::MakeMove()
+void PermBisectIterative::MakeMove()
 {
   nAccept += DoPermBisect();
   nAttempt++;
 }
 
 // Perform the permuting bisection
-int PermBisect::DoPermBisect()
+int PermBisectIterative::DoPermBisect()
 {
   unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
 
   // Set up permutation
-  cycles.clear();
-  RealType permTot0 = constructPermTable(bead0,nBisectBeads); // Permutation weight table
-  int cycleIndex = selectCycle(permTot0);
-  Cycle* c = cycles[cycleIndex];
+  Cycle c;
+  if (!selectCycleIterative(bead0,nBisectBeads,c)) {
+    return 0;
+  }
+  nPermPart = c.part.size();
+  permAttempt(nPermPart-1) += 1;
 
   // Set up pointers
   vector<int> particles;
   field<Bead*> beadI(nPermPart), beadFm1(nPermPart), beadF(nPermPart);
   for (unsigned int i=0; i<nPermPart; i++) {
-    beadI(i) = path.bead(c->part(i),bead0);
+    beadI(i) = path.bead(c.part(i),bead0);
     beadFm1(i) = beadI(i)->nextB(nBisectBeads-1);
     beadF(i) = beadFm1(i)->next;
-    particles.push_back(c->part(i));
+    particles.push_back(c.part(i));
+  }
+  if (rollOver) {
+    for (int i=0; i<nPermPart; ++i)
+      particles.push_back(beadF(i)->p);
+    sort(particles.begin(), particles.end());
+    particles.erase(unique(particles.begin(), particles.end()), particles.end());
   }
 
   // Permute particles
@@ -219,27 +175,6 @@ int PermBisect::DoPermBisect()
     prevActionChange = currActionChange;
   }
 
-  // Have to check this if neighborhood has changed
-  if (nPermPart < nPart) {
-    // Construct Permutation Table
-    path.SetMode(1);
-    RealType permTot1 = constructPermTable(bead0,nBisectBeads);
-  
-    // Decide whether or not to accept whole bisection
-    if ((permTot0/permTot1) < rng.unifRand())  {
-      // Restore things
-      for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
-        path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
-        path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
-      }
-      assignParticleLabels();
-      path.restoreR(affBeads);
-      path.restoreRhoK(affBeads);
-  
-      return 0;
-    }
-  }
-
   // Accept move, so store things
   for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
     path.bead(iP,path.beadLoop(bead1)) -> storePrev();
@@ -250,36 +185,12 @@ int PermBisect::DoPermBisect()
   path.storeRhoK(affBeads);
 
   // Increment permutation counter
-  permAccept(c->type) += 1;
+  permAccept(nPermPart-1) += 1;
 
   return 1;
 }
 
-
-// Construct permutation table and probabilities
-RealType PermBisect::constructPermTable(const int bead0, const int nBisectBeads)
-{
-  // Update t
-  updatePermTable(bead0, nBisectBeads);
-
-  // Run through permatation types
-  RealType totalWeight = 0.;
-  for (unsigned int permIndex=0; permIndex<all_cycles.size(); permIndex++) {
-    Cycle& c = all_cycles(permIndex);
-    c.weight = 1.;
-    for (unsigned int iP=0; iP<c.part.size(); iP++)
-      c.weight *= t(c.part(iP),c.part(c.perm(iP)));
-    if (c.weight > epsilon) {
-      totalWeight += c.weight;
-      c.contribution = totalWeight;
-      cycles.push_back(&c);
-    }
-  }
-
-  return totalWeight;
-}
-
-void PermBisect::updatePermTable(const int bead0, const int nBisectBeads)
+void PermBisectIterative::updatePermTable(const int bead0, const int nBisectBeads)
 {
   // Set initial and final beads
   field<Bead*> b0(nPart), b1(nPart);
@@ -304,35 +215,104 @@ void PermBisect::updatePermTable(const int bead0, const int nBisectBeads)
 
 }
 
-int PermBisect::selectCycle(RealType permTot)
+int PermBisectIterative::selectCycleIterative(const int bead0, const int nBisectBeads, Cycle& c)
 {
-  RealType x = rng.unifRand(0.,permTot);
-  int hi = cycles.size();
-  int lo = 0;
-  if (x < cycles[0]->contribution)
-    return 0;
-  while (hi - lo > 1) {
-    int mid = (hi+lo)>>1;
-    if (x < cycles[mid]->contribution)
-      hi = mid;
-    else
-      lo = mid;
+  // Update t
+  updatePermTable(bead0, nBisectBeads);
+  Tmatrix t_c = t;
+
+  // Choose particles
+  int p0 = rng.unifRand(nPart) - 1;  // Pick first particle at random
+  int p = p0;
+  vector<int> ps;
+  do {
+    // Add particle to ps
+    ps.push_back(p);
+
+    // Make sure returning to previous particles is not an option
+    for (int i=0; i<ps.size(); ++i)
+      t_c(p,ps[i]) = 0.;
+    //if (p != p0)
+    t_c(p,p0) = t(p,p0);
+
+    // Calculate row total
+    RealType Q_p = 0.;
+    RealType Q_p_c = 0.;
+    for (int i=0; i<nPart; ++i) {
+      Q_p += t(p,i);
+      Q_p_c += t_c(p,i);
+    }
+
+    // Decide whether or not to continue
+    if ((Q_p_c/Q_p) < rng.unifRand())
+      return 0;
+
+    // Select next particle with bisective search
+    RealType x = rng.unifRand(0.,Q_p_c);
+    RealType t_Q = 0.;
+    for (int i=0; i<nPart; ++i) {
+      t_Q += t_c(p,i);
+      if (t_Q > x) {
+        p = i;
+        break;
+      }
+    }
+    //int hi = nPart-1;
+    //int lo = 0;
+    //if (x < t_c(p,0))
+    //  p = 0;
+    //else {
+    //  while (hi - lo >= 1) {
+    //    int mid = (hi+lo)>>1;
+    //    if (x < t_c(p,mid))
+    //      hi = mid;
+    //    else
+    //      lo = mid;
+    //  }
+    //  p = hi;
+    //}
+
+  } while (p != p0);
+
+  // Set particles
+  int nPerm = ps.size();
+  c.part = ps;
+  for (int i=0; i<nPerm; ++i)
+    c.part(i) += offset;
+
+  // Check particles
+  for (int i=0; i<nPerm-1; ++i) {
+    for (int j=i+1; j<nPerm; ++j) {
+      if (c.part(i) == c.part(j)) {
+        cout << " WOAH " << endl;
+        cout << p0 << " " << c.part.t() << endl;
+      }
+    }
   }
-  return hi;
+
+  // Set perms
+  c.perm.set_size(nPerm);
+  for (int i=0; i<nPerm-1; ++i)
+    c.perm(i) = i+1;
+  c.perm(nPerm-1) = 0;
+  c.iPerm.set_size(nPerm);
+  c.iPerm(0) = nPerm-1;
+  for (int i=1; i<nPerm; ++i)
+    c.iPerm(i) = i-1;
+
+  return 1;
 }
 
 // Permute paths between b0 and b1 given cycle
-void PermBisect::permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c)
+void PermBisectIterative::permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle& c)
 {
-  // Set permutation type
-  permAttempt(c->type) += 1;
-
   // Execute the permutation
-  int nPerm = c->part.size();
+  int nPerm = c.part.size();
+  for (unsigned int i=0; i<nPerm; i++) {
+    b0(i)->next = b1(c.perm(i));
+  }
   for (unsigned int i=0; i<nPerm; i++)
-    b0(i)->next = b1(c->perm(i));
-  for (unsigned int i=0; i<nPerm; i++)
-    b1(i)->prev = b0(c->iPerm(i));
+    b1(i)->prev = b0(c.iPerm(i));
   for (unsigned int i=0; i<nPerm; i++)
     b1(i) = b0(i)->next;
 
@@ -340,7 +320,7 @@ void PermBisect::permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c)
 }
 
 // Reassign particle labels
-void PermBisect::assignParticleLabels()
+void PermBisectIterative::assignParticleLabels()
 {
   Bead *b;
   for (unsigned int iP=offset; iP<offset+nPart; iP++) {
@@ -353,11 +333,10 @@ void PermBisect::assignParticleLabels()
   }
 }
 
-void PermBisect::Write()
+void PermBisectIterative::Write()
 {
   // Write
   if (firstTime) {
-    out.Write("/Moves/"+name+"/nPermType", nPermType);
     out.CreateExtendableDataSet("/Moves/"+name+"/", "permAttempt", permAttempt);
     out.CreateExtendableDataSet("/Moves/"+name+"/", "permAccept", permAccept);
   } else {

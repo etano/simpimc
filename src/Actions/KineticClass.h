@@ -2,12 +2,15 @@
 #define KineticClass_H
 
 #include "ActionClass.h"
+#include <einspline/bspline.h>
+#include <einspline/nubspline.h>
 
 class Kinetic : public Action
 {
 private:
   int nImages;
   RealType normalization;
+
 protected:
 
 public:

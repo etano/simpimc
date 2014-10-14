@@ -17,6 +17,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
       actions.push_back(new Kinetic(path,actionInputs[i],out));
     else if (type == "HarmonicTrap")
       actions.push_back(new Trap(path,actionInputs[i],out));
+    else if (type == "Nodal")
+      actions.push_back(new Nodal(path,actionInputs[i],out));
     else if (type == "DavidPairAction")
       actions.push_back(new DavidPairAction(path,actionInputs[i],out));
     else if (type == "IlkkaPairAction")
@@ -34,6 +36,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
       events.push_back(new Bisect(path,rng,actions,moveInputs[i],out));
     else if (type == "PermBisect")
       events.push_back(new PermBisect(path,rng,actions,moveInputs[i],out));
+    else if (type == "PermBisectIterative")
+      events.push_back(new PermBisectIterative(path,rng,actions,moveInputs[i],out));
     else
       std::cerr << "Warning: Unrecognized Move, " << type << endl;
   }
