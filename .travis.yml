@@ -12,6 +12,7 @@ before_install:
   - export F77="gfortran-4.8"
   - export FC="gfortran-4.8"
   - sudo apt-get install -qq libhdf5-serial-dev
+  - sudo apt-get install -qq libboost-all-dev
   - sudo apt-get install -qq libarmadillo-dev
   - mkdir include && cd include
   - git clone https://github.com/etano/meinspline.git
