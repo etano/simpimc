@@ -4,15 +4,9 @@ compiler:
   - gcc
 
 before_install:
-  - sudo apt-get update
   - mkdir include && cd include
-  - pwd
-  - wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.13.tar.gz
-  - tar -xzvf hdf5-1.8.13.tar.gz && cd hdf5-1.8.13
-  - ./configure && make && make install && cd ..
-  - export HDF5_HOME=/usr
-  - sudo apt-get install armadillo armadillo-dev
-  - export ARMA_HOME=/usr
+  - sudo apt-get install libhdf5-serial-dev
+  - sudo apt-get install libarmadillo-dev
   - git clone https://github.com/etano/meinspline.git
   - cd meinspline
   - ./configure && make && make install && cd ..
