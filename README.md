@@ -1,14 +1,27 @@
-Simpimc
-=======
+# simpimc
 
 Simple path integral monte carlo in c++.
 
-Make sure MKL_HOME, MPI_HOME, and ARMA_HOME are set or in your LD_LIBRARY_PATH and PATH.
+## Installation
+
+### Dependencies:
+
+* Armadillo c++ - http://arma.sourceforge.net/
+* Meinspline - https://github.com/etano/meinspline
+
+Be sure to set the environmental variables:
+
+    export ARMA_HOME=/armadillo/install/directory
+    export EINSPLINE_HOME=/einspline/install/directory
+    
+### Compiling
 
 Build like:
 
+    git clone https://github.com/etano/simpimc.git
+    cd simpimc
     git submodule init
     git submodule update
-    cd build
+    mkdir build && cd build
     cmake ..
     make install
