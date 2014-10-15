@@ -6,6 +6,7 @@ Simple path integral monte carlo in c++.
 
 ### Dependencies:
 
+* HDF5 (with c++ API) - http://www.hdfgroup.org/HDF5/
 * Armadillo c++ - http://arma.sourceforge.net/
 * Meinspline - https://github.com/etano/meinspline
 
