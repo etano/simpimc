@@ -243,6 +243,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Actions/CoulombClass.cpp
   src/Actions/KineticClass.cpp
   src/Actions/PairActionClass.cpp
+  src/Actions/NodalClass.cpp
   src/Actions/DavidPairActionClass.cpp
   src/Actions/IlkkaPairActionClass.cpp
   src/Actions/TrapClass.cpp

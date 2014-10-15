@@ -12,6 +12,7 @@ private:
   int nImages;
   unsigned int nLevel, nBisectBeads, nPart, nPermPart, nPermType;
   RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
+  bool fixedNode;
 
   struct Cycle
   {

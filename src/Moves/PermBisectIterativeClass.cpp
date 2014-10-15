@@ -11,6 +11,7 @@ void PermBisectIterative::Init(Input &in)
   else
     nImages = 0;
   species = in.getAttribute<string>("species");
+  fixedNode = in.getAttribute<bool>("fixedNode",0);
   epsilon = in.getAttribute<RealType>("epsilon",1.e-100);
   logEpsilon = log(epsilon);
 
@@ -232,7 +233,7 @@ int PermBisectIterative::selectCycleIterative(const int bead0, const int nBisect
     // Make sure returning to previous particles is not an option
     for (int i=0; i<ps.size(); ++i)
       t_c(p,ps[i]) = 0.;
-    //if (p != p0)
+    //if (p != p0) todo: if uncommented, will ignore identity permutation
     t_c(p,p0) = t(p,p0);
 
     // Calculate row total
@@ -274,21 +275,15 @@ int PermBisectIterative::selectCycleIterative(const int bead0, const int nBisect
 
   } while (p != p0);
 
+  // Disallow even permutations from closing for fixed-node calculations
+  if (fixedNode && !(ps.size() % 2))
+    return 0;
+
   // Set particles
   int nPerm = ps.size();
   c.part = ps;
   for (int i=0; i<nPerm; ++i)
     c.part(i) += offset;
-
-  // Check particles
-  for (int i=0; i<nPerm-1; ++i) {
-    for (int j=i+1; j<nPerm; ++j) {
-      if (c.part(i) == c.part(j)) {
-        cout << " WOAH " << endl;
-        cout << p0 << " " << c.part.t() << endl;
-      }
-    }
-  }
 
   // Set perms
   c.perm.set_size(nPerm);
