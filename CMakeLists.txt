@@ -10,8 +10,8 @@ SET(CMAKE_VERBOSE_MAKEFILE OFF)
 #-------------------------------------------------------------------
 
 SET(PRECISION double) #double float
-SET(USE_MPI TRUE)
-SET(USE_OPENMP TRUE)
+SET(USE_MPI FALSE)
+SET(USE_OPENMP FALSE)
 SET(QMC_BUILD_STATIC FALSE)
 SET(NDIM 3)
 SET(COMPILER_MAKE "GNU") # INTEL, GNU, or IBM
@@ -186,10 +186,13 @@ ELSE()
     IF(MKL_FOUND)
       SET(MKL_LIBS mkl_intel_lp64 mkl_intel_thread mkl_core iomp5 pthread m mkl_scalapack_lp64 mkl_blacs_intelmpi_lp64)
       #SET(MKL_LIBS "-L$ENV{MKL_HOME};mkl_intel_lp64;mkl_sequential;mkl_core")
+      LINK_DIRECTORIES(/opt/intel/lib/intel64)
+      LINK_DIRECTORIES(${MKL_LINK_DIR})
+      SET(LAPACK_LIBS ${MKL_LIBS})
+    ELSE()
+      SET(LAPACK_LIBS lapack blas)
+      LINK_DIRECTORIES(/usr/lib)
     ENDIF()
-    LINK_DIRECTORIES(/opt/intel/lib/intel64)
-    LINK_DIRECTORIES(${MKL_LINK_DIR})
-    SET(LAPACK_LIBS ${MKL_LIBS})
 ENDIF()
 
 # Find Armadillo
