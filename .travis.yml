@@ -1,0 +1,46 @@
+# blacklist
+branches:
+  except:
+    - legacy
+    - experimental
+
+# whitelist
+branches:
+  only:
+    - master
+    - stable
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install cmake
+  - mkdir include && cd include
+
+before_install:
+  - wget http:/dd/www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.13.tar.gz
+  - tar -xzvf hdf5-1.8.13.tar.gz && cd hdf5-1.8.13
+  - ./configure && make && make install && cd ..
+  - export HDF5_HOME=/usr
+
+before_install:
+  - sudo apt-get install armadillo armadillo-dev
+  - export ARMA_HOME=/usr
+
+before_install:
+  - git clone https://github.com/etano/meinspline.git
+  - cd meinspline
+  - ./configure && make && make install && cd ..
+  - export EINSPLINE_HOME=/usr
+
+before_install:
+  - cd ..
+
+install:
+  - mkdir build && cd build
+  - cmake ..
+  - make && make install
+  - cd ..
+
+before_script:
+  - cd inputs
+
+script: ../bin/simpimc free.xml
