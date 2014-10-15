@@ -10,8 +10,8 @@ before_install:
   - sudo apt-get install libarmadillo-dev
   - git clone https://github.com/etano/meinspline.git
   - cd meinspline
-  - ./configure && make && make install && cd ..
-  - export EINSPLINE_HOME=/usr
+  - ./configure && make && sudo make install && cd ..
+  - export EINSPLINE_HOME=/usr/local
   - cd ..
 
 install:
