@@ -12,6 +12,7 @@ Simple path integral monte carlo in c++.
 
 Be sure to set the environmental variables:
 
+    export HDF5_HOME=/armadillo/install/directory
     export ARMA_HOME=/armadillo/install/directory
     export EINSPLINE_HOME=/einspline/install/directory
     
