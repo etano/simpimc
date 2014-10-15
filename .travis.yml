@@ -5,12 +5,13 @@ compiler:
 
 before_install:
   - mkdir include && cd include
+  - sudo apt-get install gfortran
   - sudo apt-get install libhdf5-serial-dev
   - sudo apt-get install libarmadillo-dev
   - git clone https://github.com/etano/meinspline.git
   - cd meinspline
-  - ./configure && make && make install && cd ..
-  - export EINSPLINE_HOME=/usr
+  - ./configure --enable-sse && make && make install && cd ..
+  - export EINSPLINE_HOME=/home/travis/build/ethan/simpimc/include/meinspline
   - cd ..
 
 install:
