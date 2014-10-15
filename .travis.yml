@@ -4,10 +4,14 @@ compiler:
   - gcc
 
 before_install:
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get update -qq
+  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - sudo apt-get install -qq gfortran
+  - sudo apt-get install -qq libhdf5-serial-dev
+  - sudo apt-get install -qq libarmadillo-dev
   - mkdir include && cd include
-  - sudo apt-get install gfortran
-  - sudo apt-get install libhdf5-serial-dev
-  - sudo apt-get install libarmadillo-dev
   - git clone https://github.com/etano/meinspline.git
   - cd meinspline
   - ./configure && make && sudo make install && cd ..
