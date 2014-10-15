@@ -79,7 +79,7 @@ RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
       while(beadA != beadF) {
         beadB = beadA->nextB(skip);
         path.Dr(beadA,beadB,dr);
-        gaussProd = 0.;
+        gaussProd = 1.;
         for (int iD=0; iD<path.nD; iD++) {
           gaussSum = 0.;
           for (int image=-nImages; image<=nImages; image++) {
