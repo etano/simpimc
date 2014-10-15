@@ -22,7 +22,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   out.Write("System/L",L);
 
   // Approximate with fast math
-  approximate = false;
+  approximate = true;
 
   // Constants
   tau = beta/(1.*nBead);
