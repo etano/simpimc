@@ -321,7 +321,7 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
   vector<int> species;
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
-    int iS = bead(iP,b0)->species.iS;
+    int iS = bead(iP,beadLoop(b0))->species.iS;
     species.push_back(iS);
   }
 
@@ -361,7 +361,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
   vector<int> species;
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
-    int iS = bead(iP,b0)->species.iS;
+    int iS = bead(iP,beadLoop(b0))->species.iS;
     species.push_back(iS);
   }
 
@@ -409,7 +409,7 @@ void Path::CalcC(Tvector &r)
 // Add rho_k for a single particle
 void Path::AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
 {
-  Tvector r = GetR((*this)(iP,iB));
+  Tvector r = GetR((*this)(iP,beadLoop(iB)));
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
     Ivector &ki = kIndices[iK];
@@ -423,7 +423,7 @@ void Path::AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
 // Calc rho_k for a single particle
 void Path::CalcRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS)
 {
-  Tvector r = GetR((*this)(iP,iB));
+  Tvector r = GetR((*this)(iP,beadLoop(iB)));
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
     Ivector &ki = kIndices[iK];
