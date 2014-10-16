@@ -26,6 +26,7 @@ install:
   - cmake ..
   - cat CMakeCache.txt
   - cat CMakeFiles/simpimc.dir/link.txt
+  - which c++
   - make && make install
   - cd ..
 
