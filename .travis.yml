@@ -20,8 +20,14 @@ before_install:
   - export FC="gfortran-4.8"
   - sudo apt-get install -qq libhdf5-serial-dev
   - sudo apt-get install -qq libboost-all-dev
-  - sudo apt-get install -qq libarmadillo-dev
+  #  - sudo apt-get install -qq libarmadillo-dev
   - mkdir include && cd include
+  - wget http://downloads.sourceforge.net/project/arma/armadillo-4.450.4.tar.gz
+  - tar -xzvf armadillo-4.450.4.tar.gz && cd armadillo-4.450.4
+  - mkdir build && cd build
+  - cmake ..
+  - make && sudo make install && cd ..
+  - export ARMA_HOME=/usr
   - git clone https://github.com/etano/meinspline.git
   - cd meinspline
   - ./configure && make && sudo make install && cd ..
