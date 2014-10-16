@@ -23,7 +23,9 @@ before_install:
 
 install:
   - mkdir build && cd build
-  - cmake -DCMAKE_CXX_COMPILER=g++-4.8 -DCMAKE_C_COMPILER=gcc-4.8 ..
+  - cmake ..
+  - cat CMakeCache.txt
+  - cat CMakeFiles/simpimc.dir/link.txt
   - make && make install
   - cd ..
 
