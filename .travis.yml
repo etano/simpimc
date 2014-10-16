@@ -13,6 +13,7 @@ before_install:
   - ln -s /usr/bin/g++-4.8 bin/g++
   - ln -s /usr/bin/g++-4.8 bin/gcc
   - ln -s /usr/bin/g++-4.8 bin/c++
+  - ls -al bin
   - export PATH="/home/travis/build/ethan/simpimc/bin:${PATH}"
   - sudo apt-get install -qq gfortran-4.8
   - export F77="gfortran-4.8"
@@ -34,6 +35,7 @@ install:
   - cat CMakeFiles/simpimc.dir/link.txt
   - which c++
   - ls -al /usr/bin/c++
+  - ls -al /etc/alternatives/c++
   - make && make install
   - cd ..
 
