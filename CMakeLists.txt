@@ -150,7 +150,7 @@ SET(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 #-------------------------------------------------------------------
 
 # Find Lapack/Blas/Atlas/MKL/XLmass/ESSL/...
-SET(LAPACKLIBS "")
+SET(LA_LIBS "")
 IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "ppc") # This covers GNU and IBM Compilers on BGQ
   # Find Lapack/BLAS BGQ
   SET(LAPACK_LIBRARY /usr/local/tools/lapack/lib/liblapack.a)
@@ -164,7 +164,7 @@ IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "ppc") # This covers GNU and IBM Compilers 
                       /opt/ibmcmp/xlf/bg/14.1/bglib64/libxlfpmt4.a
                       /opt/ibmcmp/xlf/bg/14.1/bglib64/libxlfpmt8.a
                       /opt/ibmcmp/xlf/bg/14.1/bglib64/libxlopt.a)
-  SET(LAPACK_LIBS ${LAPACK_LIBRARY} ${BLAS_LIBRARY} ${ESSL_LIBRARY}
+  SET(LA_LIBS ${LAPACK_LIBRARY} ${BLAS_LIBRARY} ${ESSL_LIBRARY}
     ${XLMASS_LIBRARY} ${FORTRAN_LIBRARY} -ldl)
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   SET(CMAKE_CXX_FLAGS "-framework Accelerate ${CMAKE_CXX_FLAGS}")
@@ -188,12 +188,15 @@ ELSE()
       #SET(MKL_LIBS "-L$ENV{MKL_HOME};mkl_intel_lp64;mkl_sequential;mkl_core")
       LINK_DIRECTORIES(/opt/intel/lib/intel64)
       LINK_DIRECTORIES(${MKL_LINK_DIR})
-      SET(LAPACK_LIBS ${MKL_LIBS})
+      SET(LA_LIBS ${MKL_LIBS})
     ELSE()
-      LINK_DIRECTORIES(/usr/lib)
-      SET(LAPACK_LIBS lapack blas)
+      FIND_LIBRARY(LAPACK_LIBS lapack /usr/lib /usr/local/lib)
+      FIND_LIBRARY(BLAS_LIBS blas /usr/lib /usr/local/lib)
+      SET(LA_LIBS ${LAPACK_LIBS} ${BLAS_LIBS})
+      LINK_LIBRARIES(${LA_LIBS})
     ENDIF()
 ENDIF()
+MESSAGE(STATUS "LA_LIBS=${LA_LIBS}")
 
 # Find Armadillo
 FIND_PATH(ARMA_INCLUDE_DIR armadillo $ENV{ARMA_HOME}/include)
@@ -262,7 +265,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Utils/IO/xmlParser.cpp
   src/Utils/RNG/RNGClass.cpp)
 ADD_EXECUTABLE(simpimc ${TEMPLATE_SRCS})
-TARGET_LINK_LIBRARIES(simpimc ${LAPACK_LIBS} ${ARMA_LIBS} ${HDF5_LIBS} ${EINSPLINE_LIBS})
+TARGET_LINK_LIBRARIES(simpimc ${LA_LIBS} ${ARMA_LIBS} ${HDF5_LIBS} ${EINSPLINE_LIBS})
 
 # Install to home directory
 INSTALL(TARGETS simpimc DESTINATION $ENV{HOME}/bin)
