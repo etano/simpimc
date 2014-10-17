@@ -7,6 +7,7 @@
 #include "EventClass.h"
 #include "WriteClass.h"
 #include "Utils/config.h"
+#include "Utils/Communication/Communication.h"
 #include "Utils/IO/InputClass.h"
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
@@ -23,13 +24,16 @@
 #include "Moves/PermBisectIterativeClass.h"
 #include "Observables/ObservableClass.h"
 #include "Observables/EnergyClass.h"
+#include "Observables/PathDumpClass.h"
 #include "Observables/TimeClass.h"
 
 class Algorithm
 {
 public:
   // Constructor
-  Algorithm() {}
+  Algorithm(CommunicatorClass& WorldComm, CommunicatorClass& InterComm, CommunicatorClass& IntraComm)
+   : path(WorldComm,InterComm,IntraComm)
+  {}
   void Init(Input &in, IOClass &out, RNG &rng);
   void Run();
 

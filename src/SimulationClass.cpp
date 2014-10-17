@@ -38,8 +38,8 @@ void Simulation::SetupSimulation(string inFile)
   // Write input data
   out.CreateGroup("Input");
   out.Write("Input/fileName",inFile);
-  string inString = in.getString();
-  out.Write("Input/contents",inString);
+  //string inString = in.getString();
+  //out.Write("Input/contents",inString);
 }
 
 void Simulation::Run()
@@ -52,6 +52,9 @@ void Simulation::Run()
   RNG rng(seed);
   out.CreateGroup("RNG");
   out.Write("RNG/seed",seed);
+
+  // Algorithm
+  Algorithm algorithm(WorldComm, InterComm, IntraComm);
   algorithm.Init(in, out, rng);
   algorithm.Run();
 

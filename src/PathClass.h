@@ -4,6 +4,7 @@
 #include "SpeciesClass.h"
 #include "BeadClass.h"
 #include "Utils/config.h"
+#include "Utils/Communication/Communication.h"
 #include "Utils/IO/InputClass.h"
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
@@ -18,8 +19,15 @@ protected:
 
 public:
   // Constructor
-  Path() {};
+  Path(CommunicatorClass& tmpWorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& tmpIntraComm) 
+   : WorldComm(tmpWorldComm), InterComm(tmpInterComm), IntraComm(tmpIntraComm)
+  {}
   void Init(Input &in, IOClass &out, RNG &rng);
+
+  // Parallel communicators
+  CommunicatorClass& WorldComm; // This is the global MPIWORLD communicator.
+  CommunicatorClass& InterComm; // This is for communication between the rank 0 procs of each walker group.
+  CommunicatorClass& IntraComm; // This is for commmunication between procs within a walker group.
 
   // Given Global Constants
   unsigned int nPart, nD, nBead;
@@ -95,6 +103,9 @@ public:
 
   // Nodes
   int refBead;
+
+  // Path initialization
+  void InitPaths(Input &in, IOClass &out, RNG &rng);
 };
 
 inline Bead* Path::operator() (int iP, int iB)

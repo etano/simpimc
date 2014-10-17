@@ -22,7 +22,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   out.Write("System/L",L);
 
   // Approximate with fast math
-  approximate = true;
+  approximate = false;
 
   // Constants
   tau = beta/(1.*nBead);
@@ -89,55 +89,10 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   setPType();
 
   // Initialize paths
-  out.CreateGroup("Init");
-  string initType = in.getChild("Init").getAttribute<string>("type");
-  out.Write("Init/type",initType);
-  if (initType == "File") {
-    string fileName = in.getChild("Init").getAttribute<string>("name");
-    int allBeads = in.getChild("Init").getAttribute<bool>("allBeads",false);
-    out.Write("Init/fileName",fileName);
-    out.Write("Init/allBeads",allBeads);
-    fstream initFile;
-    initFile.open(fileName.c_str(), std::ios_base::in);
-    if (!initFile.fail()) {
-      for (int iP=0; iP<nPart; ++iP) {
-        if (allBeads) {
-          for (int iB=0; iB<nBead; ++iB) {
-            initFile >> iP >> iB;
-            for (int iD=0; iD<nD; ++iD)
-              initFile >> bead(iP,iB)->r(iD);
-            bead(iP,iB)->storeR();
-          }
-        } else {
-          initFile >> iP;
-          Tvector r(nD);
-          for (int iD=0; iD<nD; ++iD)
-            initFile >> r(iD);
-          for (int iB=0; iB<nBead; ++iB) {
-            bead(iP,iB)->r = r;
-            bead(iP,iB)->storeR();
-          }
-        }
-      }
-      initFile.close();
-    } else {
-      cout << "ERROR: Init file '" << fileName << "' does not exist." << endl;
-      exit(1);
-    }
-  } else if (initType == "Random") {
-    for (int iP=0; iP<nPart; ++iP) {
-      RealType tmpRand = rng.unifRand();
-      for (int iB=0; iB<nBead; ++iB) {
-        for (int iD=0; iD<nD; ++iD)
-          bead(iP,iB)->r(iD) = tmpRand;
-        bead(iP,iB)->storeR();
-      }
-    }
-  }
+  InitPaths(in,out,rng);
 
   // Reset kCut
   kC = 0.;
-
 }
 
 void Path::PrintPath()

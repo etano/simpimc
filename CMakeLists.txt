@@ -10,8 +10,8 @@ SET(CMAKE_VERBOSE_MAKEFILE OFF)
 #-------------------------------------------------------------------
 
 SET(PRECISION double) #double float
-SET(USE_MPI FALSE)
-SET(USE_OPENMP FALSE)
+SET(USE_MPI TRUE)
+SET(USE_OPENMP TRUE)
 SET(QMC_BUILD_STATIC FALSE)
 SET(NDIM 3)
 SET(COMPILER_MAKE "GNU") # INTEL, GNU, or IBM
@@ -244,6 +244,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/BeadClass.cpp
   src/LoopClass.cpp
   src/PathClass.cpp
+  src/InitPaths.cpp
   src/SimulationClass.cpp
   src/SpeciesClass.cpp
   src/WriteClass.cpp
@@ -261,6 +262,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Moves/PermBisectIterativeClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
+  src/Observables/PathDumpClass.cpp
   src/Observables/TimeClass.cpp
   src/Utils/Communication/Communication.cpp
   src/Utils/IO/InputClass.cpp

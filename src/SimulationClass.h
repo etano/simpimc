@@ -29,8 +29,6 @@ public:
   void SetupSimulation(string inFile);
   void Run();
 
-  // Algorithm
-  Algorithm algorithm;
 };
 
 #endif

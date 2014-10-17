@@ -10,6 +10,13 @@ before_install:
   - export CXX="g++-4.8" CC="gcc-4.8"
   - sudo apt-get install -qq gfortran-4.8
   - export F77="gfortran-4.8" FC="gfortran-4.8"
+  - mkdir bin && cd bin
+  - ln -s /usr/bin/g++-4.8 /home/travis/build/etano/simpimc/bin/g++
+  - ln -s /usr/bin/gcc-4.8 /home/travis/build/etano/simpimc/bin/gcc
+  - ln -s /usr/bin/gfortran-4.8 /home/travis/build/etano/simpimc/bin/gfortran
+  - export PATH="/home/travis/build/etano/simpimc/bin:${PATH}"
+  - cd ..
+  - sudo apt-get install -qq libopenmpi-dev openmpi-bin
   - mkdir include && cd include
   - sudo apt-get install -qq libhdf5-serial-dev
   - wget http://downloads.sourceforge.net/project/arma/armadillo-4.450.4.tar.gz && tar -xzvf armadillo-4.450.4.tar.gz
