@@ -17,14 +17,6 @@ before_install:
   - export PATH="/home/travis/build/etano/simpimc/bin:${PATH}"
   - cd ..
   - sudo apt-get install -qq libopenmpi-dev openmpi-bin
-  - mkdir include && cd include
-  - sudo apt-get install -qq libhdf5-serial-dev
-  - wget http://downloads.sourceforge.net/project/arma/armadillo-4.450.4.tar.gz && tar -xzvf armadillo-4.450.4.tar.gz
-  - cd armadillo-4.450.4 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
-  - export ARMA_HOME=/usr
-  - git clone https://github.com/etano/meinspline.git
-  - cd meinspline && ./configure && make && sudo make install && cd .. && cd ..
-  - export EINSPLINE_HOME=/usr/local
 
 install:
   - mkdir build && cd build && cmake .. && make && make install && cd ..

@@ -20,3 +20,8 @@ data
 simpimc
 bin/
 build/
+include/
+depends/
+lib/
+share/
+etc/

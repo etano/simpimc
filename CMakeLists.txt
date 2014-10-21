@@ -12,7 +12,7 @@ SET(CMAKE_VERBOSE_MAKEFILE OFF)
 SET(PRECISION double) #double float
 SET(USE_MPI TRUE)
 SET(USE_OPENMP TRUE)
-SET(QMC_BUILD_STATIC FALSE)
+SET(BUILD_STATIC FALSE)
 SET(NDIM 3)
 SET(COMPILER_MAKE "GNU") # INTEL, GNU, or IBM
 SET(DEBUG TRUE)
@@ -100,8 +100,6 @@ ENDIF()
 SET(COMMON_FLAGS "-O3 -ffast-math -DNDIM=${NDIM}")
 IF(DEBUG)
   SET(COMMON_FLAGS "${COMMON_FLAGS} -pg")
-ELSE(DEBUG)
-  SET(COMMON_FLAGS "${COMMON_FLAGS} -DARMA_NO_DEBUG")
 ENDIF(DEBUG)
 
 IF(USE_MPI)
@@ -117,7 +115,7 @@ SET(CMAKE_CXX_SOURCE_FILE_EXTENSIONS ,"cpp")
 SET(CMAKE_C_FLAGS "-std=c99 -msse4 ${CMAKE_C_FLAGS} ${COMMON_FLAGS}")
 SET(CMAKE_C_SOURCE_FILE_EXTENSIONS ,"c")
 
-IF(QMC_BUILD_STATIC)
+IF(BUILD_STATIC)
   # Enable static linking
   set(BUILD_STATIC_LIBS TRUE)
   set(LINK_SEARCH_END_STATIC TRUE)
@@ -134,7 +132,7 @@ IF(QMC_BUILD_STATIC)
   set(CMAKE_SHARED_LIBRARY_CXX_FLAGS)
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)    # remove -rdynamic
   set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
-ENDIF(QMC_BUILD_STATIC)
+ENDIF(BUILD_STATIC)
 
 #-------------------------------------------------------------------
 # Directories
@@ -146,100 +144,17 @@ SET(PROJECT_CMAKE "${CMAKE_SOURCE_DIR}/CMake")
 SET(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 
 #-------------------------------------------------------------------
-# Dependencies
+# Scaffold
 #-------------------------------------------------------------------
+SET(SCAFFOLD_DIR "${CMAKE_SOURCE_DIR}/src/Utils")
+SET(SCAFFOLD_DEPENDS_DIR "${CMAKE_SOURCE_DIR}/depends")
+SET(SCAFFOLD_INSTALL_DIR "${CMAKE_SOURCE_DIR}")
+INCLUDE("${SCAFFOLD_DIR}/CMakeLists.txt")
 
-# Find Lapack/Blas/Atlas/MKL/XLmass/ESSL/...
-SET(LA_LIBS "")
-IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "ppc") # This covers GNU and IBM Compilers on BGQ
-  # Find Lapack/BLAS BGQ
-  SET(LAPACK_LIBRARY /usr/local/tools/lapack/lib/liblapack.a)
-  SET(BLAS_LIBRARY /usr/local/tools/blas/lib/libblas.a)
-  SET(ESSL_LIBRARY /usr/local/tools/essl/5.1/lib/libesslsmpbg.a)
-  SET(XLMASS_LIBRARY /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmass.a
-                     /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmassv.a)
-  SET(FORTRAN_LIBRARY /opt/ibmcmp/xlf/bg/14.1/bglib64/libxlf90_r.a
-                      /opt/ibmcmp/xlf/bg/14.1/bglib64/libxl.a
-                      /opt/ibmcmp/xlf/bg/14.1/bglib64/libxlfmath.a
-                      /opt/ibmcmp/xlf/bg/14.1/bglib64/libxlfpmt4.a
-                      /opt/ibmcmp/xlf/bg/14.1/bglib64/libxlfpmt8.a
-                      /opt/ibmcmp/xlf/bg/14.1/bglib64/libxlopt.a)
-  SET(LA_LIBS ${LAPACK_LIBRARY} ${BLAS_LIBRARY} ${ESSL_LIBRARY}
-    ${XLMASS_LIBRARY} ${FORTRAN_LIBRARY} -ldl)
-ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  SET(CMAKE_CXX_FLAGS "-framework Accelerate ${CMAKE_CXX_FLAGS}")
-  SET(CMAKE_C_FLAGS "-framework Accelerate ${CMAKE_C_FLAGS}")
-ELSE()
-    # Find MKL
-    FIND_PATH(MKL_INCLUDE_DIR mkl.h)
-    FIND_PATH(MKL_LINK_DIR libmkl_core.a)
-    SET(MKL_FOUND false)
-    IF(MKL_INCLUDE_DIR)
-      SET(MKL_FOUND true)
-    ELSE()
-      FIND_PATH(MKL_INCLUDE_DIR mkl.h ${MKL_HOME} ${MKL_HOME}/include $ENV{MKL_HOME} $ENV{MKL_HOME}/include)
-      FIND_PATH(MKL_LINK_DIR libmkl_core.a ${MKL_HOME} ${MKL_HOME}/lib/intel64  $ENV{MKL_HOME} $ENV{MKL_HOME}/lib/intel64)
-      IF(MKL_INCLUDE_DIR)
-        SET(MKL_FOUND true)
-      ENDIF()
-    ENDIF()
-    IF(MKL_FOUND)
-      SET(MKL_LIBS mkl_intel_lp64 mkl_intel_thread mkl_core iomp5 pthread m mkl_scalapack_lp64 mkl_blacs_intelmpi_lp64)
-      #SET(MKL_LIBS "-L$ENV{MKL_HOME};mkl_intel_lp64;mkl_sequential;mkl_core")
-      LINK_DIRECTORIES(/opt/intel/lib/intel64)
-      LINK_DIRECTORIES(${MKL_LINK_DIR})
-      SET(LA_LIBS ${MKL_LIBS})
-    ELSE()
-      FIND_LIBRARY(LAPACK_LIBS lapack /usr/lib /usr/local/lib)
-      FIND_LIBRARY(BLAS_LIBS blas /usr/lib /usr/local/lib)
-      IF(LAPACK_LIBS AND BLAS_LIBS)
-        SET(LA_LIBS ${LAPACK_LIBS} ${BLAS_LIBS})
-        LINK_LIBRARIES(${LA_LIBS})
-      ENDIF()
-    ENDIF()
-ENDIF()
-MESSAGE(STATUS "LA_LIBS=${LA_LIBS}")
-
-# Find Armadillo
-FIND_PATH(ARMA_INCLUDE_DIR armadillo $ENV{ARMA_HOME}/include)
-FIND_LIBRARY(ARMA_LIBS armadillo $ENV{ARMA_HOME}/lib64 $ENV{ARMA_HOME}/lib)
-IF(ARMA_INCLUDE_DIR AND ARMA_LIBS)
-    INCLUDE_DIRECTORIES(${ARMA_INCLUDE_DIR})
-    LINK_LIBRARIES(${ARMA_LIBS})
-    MESSAGE(STATUS "ARMA_INCLUDE_DIR=${ARMA_INCLUDE_DIR}")
-    MESSAGE(STATUS "ARMA_LIBS=${ARMA_LIBS}")
-ELSE()
-    MESSAGE(FATAL_ERROR "Set ARMA_HOME")
-ENDIF()
-
-# Find HDF5
-FIND_PATH(HDF5_INCLUDE_DIR hdf5.h $ENV{HDF5_HOME}/include)
-FIND_LIBRARY(HDF5_LIB hdf5 $ENV{HDF5_HOME}/lib $ENV{HDF5_HOME}/lib64)
-FIND_LIBRARY(HDF5_CPP_LIB hdf5_cpp $ENV{HDF5_HOME}/lib $ENV{HDF5_HOME}/lib64)
-SET(HDF5_LIBS ${HDF5_LIB} ${HDF5_CPP_LIB})
-IF(HDF5_INCLUDE_DIR AND HDF5_LIBS)
-    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
-    LINK_LIBRARIES(${HDF5_LIBS})
-    MESSAGE(STATUS "HDF5_INCLUDE_DIR=${HDF5_INCLUDE_DIR}")
-    MESSAGE(STATUS "HDF5_LIBS=${HDF5_LIBS}")
-ELSE()
-    MESSAGE(FATAL_ERROR "Set HDF5_HOME")
-ENDIF()
-
-# Find Einspline
-FIND_PATH(EINSPLINE_INCLUDE_DIR einspline $ENV{EINSPLINE_HOME}/include)
-FIND_LIBRARY(EINSPLINE_LIBS einspline $ENV{EINSPLINE_HOME}/lib)
-IF(EINSPLINE_INCLUDE_DIR AND EINSPLINE_LIBS)
-    INCLUDE_DIRECTORIES(${EINSPLINE_INCLUDE_DIR})
-    LINK_LIBRARIES(${EINSPLINE_LIBS})
-    MESSAGE(STATUS "EINSPLINE_INCLUDE_DIR=${EINSPLINE_INCLUDE_DIR}")
-    MESSAGE(STATUS "EINSPLINE_LIBS=${EINSPLINE_LIBS}")
-ELSE()
-    MESSAGE(FATAL_ERROR "Set EINSPLINE_HOME")
-ENDIF()
-
-# Create target
-SET (TEMPLATE_SRCS src/main.cpp
+#-------------------------------------------------------------------
+# Sources and target
+#-------------------------------------------------------------------
+SET (SRCS ${SRCS} src/main.cpp
   src/AlgorithmClass.cpp
   src/BeadClass.cpp
   src/LoopClass.cpp
@@ -263,13 +178,7 @@ SET (TEMPLATE_SRCS src/main.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/PathDumpClass.cpp
-  src/Observables/TimeClass.cpp
-  src/Utils/Communication/Communication.cpp
-  src/Utils/IO/InputClass.cpp
-  src/Utils/IO/xmlParser.cpp
-  src/Utils/RNG/RNGClass.cpp)
-ADD_EXECUTABLE(simpimc ${TEMPLATE_SRCS})
-TARGET_LINK_LIBRARIES(simpimc ${LA_LIBS} ${ARMA_LIBS} ${HDF5_LIBS} ${EINSPLINE_LIBS})
-
-# Install to home directory
+  src/Observables/TimeClass.cpp)
+ADD_EXECUTABLE(simpimc ${SRCS})
+TARGET_LINK_LIBRARIES(simpimc ${LIBS})
 INSTALL(TARGETS simpimc DESTINATION $ENV{HOME}/bin)
