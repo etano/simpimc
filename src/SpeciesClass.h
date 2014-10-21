@@ -30,6 +30,9 @@ public:
 
   // Fermions
   bool fermi;
+
+  // Rho_k
+  bool needUpdateRhoK;
 };
 
 #endif

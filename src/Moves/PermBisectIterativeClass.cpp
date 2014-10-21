@@ -32,27 +32,59 @@ void PermBisectIterative::Init(Input &in)
   permAccept.zeros(nPart);
 }
 
-// Make the move
-void PermBisectIterative::MakeMove()
+void PermBisectIterative::Accept()
 {
-  nAccept += DoPermBisect();
-  nAttempt++;
+  permAttempt(nPermPart-1) += 1;
+  permAccept(nPermPart-1) += 1;
+
+  // Accept move, so store things
+  for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
+    path.bead(iP,path.beadLoop(bead1)) -> storePrev();
+    path.bead(iP,path.beadLoop(bead1-1)) -> storeNext();
+  }
+  assignParticleLabels();
+  path.storeR(affBeads);
+  path.storeRhoK(affBeads);
+
+  // Call reject for each action
+  for (int iAction=0; iAction<actionList.size(); ++iAction)
+    actionList[iAction]->Accept();
+}
+
+void PermBisectIterative::Reject()
+{
+  // No need to do some things if bisection isn't attempted
+  if (nPermPart > 0) {
+    permAttempt(nPermPart-1) += 1;
+
+    // Restore things
+    for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
+      path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
+      path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
+    }
+    assignParticleLabels();
+    path.restoreR(affBeads);
+    path.restoreRhoK(affBeads);
+  }
+
+  // Call reject for each action
+  for (int iAction=0; iAction<actionList.size(); ++iAction)
+    actionList[iAction]->Reject();
 }
 
 // Perform the permuting bisection
-int PermBisectIterative::DoPermBisect()
+int PermBisectIterative::Attempt()
 {
-  unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
-  unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
+  bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
+  bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
 
   // Set up permutation
   Cycle c;
-  if (!selectCycleIterative(bead0,nBisectBeads,c)) {
-    return 0;
-  }
+  nPermPart = 0; // reset to indicate if bisection is atempted or not
+  if (!selectCycleIterative(c))
+    return 0; // do not attempt bisection since permutation not accepted
   nPermPart = c.part.size();
-  permAttempt(nPermPart-1) += 1;
 
   // Set up pointers
   vector<int> particles;
@@ -142,16 +174,14 @@ int PermBisectIterative::DoPermBisect()
     // Calculate action change
     RealType oldAction = 0.;
     RealType newAction = 0.;
-    for (unsigned int iB=bead0; iB<bead1; iB+=2*skip) {
-      for (int iAction=0; iAction<actionList.size(); ++iAction) {
-        // Old action
-        path.SetMode(0);
-        oldAction += actionList[iAction]->GetAction(iB, iB+2*skip, particles, iLevel);
+    for (int iAction=0; iAction<actionList.size(); ++iAction) {
+      // Old action
+      path.SetMode(0);
+      oldAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
 
-        // New action
-        path.SetMode(1);
-        newAction += actionList[iAction]->GetAction(iB, iB+2*skip, particles, iLevel);
-      }
+      // New action
+      path.SetMode(1);
+      newAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
     }
 
     // Calculate acceptance ratio
@@ -160,38 +190,16 @@ int PermBisectIterative::DoPermBisect()
     RealType logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
 
     // Metropolis step
-    if (logAcceptProb < log(rng.unifRand())) {
-      // Restore things
-      for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
-        path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
-        path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
-      }
-      assignParticleLabels();
-      path.restoreR(affBeads);
-      path.restoreRhoK(affBeads);
-
+    if (logAcceptProb < log(rng.unifRand()))
       return 0;
-    }
 
     prevActionChange = currActionChange;
   }
 
-  // Accept move, so store things
-  for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
-    path.bead(iP,path.beadLoop(bead1)) -> storePrev();
-    path.bead(iP,path.beadLoop(bead1-1)) -> storeNext();
-  }
-  assignParticleLabels();
-  path.storeR(affBeads);
-  path.storeRhoK(affBeads);
-
-  // Increment permutation counter
-  permAccept(nPermPart-1) += 1;
-
   return 1;
 }
 
-void PermBisectIterative::updatePermTable(const int bead0, const int nBisectBeads)
+void PermBisectIterative::updatePermTable()
 {
   // Set initial and final beads
   field<Bead*> b0(nPart), b1(nPart);
@@ -216,10 +224,10 @@ void PermBisectIterative::updatePermTable(const int bead0, const int nBisectBead
 
 }
 
-int PermBisectIterative::selectCycleIterative(const int bead0, const int nBisectBeads, Cycle& c)
+int PermBisectIterative::selectCycleIterative(Cycle& c)
 {
   // Update t
-  updatePermTable(bead0, nBisectBeads);
+  updatePermTable();
   Tmatrix t_c = t;
 
   // Choose particles

@@ -273,10 +273,6 @@ RealType IlkkaPairAction::CalcVLong()
 /// Calculate the ULong value
 RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int level)
 {
-  // Update rho k if looking at changed positions
-  if (path.mode == 1)
-    path.UpdateRhoKP(b0, b1, particles, level);
-
   // Get rho k
   arma::field<Cvector>& rhoK(path.GetRhoK());
 
@@ -285,7 +281,7 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
   RealType tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
-      for (int iB=b0; iB<=b1; iB+=skip) {
+      for (int iB=b0; iB<b1; iB+=skip) {
         RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += rhok2*uLong_k(iK);
       }

@@ -83,23 +83,62 @@ void PermBisect::BuildCycles()
 
 }
 
-// Make the move
-void PermBisect::MakeMove()
+// Accept current move
+void PermBisect::Accept()
 {
-  nAccept += DoPermBisect();
   nAttempt++;
+  nAccept++;
+
+  // Accept move, so store things
+  for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
+    path.bead(iP,path.beadLoop(bead1)) -> storePrev();
+    path.bead(iP,path.beadLoop(bead1-1)) -> storeNext();
+  }
+  assignParticleLabels();
+  path.storeR(affBeads);
+  path.storeRhoK(affBeads);
+
+  // Increment permutation counter
+  permAttempt(permType) += 1;
+  permAccept(permType) += 1;
+
+  // Call accept for each action
+  for (int iAction=0; iAction<actionList.size(); ++iAction)
+    actionList[iAction]->Accept();
+}
+
+// Reject current move
+void PermBisect::Reject()
+{
+  nAttempt++;
+
+  // Restore things
+  for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
+    path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
+    path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
+  }
+  assignParticleLabels();
+  path.restoreR(affBeads);
+  path.restoreRhoK(affBeads);
+
+  // Increment permutation counter
+  permAttempt(permType) += 1;
+
+  // Call reject for each action
+  for (int iAction=0; iAction<actionList.size(); ++iAction)
+    actionList[iAction]->Reject();
 }
 
 // Perform the permuting bisection
-int PermBisect::DoPermBisect()
+int PermBisect::Attempt()
 {
-  unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
-  unsigned int bead1 = bead0 + nBisectBeads; // Set last bead in bisection
+  bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
+  bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
 
   // Set up permutation
   cycles.clear();
-  RealType permTot0 = constructPermTable(bead0,nBisectBeads); // Permutation weight table
+  RealType permTot0 = constructPermTable(); // Permutation weight table
   int cycleIndex = selectCycle(permTot0);
   Cycle* c = cycles[cycleIndex];
 
@@ -185,16 +224,14 @@ int PermBisect::DoPermBisect()
     // Calculate action change
     RealType oldAction = 0.;
     RealType newAction = 0.;
-    for (unsigned int iB=bead0; iB<bead1; iB+=2*skip) {
-      for (int iAction=0; iAction<actionList.size(); ++iAction) {
-        // Old action
-        path.SetMode(0);
-        oldAction += actionList[iAction]->GetAction(iB, iB+2*skip, particles, iLevel);
+    for (int iAction=0; iAction<actionList.size(); ++iAction) {
+      // Old action
+      path.SetMode(0);
+      oldAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
 
-        // New action
-        path.SetMode(1);
-        newAction += actionList[iAction]->GetAction(iB, iB+2*skip, particles, iLevel);
-      }
+      // New action
+      path.SetMode(1);
+      newAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
     }
 
     // Calculate acceptance ratio
@@ -223,7 +260,7 @@ int PermBisect::DoPermBisect()
   if (nPermPart < nPart) {
     // Construct Permutation Table
     path.SetMode(1);
-    RealType permTot1 = constructPermTable(bead0,nBisectBeads);
+    RealType permTot1 = constructPermTable();
   
     // Decide whether or not to accept whole bisection
     if ((permTot0/permTot1) < rng.unifRand())  {
@@ -249,18 +286,14 @@ int PermBisect::DoPermBisect()
   path.storeR(affBeads);
   path.storeRhoK(affBeads);
 
-  // Increment permutation counter
-  permAccept(c->type) += 1;
-
   return 1;
 }
 
-
 // Construct permutation table and probabilities
-RealType PermBisect::constructPermTable(const int bead0, const int nBisectBeads)
+RealType PermBisect::constructPermTable()
 {
   // Update t
-  updatePermTable(bead0, nBisectBeads);
+  updatePermTable();
 
   // Run through permatation types
   RealType totalWeight = 0.;
@@ -279,7 +312,7 @@ RealType PermBisect::constructPermTable(const int bead0, const int nBisectBeads)
   return totalWeight;
 }
 
-void PermBisect::updatePermTable(const int bead0, const int nBisectBeads)
+void PermBisect::updatePermTable()
 {
   // Set initial and final beads
   field<Bead*> b0(nPart), b1(nPart);
@@ -325,7 +358,7 @@ int PermBisect::selectCycle(RealType permTot)
 void PermBisect::permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c)
 {
   // Set permutation type
-  permAttempt(c->type) += 1;
+  permType = c->type;
 
   // Execute the permutation
   int nPerm = c->part.size();

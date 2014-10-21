@@ -7,8 +7,16 @@ void Action::GetOffset(string species, int &iSpecies, int &offset)
     if (path.speciesList[iS]->name == species) {
       iSpecies = iS;
       offset = tmpOffset;
+      break;
     }
     tmpOffset += path.speciesList[iS]->nPart;
+  }
+
+  if (tmpOffset == path.nPart) {
+    // Species doesn't exist
+    cout << "Warning: species " << species << " does not exist elsewhere..." << endl;
+    iSpecies = -1;
+    offset = path.nPart;
   }
 }
 

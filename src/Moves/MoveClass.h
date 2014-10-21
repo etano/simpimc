@@ -32,19 +32,13 @@ public:
   }
 
   string type;
+  virtual void DoEvent();
 
   // Moves
-  inline void DoEvent() {
-    struct timeval time;
-    gettimeofday(&time, NULL); // Start Time
-    RealType start = time.tv_sec + (time.tv_usec / 1000000.);
-    MakeMove();
-    gettimeofday(&time, NULL); //END-TIME
-    RealType end = time.tv_sec + (time.tv_usec / 1000000.);
-    timeSpent += end - start;
-  }
   virtual void Init(Input &in) {};
-  virtual void MakeMove() {};
+  virtual int Attempt() {};
+  virtual void Accept() {};
+  virtual void Reject() {};
 
   // Acceptance
   bool firstTime;
@@ -54,6 +48,7 @@ public:
 
   // Write
   virtual void Write();
+
 };
 
 #endif

@@ -15,4 +15,7 @@ void Species::Init(Input &in, IOClass &out, int nBead, int nD)
   out.Write("System/Particles/"+name+"/nPart",nPart);
   out.Write("System/Particles/"+name+"/lambda",lambda);
   out.Write("System/Particles/"+name+"/fermi",fermi);
+
+  // Set defaults
+  needUpdateRhoK = true;
 }

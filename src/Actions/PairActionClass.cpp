@@ -16,22 +16,32 @@ void PairAction::Init(Input &in)
   }
   GetOffset(speciesA,iSpeciesA,offsetA);
   GetOffset(speciesB,iSpeciesB,offsetB);
-  isConstant = ((iSpeciesA == iSpeciesB) && (path.speciesList[iSpeciesA]->nPart == 1 || path.speciesList[iSpeciesA]->lambda == 0.));
-  isFirstTime = true;
+  cout << speciesA << " " << speciesB << " " << iSpeciesA << " " << iSpeciesB << endl;
+  if (iSpeciesA >= 0 && iSpeciesB >= 0) {
+    isConstant = ((iSpeciesA == iSpeciesB)
+                 && (path.speciesList[iSpeciesA]->nPart == 1
+                    || path.speciesList[iSpeciesA]->lambda == 0.));
+    isFirstTime = true;
 
-  string fileName = in.getAttribute<string>("file");
-  ReadFile(fileName);
+    string fileName = in.getAttribute<string>("file");
+    ReadFile(fileName);
 
-  // Write things to file
-  out.Write("Actions/"+name+"/file", fileName);
-  out.Write("Actions/"+name+"/nImages", nImages);
-  out.Write("Actions/"+name+"/nOrder", nOrder);
-  out.Write("Actions/"+name+"/speciesA", speciesA);
-  out.Write("Actions/"+name+"/speciesB", speciesB);
-  out.Write("Actions/"+name+"/maxLevel", maxLevel);
-  out.Write("Actions/"+name+"/useLongRange", useLongRange);
-  if (useLongRange)
-    out.Write("Actions/"+name+"/kCut", kCut);
+    // Write things to file
+    out.Write("Actions/"+name+"/file", fileName);
+    out.Write("Actions/"+name+"/nImages", nImages);
+    out.Write("Actions/"+name+"/nOrder", nOrder);
+    out.Write("Actions/"+name+"/speciesA", speciesA);
+    out.Write("Actions/"+name+"/speciesB", speciesB);
+    out.Write("Actions/"+name+"/maxLevel", maxLevel);
+    out.Write("Actions/"+name+"/useLongRange", useLongRange);
+    if (useLongRange)
+      out.Write("Actions/"+name+"/kCut", kCut);
+  } else {
+    isConstant = true;
+    isFirstTime = false;
+    dUdB = 0.;
+  }
+
 }
 
 RealType PairAction::DActionDBeta()
@@ -65,9 +75,8 @@ RealType PairAction::DActionDBeta()
       }
     }
 
-    if (useLongRange) {
+    if (useLongRange)
       tot += CalcdUdBetaLong();
-    }
 
     isFirstTime = false;
     dUdB = tot;
@@ -78,38 +87,52 @@ RealType PairAction::DActionDBeta()
 
 RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level)
 {
-  if (level > maxLevel)
+
+  if (level > maxLevel || isConstant || iSpeciesA < 0 || iSpeciesB < 0)
     return 0.;
 
-  if (isConstant)
-    return 0.;
-
-  int skip = 1<<level;
-  RealType levelTau = skip*path.tau;
-  RealType tot = 0.;
-
-  vector<int> particlesA, particlesB, otherParticlesA, otherParticlesB;
+  // Make sure particles are of species A or B and organize them accordingly
+  vector<int> particlesA, particlesB;
+  int nA(0), nB(0);
   for (int p=0; p<particles.size(); ++p) {
     int iP = particles[p];
-    if (path(iP,b0)->s == iSpeciesA)
+    int iS = path(iP,b0)->s;
+    if (iS == iSpeciesA) {
       particlesA.push_back(iP);
-    else if (path(iP,b0)->s == iSpeciesB)
+      nA++;
+    }
+    else if (iS == iSpeciesB) {
       particlesB.push_back(iP);
+      nB++;
+    }
   }
+  if (nA==0 && nB==0)
+    return 0.;
+  if (iSpeciesA == iSpeciesB && (nA==0))
+    return 0.;
+
+  // Make vectors of other particles of species A and B
+  vector<int> otherParticlesA;
   for (int iP=offsetA; iP<offsetA+path.speciesList[iSpeciesA]->nPart; ++iP) {
     if (find(particlesA.begin(), particlesA.end(), iP)==particlesA.end())
       otherParticlesA.push_back(iP);
   }
+  vector<int> otherParticlesB;
   for (int iP=offsetB; iP<offsetB+path.speciesList[iSpeciesB]->nPart; ++iP) {
     if (find(particlesB.begin(), particlesB.end(), iP)==particlesB.end())
       otherParticlesB.push_back(iP);
   }
 
-  // Homologous
+  // Sum up contributing terms
+  int skip = 1<<level;
+  RealType levelTau = skip*path.tau;
+  RealType tot = 0.;
   Tvector r(path.nD), rP(path.nD), rrP(path.nD);
-  if (iSpeciesA == iSpeciesB && (particlesA.size()!=0)) {
+
+  // Homologous
+  if (iSpeciesA == iSpeciesB) {
     // Loop over A particles with other A particles
-    for (int p=0; p<particlesA.size(); ++p) {
+    for (int p=0; p<nA; ++p) {
       int iP = particlesA[p];
       for (int q=0; q<otherParticlesA.size(); ++q) {
         int jP = otherParticlesA[q];
@@ -122,9 +145,9 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
       }
     }
     // Loop over A particles with A particles
-    for (int p=0; p<particlesA.size()-1; ++p) {
+    for (int p=0; p<nA-1; ++p) {
       int iP = particlesA[p];
-      for (int q=p+1; q<particlesA.size(); ++q) {
+      for (int q=p+1; q<nA; ++q) {
         int jP = particlesA[q];
         for (int iB=b0; iB<b1; iB+=skip) {
           int jB = iB + skip;
@@ -137,7 +160,7 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
   // Heterologous
   } else {
     // Loop over A particles with other B particles
-    for (int p=0; p<particlesA.size(); ++p) {
+    for (int p=0; p<nA; ++p) {
       int iP = particlesA[p];
       for (int q=0; q<otherParticlesB.size(); ++q) {
         int jP = otherParticlesB[q];
@@ -150,7 +173,7 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
       }
     }
     // Loop over B particles with other A particles
-    for (int p=0; p<particlesB.size(); ++p) {
+    for (int p=0; p<nB; ++p) {
       int iP = particlesB[p];
       for (int q=0; q<otherParticlesA.size(); ++q) {
         int jP = otherParticlesA[q];
@@ -163,9 +186,9 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
       }
     }
     // Loop over A particles with B particles
-    for (int p=0; p<particlesA.size(); ++p) {
+    for (int p=0; p<nA; ++p) {
       int iP = particlesA[p];
-      for (int q=0; q<particlesB.size(); ++q) {
+      for (int q=0; q<nB; ++q) {
         int jP = particlesB[q];
         for (int iB=b0; iB<b1; iB+=skip) {
           int jB = iB + skip;
@@ -177,12 +200,38 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
     }
   }
 
-  if (useLongRange)
+  // Add in long range part
+  if (useLongRange) { // fixme: currently this assumes level = 0
+    if (path.speciesList[iSpeciesA]->needUpdateRhoK && path.GetMode()) {
+      path.UpdateRhoKP(b0, b1, particlesA, level);
+      path.speciesList[iSpeciesA]->needUpdateRhoK = false;
+    }
+    if (path.speciesList[iSpeciesB]->needUpdateRhoK && path.GetMode()) {
+      path.UpdateRhoKP(b0, b1, particlesB, level);
+      path.speciesList[iSpeciesB]->needUpdateRhoK = false;
+    }
     tot += CalcULong(b0, b1, particles, level);
+  }
 
   return tot;
 }
 
 void PairAction::Write() {}
 
+void PairAction::Accept()
+{
+  if (useLongRange && iSpeciesA >= 0 && iSpeciesB >= 0) {
+    path.speciesList[iSpeciesA]->needUpdateRhoK = true;
+    path.speciesList[iSpeciesB]->needUpdateRhoK = true;
+  }
 
+}
+
+void PairAction::Reject()
+{
+  if (useLongRange && iSpeciesA >= 0 && iSpeciesB >= 0) {
+    path.speciesList[iSpeciesA]->needUpdateRhoK = true;
+    path.speciesList[iSpeciesB]->needUpdateRhoK = true;
+  }
+
+}

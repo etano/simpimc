@@ -11,6 +11,7 @@ private:
   int offset;
   int nImages;
   unsigned int nLevel, nBisectBeads, nPart, nPermPart, nPermType;
+  unsigned int bead0, bead1;
   RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
   bool fixedNode;
 
@@ -26,9 +27,8 @@ private:
 
   Ivector permAttempt, permAccept;
 
-  int DoPermBisect();
-  void updatePermTable(const int bead0, const int nBisectBeads);
-  int selectCycleIterative(const int bead0, const int nBisectBeads, Cycle& c);
+  void updatePermTable();
+  int selectCycleIterative(Cycle& c);
   void permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle& c);
   void assignParticleLabels();
   void Write();
@@ -45,7 +45,9 @@ public:
   }
 
   virtual void Init(Input &in);
-  virtual void MakeMove();
+  virtual int Attempt();
+  virtual void Accept();
+  virtual void Reject();
 };
 
 

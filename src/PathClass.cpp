@@ -246,7 +246,7 @@ void Path::InitRhoK()
 // Update all rho k values
 void Path::UpdateRhoK()
 {
-  // Calculate rho_k's HACK SEE IF WE CAN DO THIS INLINE
+  // Calculate rho_k's
   for (int iB=0; iB<nBead; iB++) {
     for (int iS=0; iS<nSpecies; iS++) {
       // Zero out rho_k array
@@ -283,7 +283,7 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
   // Reset to old copy
   for (int s=0; s<species.size(); s++) {
     int iS = species[s];
-    for (int iB=b0; iB<=b1; iB+=skip)
+    for (int iB=b0; iB<b1; iB+=skip)
       rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS);
   }
 
@@ -291,7 +291,7 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
     int iS = bead(iP,0)->species.iS;
-    for (int iB=b0; iB<=b1; iB+=skip) {
+    for (int iB=b0; iB<b1; iB+=skip) {
       // Calculate new values
       SetMode(1);
       CalcRhoKP(rhoKP,iP,iB,iS);
@@ -323,7 +323,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
   // Reset to old copy
   for (int s=0; s<species.size(); s++) {
     int iS = species[s];
-    for (int iB=b0; iB<=b1; iB+=skip)
+    for (int iB=b0; iB<b1; iB+=skip)
       rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS);
   }
 
@@ -331,7 +331,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
     int iS = bead(iP,0)->species.iS;
-    for (int iB=b0; iB<=b1; iB+=skip) {
+    for (int iB=b0; iB<b1; iB+=skip) {
       // Add in new values
       SetMode(1);
       AddRhoKP(rhoK,iP,iB,iS,1);

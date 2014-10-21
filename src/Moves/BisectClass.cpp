@@ -18,14 +18,32 @@ void Bisect::Init(Input &in)
   nBisectBeads = 1<<nLevel; // Number of beads in bisection
 }
 
-void Bisect::MakeMove()
+// Accept current move
+void Bisect::Accept()
 {
-  nAccept += DoBisect();
-  nAttempt++;
+  // Move Accepted, so copy new coordinates
+  path.storeR(affBeads);
+  path.storeRhoK(affBeads);
+
+  // Call accept for each action
+  for (int iAction=0; iAction<actionList.size(); ++iAction)
+    actionList[iAction]->Accept();
+}
+
+// Reject current move
+void Bisect::Reject()
+{
+  // Move rejected, so return old coordinates
+  path.restoreR(affBeads);
+  path.restoreRhoK(affBeads);
+
+  // Call reject for each action
+  for (int iAction=0; iAction<actionList.size(); ++iAction)
+    actionList[iAction]->Reject();
 }
 
 // Bisection Move
-int Bisect::DoBisect()
+int Bisect::Attempt()
 {
   unsigned int iP = offset + rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
   unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
@@ -110,34 +128,26 @@ int Bisect::DoBisect()
     // Calculate action change
     RealType oldAction = 0.;
     RealType newAction = 0.;
-    for (unsigned int iB=bead0; iB<bead1; iB+=2*skip) {
-      for (int iAction=0; iAction<actionList.size(); ++iAction) {
-        // Old action
-        path.SetMode(0);
-        oldAction += actionList[iAction]->GetAction(iB, iB+2*skip, particles, iLevel);
+    for (int iAction=0; iAction<actionList.size(); ++iAction) {
+      // Old action
+      path.SetMode(0);
+      oldAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
 
-        // New action
-        path.SetMode(1);
-        newAction += actionList[iAction]->GetAction(iB, iB+2*skip, particles, iLevel);
-      }
+      // New action
+      path.SetMode(1);
+      newAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
     }
 
     RealType logSampleRatio = -newLogSampleProb + oldLogSampleProb;
     RealType currActionChange = newAction - oldAction;
     RealType logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
 
-    if (logAcceptProb < log(rng.unifRand())) { // Reject if true
-      path.restoreR(affBeads);
-      path.restoreRhoK(affBeads);
+    // Metropolis reject step
+    if (logAcceptProb < log(rng.unifRand()))
       return 0;
-    }
 
     prevActionChange = currActionChange;
   }
-
-  // Move Accepted, so copy new coordinates
-  path.storeR(affBeads);
-  path.storeRhoK(affBeads);
 
   return 1;
 }

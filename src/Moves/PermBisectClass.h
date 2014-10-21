@@ -11,6 +11,7 @@ private:
   int offset;
   int nImages;
   unsigned int nLevel, nBisectBeads, nPart, nPermPart, nPermType;
+  unsigned int bead0, bead1;
   RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
 
   struct Cycle
@@ -23,11 +24,11 @@ private:
   field<Cycle> all_cycles;
   Tmatrix t;
 
+  int permType;
   Ivector permAttempt, permAccept;
 
-  int DoPermBisect();
-  RealType constructPermTable(const int bead0, const int nBisectBeads);
-  void updatePermTable(const int bead0, const int nBisectBeads);
+  RealType constructPermTable();
+  void updatePermTable();
   void BuildCycles();
   int selectCycle(RealType permTot);
   void permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c);
@@ -46,7 +47,9 @@ public:
   }
 
   virtual void Init(Input &in);
-  virtual void MakeMove();
+  virtual int Attempt();
+  virtual void Accept();
+  virtual void Reject();
 };
 
 

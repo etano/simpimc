@@ -13,7 +13,6 @@ private:
   unsigned int nLevel, nBisectBeads;
   RealType lambda;
 
-  int DoBisect();
   std::vector<Bead*> affBeads;
 protected:
 
@@ -26,7 +25,10 @@ public:
   }
 
   virtual void Init(Input &in);
-  virtual void MakeMove();
+  virtual int Attempt();
+  virtual void Accept();
+  virtual void Reject();
+
 };
 
 #endif

@@ -40,6 +40,8 @@ public:
   virtual RealType DActionDBeta() {};
   virtual RealType GetAction(int b0, int b1, vector<int> &particles, int level) {};
   virtual void Write() {};
+  virtual void Accept() {};
+  virtual void Reject() {};
   void DoEvent() {};
 };
 
