@@ -9,7 +9,6 @@
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
 #include "Utils/Algorithm/Algorithm.h"
-#include "Utils/Algorithm/fastmath.h"
 
 class Path
 {
@@ -51,7 +50,7 @@ public:
 
   // Fast math
   bool approximate;
-  inline RealType fexp(RealType x) { if (approximate) { return fastexp(x); } else { return exp(x); } };
+  inline RealType fexp(RealType x) { return exp(x); };
 
   // Beads
   field<Bead*> bead;
