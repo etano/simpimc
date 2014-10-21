@@ -4,7 +4,7 @@ Simple path integral monte carlo in c++.
 
 ## Installation
 
-### Dependencies:
+### Dependencies
 
 * HDF5 (with c++ API) - http://www.hdfgroup.org/HDF5/
 * Armadillo c++ - http://arma.sourceforge.net/
@@ -27,3 +27,15 @@ Build like:
     mkdir build && cd build
     cmake ..
     make
+    
+## Running
+
+To run simpimc simply do the following:
+
+    simpimc input.xml
+    
+Or if you wish to run in parallel:
+
+    mpiexec -np 2 simpimc input.xml
+    
+Example XML inputs can be found in the inputs folder.
