@@ -17,6 +17,8 @@ before_install:
   - export PATH="/home/travis/build/etano/simpimc/bin:${PATH}"
   - cd ..
   - sudo apt-get install -qq libopenmpi-dev openmpi-bin
+  - sudo apt-get install -qq libhdf5-serial-dev
+  - export HDF5_HOME=/usr
 
 install:
   - mkdir build && cd build && cmake .. && make && make install && cd ..
