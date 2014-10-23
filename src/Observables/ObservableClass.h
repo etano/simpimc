@@ -13,6 +13,40 @@ private:
 protected:
   Path& path;
   IOClass &out;
+  int skip;
+
+  struct LinearGrid
+  {
+    Tvector rs;
+    RealType rMin, rMax, dr, iDr;
+    int nR;
+
+    void CreateGrid(RealType t_rMin, RealType t_rMax, int t_nR)
+    {
+      rMin = t_rMin;
+      rMax = t_rMax;
+      nR = t_nR;
+      dr = (rMax-rMin)/(nR-1.);
+      iDr = 1./dr;
+      rs.set_size(nR);
+      for (int i=0; i<nR; ++i)
+        rs(i) = rMin + i*dr;
+    };
+    inline RealType operator() (int i) { return rs(i); };
+    int ReverseMap(RealType r) {
+      int i = (int) nearbyint((r-rMin)*iDr-0.5);
+      if (i < 0)
+        return 0;
+      else
+        return i;
+    };
+  };
+
+  struct Histogram
+  {
+    Tvector y;
+    LinearGrid x;
+  };
 
 public:
   // Constructor
@@ -21,6 +55,7 @@ public:
   {
     name = in.getAttribute<string>("name");
     type = in.getAttribute<string>("type");
+    skip = in.getAttribute<int>("skip",1);
     out.CreateGroup("Observables/"+name);
     out.Write("Observables/"+name+"/type",type);
     firstTime = 1;

@@ -14,11 +14,12 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   if (PBC) {
     L = in.getChild("System").getAttribute<RealType>("L");
     iL = 1./L;
+    vol = pow(L,nD);
   } else {
     L = 0.;
     iL = 0.;
+    vol = 1.;
   }
-  vol = pow(L,nD);
   out.Write("System/L",L);
 
   // Approximate with fast math
@@ -119,6 +120,7 @@ void Path::GetSpeciesInfo(string species, int &iSpecies, int &offset)
     if (speciesList[iS]->name == species) {
       iSpecies = iS;
       offset = tmpOffset;
+      break;
     }
     tmpOffset += speciesList[iS]->nPart;
   }

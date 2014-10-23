@@ -23,23 +23,25 @@ void Energy::Accumulate()
 
 void Energy::Write()
 {
-  RealType norm = 1./(path.nBead*nMeasure);
-  RealType E = 0.;
-  for (int i=0; i<actionList.size(); ++i) {
-    Es[i] *= norm;
-    E += Es[i];
-  }
+  if (nMeasure > 0) {
+    RealType norm = 1./(path.nBead*nMeasure);
+    RealType E = 0.;
+    for (int i=0; i<actionList.size(); ++i) {
+      Es[i] *= norm;
+      E += Es[i];
+    }
 
-  if (firstTime) {
-    firstTime = 0;
-    out.CreateExtendableDataSet("/Observables/"+name+"/", "Total", E);
-    for (int i=0; i<actionList.size(); ++i)
-      out.CreateExtendableDataSet("/Observables/"+name+"/", actionList[i]->name, Es[i]);
-  } else {
-    out.AppendDataSet("/Observables/"+name+"/", "Total", E);
-    for (int i=0; i<actionList.size(); ++i)
-      out.AppendDataSet("/Observables/"+name+"/", actionList[i]->name, Es[i]);
-  }
+    if (firstTime) {
+      firstTime = 0;
+      out.CreateExtendableDataSet("/Observables/"+name+"/", "Total", E);
+      for (int i=0; i<actionList.size(); ++i)
+        out.CreateExtendableDataSet("/Observables/"+name+"/", actionList[i]->name, Es[i]);
+    } else {
+      out.AppendDataSet("/Observables/"+name+"/", "Total", E);
+      for (int i=0; i<actionList.size(); ++i)
+        out.AppendDataSet("/Observables/"+name+"/", actionList[i]->name, Es[i]);
+    }
 
-  Reset();
+    Reset();
+  }
 }

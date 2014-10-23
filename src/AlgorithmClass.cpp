@@ -49,8 +49,12 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
     string type = observableInputs[i].getAttribute<string>("type");
     if (type == "Energy")
       events.push_back(new Energy(path,actions,observableInputs[i],out));
+    else if (type == "PairCorrelation")
+      events.push_back(new PairCorrelation(path,observableInputs[i],out));
     else if (type == "PathDump")
       events.push_back(new PathDump(path,observableInputs[i],out));
+    else if (type == "StructureFactor")
+      events.push_back(new StructureFactor(path,observableInputs[i],out));
     else if (type == "Time")
       events.push_back(new Time(path,events,observableInputs[i],out));
     else

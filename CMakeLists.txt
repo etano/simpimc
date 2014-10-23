@@ -177,7 +177,9 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Moves/PermBisectIterativeClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
+  src/Observables/PairCorrelationClass.cpp
   src/Observables/PathDumpClass.cpp
+  src/Observables/StructureFactorClass.cpp
   src/Observables/TimeClass.cpp)
 ADD_EXECUTABLE(simpimc ${SRCS})
 TARGET_LINK_LIBRARIES(simpimc ${LIBS})

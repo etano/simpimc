@@ -39,15 +39,63 @@ void PairAction::Init(Input &in)
   } else {
     isConstant = true;
     isFirstTime = false;
-    dUdB = 0.;
+    dUdBConstant = 0.;
+    VConstant = 0.;
   }
 
+}
+
+RealType PairAction::Potential()
+{
+  if (isConstant && !isFirstTime)
+    return VConstant;
+  else {
+    RealType tot = 0.;
+    Tvector dr(path.nD);
+    if (iSpeciesA == iSpeciesB) {
+      for (int iP=offsetA; iP<offsetA+path.speciesList[iSpeciesA]->nPart-1; ++iP) {
+        for (int jP=iP+1; jP<offsetA+path.speciesList[iSpeciesA]->nPart; ++jP) {
+          for (int iB=0; iB<path.nBead; iB+=1) {
+            int jB = iB + 1;
+            path.Dr(path(iP,iB),path(jP,iB),dr);
+            RealType rMag = mag(dr);
+            path.Dr(path(iP,jB),path(jP,jB),dr);
+            RealType rPMag = mag(dr);
+            tot += CalcV(rMag,rPMag,0);
+          }
+        }
+      }
+    } else {
+      for (int iP=offsetA; iP<offsetA+path.speciesList[iSpeciesA]->nPart; ++iP) {
+        for (int jP=offsetB; jP<offsetB+path.speciesList[iSpeciesB]->nPart; ++jP) {
+          for (int iB=0; iB<path.nBead; iB+=1) {
+            int jB = iB + 1;
+            path.Dr(path(iP,iB),path(jP,iB),dr);
+            RealType rMag = mag(dr);
+            path.Dr(path(iP,jB),path(jP,jB),dr);
+            RealType rPMag = mag(dr);
+            tot += CalcV(rMag,rPMag,0);
+          }
+        }
+      }
+    }
+
+    if (useLongRange)
+      tot += CalcVLong();
+
+    if (isFirstTime) {
+      isFirstTime = false;
+      VConstant = tot;
+    }
+
+    return tot;
+  }
 }
 
 RealType PairAction::DActionDBeta()
 {
   if (isConstant && !isFirstTime)
-    return dUdB;
+    return dUdBConstant;
   else {
     RealType tot = 0.;
     Tvector r(path.nD), rP(path.nD), rrP(path.nD);
@@ -78,8 +126,10 @@ RealType PairAction::DActionDBeta()
     if (useLongRange)
       tot += CalcdUdBetaLong();
 
-    isFirstTime = false;
-    dUdB = tot;
+    if (isFirstTime) {
+      isFirstTime = false;
+      dUdBConstant = tot;
+    }
 
     return tot;
   }

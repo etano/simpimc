@@ -24,7 +24,9 @@
 #include "Moves/PermBisectIterativeClass.h"
 #include "Observables/ObservableClass.h"
 #include "Observables/EnergyClass.h"
+#include "Observables/PairCorrelationClass.h"
 #include "Observables/PathDumpClass.h"
+#include "Observables/StructureFactorClass.h"
 #include "Observables/TimeClass.h"
 
 class Algorithm

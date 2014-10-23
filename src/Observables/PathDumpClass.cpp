@@ -2,7 +2,6 @@
 
 void PathDump::Init(Input &in)
 {
-  skip = in.getAttribute<int>("skip",1);
   nDump = 0;
 
   Reset();
