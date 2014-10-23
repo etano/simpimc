@@ -8,7 +8,8 @@ class Energy : public Observable
 {
 private:
   vector<Action*> &actionList;
-  vector<RealType> Es;
+  Tvector Es, Vs;
+  bool measureV;
 protected:
 public:
   Energy(Path &tmpPath, vector<Action*> &tmpActionList, Input &in, IOClass &out)

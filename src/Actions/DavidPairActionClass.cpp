@@ -114,6 +114,23 @@ void DavidPairAction::ReadFile(string fileName)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
+RealType DavidPairAction::CalcV(RealType &r, RealType &rP, int level)
+{
+  // Limits
+  RealType rMin, rMax;
+  GetLimits(rMin, rMax, r, rP, grid);
+
+  // This is the endpoint action
+  RealType V;
+  Tvector rVals(nVal+1), rPVals(nVal+1), qVals(nVal+1);
+  eval_multi_NUBspline_1d_d(Ukj(level),r,rVals.memptr());
+  eval_multi_NUBspline_1d_d(Ukj(level),rP,rPVals.memptr());
+  V = 0.5*(rVals(0) + rPVals(0));
+
+  return V;
+}
+
+/// Calculate the U(r,r') value when given r and r' and the level 
 RealType DavidPairAction::CalcU(RealType &r, RealType &rP, RealType &s, int level)
 {
   // Constants

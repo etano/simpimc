@@ -41,7 +41,7 @@ public:
   virtual void ReadFile(string fileName);
 
   // Pair actions
-  virtual RealType CalcV(Tvector& rVec, Tvector& rPVec, int level);
+  virtual RealType CalcV(RealType &r, RealType &rP, int level);
   virtual RealType CalcVLong();
   virtual RealType CalcU(RealType &r, RealType &rP, RealType &s, int level);
   virtual RealType CalcULong(int b0, int b1, vector<int> &particles, int level);

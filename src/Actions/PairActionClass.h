@@ -26,7 +26,6 @@ protected:
   // Helpers
   virtual void ReadFile(string fileName) = 0;
   inline void GetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rPrime, NUgrid *g);
-  inline void GetConstants(Tvector &rVec, Tvector &rPVec, RealType &r, RealType &rP, RealType &q, RealType &s, RealType &z, RealType &x, RealType &y);
 
   // Pair actions
   virtual RealType CalcV(RealType &r, RealType &rP, int level) = 0;
@@ -66,19 +65,5 @@ inline void PairAction::GetLimits(RealType &rMin, RealType &rMax, RealType &r, R
   if(r < rMin)
     r = rMin;
 }
-
-inline void PairAction::GetConstants(Tvector &rVec, Tvector &rPVec, RealType &r, RealType &rP, RealType &q, RealType &s, RealType &z, RealType &x, RealType &y)
-{
-  r = mag(rVec);
-  rP = mag(rPVec);
-  q = (r + rP)/2.;
-  Tvector dr;
-  path.Dr(rVec,rPVec,dr);
-  s = mag(dr);
-  z = r - rP;
-  x = q + 0.5*s;
-  y = q - 0.5*s;
-}
-
 
 #endif

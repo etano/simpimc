@@ -161,12 +161,8 @@ void IlkkaPairAction::ReadFile(string fileName)
 }
 
 /// Calculate the V(r,r') value when given r and r' and the level 
-RealType IlkkaPairAction::CalcV(Tvector& rVec, Tvector& rPVec, int level)
+RealType IlkkaPairAction::CalcV(RealType &r, RealType &rP, int level)
 {
-  // Constants
-  RealType r, rP, q, s, z, x, y;
-  GetConstants(rVec, rPVec, r, rP, q, s, z, x, y);
-
   // Limits
   RealType rMin, rMax;
   GetLimits(rMin, rMax, r, rP, r_v_grid);
