@@ -26,6 +26,7 @@
 #include "Observables/EnergyClass.h"
 #include "Observables/PairCorrelationClass.h"
 #include "Observables/PathDumpClass.h"
+#include "Observables/SignClass.h"
 #include "Observables/StructureFactorClass.h"
 #include "Observables/TimeClass.h"
 

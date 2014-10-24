@@ -179,6 +179,7 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/PairCorrelationClass.cpp
   src/Observables/PathDumpClass.cpp
+  src/Observables/SignClass.cpp
   src/Observables/StructureFactorClass.cpp
   src/Observables/TimeClass.cpp)
 ADD_EXECUTABLE(simpimc ${SRCS})

@@ -11,7 +11,6 @@ void PermBisectIterative::Init(Input &in)
   else
     nImages = 0;
   species = in.getAttribute<string>("species");
-  fixedNode = in.getAttribute<bool>("fixedNode",0);
   epsilon = in.getAttribute<RealType>("epsilon",1.e-100);
   logEpsilon = log(epsilon);
 
@@ -36,6 +35,10 @@ void PermBisectIterative::Accept()
 {
   permAttempt(nPermPart-1) += 1;
   permAccept(nPermPart-1) += 1;
+
+  // Change sign weight for fermions
+  if (!(nPermPart%2) && path.speciesList[iSpecies]->fermi)
+    path.sign *= -1;
 
   // Accept move, so store things
   for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
@@ -244,7 +247,6 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
     // Make sure returning to previous particles is not an option
     for (int i=0; i<ps.size(); ++i)
       t_c(p,ps[i]) = 0.;
-    //if (p != p0) todo: if uncommented, will ignore identity permutation
     t_c(p,p0) = t(p,p0);
 
     // Calculate row total
@@ -269,26 +271,14 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
         break;
       }
     }
-    //int hi = nPart-1;
-    //int lo = 0;
-    //if (x < t_c(p,0))
-    //  p = 0;
-    //else {
-    //  while (hi - lo >= 1) {
-    //    int mid = (hi+lo)>>1;
-    //    if (x < t_c(p,mid))
-    //      hi = mid;
-    //    else
-    //      lo = mid;
-    //  }
-    //  p = hi;
-    //}
 
   } while (p != p0);
 
   // Disallow even permutations from closing for fixed-node calculations
-  if (fixedNode && !(ps.size() % 2))
+  if (path.speciesList[iSpecies]->fermi && path.speciesList[iSpecies]->fixedNode && !(ps.size()%2)) {
+    nPermPart = ps.size();
     return 0;
+  }
 
   // Set particles
   int nPerm = ps.size();

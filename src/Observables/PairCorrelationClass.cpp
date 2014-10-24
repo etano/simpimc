@@ -57,7 +57,7 @@ void PairCorrelation::Accumulate()
           path.Dr(path(iP,iB),path(jP,iB),dr);
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
-            gr.y(i) = gr.y(i) + 1.;
+            gr.y(i) = gr.y(i) + 1.*path.sign;
         }
       }
     }
@@ -69,7 +69,7 @@ void PairCorrelation::Accumulate()
           path.Dr(path(iP,iB),path(jP,iB),dr);
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
-            gr.y(i) = gr.y(i) + 1.;
+            gr.y(i) = gr.y(i) + 1.*path.sign;
         }
       }
     }

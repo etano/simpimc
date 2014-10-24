@@ -36,7 +36,7 @@ void StructureFactor::Accumulate()
   for (int iK=0; iK<path.kIndices.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=0; iB<path.nBead; ++iB) {
-        sk(iK) += cmag2(path.rhoK(iB,iSpeciesA)(iK),path.rhoK(iB,iSpeciesB)(iK));
+        sk(iK) += path.sign*cmag2(path.rhoK(iB,iSpeciesA)(iK),path.rhoK(iB,iSpeciesB)(iK));
       }
     }
   }

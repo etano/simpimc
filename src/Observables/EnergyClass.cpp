@@ -21,9 +21,9 @@ void Energy::Accumulate()
 {
   path.SetMode(1);
   for (int i=0; i<actionList.size(); ++i) {
-    Es(i) += actionList[i]->DActionDBeta();
+    Es(i) += path.sign*actionList[i]->DActionDBeta();
     if (measureV)
-      Vs(i) += actionList[i]->Potential();
+      Vs(i) += path.sign*actionList[i]->Potential();
   }
   nMeasure += 1;
 }

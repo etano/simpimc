@@ -30,6 +30,7 @@ public:
 
   // Fermions
   bool fermi;
+  bool fixedNode;
 
   // Rho_k
   bool needUpdateRhoK;

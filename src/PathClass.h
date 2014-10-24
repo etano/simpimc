@@ -102,7 +102,9 @@ public:
   void restoreRhoKP(vector<Bead*>& affBeads);
 
   // Nodes
+  int sign;
   int refBead;
+  int CalcSign();
 
   // Path initialization
   void InitPaths(Input &in, IOClass &out, RNG &rng);

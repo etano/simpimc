@@ -34,7 +34,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   vector<Input> speciesInput = in.getChild("Particles").getChildList("Species");
   nSpecies = speciesInput.size();
   nPart = 0;
-  for (int iS=0; iS<nSpecies; iS+=1) {
+  for (int iS=0; iS<nSpecies; iS++) {
     speciesList.push_back(new Species(speciesInput[iS],out,iS,nBead,nD));
     nPart += speciesList[iS]->nPart;
   }
@@ -45,7 +45,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
 
   // Initiate bead looping
   beadLoop.set_size(2*nBead);
-  for (unsigned int iB = 0; iB < nBead; iB += 1) {
+  for (unsigned int iB = 0; iB < nBead; iB++) {
     beadLoop(iB) = iB;
     beadLoop(iB + nBead) = beadLoop(iB);
   }
@@ -56,24 +56,24 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   // Initiate beads
   bead.set_size(nPart,nBead);
   unsigned int unique_id = 0;
-  for (int iS=0; iS<nSpecies; iS+=1) {
+  for (int iS=0; iS<nSpecies; iS++) {
     int offset;
     GetSpeciesInfo(speciesList[iS]->name,iS,offset);
     for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
       for (unsigned int iB=0; iB<nBead; iB++) {
         bead(iP,iB) = new Bead(nD,*speciesList[iS],iP,iB,unique_id);
-        unique_id += 1;
+        unique_id++;
       }
     }
   }
 
   // Initiate bead connections
-  for (unsigned int iP = 0; iP < nPart; iP += 1) {
+  for (unsigned int iP = 0; iP < nPart; iP++) {
     bead(iP,0) -> next = bead(iP,1);
     bead(iP,0) -> nextC = bead(iP,1);
     bead(iP,0) -> prev = bead(iP,nBead-1);
     bead(iP,0) -> prevC = bead(iP,nBead-1);
-    for (unsigned int iB = 1; iB < nBead; iB += 1) {
+    for (unsigned int iB = 1; iB < nBead; iB++) {
       bead(iP,iB) -> next = bead(iP,beadLoop(iB+1));
       bead(iP,iB) -> nextC = bead(iP,beadLoop(iB+1));
       bead(iP,iB) -> prev = bead(iP,iB-1);
@@ -81,8 +81,6 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
     }
   }
 
-  // Initiate nodal things
-  refBead = 0;
 
   // Set permutation types
   iCount.zeros(nPart);
@@ -98,6 +96,11 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
     RealType kCut = in.getChild("System").getAttribute<RealType>("kCut");
     SetupKs(kCut);
   }
+
+  // Initiate nodal things
+  sign = 1;
+  refBead = 0;
+  CalcSign();
 }
 
 // Store R
@@ -134,7 +137,7 @@ void Path::PrintPath()
 void Path::GetSpeciesInfo(string species, int &iSpecies, int &offset)
 {
   int tmpOffset = 0;
-  for (unsigned int iS=0; iS<nSpecies; iS+=1) {
+  for (unsigned int iS=0; iS<nSpecies; iS++) {
     if (speciesList[iS]->name == species) {
       iSpecies = iS;
       offset = tmpOffset;
@@ -438,6 +441,34 @@ inline void Path::CalcRhoKP(Bead* b)
     for (int iD=0; iD<nD; iD++)
       factor *= C(iD)(ki(iD));
     tmpRhoK(iK) = factor;
+  }
+}
+
+// Compute path sign
+int Path::CalcSign()
+{
+  // Count up each permutation type
+  sign = 1;
+  for (int iS=0; iS<nSpecies; iS++) {
+    if (speciesList[iS]->fermi) {
+      int offset;
+      GetSpeciesInfo(speciesList[iS]->name,iS,offset);
+      Ivector pCount;
+      pCount.zeros(speciesList[iS]->nPart);
+      for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
+        iCount(iP) = 0;
+        Bead* b = bead(iP,nBead-1);
+        while (b->next != bead(iP,0)) {
+          iCount(iP)++;
+          b = bead(b->next->p,nBead-1);
+        }
+        pCount(iCount(iP))++; // Bin values by number of exchanges
+      }
+      for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP++) {
+        if (iP%2)
+          sign *= pow(-1,pCount(iP));
+      }
+    }
   }
 }
 

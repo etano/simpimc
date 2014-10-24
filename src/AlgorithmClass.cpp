@@ -53,6 +53,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
       events.push_back(new PairCorrelation(path,observableInputs[i],out));
     else if (type == "PathDump")
       events.push_back(new PathDump(path,observableInputs[i],out));
+    else if (type == "Sign")
+      events.push_back(new Sign(path,observableInputs[i],out));
     else if (type == "StructureFactor")
       events.push_back(new StructureFactor(path,observableInputs[i],out));
     else if (type == "Time")
