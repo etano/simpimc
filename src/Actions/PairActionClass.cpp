@@ -4,7 +4,7 @@ void PairAction::Init(Input &in)
 {
   // Read in things
   nImages = in.getAttribute<int>("nImages");
-  nOrder = in.getAttribute<int>("nOrder");
+  nOrder = in.getAttribute<int>("nOrder",-1);
   speciesA = in.getAttribute<string>("speciesA");
   speciesB = in.getAttribute<string>("speciesB");
   cout << "Setting up pair action between " << speciesA << " and " << speciesB << "..." << endl;
