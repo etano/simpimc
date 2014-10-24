@@ -13,7 +13,7 @@ private:
   unsigned int nLevel, nBisectBeads, nPart, nPermPart, nPermType;
   unsigned int bead0, bead1;
   RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
-  bool fixedNode;
+  bool rollOver, fixedNode;
 
   struct Cycle
   {

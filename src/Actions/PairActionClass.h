@@ -26,6 +26,7 @@ protected:
   // Helpers
   virtual void ReadFile(string fileName) = 0;
   inline void GetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rPrime, NUgrid *g);
+  inline void SetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rPrime);
 
   // Pair actions
   virtual RealType CalcV(RealType &r, RealType &rP, int level) = 0;
@@ -54,12 +55,17 @@ public:
 
 inline void PairAction::GetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rP, NUgrid *g)
 {
+  rMin = g->start;
   rMax = g->end;
+  SetLimits(rMin,rMax,r,rP);
+}
+
+inline void PairAction::SetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rP)
+{
   if (r > rMax)
     r = rMax;
   if (rP > rMax)
     rP = rMax;
-  rMin = g->start;
   if (rP < rMin)
     rP = rMin;
   if(r < rMin)

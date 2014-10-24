@@ -23,7 +23,9 @@ void Bisect::Accept()
 {
   // Move Accepted, so copy new coordinates
   path.storeR(affBeads);
-  path.storeRhoK(affBeads);
+  path.storeRhoKP(affBeads);
+  for (int iB=bead0; iB<=bead1; ++iB)
+    path.storeRhoK(iB,iSpecies);
 
   // Call accept for each action
   for (int iAction=0; iAction<actionList.size(); ++iAction)
@@ -35,7 +37,9 @@ void Bisect::Reject()
 {
   // Move rejected, so return old coordinates
   path.restoreR(affBeads);
-  path.restoreRhoK(affBeads);
+  path.restoreRhoKP(affBeads);
+  for (int iB=bead0; iB<=bead1; ++iB)
+    path.restoreRhoK(iB,iSpecies);
 
   // Call reject for each action
   for (int iAction=0; iAction<actionList.size(); ++iAction)
@@ -46,8 +50,8 @@ void Bisect::Reject()
 int Bisect::Attempt()
 {
   unsigned int iP = offset + rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
-  unsigned int bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
-  unsigned int bead1 = bead0 + nBisectBeads;
+  bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
+  bead1 = bead0 + nBisectBeads;
 
   // Set up pointers
   Bead *beadI = path(iP,bead0);

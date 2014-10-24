@@ -24,19 +24,21 @@ public:
 
   Species &species;
 
-  void store();
-  void restore();
-  void storeR();
-  void restoreR();
-  void storePrev();
-  void restorePrev();
-  void storeNext();
-  void restoreNext();
-  void storePartRecord();
-  void restorePartRecord();
-  void storeNodeDistance();
-  void restoreNodeDistance();
-  void move( Tvector& dr );
+  inline void store();
+  inline void restore();
+  inline void storeR() { rC = r; };
+  inline void restoreR() { r = rC; };
+  inline void storeRhoK() { rhoKC = rhoK; };
+  inline void restoreRhoK() { rhoK = rhoKC; };
+  inline void storePrev() { prevC = prev; };
+  inline void restorePrev() { prev = prevC; };
+  inline void storeNext() { nextC = next; };
+  inline void restoreNext() { next = nextC; };
+  inline void storeNodeDistance() { nDistC = nDist; };
+  inline void restoreNodeDistance() { nDist = nDistC; };
+  inline void move( Tvector& dr ) { r += dr; };
+  inline void storePartRecord();
+  inline void restorePartRecord();
   Bead* nextB( unsigned int n );
   Bead* prevB( unsigned int n );
 
@@ -46,6 +48,7 @@ public:
   unsigned int id;
   RealType nDist, nDistC;
   Tvector r, rC;
+  Cvector rhoK, rhoKC;
   Bead *self;
   Bead *next, *nextC;
   Bead *prev, *prevC;

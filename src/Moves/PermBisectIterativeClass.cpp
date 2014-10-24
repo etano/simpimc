@@ -44,7 +44,9 @@ void PermBisectIterative::Accept()
   }
   assignParticleLabels();
   path.storeR(affBeads);
-  path.storeRhoK(affBeads);
+  path.storeRhoKP(affBeads);
+  for (int iB=bead0; iB<=bead1; ++iB)
+    path.storeRhoK(iB,iSpecies);
 
   // Call reject for each action
   for (int iAction=0; iAction<actionList.size(); ++iAction)
@@ -62,9 +64,10 @@ void PermBisectIterative::Reject()
       path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
       path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
     }
-    assignParticleLabels();
     path.restoreR(affBeads);
-    path.restoreRhoK(affBeads);
+    path.restoreRhoKP(affBeads);
+    for (int iB=bead0; iB<=bead1; ++iB)
+      path.restoreRhoK(iB,iSpecies);
   }
 
   // Call reject for each action
@@ -77,7 +80,7 @@ int PermBisectIterative::Attempt()
 {
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   bead1 = bead0 + nBisectBeads; // Set last bead in bisection
-  bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
+  rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
 
   // Set up permutation
   Cycle c;
@@ -259,7 +262,7 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
     // Select next particle with bisective search
     RealType x = rng.unifRand(0.,Q_p_c);
     RealType t_Q = 0.;
-    for (int i=0; i<nPart; ++i) {
+    for (int i=0; i<nPart; ++i) { // fixme: not doing bisection
       t_Q += t_c(p,i);
       if (t_Q > x) {
         p = i;
@@ -326,12 +329,23 @@ void PermBisectIterative::permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle
 void PermBisectIterative::assignParticleLabels()
 {
   Bead *b;
-  for (unsigned int iP=offset; iP<offset+nPart; iP++) {
-    b = path.bead(iP,0);
-    for (unsigned int iB=0; iB<path.nBead; iB++) {
-      path.bead(iP,iB) = b;
-      path.bead(iP,iB)->p = iP;
-      b = b->next;
+  if (path.nBead-path.beadLoop(bead1-1) < path.beadLoop(bead1+1)) {
+    for (unsigned int iP=offset; iP<offset+nPart; iP++) {
+      b = path.bead(iP,path.beadLoop(bead1-1));
+      for (unsigned int iB=path.beadLoop(bead1-1); iB<path.nBead; iB++) {
+        path.bead(iP,iB) = b;
+        path.bead(iP,iB)->p = iP;
+        b = b->next;
+      }
+    }
+  } else {
+    for (unsigned int iP=offset; iP<offset+nPart; iP++) {
+      b = path.bead(iP,path.beadLoop(bead1+1));
+      for (unsigned int iB=path.beadLoop(bead1+1); iB>0; iB--) {
+        path.bead(iP,iB) = b;
+        path.bead(iP,iB)->p = iP;
+        b = b->prev;
+      }
     }
   }
 }

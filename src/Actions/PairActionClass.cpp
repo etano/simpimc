@@ -11,7 +11,7 @@ void PairAction::Init(Input &in)
   maxLevel = in.getAttribute<int>("maxLevel",0);
   useLongRange = in.getAttribute<int>("useLongRange",0);
   if (useLongRange) {
-    kCut = in.getAttribute<RealType>("kCut");
+    kCut = in.getAttribute<RealType>("kCut",path.kC);
     path.SetupKs(kCut);
   }
   GetOffset(speciesA,iSpeciesA,offsetA);

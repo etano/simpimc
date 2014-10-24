@@ -94,6 +94,24 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
 
   // Reset kCut
   kC = 0.;
+  if (PBC) {
+    RealType kCut = in.getChild("System").getAttribute<RealType>("kCut");
+    SetupKs(kCut);
+  }
+}
+
+// Store R
+void Path::storeR(vector<Bead*>& affBeads)
+{
+  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
+    (*beadIter) -> storeR();
+}
+
+// Restore R
+void Path::restoreR(vector<Bead*>& affBeads)
+{
+  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
+    (*beadIter) -> restoreR();
 }
 
 void Path::PrintPath()
@@ -126,8 +144,24 @@ void Path::GetSpeciesInfo(string species, int &iSpecies, int &offset)
   }
 }
 
+// Put R in the Box
+void Path::PutInBox(Tvector& r)
+{
+  Tvector n(NDIM);
+  n(0) = -nearbyint(r(0)*iL);
+  r(0) += n(0)*L;
+#if NDIM>1
+  n(1) = -nearbyint(r(1)*iL);
+  r(1) += n(1)*L;
+#endif
+#if NDIM>2
+  n(2) = -nearbyint(r(2)*iL);
+  r(2) += n(2)*L;
+#endif
+}
+
 // Avoid negative and 0 k vectors
-inline bool Path::Include(Tvector &k, RealType kCut)
+bool Path::Include(Tvector &k, RealType kCut)
 {
   RealType k2 = dot(k,k);
   if (k2 < kCut*kCut && k2 != 0.) {
@@ -207,9 +241,8 @@ void Path::InitRhoK()
   // Resize rhoK
   rhoK.set_size(nBead,nSpecies);
   rhoKC.set_size(nBead,nSpecies);
-  rhoKP.set_size(nBead,nSpecies,nPart);
-  rhoKPC.set_size(nBead,nSpecies,nPart);
 
+  // Set to old mode
   bool tmpMode = GetMode();
   SetMode(0);
 
@@ -219,8 +252,8 @@ void Path::InitRhoK()
       rhoK(iB,iS).zeros(kIndices.size());
       rhoKC(iB,iS).zeros(kIndices.size());
       for (int iP=0; iP<nPart; ++iP) {
-        rhoKP(iB,iS,iP).zeros(kIndices.size());
-        rhoKPC(iB,iS,iP).zeros(kIndices.size());
+        bead(iP,iB)->rhoK.zeros(kIndices.size());
+        bead(iP,iB)->rhoKC.zeros(kIndices.size());
       }
     }
   }
@@ -234,13 +267,13 @@ void Path::InitRhoK()
 
       // Calculate rho_kp values
       for (int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-        CalcRhoKP(rhoKPC,iP,iB,iS);
-        rhoKC(iB,iS) += rhoKPC(iB,iS,iP);
+        CalcRhoKP(bead(iP,iB));
+        bead(iP,iB)->restoreRhoK();
+        rhoKC(iB,iS) += bead(iP,iB)->rhoKC;
       }
+      rhoK(iB,iS) = rhoKC(iB,iS);
     }
   }
-  rhoK = rhoKC;
-  rhoKP = rhoKPC;
 
   SetMode(tmpMode);
 }
@@ -260,7 +293,7 @@ void Path::UpdateRhoK()
 
       // Calculate rho_kp values
       for (int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-        rhoK(iB,iS) += rhoKP(iB,iS,iP);
+        rhoK(iB,iS) += bead(iP,iB)->rhoK;
       }
     }
   }
@@ -296,10 +329,10 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
     for (int iB=b0; iB<b1; iB+=skip) {
       // Calculate new values
       SetMode(1);
-      CalcRhoKP(rhoKP,iP,iB,iS);
+      CalcRhoKP(bead(iP,beadLoop(iB)));
 
       // Add in new values and subtract out old values
-      rhoK(beadLoop(iB),iS) += rhoKP(beadLoop(iB),iS,iP) - rhoKPC(beadLoop(iB),iS,iP);
+      rhoK(beadLoop(iB),iS) += bead(iP,beadLoop(iB))->rhoK - bead(iP,beadLoop(iB))->rhoKC;
 
     }
   }
@@ -377,17 +410,34 @@ void Path::AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
   }
 }
 
-// Calc rho_k for a single particle
-void Path::CalcRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS)
+// Store rhoK
+void Path::storeRhoKP(vector<Bead*>& affBeads)
 {
-  Tvector r = GetR((*this)(iP,beadLoop(iB)));
+  if (kC > 0)
+    for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
+      (*beadIter) -> storeRhoK();
+}
+
+// Restore rhoK
+void Path::restoreRhoKP(vector<Bead*>& affBeads)
+{
+  if (kC > 0)
+    for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
+      (*beadIter) -> restoreRhoK();
+}
+
+// Calc rho_k for a single particle
+inline void Path::CalcRhoKP(Bead* b)
+{
+  Tvector r = GetR(b);
+  Cvector& tmpRhoK = GetRhoK(b);
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
     Ivector &ki = kIndices[iK];
     ComplexType factor = 1.;
     for (int iD=0; iD<nD; iD++)
       factor *= C(iD)(ki(iD));
-    tmpRhoK(beadLoop(iB),iS,iP)(iK) = factor;
+    tmpRhoK(iK) = factor;
   }
 }
 

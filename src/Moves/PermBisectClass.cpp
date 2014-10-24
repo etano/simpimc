@@ -96,7 +96,9 @@ void PermBisect::Accept()
   }
   assignParticleLabels();
   path.storeR(affBeads);
-  path.storeRhoK(affBeads);
+  path.storeRhoKP(affBeads);
+  for (int iB=bead0; iB<=bead1; ++iB)
+    path.storeRhoK(iB,iSpecies);
 
   // Increment permutation counter
   permAttempt(permType) += 1;
@@ -119,7 +121,9 @@ void PermBisect::Reject()
   }
   assignParticleLabels();
   path.restoreR(affBeads);
-  path.restoreRhoK(affBeads);
+  path.restoreRhoKP(affBeads);
+  for (int iB=bead0; iB<=bead1; ++iB)
+    path.restoreRhoK(iB,iSpecies);
 
   // Increment permutation counter
   permAttempt(permType) += 1;
@@ -240,18 +244,8 @@ int PermBisect::Attempt()
     RealType logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
 
     // Metropolis step
-    if (logAcceptProb < log(rng.unifRand())) {
-      // Restore things
-      for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
-        path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
-        path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
-      }
-      assignParticleLabels();
-      path.restoreR(affBeads);
-      path.restoreRhoK(affBeads);
-
+    if (logAcceptProb < log(rng.unifRand()))
       return 0;
-    }
 
     prevActionChange = currActionChange;
   }
@@ -263,28 +257,9 @@ int PermBisect::Attempt()
     RealType permTot1 = constructPermTable();
   
     // Decide whether or not to accept whole bisection
-    if ((permTot0/permTot1) < rng.unifRand())  {
-      // Restore things
-      for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
-        path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
-        path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
-      }
-      assignParticleLabels();
-      path.restoreR(affBeads);
-      path.restoreRhoK(affBeads);
-  
+    if ((permTot0/permTot1) < rng.unifRand())
       return 0;
-    }
   }
-
-  // Accept move, so store things
-  for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
-    path.bead(iP,path.beadLoop(bead1)) -> storePrev();
-    path.bead(iP,path.beadLoop(bead1-1)) -> storeNext();
-  }
-  assignParticleLabels();
-  path.storeR(affBeads);
-  path.storeRhoK(affBeads);
 
   return 1;
 }

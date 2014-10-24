@@ -11,6 +11,7 @@ private:
   int offset;
   int nImages;
   unsigned int nLevel, nBisectBeads;
+  unsigned int bead0, bead1;
   RealType lambda;
 
   std::vector<Bead*> affBeads;

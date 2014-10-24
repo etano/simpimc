@@ -12,14 +12,39 @@ void IlkkaPairAction::ReadFile(string fileName)
   nOrder = -1; // HACK
 
   // Read in u
+  int nx_u, ny_u;
+  in.Read("u/offDiag/nx", nx_u);
+  in.Read("u/offDiag/ny", ny_u);
+  Tvector x_u(nx_u);
+  Tvector y_u(ny_u);
+  Tmatrix u_xy(nx_u,ny_u);
+  in.Read("u/offDiag/x", x_u);
+  in.Read("u/offDiag/y", y_u);
+  in.Read("u/offDiag/u_xy", u_xy);
+
+  // Spline u
+  NUgrid* x_u_grid = create_general_grid(x_u.memptr(), x_u.size());
+  NUgrid* y_u_grid = create_general_grid(y_u.memptr(), y_u.size());
+  u_xy_spline = create_NUBspline_2d_d(x_u_grid, y_u_grid, xBC, xBC, u_xy.memptr());
+
+  // u long range
   if (useLongRange) {
+    // Read in r
     int nr_u;
     in.Read("u/diag/nrLong", nr_u);
-    r_u.set_size(nr_u);
-    uLong_r.set_size(nr_u);
+    Tvector r_u(nr_u);
+    Tvector uLong_r(nr_u);
     in.Read("u/diag/rLong", r_u);
     in.Read("u/diag/uLong_r", uLong_r);
     in.Read("u/diag/uLong_r0",uLong_r0);
+
+    // Spline r
+    NUgrid* r_u_grid = create_general_grid(r_u.memptr(), r_u.size());
+    r_u_min = r_u_grid->start;
+    r_u_max = r_u_grid->end;
+    uLong_r_spline = create_NUBspline_1d_d(r_u_grid, xBC, uLong_r.memptr());
+
+    // Read in k
     int nk_u;
     in.Read("u/diag/nk", nk_u);
     Tvector k_u(nk_u);
@@ -37,35 +62,41 @@ void IlkkaPairAction::ReadFile(string fileName)
       }
     }
   }
-  int nx_u, ny_u;
-  in.Read("u/offDiag/nx", nx_u);
-  in.Read("u/offDiag/ny", ny_u);
-  x_u.set_size(nx_u);
-  y_u.set_size(ny_u);
-  u_xy.set_size(nx_u,ny_u);
-  in.Read("u/offDiag/x", x_u);
-  in.Read("u/offDiag/y", y_u);
-  in.Read("u/offDiag/u_xy", u_xy);
-
-  // Spline u
-  x_u_grid = create_general_grid(x_u.memptr(), x_u.size());
-  y_u_grid = create_general_grid(y_u.memptr(), y_u.size());
-  u_xy_spline = create_NUBspline_2d_d(x_u_grid, y_u_grid, xBC, xBC, u_xy.memptr());
-
-  if (useLongRange) {
-    r_u_grid = create_general_grid(r_u.memptr(), r_u.size());
-    uLong_r_spline = create_NUBspline_1d_d(r_u_grid, xBC, uLong_r.memptr());
-  }
 
   // Read in du
+  int nx_du, ny_du;
+  in.Read("du/offDiag/nx", nx_du);
+  in.Read("du/offDiag/ny", ny_du);
+  Tvector x_du(nx_du);
+  Tvector y_du(ny_du);
+  Tmatrix du_xy(nx_du,ny_du);
+  in.Read("du/offDiag/x", x_du);
+  in.Read("du/offDiag/y", y_du);
+  in.Read("du/offDiag/du_xy", du_xy);
+
+  // Spline du
+  NUgrid* x_du_grid = create_general_grid(x_du.memptr(), x_du.size());
+  NUgrid* y_du_grid = create_general_grid(y_du.memptr(), y_du.size());
+  du_xy_spline = create_NUBspline_2d_d(x_du_grid, y_du_grid, xBC, xBC, du_xy.memptr());
+
+  // du long range
   if (useLongRange) {
+    // Read in r
     int nr_du;
     in.Read("du/diag/nrLong", nr_du);
-    r_du.set_size(nr_du);
-    duLong_r.set_size(nr_du);
+    Tvector r_du(nr_du);
+    Tvector duLong_r(nr_du);
     in.Read("du/diag/rLong", r_du);
     in.Read("du/diag/duLong_r", duLong_r);
     in.Read("du/diag/duLong_r0",duLong_r0);
+
+    // Spline r
+    NUgrid* r_du_grid = create_general_grid(r_du.memptr(), r_du.size());
+    r_du_min = r_du_grid->start;
+    r_du_max = r_du_grid->end;
+    duLong_r_spline = create_NUBspline_1d_d(r_du_grid, xBC, duLong_r.memptr());
+
+    // Read in k
     int nk_du;
     in.Read("du/diag/nk", nk_du);
     Tvector k_du(nk_du);
@@ -82,41 +113,41 @@ void IlkkaPairAction::ReadFile(string fileName)
           duLong_k(iK) = tmpDULong_k(iK_du);
       }
     }
-  }
-  int nx_du, ny_du;
-  in.Read("du/offDiag/nx", nx_du);
-  in.Read("du/offDiag/ny", ny_du);
-  x_du.set_size(nx_du);
-  y_du.set_size(ny_du);
-  du_xy.set_size(nx_du,ny_du);
-  in.Read("du/offDiag/x", x_du);
-  in.Read("du/offDiag/y", y_du);
-  in.Read("du/offDiag/du_xy", du_xy);
 
-  // Spline du
-  x_du_grid = create_general_grid(x_du.memptr(), x_du.size());
-  y_du_grid = create_general_grid(y_du.memptr(), y_du.size());
-  du_xy_spline = create_NUBspline_2d_d(x_du_grid, y_du_grid, xBC, xBC, du_xy.memptr());
-  if (useLongRange) {
-    r_du_grid = create_general_grid(r_du.memptr(), r_du.size());
-    duLong_r_spline = create_NUBspline_1d_d(r_du_grid, xBC, duLong_r.memptr());
   }
 
   // Read in v
   int nr_v;
   in.Read("v/diag/nr", nr_v);
-  r_v.set_size(nr_v);
-  v_r.set_size(nr_v);
+  Tvector r_v(nr_v);
+  Tvector v_r(nr_v);
   in.Read("v/diag/r", r_v);
   in.Read("v/diag/v_r", v_r);
+
+  // Spline v
+  NUgrid* r_v_grid = create_general_grid(r_v.memptr(), r_v.size());
+  r_v_min = r_v_grid->start;
+  r_v_max = r_v_grid->end;
+  v_r_spline = create_NUBspline_1d_d(r_v_grid, xBC, v_r.memptr());
+
+  // v long range
   if (useLongRange) {
+    // Read in r
     int nr_vLong;
     in.Read("v/diag/nrLong", nr_vLong);
-    r_vLong.set_size(nr_vLong);
-    vLong_r.set_size(nr_vLong);
+    Tvector r_vLong(nr_vLong);
+    Tvector vLong_r(nr_vLong);
     in.Read("v/diag/rLong",r_vLong);
     in.Read("v/diag/vLong_r",vLong_r);
     in.Read("v/diag/vLong_r0",vLong_r0);
+
+    // Spline r
+    NUgrid* r_vLong_grid = create_general_grid(r_vLong.memptr(), r_vLong.size());
+    r_vLong_min = r_vLong_grid->start;
+    r_vLong_max = r_vLong_grid->end;
+    vLong_r_spline = create_NUBspline_1d_d(r_vLong_grid, xBC, vLong_r.memptr());
+
+    // Read in k
     int nk_v;
     in.Read("du/diag/nk", nk_v);
     Tvector k_v(nk_v);
@@ -133,14 +164,6 @@ void IlkkaPairAction::ReadFile(string fileName)
           vLong_k(iK) = tmpVLong_k(iK_v);
       }
     }
-  }
-
-  // Spline v
-  r_v_grid = create_general_grid(r_v.memptr(), r_v.size());
-  v_r_spline = create_NUBspline_1d_d(r_v_grid, xBC, v_r.memptr());
-  if (useLongRange) {
-    r_vLong_grid = create_general_grid(r_vLong.memptr(), r_vLong.size());
-    vLong_r_spline = create_NUBspline_1d_d(r_vLong_grid, xBC, vLong_r.memptr());
   }
 
   // Calculate constants
@@ -164,8 +187,7 @@ void IlkkaPairAction::ReadFile(string fileName)
 RealType IlkkaPairAction::CalcV(RealType &r, RealType &rP, int level)
 {
   // Limits
-  RealType rMin, rMax;
-  GetLimits(rMin, rMax, r, rP, r_v_grid);
+  SetLimits(r_v_min, r_v_max, r, rP);
 
   // Calculate V
   RealType V = 0.;
@@ -175,7 +197,7 @@ RealType IlkkaPairAction::CalcV(RealType &r, RealType &rP, int level)
   eval_NUBspline_1d_d(v_r_spline,rP,&tmpV);
   V += 0.5*tmpV;
   if (useLongRange) {
-    GetLimits(rMin, rMax, r, rP, r_vLong_grid);
+    SetLimits(r_vLong_min, r_vLong_max, r, rP);
     eval_NUBspline_1d_d(vLong_r_spline,r,&tmpV);
     V -= 0.5*tmpV;
     eval_NUBspline_1d_d(vLong_r_spline,rP,&tmpV);
@@ -200,8 +222,7 @@ RealType IlkkaPairAction::CalcU(RealType &r, RealType &rP, RealType &s, int leve
   // Subtract out long range part
   if (useLongRange) {
     // Limits
-    RealType rMin, rMax;
-    GetLimits(rMin, rMax, r, rP, r_u_grid);
+    SetLimits(r_u_min, r_u_max, r, rP);
 
     // Splines
     RealType tmpU;
@@ -229,8 +250,7 @@ RealType IlkkaPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, in
   // Subtract out long range part
   if (useLongRange) {
     // Limits
-    RealType rMin, rMax;
-    GetLimits(rMin, rMax, r, rP, r_du_grid);
+    SetLimits(r_du_min, r_du_max, r, rP);
 
     // Splines
     RealType tmpDU;

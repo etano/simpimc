@@ -35,15 +35,17 @@ void Time::Write()
     norm /= totalTime;
   vector<RealType> eventTimes(eventList.size());
   for (int i=0; i<eventTimes.size(); ++i)
-    eventTimes[i] = eventList[i]->timeSpent * norm;
+    eventTimes[i] = eventList[i]->timeSpent;
 
   if (firstTime) {
     firstTime = 0;
     for (int i=0; i<eventTimes.size(); ++i)
       out.CreateExtendableDataSet("/Observables/"+name+"/", eventList[i]->name, eventTimes[i]);
+    out.CreateExtendableDataSet("/Observables/"+name+"/", "Block", totalTime);
   } else {
     for (int i=0; i<eventTimes.size(); ++i)
       out.AppendDataSet("/Observables/"+name+"/", eventList[i]->name, eventTimes[i]);
+    out.AppendDataSet("/Observables/"+name+"/", "Block", totalTime);
   }
 
   Reset();
