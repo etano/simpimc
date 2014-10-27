@@ -48,7 +48,7 @@ void PermBisectIterative::Accept()
   assignParticleLabels();
   path.storeR(affBeads);
   path.storeRhoKP(affBeads);
-  for (int iB=bead0; iB<=bead1; ++iB)
+  for (int iB=bead0; iB<bead1; ++iB)
     path.storeRhoK(iB,iSpecies);
 
   // Call reject for each action
@@ -69,7 +69,7 @@ void PermBisectIterative::Reject()
     }
     path.restoreR(affBeads);
     path.restoreRhoKP(affBeads);
-    for (int iB=bead0; iB<=bead1; ++iB)
+    for (int iB=bead0; iB<bead1; ++iB)
       path.restoreRhoK(iB,iSpecies);
   }
 
@@ -115,7 +115,7 @@ int PermBisectIterative::Attempt()
   field<Bead*> beadA(nPermPart);
   affBeads.clear();
   for (unsigned int i=0; i<nPermPart; i++) {
-    for(beadA(i) = beadI(i); beadA(i) != beadF(i); beadA(i) = beadA(i) -> next)
+    for(beadA(i) = beadI(i)->next; beadA(i) != beadF(i); beadA(i) = beadA(i)->next)
       affBeads.push_back(beadA(i));
   }
 

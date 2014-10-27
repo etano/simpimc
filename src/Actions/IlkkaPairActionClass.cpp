@@ -170,14 +170,14 @@ void IlkkaPairAction::ReadFile(string fileName)
   int N1 = path.speciesList[iSpeciesA]->nPart;
   int N2 = path.speciesList[iSpeciesB]->nPart;
   if (iSpeciesA == iSpeciesB) { // homologous
-    duLong_k0 *= 0.25*N1*N1*path.nBead;
+    duLong_k0 *= 0.5*N1*N1*path.nBead;
     duLong_r0 *= -0.5*N1*path.nBead;
-    vLong_k0 *= 0.25*N1*N1*path.nBead;
+    vLong_k0 *= 0.5*N1*N1*path.nBead;
     vLong_r0 *= -0.5*N1*path.nBead;
   } else { // heterologous
-    duLong_k0 *= 0.5*N1*N2*path.nBead;
+    duLong_k0 *= N1*N2*path.nBead;
     duLong_r0 *= 0.*path.nBead;
-    vLong_k0 *= 0.5*N1*N2*path.nBead;
+    vLong_k0 *= N1*N2*path.nBead;
     vLong_r0 *= 0.*path.nBead;
   }
 
@@ -299,7 +299,7 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int 
     if (path.magKs[iK] < kCut) {
       for (int iB=b0; iB<b1; iB+=skip) {
         RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
-        tot += rhok2*uLong_k(iK);
+        tot += uLong_k(iK)*rhok2;
       }
     }
   }

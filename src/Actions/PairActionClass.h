@@ -64,12 +64,13 @@ inline void PairAction::SetLimits(RealType &rMin, RealType &rMax, RealType &r, R
 {
   if (r > rMax)
     r = rMax;
+  else if (r < rMin)
+    r = rMin;
+
   if (rP > rMax)
     rP = rMax;
-  if (rP < rMin)
+  else if (rP < rMin)
     rP = rMin;
-  if(r < rMin)
-    r = rMin;
 }
 
 #endif

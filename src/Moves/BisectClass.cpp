@@ -24,7 +24,7 @@ void Bisect::Accept()
   // Move Accepted, so copy new coordinates
   path.storeR(affBeads);
   path.storeRhoKP(affBeads);
-  for (int iB=bead0; iB<=bead1; ++iB)
+  for (int iB=bead0+1; iB<bead1; ++iB)
     path.storeRhoK(iB,iSpecies);
 
   // Call accept for each action
@@ -38,7 +38,7 @@ void Bisect::Reject()
   // Move rejected, so return old coordinates
   path.restoreR(affBeads);
   path.restoreRhoKP(affBeads);
-  for (int iB=bead0; iB<=bead1; ++iB)
+  for (int iB=bead0+1; iB<bead1; ++iB)
     path.restoreRhoK(iB,iSpecies);
 
   // Call reject for each action
@@ -66,7 +66,7 @@ int Bisect::Attempt()
   // Set which beads are affected by the move
   Bead *beadA;
   affBeads.clear();
-  for(beadA = beadI; beadA != beadF; beadA = beadA -> next)
+  for(beadA = beadI->next; beadA != beadF; beadA = beadA -> next)
     affBeads.push_back(beadA);
 
   // Perform the bisection (move exactly through kinetic action)
@@ -91,11 +91,6 @@ int Bisect::Attempt()
       beadB = beadA->nextB(skip);
       beadC = beadB->nextB(skip);
 
-      // Keep track of only the beads that actually change
-      //affBeads.push_back(beadB);
-      //beadB->storeR();
-      //path.storeRhoK(beadB);
-
       // Old sampling
       path.SetMode(0);
       path.RBar(beadC, beadA, rBarOld);
@@ -117,8 +112,8 @@ int Bisect::Attempt()
         for (int image=-nImages; image<=nImages; image++) {
           RealType distOld = deltaOld(iD) + (RealType)image*path.L;
           RealType distNew = deltaNew(iD) + (RealType)image*path.L;
-          gaussSumOld += path.fexp(-0.5*distOld*distOld/sigma2);
-          gaussSumNew += path.fexp(-0.5*distNew*distNew/sigma2);
+          gaussSumOld += exp(-0.5*distOld*distOld/sigma2);
+          gaussSumNew += exp(-0.5*distNew*distNew/sigma2);
         }
         gaussProdOld *= gaussSumOld;
         gaussProdNew *= gaussSumNew;

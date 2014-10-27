@@ -331,7 +331,6 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
     int iS = bead(iP,0)->species.iS;
     for (int iB=b0; iB<b1; iB+=skip) {
       // Calculate new values
-      SetMode(1);
       CalcRhoKP(bead(iP,beadLoop(iB)));
 
       // Add in new values and subtract out old values

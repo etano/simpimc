@@ -16,7 +16,6 @@ void PairAction::Init(Input &in)
   }
   GetOffset(speciesA,iSpeciesA,offsetA);
   GetOffset(speciesB,iSpeciesB,offsetB);
-  cout << speciesA << " " << speciesB << " " << iSpeciesA << " " << iSpeciesB << endl;
   if (iSpeciesA >= 0 && iSpeciesB >= 0) {
     isConstant = ((iSpeciesA == iSpeciesB)
                  && (path.speciesList[iSpeciesA]->nPart == 1
@@ -156,10 +155,9 @@ RealType PairAction::GetAction(int b0, int b1, vector<int> &particles, int level
       nB++;
     }
   }
-  if (nA==0 && nB==0)
-    return 0.;
-  if (iSpeciesA == iSpeciesB && (nA==0))
-    return 0.;
+  if (nA==0)
+    if ((iSpeciesA==iSpeciesB) || (nB==0))
+      return 0.;
 
   // Make vectors of other particles of species A and B
   vector<int> otherParticlesA;
