@@ -25,8 +25,8 @@ RealType Kinetic::DActionDBeta()
       int offset;
       GetOffset(path.speciesList[iS]->name,iS,offset);
       for (int iP=offset; iP<offset+path.speciesList[iS]->nPart; iP++) {
-        for (int iB=0; iB<path.nBead; iB+=1) {
-          path.Dr(path(iP,iB),path(iP,iB)->next,dr);
+        for (int iB=0; iB<path.nBead; iB++) {
+          path.Dr(path(iP,iB),path.GetNextBead(path(iP,iB),1),dr);
           gaussProd = 1.;
           gaussSum.zeros();
           numSum.zeros();
@@ -75,9 +75,9 @@ RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
       RealType i4LambdaTau = 1./(4.*lambda*levelTau);
       RealType gaussProd, gaussSum, dist;
       beadA = path(iP,b0);
-      beadF = path(iP,b0)->nextB(b1-b0);
+      beadF = path.GetNextBead(beadA,b1-b0);
       while(beadA != beadF) {
-        beadB = beadA->nextB(skip);
+        beadB = path.GetNextBead(beadA,skip);
         path.Dr(beadA,beadB,dr);
         gaussProd = 1.;
         for (int iD=0; iD<path.nD; iD++) {

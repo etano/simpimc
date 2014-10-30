@@ -119,7 +119,6 @@ void PermBisect::Reject()
     path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
     path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
   }
-  assignParticleLabels();
   path.restoreR(affBeads);
   path.restoreRhoKP(affBeads);
   for (int iB=bead0; iB<=bead1; ++iB)
@@ -148,8 +147,9 @@ int PermBisect::Attempt()
 
   // Set up pointers
   vector<int> particles;
-  field<Bead*> beadI(nPermPart), beadFm1(nPermPart), beadF(nPermPart);
-  for (unsigned int i=0; i<nPermPart; i++) {
+  int nPartPerm = c->part.size();
+  field<Bead*> beadI(nPartPerm), beadFm1(nPartPerm), beadF(nPartPerm);
+  for (unsigned int i=0; i<nPartPerm; i++) {
     beadI(i) = path.bead(c->part(i),bead0);
     beadFm1(i) = beadI(i)->nextB(nBisectBeads-1);
     beadF(i) = beadFm1(i)->next;
@@ -160,16 +160,17 @@ int PermBisect::Attempt()
   permuteBeads(beadFm1, beadF, c);
 
   // Note affected beads
-  field<Bead*> beadA(nPermPart);
+  field<Bead*> beadA(nPartPerm);
   affBeads.clear();
-  for (unsigned int i=0; i<nPermPart; i++) {
+  for (unsigned int i=0; i<nPartPerm; i++) {
     for(beadA(i) = beadI(i); beadA(i) != beadF(i); beadA(i) = beadA(i) -> next)
       affBeads.push_back(beadA(i));
   }
 
   // Perform the bisection (move exactly through kinetic action)
-  field<Bead*> beadB(nPermPart), beadC(nPermPart);
-  RealType prevActionChange = 0.;
+  field<Bead*> beadB(nPartPerm), beadC(nPartPerm);
+  RealType oldCycleWeight = -log(c->weight);
+  RealType prevActionChange = oldCycleWeight;
   RealType prefactorOfSampleProb = 0.;
   Tvector rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
   RealType gaussProdOld, gaussSumOld, distOld, gaussProdNew, gaussSumNew, distNew;
@@ -184,20 +185,20 @@ int PermBisect::Attempt()
     // Calculate sampling probability
     RealType oldLogSampleProb = 0.;
     RealType newLogSampleProb = 0.;
-    for (unsigned int i=0; i<nPermPart; i++) {
+    for (unsigned int i=0; i<nPartPerm; i++) {
       beadA(i) = beadI(i);
       while(beadA(i) != beadF(i)) {
-        // Set beads
-        beadB(i) = beadA(i)->nextB(skip);
-        beadC(i) = beadB(i)->nextB(skip);
-
         // Old sampling
         path.SetMode(0);
+        beadB(i) = path.GetNextBead(beadA(i),skip);
+        beadC(i) = path.GetNextBead(beadB(i),skip);
         path.RBar(beadC(i), beadA(i), rBarOld);
         path.Dr(beadB(i), rBarOld, deltaOld);
 
         // New sampling
         path.SetMode(1);
+        beadB(i) = path.GetNextBead(beadA(i),skip);
+        beadC(i) = path.GetNextBead(beadB(i),skip);
         path.RBar(beadC(i), beadA(i), rBarNew);
         rng.normRand(deltaNew, 0, sigma);
         path.PutInBox(deltaNew);
@@ -257,7 +258,7 @@ int PermBisect::Attempt()
     RealType permTot1 = constructPermTable();
   
     // Decide whether or not to accept whole bisection
-    if ((permTot0/permTot1) < rng.unifRand())
+    if ((oldCycleWeight*permTot0/permTot1) < rng.unifRand())
       return 0;
   }
 
@@ -283,7 +284,6 @@ RealType PermBisect::constructPermTable()
       cycles.push_back(&c);
     }
   }
-
   return totalWeight;
 }
 
@@ -293,20 +293,18 @@ void PermBisect::updatePermTable()
   field<Bead*> b0(nPart), b1(nPart);
   for (unsigned int iP=0; iP<nPart; iP++) {
     b0(iP) = path.bead(iP+offset,bead0);
-    b1(iP) = b0(iP) -> nextB(nBisectBeads);
+    b1(iP) = path.GetNextBead(b0(iP),nBisectBeads);
   }
 
   // Construct t table
-  Tvector dr(path.nD);
+  Tvector dr_ij(path.nD), dr_ii(path.nD);
   RealType exponent;
   for (unsigned int i=0; i<nPart; i++) {
+    path.Dr(b0(i), b1(i), dr_ii);
     for (unsigned int j=0; j<nPart; j++) {
-      path.Dr(b0(i), b1(j), dr);
-      exponent = -dot(dr, dr)*i4LambdaTauNBisectBeads;
-      if (exponent > logEpsilon)
-        t(i,j) = path.fexp(exponent);
-      else
-        t(i,j) = 0.;
+      path.Dr(b0(i), b1(j), dr_ij);
+      exponent = (-dot(dr_ij, dr_ij) + dot(dr_ii, dr_ii))*i4LambdaTauNBisectBeads;
+      t(i,j) = exp(exponent);
     }
   }
 
@@ -351,14 +349,28 @@ void PermBisect::permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c)
 void PermBisect::assignParticleLabels()
 {
   Bead *b;
+//  for (unsigned int iP=offset; iP<offset+nPart; iP++) {
+//    b = path.bead(iP,0);
+//    for (unsigned int iB=0; iB<path.nBead; iB++) {
+//      path.bead(iP,iB) = b;
+//      path.bead(iP,iB)->p = iP;
+//      b = b->next;
+//    }
+//  }
   for (unsigned int iP=offset; iP<offset+nPart; iP++) {
-    b = path.bead(iP,0);
-    for (unsigned int iB=0; iB<path.nBead; iB++) {
+    b = path.bead(iP,path.beadLoop(bead1-1));
+    for (unsigned int iB=path.beadLoop(bead1-1); iB<path.nBead; iB++) {
       path.bead(iP,iB) = b;
       path.bead(iP,iB)->p = iP;
       b = b->next;
     }
   }
+
+  //for (unsigned int iP=offset; iP<offset+nPart; iP++) {
+  //  for (unsigned int iB=0; iB<path.nBead; iB++) {
+  //    cout << iP << " " << iB << "   " << path.bead(iP,iB)->prev->p << " " << path.bead(iP,iB)->p << " " << path.bead(iP,iB)->next->p << "   " << path.bead(iP,iB)->prev->b << " " << path.bead(iP,iB)->b << " " << path.bead(iP,iB)->next->b << endl;
+  //  }
+  //}
 }
 
 void PermBisect::Write()

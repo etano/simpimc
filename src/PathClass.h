@@ -9,6 +9,7 @@
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
 #include "Utils/Algorithm/Algorithm.h"
+#include <map>
 
 class Path
 {
@@ -41,13 +42,6 @@ public:
   vector<Species*> speciesList;
   void GetSpeciesInfo(string species, int &iSpecies, int &offset);
 
-  // Permutation Counter
-  int getPType();
-  void setPType();
-  Imatrix pType;
-  Ivector iCount, pCount;
-  unsigned int nType;
-
   // Fast math
   bool approximate;
   RealType fexp(RealType x) { return exp(x); };
@@ -65,6 +59,8 @@ public:
   void storeR(vector<Bead*> &affBeads);
   void restoreR(vector<Bead*> &affBeads);
   inline Tvector& GetR(Bead* b) { return mode ? b->r : b->rC; };
+  inline Bead* GetNextBead(Bead* b, int n) { return mode ? b->nextB(n) : b->nextBC(n); };
+  inline Bead* GetPrevBead(Bead* b, int n) { return mode ? b->prevB(n) : b->prevBC(n); };
   inline void Dr(Tvector &r0, Tvector &r1, Tvector &dr) { dr = r0 - r1; PutInBox(dr); };
   inline void Dr(Bead* b0, Tvector &r1, Tvector &dr) { Dr(GetR(b0), r1, dr); };
   inline void Dr(Bead* b0, Bead* b1, Tvector &dr) { Dr(GetR(b0), GetR(b1), dr); };
@@ -105,6 +101,25 @@ public:
   int sign;
   int refBead;
   int CalcSign();
+
+  // Permutations
+  struct CompareVecInt
+  {
+    bool operator() (const vector<int> &a, const vector<int> &b) {
+      for (int i = 0; i<a.size(); i++)
+        if (a[i] != b[i])
+          return (a[i] > b[i]);
+      return (a[0]>b[0]);
+    }
+  };
+
+  map<vector<int>,int,CompareVecInt> possPerms;
+  map<vector<int>,int,CompareVecInt>::const_iterator possPermsIterator;
+  void SetCycleCount(int iS, vector<int>& cycles);
+  int GetPermSector(int iS);
+  int GetPermSector(int iS, vector<int>& cycles);
+  void SetupPermSectors(int n, int sectorsMax);
+
 
   // Path initialization
   void InitPaths(Input &in, IOClass &out, RNG &rng);

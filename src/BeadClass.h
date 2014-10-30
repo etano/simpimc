@@ -40,7 +40,9 @@ public:
   inline void storePartRecord();
   inline void restorePartRecord();
   Bead* nextB( unsigned int n );
+  Bead* nextBC( unsigned int n );
   Bead* prevB( unsigned int n );
+  Bead* prevBC( unsigned int n );
 
   unsigned int p;
   unsigned int b;

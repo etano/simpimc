@@ -80,22 +80,22 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
       bead(iP,iB) -> prevC = bead(iP,iB-1);
     }
   }
-
-
-  // Set permutation types
-  iCount.zeros(nPart);
-  pCount.zeros(nPart);
-  setPType();
+  //bead(0,0) -> prev = bead(1,nBead-1);
+  //bead(0,0) -> prevC = bead(1,nBead-1);
+  //bead(1,0) -> prev = bead(0,nBead-1);
+  //bead(1,0) -> prevC = bead(0,nBead-1);
+  //bead(0,nBead-1) -> next = bead(1,0);
+  //bead(0,nBead-1) -> nextC = bead(1,0);
+  //bead(1,nBead-1) -> next = bead(0,0);
+  //bead(1,nBead-1) -> nextC = bead(0,0);
 
   // Initialize paths
   InitPaths(in,out,rng);
 
   // Reset kCut
   kC = 0.;
-  if (PBC) {
-    RealType kCut = in.getChild("System").getAttribute<RealType>("kCut");
-    SetupKs(kCut);
-  }
+  RealType kCut = in.getChild("System").getAttribute<RealType>("kCut",2.*M_PI/(pow(vol,1./nD)));
+  SetupKs(kCut);
 
   // Initiate nodal things
   sign = 1;
@@ -446,121 +446,103 @@ inline void Path::CalcRhoKP(Bead* b)
 // Compute path sign
 int Path::CalcSign()
 {
-  // Count up each permutation type
   sign = 1;
   for (int iS=0; iS<nSpecies; iS++) {
     if (speciesList[iS]->fermi) {
-      int offset;
-      GetSpeciesInfo(speciesList[iS]->name,iS,offset);
-      Ivector pCount;
-      pCount.zeros(speciesList[iS]->nPart);
-      for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-        iCount(iP) = 0;
-        Bead* b = bead(iP,nBead-1);
-        while (b->next != bead(iP,0)) {
-          iCount(iP)++;
-          b = bead(b->next->p,nBead-1);
-        }
-        pCount(iCount(iP))++; // Bin values by number of exchanges
-      }
-      for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP++) {
-        if (iP%2)
-          sign *= pow(-1,pCount(iP));
-      }
+      vector<int> cycles;
+      SetCycleCount(iS, cycles);
+      for (int i=0; i<cycles.size(); i++)
+        sign *= pow(-1,cycles[i]-1);
     }
   }
 }
 
-// Identify permuation state
-int Path::getPType()
+// Retrieve list of cycles
+void Path::SetCycleCount(int iS, vector<int>& cycles)
 {
-  if (nType < 2) return 0;
-
-  unsigned int iType, xPart;
-
-  // Count up each permutation type
-  pCount.zeros();
-  for (unsigned int iP = 0; iP < nPart; iP += 1) {
-    iCount(iP) = 0;
-    xPart = iP;
-    while ((bead(xPart,nBead-1) -> next -> p) != iP) {
-      iCount(iP) += 1;
-      xPart = (bead(xPart,nBead-1) -> next -> p);
+  int offset;
+  GetSpeciesInfo(speciesList[iS]->name,iS,offset);
+  Ivector alreadyCounted;
+  alreadyCounted.zeros(speciesList[iS]->nPart);
+  for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
+    if (!alreadyCounted(iP)) {
+      int cycleLength = 1;
+      Bead* b = bead(iP,nBead-1);
+      alreadyCounted(iP) = 1;
+      while (GetNextBead(b,1) != bead(iP,0)) {
+        cycleLength++;
+        b = GetNextBead(b,nBead);//bead(b->next->p,nBead-1);
+        alreadyCounted(b->p) = 1;
+      }
+      cycles.push_back(cycleLength);
     }
-    pCount(iCount(iP)) += 1; // Bin values by number of exchanges
   }
-
-  for (unsigned int iP = 0; iP < nPart; iP += 1) 
-    pCount(iP) = pCount(iP)/(iP+1); // Normalize values
-
-  iType = 0;
-  while (iType < nType) {
-    xPart = 0;
-    while (xPart < nPart) {
-      if (pCount(xPart) != pType(iType,xPart)) break;
-      xPart += 1;
-    }
-    if (xPart == nPart) break;
-    iType += 1;      
-  }
-
-  return iType;
 }
 
-// Set up permuation states
-void Path::setPType()
+// Retrieve permutation sector
+int Path::GetPermSector(int iS)
 {
-  switch (nPart) {
-    case 1:
-      nType = 1;
-      pType.zeros(nType,nPart);
-      pType(0,0) = 1; 
-      break;
-    case 2:
-      nType = 2;
-      pType.zeros(nType,nPart);
-      pType(0,0) = 2;
-      pType(1,1) = 1;
-      break;
-    case 3:
-      nType = 3;
-      pType.zeros(nType,nPart);
-      pType(0,0) = 3;
-      pType(1,2) = 1; 
-      pType(2,0) = 1;
-      pType(2,1) = 1;
-      break;
-    case 4:
-      nType = 5;
-      pType.zeros(nType,nPart);
-      pType(0,0) = 4;
-      pType(1,0) = 2;
-      pType(1,1) = 1;
-      pType(2,0) = 1;
-      pType(2,2) = 1;
-      pType(3,1) = 2;
-      pType(4,3) = 1;
-      break;
-    case 5:
-      nType = 7;
-      pType.zeros(nType,nPart);
-      pType(0,0) = 5;
-      pType(1,0) = 3;
-      pType(1,1) = 1;
-      pType(2,0) = 2;
-      pType(2,2) = 1;
-      pType(3,0) = 1;
-      pType(3,3) = 1;
-      pType(4,0) = 1;
-      pType(4,1) = 2;
-      pType(5,1) = 1;
-      pType(5,2) = 1;
-      pType(6,4) = 1;
-      break;
-    default:
-      nType = 1;
-      pType.zeros(nType,nPart);
-      pType(0,0) = 1;
-      break;
+  vector<int> cycles;
+  SetCycleCount(iS, cycles);
+  return GetPermSector(iS, cycles);
+}
+
+// Retrieve permutation sector
+int Path::GetPermSector(int iS, vector<int>& cycles)
+{
+  sort(cycles.begin(),cycles.end());
+  possPermsIterator = possPerms.find(cycles);
+  if (possPermsIterator == possPerms.end()) {
+    cout << "Broken Permutation: " << endl;
+    for (vector<int>::size_type i=0; i != cycles.size(); i++)
+      cout << cycles[i] << " ";
+    cout << endl;
+    exit(1);
   }
+  return possPermsIterator->second;
+}
+
+// Setup permutation sectors
+void Path::SetupPermSectors(int n, int sectorsMax)
+{
+  cout << "Setting up permutation sectors..." << endl;
+  vector<int> a;
+  a.resize(n);
+  for (int i=0; i<n; i++) {
+    a[i] = 0;
+  }
+  int k = 1;
+  int y = n-1;
+  vector< vector<int> > tmpPossPerms;
+  while (k != 0 && (sectorsMax > possPerms.size() || !sectorsMax)) {
+    int x = a[k-1] + 1;
+    k -= 1;
+    while (2*x <= y) {
+      a[k] = x;
+      y -= x;
+      k += 1;
+    }
+    int l = k+1;
+    while (x <= y && (sectorsMax > possPerms.size() || !sectorsMax)) {
+      a[k] = x;
+      a[l] = y;
+      vector<int> b;
+      for (vector<int>::size_type j=0; j!=k+2; j++)
+        b.push_back(a[j]);
+      tmpPossPerms.push_back(b);
+      x += 1;
+      y -= 1;
+    }
+    a[k] = x+y;
+    y = x+y-1;
+    vector<int> c;
+    for (vector<int>::size_type j=0; j!=k+1; j++)
+      c.push_back(a[j]);
+    tmpPossPerms.push_back(c);
+  }
+
+  int nSectors = tmpPossPerms.size();
+  for (vector<int>::size_type j=0; j != nSectors; j++)
+    possPerms[tmpPossPerms[j]] = j;
+
 }

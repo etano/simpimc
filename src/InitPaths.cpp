@@ -18,13 +18,11 @@ void Path::InitPaths(Input &in, IOClass &out, RNG &rng)
       for (int iP=0; iP<nPart; ++iP) {
         if (allBeads) {
           for (int iB=0; iB<nBead; ++iB) {
-            initFile >> iP >> iB;
             for (int iD=0; iD<nD; ++iD)
               initFile >> bead(iP,iB)->r(iD);
             bead(iP,iB)->storeR();
           }
         } else {
-          initFile >> iP;
           Tvector r(nD);
           for (int iD=0; iD<nD; ++iD)
             initFile >> r(iD);
@@ -60,12 +58,15 @@ void Path::InitPaths(Input &in, IOClass &out, RNG &rng)
       RealType delta = L/nPartPerND;
       for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
         int p = (iP-offset)/2;
-        Tvector r(nD);
-        r(0) = p/(nPartPerND*nPartPerND);
+        Ivector tmp(nD);
+        tmp(0) = p/(nPartPerND*nPartPerND);
         if (nD > 1)
-          r(1) = (p-(r(0)*nPartPerND*nPartPerND))/nPartPerND;
+          tmp(1) = (p-(tmp(0)*nPartPerND*nPartPerND))/nPartPerND;
         if (nD > 2)
-          r(2) = p - r(0)*nPartPerND*nPartPerND - r(1)*nPartPerND;
+          tmp(2) = p - tmp(0)*nPartPerND*nPartPerND - tmp(1)*nPartPerND;
+        Tvector r(nD);
+        for (int iD=0; iD<nD; ++iD)
+          r(iD) = 1.*tmp(iD);
         r *= delta;
         r -= 0.5*L;
         if (iP % 2)

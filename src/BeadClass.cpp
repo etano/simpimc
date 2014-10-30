@@ -35,10 +35,24 @@ Bead* Bead::nextB( unsigned int n )
   return bead;
 }
 
+Bead* Bead::nextBC( unsigned int n )
+{
+  Bead *bead = this;
+  for (unsigned int i = 0; i < n; i += 1) bead = bead -> nextC;
+  return bead;
+}
+
 Bead* Bead::prevB( unsigned int n )
 {
   Bead *bead = this;
   for (unsigned int i = 0; i < n; i += 1) bead = bead -> prev;
+  return bead;
+}
+
+Bead* Bead::prevBC( unsigned int n )
+{
+  Bead *bead = this;
+  for (unsigned int i = 0; i < n; i += 1) bead = bead -> prevC;
   return bead;
 }
 
