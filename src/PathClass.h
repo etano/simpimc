@@ -9,7 +9,7 @@
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
 #include "Utils/Algorithm/Algorithm.h"
-#include <map>
+#include "Utils/Algorithm/fastmath.h"
 
 class Path
 {
@@ -44,7 +44,7 @@ public:
 
   // Fast math
   bool approximate;
-  RealType fexp(RealType x) { return exp(x); };
+  inline RealType fexp(RealType x) { return approximate ? fastexp(x) : exp(x); };
 
   // Mode (use copy or true)
   bool mode;

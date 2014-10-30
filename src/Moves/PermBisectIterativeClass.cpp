@@ -222,7 +222,10 @@ void PermBisectIterative::updatePermTable()
     for (unsigned int j=0; j<nPart; j++) {
       path.Dr(b0(i), b1(j), dr_ij);
       exponent = (-dot(dr_ij,dr_ij))*i4LambdaTauNBisectBeads;
-      t(i,j) = path.fexp(exponent);
+      if (exponent > logEpsilon)
+        t(i,j) = path.fexp(exponent);
+      else
+        t(i,j) = 0.;
     }
   }
 

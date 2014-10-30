@@ -112,8 +112,8 @@ int Bisect::Attempt()
         for (int image=-nImages; image<=nImages; image++) {
           RealType distOld = deltaOld(iD) + (RealType)image*path.L;
           RealType distNew = deltaNew(iD) + (RealType)image*path.L;
-          gaussSumOld += exp(-0.5*distOld*distOld/sigma2);
-          gaussSumNew += exp(-0.5*distNew*distNew/sigma2);
+          gaussSumOld += path.fexp(-0.5*distOld*distOld/sigma2);
+          gaussSumNew += path.fexp(-0.5*distNew*distNew/sigma2);
         }
         gaussProdOld *= gaussSumOld;
         gaussProdNew *= gaussSumNew;

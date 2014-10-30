@@ -304,7 +304,10 @@ void PermBisect::updatePermTable()
     for (unsigned int j=0; j<nPart; j++) {
       path.Dr(b0(i), b1(j), dr_ij);
       exponent = (-dot(dr_ij, dr_ij) + dot(dr_ii, dr_ii))*i4LambdaTauNBisectBeads;
-      t(i,j) = exp(exponent);
+      if (exponent > logEpsilon)
+        t(i,j) = path.fexp(exponent);
+      else
+        t(i,j) = 0.;
     }
   }
 

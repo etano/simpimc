@@ -34,7 +34,7 @@ RealType Kinetic::DActionDBeta()
             for (int image=-nImages; image<=nImages; image++) {
               dist = dr(iD) + image*path.L;
               dist2i4LambdaTau = dist*dist*i4LambdaTau;
-              expPart = exp(-dist2i4LambdaTau);
+              expPart = path.fexp(-dist2i4LambdaTau);
               gaussSum(iD) += expPart;
               numSum(iD) += -(dist2i4LambdaTau/path.tau)*expPart;
             }
@@ -84,7 +84,7 @@ RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
           gaussSum = 0.;
           for (int image=-nImages; image<=nImages; image++) {
             dist = dr(iD) + image*path.L;
-            gaussSum += exp(-dist*dist*i4LambdaTau);
+            gaussSum += path.fexp(-dist*dist*i4LambdaTau);
           }
           gaussProd *= gaussSum;
         }
