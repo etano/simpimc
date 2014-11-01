@@ -249,8 +249,13 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
     for (int i=0; i<ps.size(); ++i)
       t_c(p,ps[i]) = 0.;
 
+    // Allow cycle to close
     if (ps.size() > 0)
       t_c(p,p0) = t(p,p0);
+
+    // Disallow even permutations for fixed-node fermions
+    if (path.speciesList[iSpecies]->fermi && path.speciesList[iSpecies]->fixedNode && !(ps.size()%2))
+      t_c(p,p0) = 0.;
 
     // Calculate row total
     RealType Q_p = 0.;
@@ -276,12 +281,6 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
     }
 
   } while (p != p0);
-
-  // Disallow even permutations from closing for fixed-node calculations
-  if (path.speciesList[iSpecies]->fermi && path.speciesList[iSpecies]->fixedNode && !(ps.size()%2)) {
-    nPermPart = ps.size();
-    return 0;
-  }
 
   // Set weight
   c.weight = 1.;
