@@ -13,6 +13,41 @@ void Nodal::Init(Input &in)
   out.Write("Actions/"+name+"/nImages", nImages);
   out.Write("Actions/"+name+"/species", species);
   out.Write("Actions/"+name+"/maxLevel", maxLevel);
+
+  // Setup splines
+  SetupSpline();
+}
+
+// Create spline
+void Nodal::SetupSpline()
+{
+  // Setup grid
+  Ugrid r_grid;
+  r_grid.start = -path.L/2.;
+  r_grid.end = path.L/2.;
+  r_grid.num = 1000;
+  RealType dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
+
+  // Resize spline field
+  int nSpline = path.nBead/2 + (path.nBead%2) + 1;
+  rho_free_r_splines.set_size(nSpline);
+
+  // Create splines
+  for (int iSpline=0; iSpline<nSpline; ++iSpline) {
+    Tvector rho_free_r(r_grid.num);
+    RealType t_i4LambdaTau = 1./(4.*path.speciesList[iSpecies]->lambda*path.tau*(iSpline+1));
+    for (int i=0; i<r_grid.num; ++i) {
+      RealType r = r_grid.start + i*dr;
+      rho_free_r(i) = 0.;
+      for (int image=-nImages; image<=nImages; image++) {
+        RealType t_r = r + image*path.L;
+        rho_free_r(i) += path.fexp(-t_r*t_r*t_i4LambdaTau);
+      }
+    }
+    BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
+    UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
+    rho_free_r_splines[iSpline] = rho_free_r_spline;
+  }
 }
 
 RealType Nodal::DActionDBeta()
@@ -42,7 +77,6 @@ RealType Nodal::GetAction(int b0, int b1, vector<int> &particles, int level)
   // Constants
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
-  RealType i4LambdaTau = 1./(4.*path.speciesList[iSpecies]->lambda*path.tau);
 
   // See if ref slice included
   bool checkAll = false;
@@ -50,9 +84,30 @@ RealType Nodal::GetAction(int b0, int b1, vector<int> &particles, int level)
     checkAll = ((b0 <= path.refBead) && (b1 >= path.refBead));
   else
     checkAll = (path.beadLoop(b1) >= path.refBead);
+
+  // Set start and end
+  int startB, endB;
   if (checkAll) {
-    b0 = 0;
-    b1 = path.nBead;
+    startB = 0;
+    endB = path.nBead-1;
+  } else {
+    startB = b0;
+    endB = b1;
+  }
+
+  // Set ref beads and initial beads
+  vector<Bead*> refBeads, otherBeads;
+  int sliceDiff0 = path.beadLoop(startB) - path.refBead;
+  int absSliceDiff0 = abs(sliceDiff0);
+  for (int iP=0; iP<path.speciesList[iSpecies]->nPart; ++iP) {
+    refBeads.push_back(path.bead(iP+offset,path.refBead));
+    if (absSliceDiff0 >= 0) {
+      //otherBeads.push_back(path.GetNextBead(refBeads[iP],absSliceDiff0)); // fixme: This may be the only correct form
+      otherBeads.push_back(path.bead(iP+offset,startB));
+    } else {
+      //otherBeads.push_back(path.GetPrevBead(refBeads[iP],absSliceDiff0));
+      otherBeads.push_back(path.bead(iP+offset,startB));
+    }
   }
 
   // Compute action
@@ -60,27 +115,20 @@ RealType Nodal::GetAction(int b0, int b1, vector<int> &particles, int level)
   Tvector dr(path.nD);
   RealType tot = 0.;
   RealType gaussProd, gaussSum, dist;
-  for (int iB=b0; iB<b1; iB+=skip) {
+  for (int iB=startB; iB<=endB; iB+=skip) {
     if (iB != path.refBead) {
       // Form rho_F
-      int sliceDiff = min(abs(path.beadLoop(iB) - path.refBead), abs(path.refBead - path.beadLoop(iB)));
-      for (int iP=offset; iP<offset+path.speciesList[iSpecies]->nPart; ++iP) {
-        for (int jP=offset; jP<offset+path.speciesList[iSpecies]->nPart; ++jP) {
-          //path.Dr(path.bead(iP,path.refBead), path.bead(jP,path.refBead)->nextB(sliceDiff), dr);
-          path.Dr(path.bead(iP,path.refBead), path.bead(jP,iB), dr);
-          gaussProd = 1.;
-          for (int iD=0; iD<path.nD; iD++) {
-            gaussSum = 0.;
-            for (int image=-nImages; image<=nImages; image++) {
-              dist = dr(iD) + image*path.L;
-              gaussSum += path.fexp(-dist*dist*i4LambdaTau/sliceDiff);
-            }
-            gaussProd *= gaussSum;
-          }
-          rho_F(iP-offset,jP-offset) = gaussProd;
+      int sliceDiff = path.beadLoop(iB) - path.refBead;
+      int absSliceDiff = abs(sliceDiff);
+      int invSliceDiff = path.nBead-absSliceDiff;
+      int minSliceDiff = min(absSliceDiff, invSliceDiff);
+      for (int iP=0; iP<path.speciesList[iSpecies]->nPart; ++iP) {
+        for (int jP=0; jP<path.speciesList[iSpecies]->nPart; ++jP) {
+          path.Dr(refBeads[iP], otherBeads[jP], dr);
+          rho_F(iP,jP) = GetRhoij(dr, minSliceDiff);
         }
       }
-  
+
       // Take determinant and check sign
       RealType det_rho_F = det(rho_F);
       if (det_rho_F < 0.) {
@@ -89,9 +137,24 @@ RealType Nodal::GetAction(int b0, int b1, vector<int> &particles, int level)
         tot += 0.;
       }
     }
+
+    // Move down the line
+    for (int iP=0; iP<path.speciesList[iSpecies]->nPart; ++iP)
+      otherBeads[iP] = path.GetNextBead(otherBeads[iP],skip);
   }
 
   return tot;
+}
+
+RealType Nodal::GetRhoij(Tvector& r, int sliceDiff)
+{
+  RealType gaussProd = 1.;
+  for (int iD=0; iD<path.nD; iD++) {
+    RealType gaussSum;
+    eval_UBspline_1d_d(rho_free_r_splines[sliceDiff-1],r(iD),&gaussSum);
+    gaussProd *= gaussSum;
+  }
+  return gaussProd;
 }
 
 void Nodal::Write() {}
