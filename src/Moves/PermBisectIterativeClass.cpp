@@ -51,7 +51,8 @@ void PermBisectIterative::Accept()
     path.bead(iP,path.beadLoop(bead1)) -> storePrev();
     path.bead(iP,path.beadLoop(bead1-1)) -> storeNext();
   }
-  assignParticleLabels();
+  if (nPermPart > 1) // only need to reassign particle labels if actual permutation
+    assignParticleLabels();
   path.storeR(affBeads);
   path.storeRhoKP(affBeads);
   for (int iB=bead0; iB<bead1; ++iB)
@@ -95,7 +96,6 @@ void PermBisectIterative::Reset()
     nBisectBeads = 1<<nLevel; // Number of beads in bisection
     lambda = path.speciesList[iSpecies]->lambda;
     i4LambdaTauNBisectBeads = 1./(4.*lambda*path.tau*nBisectBeads);
-    cout << nLevel << endl;
   }
 
   Move::Reset();
@@ -373,9 +373,13 @@ void PermBisectIterative::Write()
   if (firstTime) {
     out.CreateExtendableDataSet("/Moves/"+name+"/", "permAttempt", permAttempt);
     out.CreateExtendableDataSet("/Moves/"+name+"/", "permAccept", permAccept);
+    if (adaptive)
+      out.CreateExtendableDataSet("/Moves/"+name+"/", "nLevel", nLevel);
   } else {
     out.AppendDataSet("/Moves/"+name+"/", "permAttempt", permAttempt);
     out.AppendDataSet("/Moves/"+name+"/", "permAccept", permAccept);
+    if (adaptive)
+      out.AppendDataSet("/Moves/"+name+"/", "nLevel", nLevel);
   }
 
   // Reset
