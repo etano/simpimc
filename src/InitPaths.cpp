@@ -40,8 +40,9 @@ void Path::InitPaths(Input &in, IOClass &out, RNG &rng)
 
   // Random configuration
   } else if (initType == "Random") {
+    RealType cofactor = in.getChild("Init").getAttribute<RealType>("cofactor",1.);
     for (int iP=0; iP<nPart; ++iP) {
-      RealType tmpRand = rng.unifRand();
+      RealType tmpRand = rng.unifRand(-cofactor*L/2.,cofactor*L/2.);
       for (int iB=0; iB<nBead; ++iB) {
         for (int iD=0; iD<nD; ++iD)
           bead(iP,iB)->r(iD) = tmpRand;
