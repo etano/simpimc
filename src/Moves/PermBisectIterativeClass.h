@@ -12,8 +12,8 @@ private:
   int nImages;
   unsigned int nLevel, nBisectBeads, nPart, nPermPart, nPermType;
   unsigned int bead0, bead1;
-  RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
-  bool rollOver, fixedNode;
+  RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon, targetRatio;
+  bool adaptive, rollOver, fixedNode;
 
   struct Cycle
   {
@@ -48,6 +48,7 @@ public:
   virtual int Attempt();
   virtual void Accept();
   virtual void Reject();
+  virtual void Reset();
 };
 
 

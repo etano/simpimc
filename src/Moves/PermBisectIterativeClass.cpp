@@ -2,6 +2,7 @@
 
 void PermBisectIterative::Init(Input &in)
 {
+  // Read in things
   nLevel = in.getAttribute<int>("nLevel");
   int maxPossibleLevel = floor(log2(path.nBead));
   if (nLevel > maxPossibleLevel)
@@ -13,6 +14,11 @@ void PermBisectIterative::Init(Input &in)
   species = in.getAttribute<string>("species");
   epsilon = in.getAttribute<RealType>("epsilon",1.e-100);
   logEpsilon = log(epsilon);
+
+  // Adaptive bisection level
+  adaptive = in.getAttribute<int>("adaptive",0);
+  if (adaptive)
+    targetRatio = in.getAttribute<RealType>("targetRatio");
 
   // Set species things
   path.GetSpeciesInfo(species,iSpecies,offset);
@@ -76,6 +82,23 @@ void PermBisectIterative::Reject()
   // Call reject for each action
   for (int iAction=0; iAction<actionList.size(); ++iAction)
     actionList[iAction]->Reject();
+}
+
+void PermBisectIterative::Reset()
+{
+  if (adaptive) {
+    RealType acceptRatio = (RealType) nAccept / (RealType) nAttempt;
+    if (acceptRatio < targetRatio && nLevel > 0)
+      nLevel--;
+    else
+      nLevel++;
+    nBisectBeads = 1<<nLevel; // Number of beads in bisection
+    lambda = path.speciesList[iSpecies]->lambda;
+    i4LambdaTauNBisectBeads = 1./(4.*lambda*path.tau*nBisectBeads);
+    cout << nLevel << endl;
+  }
+
+  Move::Reset();
 }
 
 // Perform the permuting bisection

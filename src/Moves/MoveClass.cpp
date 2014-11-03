@@ -24,12 +24,6 @@ void Move::Reset()
   nAttempt = 0;
 }
 
-RealType Move::getPerAccept()
-{
-  RealType perAccept = (nAccept*1.) / (nAttempt*1.);  // Percentage accepted
-  return perAccept;
-}
-
 void Move::Write()
 {
   if (firstTime) {

@@ -43,8 +43,7 @@ public:
   // Acceptance
   bool firstTime;
   unsigned int nAttempt, nAccept;
-  RealType getPerAccept();
-  void Reset();
+  virtual void Reset();
 
   // Write
   virtual void Write();
