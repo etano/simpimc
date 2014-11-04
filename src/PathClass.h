@@ -9,7 +9,6 @@
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
 #include "Utils/Algorithm/Algorithm.h"
-#include "Utils/Algorithm/fastmath.h"
 
 class Path
 {
@@ -19,7 +18,7 @@ protected:
 
 public:
   // Constructor
-  Path(CommunicatorClass& tmpWorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& tmpIntraComm) 
+  Path(CommunicatorClass& tmpWorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& tmpIntraComm)
    : WorldComm(tmpWorldComm), InterComm(tmpInterComm), IntraComm(tmpIntraComm)
   {}
   void Init(Input &in, IOClass &out, RNG &rng);
@@ -44,7 +43,7 @@ public:
 
   // Fast math
   bool approximate;
-  inline RealType fexp(RealType x) { return approximate ? fastexp(x) : exp(x); };
+  inline RealType fexp(RealType x) { return exp(x); };
 
   // Mode (use copy or true)
   bool mode;
@@ -65,7 +64,7 @@ public:
   inline void Dr(Bead* b0, Tvector &r1, Tvector &dr) { Dr(GetR(b0), r1, dr); };
   inline void Dr(Bead* b0, Bead* b1, Tvector &dr) { Dr(GetR(b0), GetR(b1), dr); };
   inline void RBar(Bead* b0, Bead* b1, Tvector &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
-  inline void DrDrPDrrP(int b0, int b1, int p0, int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r0, Tvector &r1, Tvector &dr);
+  inline void DrDrPDrrP(const int b0, const int b1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r0, Tvector &r1, Tvector &dr);
   void PrintPath();
 
   // Periodic Boundary Condition
@@ -125,37 +124,14 @@ public:
   void InitPaths(Input &in, IOClass &out, RNG &rng);
 };
 
-
 // Get dr, drP, and drrP
-inline void Path::DrDrPDrrP(int b0, int b1, int p0, int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r, Tvector &rP, Tvector &rrP)
+inline void Path::DrDrPDrrP(const int b0, const int b1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r, Tvector &rP, Tvector &rrP)
 {
-  b0 = beadLoop(b0);
-  b1 = beadLoop(b1);
-  r = GetR(bead(p1,b0)) - GetR(bead(p0,b0));
-  rP = GetR(bead(p1,b1)) - GetR(bead(p0,b1));
-
-  Tvector n(NDIM), m(NDIM);
-  n(0) = -nearbyint(r(0)*iL);
-  r(0) += n(0)*L;
-  m(0) = nearbyint((r(0)-rP(0))*iL);
-  rP(0) += m(0)*L;
-#if NDIM>1
-  n(1) = -nearbyint(r(1)*iL);
-  r(1) += n(1)*L;
-  m(1) = nearbyint((r(1)-rP(1))*iL);
-  rP(1) += m(1)*L;
-#endif
-#if NDIM>2
-  n(2) = -nearbyint(r(2)*iL);
-  r(2) += n(2)*L;
-  m(2) = nearbyint((r(2)-rP(2))*iL);
-  rP(2) += m(2)*L;
-#endif
+  Dr(bead(p1,beadLoop(b0)),bead(p0,beadLoop(b0)),r);
+  Dr(bead(p1,beadLoop(b1)),bead(p0,beadLoop(b1)),rP);
   rMag = mag(r);
   rPMag = mag(rP);
-
-  rrP = r - rP;
-  PutInBox(rrP);
+  Dr(r,rP,rrP);
   rrPMag = mag(rrP);
 }
 

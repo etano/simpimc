@@ -80,14 +80,6 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
       bead(iP,iB) -> prevC = bead(iP,iB-1);
     }
   }
-  //bead(0,0) -> prev = bead(1,nBead-1);
-  //bead(0,0) -> prevC = bead(1,nBead-1);
-  //bead(1,0) -> prev = bead(0,nBead-1);
-  //bead(1,0) -> prevC = bead(0,nBead-1);
-  //bead(0,nBead-1) -> next = bead(1,0);
-  //bead(0,nBead-1) -> nextC = bead(1,0);
-  //bead(1,nBead-1) -> next = bead(0,0);
-  //bead(1,nBead-1) -> nextC = bead(0,0);
 
   // Initialize paths
   InitPaths(in,out,rng);
@@ -150,17 +142,11 @@ void Path::GetSpeciesInfo(string species, int &iSpecies, int &offset)
 // Put R in the Box
 void Path::PutInBox(Tvector& r)
 {
-  Tvector n(NDIM);
-  n(0) = -nearbyint(r(0)*iL);
-  r(0) += n(0)*L;
-#if NDIM>1
-  n(1) = -nearbyint(r(1)*iL);
-  r(1) += n(1)*L;
-#endif
-#if NDIM>2
-  n(2) = -nearbyint(r(2)*iL);
-  r(2) += n(2)*L;
-#endif
+  Ivector n(nD);
+  for (int iD=0; iD<nD; ++iD) {
+    n(iD) = -rint(r(iD)*iL);
+    r(iD) += n(iD)*L;
+  }
 }
 
 // Avoid negative and 0 k vectors
