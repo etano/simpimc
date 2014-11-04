@@ -1,6 +1,7 @@
 import sys
 import h5py as h5
 import Stats
+import numpy as np
 
 try:
     StartCut = int(sys.argv[1])
@@ -15,7 +16,7 @@ for fname in sys.argv[firstArg:]:
     ENames = f['Observables/Energy'].keys()
     for EName in ENames:
         try:
-            Es = f['Observables/Energy/'+EName][StartCut:]
+            Es = np.transpose(f['Observables/Energy/'+EName][StartCut:])[0]
             if EName in EStats:
                 EStats[EName].append(Stats.stats(Es))
             else:
