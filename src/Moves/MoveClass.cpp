@@ -26,13 +26,16 @@ void Move::Reset()
 
 void Move::Write()
 {
+  RealType acceptRatio = (1.*nAccept)/(1.*nAttempt);
   if (firstTime) {
     firstTime = 0;
     out.CreateExtendableDataSet("/Moves/"+name+"/", "nAttempt", nAttempt);
     out.CreateExtendableDataSet("/Moves/"+name+"/", "nAccept", nAccept);
+    out.CreateExtendableDataSet("/Moves/"+name+"/", "x", acceptRatio);
   } else {
     out.AppendDataSet("/Moves/"+name+"/", "nAttempt", nAttempt);
     out.AppendDataSet("/Moves/"+name+"/", "nAccept", nAccept);
+    out.AppendDataSet("/Moves/"+name+"/", "x", acceptRatio);
   }
 
   Reset();

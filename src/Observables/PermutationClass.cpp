@@ -23,7 +23,23 @@ void Permutation::Init(Input &in)
     for (int j=0; j<tmpPerm.size(); ++j)
       tmpPerms(tmpPerm[j]-1,(*tmpIt).second)++;
   }
-  out.Write("/Observables/"+name+"/poss_sectors", tmpPerms);
+  out.CreateGroup(prefix+"sectors");
+  string data_type = "pairs";
+  out.Write(prefix+"sectors/data_type",data_type);
+  Ivector tmpPermIndices(path.possPerms.size());
+  for (int i=0; i<path.possPerms.size(); ++i)
+    tmpPermIndices(i) = i;
+  out.Write(prefix+"sectors/x", tmpPermIndices);
+  out.Write(prefix+"sectors/possPerms", tmpPerms);
+
+  // Write out possible cycles
+  Ivector tmpCycles(path.speciesList[iSpecies]->nPart);
+  for (int iP=0; iP<path.speciesList[iSpecies]->nPart; ++iP)
+    tmpCycles(iP) = iP+1;
+  out.CreateGroup(prefix+"cycles");
+  data_type = "histogram";
+  out.Write(prefix+"cycles/data_type",data_type);
+  out.Write(prefix+"cycles/x", tmpCycles);
 
   Reset();
 }
@@ -70,9 +86,9 @@ void Permutation::Write()
       tmpSectorCount(1) = (*it).second;
       if (firstTime && firstSector) {
         firstSector = false;
-        out.CreateExtendableDataSet("/Observables/"+name+"/", "sectors", tmpSectorCount);
+        out.CreateExtendableDataSet("/"+prefix+"/sectors/", "y", tmpSectorCount);
       } else
-        out.AppendDataSet("/Observables/"+name+"/", "sectors", tmpSectorCount);
+        out.AppendDataSet("/"+prefix+"/sectors/", "y", tmpSectorCount);
     }
 
     // CycleCount
@@ -82,9 +98,9 @@ void Permutation::Write()
     RealType norm = 1./nCycles;
     cycles *= norm;
     if (firstTime)
-      out.CreateExtendableDataSet("/Observables/"+name+"/", "cycles", cycles);
+      out.CreateExtendableDataSet("/"+prefix+"/cycles/", "y", cycles);
     else
-      out.AppendDataSet("/Observables/"+name+"/", "cycles", cycles);
+      out.AppendDataSet("/"+prefix+"/cycles/", "y", cycles);
 
     if (firstTime)
       firstTime = false;

@@ -17,6 +17,8 @@ public:
     : Observable(tmpPath, in, out)
   {
     Init(in);
+    string data_type = "histogram";
+    out.Write(prefix+"/data_type",data_type);
   }
 
   virtual void Init(Input &in);

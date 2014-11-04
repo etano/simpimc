@@ -37,13 +37,19 @@ void Energy::Write()
     Es = Es/norm;
     RealType E = sum(Es);
     if (firstTime) {
-      out.CreateExtendableDataSet("/Observables/"+name+"/", "Total", E);
-      for (int i=0; i<actionList.size(); ++i)
-        out.CreateExtendableDataSet("/Observables/"+name+"/", actionList[i]->name, Es(i));
+      out.CreateGroup(prefix+"Total");
+      out.CreateExtendableDataSet("/"+prefix+"Total/", "x", E);
+      string data_type = "scalar";
+      out.Write(prefix+"Total/data_type",data_type);
+      for (int i=0; i<actionList.size(); ++i) {
+        out.CreateGroup(prefix+actionList[i]->name);
+        out.CreateExtendableDataSet("/"+prefix+actionList[i]->name+"/", "x", Es(i));
+        out.Write(prefix+actionList[i]->name+"/data_type", data_type);
+      }
     } else {
-      out.AppendDataSet("/Observables/"+name+"/", "Total", E);
+      out.AppendDataSet("/"+prefix+"Total/", "x", E);
       for (int i=0; i<actionList.size(); ++i)
-        out.AppendDataSet("/Observables/"+name+"/", actionList[i]->name, Es(i));
+        out.AppendDataSet("/"+prefix+actionList[i]->name+"/", "x", Es(i));
     }
 
     // Write Vs
@@ -51,13 +57,19 @@ void Energy::Write()
       Vs = Vs/norm;
       RealType V = sum(Vs);
       if (firstTime) {
-        out.CreateExtendableDataSet("/Observables/"+name+"/", "vTotal", V);
-        for (int i=0; i<actionList.size(); ++i)
-          out.CreateExtendableDataSet("/Observables/"+name+"/", "v"+actionList[i]->name, Vs(i));
+        out.CreateGroup(prefix+"Total");
+        out.CreateExtendableDataSet("/"+prefix+"Total/", "x", V);
+        string data_type = "scalar";
+        out.Write(prefix+"Total/data_type",data_type);
+        for (int i=0; i<actionList.size(); ++i) {
+          out.CreateGroup(prefix+actionList[i]->name);
+          out.CreateExtendableDataSet("/"+prefix+actionList[i]->name+"/", "x", Vs(i));
+          out.Write(prefix+actionList[i]->name+"/data_type", data_type);
+        }
       } else {
-        out.AppendDataSet("/Observables/"+name+"/", "vTotal", V);
+        out.AppendDataSet("/"+prefix+"Total", "x", V);
         for (int i=0; i<actionList.size(); ++i)
-         out.AppendDataSet("/Observables/"+name+"/", "v"+actionList[i]->name, Vs(i));
+          out.AppendDataSet("/"+prefix+actionList[i]->name+"/", "x", Vs(i));
       }
     }
 

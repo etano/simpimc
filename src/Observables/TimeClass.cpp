@@ -39,13 +39,19 @@ void Time::Write()
 
   if (firstTime) {
     firstTime = 0;
-    for (int i=0; i<eventTimes.size(); ++i)
-      out.CreateExtendableDataSet("/Observables/"+name+"/", eventList[i]->name, eventTimes[i]);
-    out.CreateExtendableDataSet("/Observables/"+name+"/", "Block", totalTime);
+    string data_type = "scalar";
+    out.CreateGroup(prefix+"Block");
+    out.Write(prefix+"Block/data_type",data_type);
+    out.CreateExtendableDataSet(prefix+"Block/", "x", totalTime);
+    for (int i=0; i<eventTimes.size(); ++i) {
+      out.CreateGroup(prefix+eventList[i]->name);
+      out.Write(prefix+eventList[i]->name+"/data_type",data_type);
+      out.CreateExtendableDataSet("/"+prefix+eventList[i]->name+"/", "x", eventTimes[i]);
+    }
   } else {
+    out.AppendDataSet(prefix+"Block/", "x", totalTime);
     for (int i=0; i<eventTimes.size(); ++i)
-      out.AppendDataSet("/Observables/"+name+"/", eventList[i]->name, eventTimes[i]);
-    out.AppendDataSet("/Observables/"+name+"/", "Block", totalTime);
+      out.AppendDataSet("/"+prefix+eventList[i]->name+"/", "x", eventTimes[i]);
   }
 
   Reset();

@@ -2,6 +2,9 @@
 
 void Sign::Init(Input &in)
 {
+  string data_type = "scalar";
+  out.Write(prefix+"/data_type",data_type);
+
   Reset();
 }
 
@@ -27,9 +30,9 @@ void Sign::Write()
     sign /= norm;
     if (firstTime) {
       firstTime = 0;
-      out.CreateExtendableDataSet("/Observables/"+name+"/", "sign", sign);
+      out.CreateExtendableDataSet("/Observables/"+name+"/", "x", sign);
     } else {
-      out.AppendDataSet("/Observables/"+name+"/", "sign", sign);
+      out.AppendDataSet("/Observables/"+name+"/", "x", sign);
     }
 
     Reset();

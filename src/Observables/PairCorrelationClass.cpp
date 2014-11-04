@@ -29,12 +29,12 @@ void PairCorrelation::Init(Input &in)
   }
 
   // Write things to file
-  out.Write("Observables/"+name+"/speciesA", speciesA);
-  out.Write("Observables/"+name+"/speciesB", speciesB);
-  out.Write("Observables/"+name+"/rMin", rMin);
-  out.Write("Observables/"+name+"/rMax", rMax);
-  out.Write("Observables/"+name+"/nR", nR);
-  out.Write("/Observables/"+name+"/r", rs);
+  out.Write(prefix+"/speciesA", speciesA);
+  out.Write(prefix+"/speciesB", speciesB);
+  out.Write(prefix+"/rMin", rMin);
+  out.Write(prefix+"/rMax", rMax);
+  out.Write(prefix+"/nR", nR);
+  out.Write(prefix+"/x", rs);
 
   Reset();
 }
@@ -107,10 +107,9 @@ void PairCorrelation::Write()
     // Write to file
     if (firstTime) {
       firstTime = 0;
-
-      out.CreateExtendableDataSet("/Observables/"+name+"/", "gr", gr.y);
+      out.CreateExtendableDataSet("/"+prefix, "y", gr.y);
     } else {
-      out.AppendDataSet("/Observables/"+name+"/", "gr", gr.y);
+      out.AppendDataSet("/"+prefix, "y", gr.y);
     }
 
     Reset();

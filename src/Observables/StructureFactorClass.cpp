@@ -14,12 +14,12 @@ void StructureFactor::Init(Input &in)
   sk.zeros(path.ks.size());
 
   // Write things to file
-  out.Write("Observables/"+name+"/speciesA", speciesA);
-  out.Write("Observables/"+name+"/speciesB", speciesB);
-  out.Write("Observables/"+name+"/kCut", kCut);
-  out.CreateExtendableDataSet("/Observables/"+name+"/", "ks", path.magKs[0]);
+  out.Write(prefix+"/speciesA", speciesA);
+  out.Write(prefix+"/speciesB", speciesB);
+  out.Write(prefix+"/kCut", kCut);
+  out.CreateExtendableDataSet("/"+prefix+"/", "x", path.magKs[0]);
   for (int iK=1; iK<path.magKs.size(); ++iK)
-    out.AppendDataSet("/Observables/"+name+"/", "ks", path.magKs[iK]);
+    out.AppendDataSet("/"+prefix+"/", "x", path.magKs[iK]);
 
   Reset();
 }
@@ -59,9 +59,9 @@ void StructureFactor::Write()
     // Write to file
     if (firstTime) {
       firstTime = 0;
-      out.CreateExtendableDataSet("/Observables/"+name+"/", "sk", sk);
+      out.CreateExtendableDataSet("/"+prefix+"/", "y", sk);
     } else {
-      out.AppendDataSet("/Observables/"+name+"/", "sk", sk);
+      out.AppendDataSet("/"+prefix+"/", "y", sk);
     }
 
     Reset();

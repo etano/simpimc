@@ -48,6 +48,8 @@ protected:
     LinearGrid x;
   };
 
+  string prefix;
+
 public:
   // Constructor
   Observable(Path &tmpPath, Input &in, IOClass &tmpOut)
@@ -56,8 +58,9 @@ public:
     name = in.getAttribute<string>("name");
     type = in.getAttribute<string>("type");
     skip = in.getAttribute<int>("skip",1);
-    out.CreateGroup("Observables/"+name);
-    out.Write("Observables/"+name+"/type",type);
+    prefix = "Observables/"+name+"/";
+    out.CreateGroup(prefix);
+    out.Write(prefix+"/type",type);
     firstTime = 1;
     nMeasure = 0;
   }

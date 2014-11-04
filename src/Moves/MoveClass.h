@@ -18,6 +18,7 @@ protected:
   IOClass& out;
 
   vector<Action*> &actionList;
+  string prefix;
 public:
   // Constructor
   Move(Path &tmpPath, RNG &tmpRNG, vector<Action*> &tmpActionList, Input &in, IOClass &tmpOut)
@@ -25,8 +26,11 @@ public:
   {
     name = in.getAttribute<string>("name");
     type = in.getAttribute<string>("type");
-    out.CreateGroup("Moves/"+name);
-    out.Write("Moves/"+name+"/type",type);
+    prefix = "Moves/"+name;
+    out.CreateGroup(prefix);
+    out.Write(prefix+"/type",type);
+    string data_type = "scalar";
+    out.Write(prefix+"/data_type",data_type);
     firstTime = 1;
     Reset();
   }
