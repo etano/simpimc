@@ -1,7 +1,7 @@
 import sys
 import h5py as h5
-import Stats
 import numpy as np
+import Stats
 
 try:
     StartCut = int(sys.argv[1])
@@ -28,9 +28,6 @@ for fname in sys.argv[firstArg:]:
     f.close()
 
 for EName in EStats.keys():
-    try:
-        TotStats = Stats.UnweightedAvg(EStats[EName])
-        print EName, TotStats
-    except:
-        pass
+    TotStats = Stats.UnweightedAvg(EStats[EName])
+    print EName, TotStats
 
