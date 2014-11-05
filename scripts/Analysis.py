@@ -83,7 +83,7 @@ class Histogram(Observable):
             yStats = []
             for y in ys:
                 yStats.append(Stats.stats(y[i]))
-            stats.append(Stats.UnweightedAvg(yStats))
+            stats.append(Stats.UnweightedAvg(np.array(yStats)))
         return (xs, stats)
 
     def WriteToFile(self, (xs, stats)):
