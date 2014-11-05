@@ -55,7 +55,7 @@ class Scalar(Observable):
         dStats = []
         for d in data:
             dStats.append(Stats.stats(d))
-        stats = Stats.UnweightedAvg(dStats)
+        stats = Stats.UnweightedAvg(np.array(dStats))
         return stats
 
     def WriteToFile(self, stats):

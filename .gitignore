@@ -3,6 +3,8 @@ tags
 *.swp
 .VimballRecord
 *.o
+*.so
+*.dylib
 *.lo
 *.plo
 *.pyc

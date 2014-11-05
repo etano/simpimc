@@ -1,73 +1,56 @@
-from math import sqrt
-import acor
+import sys
+import os
+import ctypes
+import numpy as np
+
+def we_are_frozen():
+    # All of the modules are built-in to the interpreter, e.g., by py2exe
+    return hasattr(sys, "frozen")
+
+def module_path():
+    encoding = sys.getfilesystemencoding()
+    if we_are_frozen():
+        return os.path.dirname(unicode(sys.executable, encoding))
+    return os.path.dirname(unicode(__file__, encoding))
+
+StatsLib = ctypes.cdll.LoadLibrary(module_path()+'/stats.so')
 
 # Mean
-def Mean(g):
-    return sum(g)/len(g)
+StatsLib.Mean.argtypes = [ctypes.c_void_p,ctypes.c_int]
+StatsLib.Mean.restype = ctypes.c_double
+def Mean(x):
+    return StatsLib.Mean(x.ctypes,len(x))
 
 # Mean squared
-def Mean2(g):
-    return sum(g**2)/len(g)
+StatsLib.Mean2.argtypes = [ctypes.c_void_p,ctypes.c_int]
+StatsLib.Mean2.restype = ctypes.c_double
+def Mean2(x):
+    return StatsLib.Mean2(x.ctypes,len(x))
 
 # Sample variance
-def SampVar(g):
-    return Mean2(g) - Mean(g)**2
-
-# Unbiased estimate of population variance
-def Var(g):
-    N = len(g)
-    if N > 1:
-        return ((N+0.)/(N-1.)) * SampVar(g)
-    else:
-        return 0.
+StatsLib.Var.argtypes = [ctypes.c_void_p,ctypes.c_int]
+StatsLib.Var.restype = ctypes.c_double
+def Var(x):
+    return StatsLib.Var(x.ctypes,len(x))
 
 # Standard deviation
-def Sigma(g):
-    return sqrt(Var(g))
+StatsLib.StdDev.argtypes = [ctypes.c_void_p,ctypes.c_int]
+StatsLib.StdDev.restype = ctypes.c_double
+def StdDev(x):
+    return StatsLib.StdDev(x.ctypes,len(x))
 
 # Average means
+StatsLib.UnweightedAvg.argtypes = [ctypes.c_void_p,ctypes.c_void_p,ctypes.c_void_p,ctypes.c_int]
+StatsLib.UnweightedAvg.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=(3,))
 def UnweightedAvg(stats):
-    mean, error, kappa = 0., 0., 0.
-    for s in stats:
-        mean += s[0]
-        error += s[1]*s[1]
-        kappa += s[2]
+    means = stats[:,0]
+    errors = stats[:,1]
+    kappas = stats[:,2]
     N = len(stats)
-    mean /= N
-    error = sqrt(error)/N
-    kappa /= N
-    return mean, error, kappa
-
-# Reaverage through means, errors, and N
-def UnweightedReAvg(stats):
-    totMean,totMean2,totError,totN = 0.,0.,0.,0.
-    for s in stats:
-        [mean,error,kappa,N] = s
-        mean2 = error*error*(N-1.) + mean*mean
-        totMean += mean*N
-        totMean2 += mean2*N
-        totN += N
-    if totN != 0:
-        totMean /= totN
-        totMean2 /= totN
-        var = totMean2 - totMean*totMean
-        if totN > 1 and var > 0:
-            totError = sqrt(var/(totN-1.))
-        else:
-            totError = 0.
-    return totMean, totError, totN
+    return StatsLib.UnweightedAvg(means.ctypes,errors.ctypes,kappas.ctypes,N)
 
 # Statistics with auto-correlation
+StatsLib.Stats.argtypes = [ctypes.c_void_p,ctypes.c_int]
+StatsLib.Stats.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=(3,))
 def stats(x):
-    N = len(x)
-    try:
-        kappa, mean, error = acor.acor(x)
-    except RuntimeError:
-        kappa = 1.
-        mean = Mean(x)
-        var = Var(x)
-        if var < 0:
-            error = 0.
-        else:
-            error = sqrt(Var(x)/N)
-    return mean, error, kappa, N
+    return StatsLib.Stats(x.ctypes,len(x))

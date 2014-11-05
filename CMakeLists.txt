@@ -153,6 +153,7 @@ INCLUDE("${SCAFFOLD_DIR}/CMakeLists.txt")
 #-------------------------------------------------------------------
 # Sources and target
 #-------------------------------------------------------------------
+# simpimc
 SET (SRCS ${SRCS} src/main.cpp
   src/AlgorithmClass.cpp
   src/BeadClass.cpp
@@ -185,3 +186,14 @@ SET (SRCS ${SRCS} src/main.cpp
 ADD_EXECUTABLE(simpimc ${SRCS})
 TARGET_LINK_LIBRARIES(simpimc ${LIBS})
 INSTALL(TARGETS simpimc DESTINATION $ENV{HOME}/bin)
+
+# Stats library
+ExternalProject_Add(
+  stats
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/scripts
+  CONFIGURE_COMMAND ""
+  BUILD_IN_SOURCE 1
+  BUILD_COMMAND ${CMAKE_CXX_COMPILER} -Wall -O3 -ffast-math -shared Stats.cpp -o stats.so
+  INSTALL_COMMAND ""
+)
+
