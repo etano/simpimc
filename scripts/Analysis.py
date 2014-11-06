@@ -47,8 +47,11 @@ class Observable:
 class Scalar(Observable):
     def GetData(self, files):
         data = []
-        for f in files:
+        for file in files:
+            f = h5.File(file,'r')
             data.append(f[self.prefix+self.section+"/x"][startCut:])
+            f.flush()
+            f.close()
         return data
 
     def DoStatistics(self, data):
@@ -70,10 +73,13 @@ class Scalar(Observable):
 # Histogram variables
 class Histogram(Observable):
     def GetData(self, files):
-        xs = files[0][self.prefix+self.section+"/x"]
-        ys = []
-        for f in files:
+        xs,ys = [],[]
+        for file in files:
+            f = h5.File(file,'r')
+            xs = f[self.prefix+self.section+"/x"]
             ys.append(np.transpose(f[self.prefix+self.section+"/y"][startCut:]))
+            f.flush()
+            f.close()
         return (xs, ys)
 
     def DoStatistics(self, data):
@@ -100,10 +106,13 @@ class Histogram(Observable):
 # Pair variables
 class Pair(Observable):
     def GetData(self, files):
-        xs = files[0][self.prefix+self.section+"/x"]
-        ys = {}
-        for f in files:
+        xs,ys = [],{}
+        for file in files:
+            f = h5.File(file,'r')
+            xs = f[self.prefix+self.section+"/x"]
             pairs = f[self.prefix+self.section+"/y"][startCut:]
+            f.flush()
+            f.close()
             for pair in pairs:
                 try:
                     ys[pair[0]] += pair[1]
@@ -165,21 +174,18 @@ except:
 
 # Get h5 files
 files = []
-for fname in sys.argv[firstArg:]:
-    f = h5.File(fname,'r')
-    files.append(f)
+for file in sys.argv[firstArg:]:
+    files.append(file)
 
 # Get observables
 obs = []
-ob_names = GetSubsections(files[0],'/')
+f0 = h5.File(files[0],'r')
+ob_names = GetSubsections(f0,'/')
 for ob_name in ob_names:
-    AddObservable(files[0], ob_name, obs, startCut)
+    AddObservable(f0, ob_name, obs, startCut)
+f0.flush()
+f0.close()
 
 # Compute statistics
 for ob in obs:
     ob.Process(files)
-
-# Delete file pointers
-for f in files:
-    f.flush()
-    f.close()

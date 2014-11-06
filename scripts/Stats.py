@@ -44,10 +44,10 @@ def StdDev(x):
 StatsLib.UnweightedAvg.argtypes = [npct_double, npct_double, npct_double, ct.c_int]
 StatsLib.UnweightedAvg.restype = np.ctypeslib.ndpointer(dtype=ct.c_double, shape=(3,))
 def UnweightedAvg(stats):
+    N = len(stats)
     means = stats[:,0]
     errors = stats[:,1]
     kappas = stats[:,2]
-    N = len(stats)
     return StatsLib.UnweightedAvg(np.ascontiguousarray(means), np.ascontiguousarray(errors), np.ascontiguousarray(kappas), N)
 
 # Statistics with auto-correlation

@@ -193,7 +193,7 @@ ExternalProject_Add(
   SOURCE_DIR ${CMAKE_SOURCE_DIR}/scripts
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE 1
-  BUILD_COMMAND ${CMAKE_CXX_COMPILER} -Wall -O3 -ffast-math -shared Stats.cpp -o stats.so
+  BUILD_COMMAND ${CMAKE_CXX_COMPILER} -Wall -O3 -ffast-math -shared -fPIC Stats.cpp -o stats.so
   INSTALL_COMMAND ""
 )
 

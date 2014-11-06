@@ -19,6 +19,14 @@ extern "C" {
     return tot/N;
   }
 
+  RealType RootMean2(RealType* x, int N)
+  {
+    RealType tot = 0.;
+    for (int i=0; i<N; ++i)
+      tot += x[i]*x[i];
+    return sqrt(tot)/N;
+  }
+
   RealType Var(RealType* x, int N)
   {
     RealType m2 = Mean2(x,N);
@@ -58,7 +66,7 @@ extern "C" {
   {
     RealType* stats = new RealType[3];
     stats[0] = Mean(means,N);
-    stats[1] = Mean2(errors,N);
+    stats[1] = RootMean2(errors,N);
     stats[2] = Mean(kappas,N);
     return stats;
   }
