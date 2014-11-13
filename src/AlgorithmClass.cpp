@@ -18,7 +18,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
     else if (type == "HarmonicTrap")
       actions.push_back(new Trap(path,actionInputs[i],out));
     else if (type == "Nodal")
-      actions.push_back(new Nodal(path,actionInputs[i],out));
+      actions.push_back(new Nodal(path,rng,actionInputs[i],out));
     else if (type == "DavidPairAction")
       actions.push_back(new DavidPairAction(path,actionInputs[i],out));
     else if (type == "IlkkaPairAction")

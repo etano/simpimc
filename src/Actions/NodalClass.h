@@ -2,6 +2,7 @@
 #define NodalClass_H
 
 #include "ActionClass.h"
+#include "../Utils/RNG/RNGClass.h"
 #include <einspline/multi_bspline.h>
 #include <einspline/bspline.h>
 
@@ -17,10 +18,7 @@ protected:
   int startB, endB;
 
   // Rho matrix
-  field<Tmatrix> g, g_c, c, c_c;
-  field<bool> c_good;
   field<RealType> rho_F, rho_F_c;
-  void SetCij(int iB);
   RealType GetGij(Tvector &r, int sliceDiff);
 
   // Ref beads
@@ -31,10 +29,13 @@ protected:
   field<UBspline_1d_d*> rho_free_r_splines;
   void SetupSpline();
 
+  // RNG
+  RNG &rng;
+
 public:
   // Constructor
-  Nodal(Path &path, Input &in, IOClass &out)
-    : Action(path,in,out)
+  Nodal(Path &path, RNG &t_rng, Input &in, IOClass &out)
+    : Action(path,in,out), rng(t_rng)
   {
     Init(in);
   }
