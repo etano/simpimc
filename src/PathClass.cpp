@@ -448,13 +448,13 @@ void Path::SetCycleCount(int iS, vector<int>& cycles)
 {
   int offset;
   GetSpeciesInfo(speciesList[iS]->name,iS,offset);
-  Ivector alreadyCounted;
-  alreadyCounted.zeros(speciesList[iS]->nPart);
+  Ivector alreadyCounted(speciesList[iS]->nPart);
+  alreadyCounted.zeros();
   for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-    if (!alreadyCounted(iP)) {
+    if (!alreadyCounted(iP-offset)) {
       int cycleLength = 1;
       Bead* b = bead(iP,nBead-1);
-      alreadyCounted(iP) = 1;
+      alreadyCounted(iP-offset) = 1;
       while (GetNextBead(b,1) != bead(iP,0)) {
         cycleLength++;
         b = GetNextBead(b,nBead);//bead(b->next->p,nBead-1);
