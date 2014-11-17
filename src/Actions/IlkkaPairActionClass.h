@@ -16,7 +16,6 @@ public:
   }
 
   // Parameters
-  string type1, type2;
   int nOrder;
   RealType kCutoff;
 

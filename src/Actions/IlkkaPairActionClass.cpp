@@ -149,7 +149,7 @@ void IlkkaPairAction::ReadFile(string fileName)
 
     // Read in k
     int nk_v;
-    in.Read("du/diag/nk", nk_v);
+    in.Read("v/diag/nk", nk_v);
     Tvector k_v(nk_v);
     Tvector tmpVLong_k(nk_v);
     in.Read("v/diag/k",k_v);
