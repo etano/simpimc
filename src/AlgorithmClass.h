@@ -15,6 +15,7 @@
 #include "Actions/CoulombClass.h"
 #include "Actions/KineticClass.h"
 #include "Actions/NodalClass.h"
+#include "Actions/BarePairActionClass.h"
 #include "Actions/DavidPairActionClass.h"
 #include "Actions/IlkkaPairActionClass.h"
 #include "Actions/TrapClass.h"

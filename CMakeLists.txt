@@ -168,6 +168,7 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Actions/KineticClass.cpp
   src/Actions/PairActionClass.cpp
   src/Actions/NodalClass.cpp
+  src/Actions/BarePairActionClass.cpp
   src/Actions/DavidPairActionClass.cpp
   src/Actions/IlkkaPairActionClass.cpp
   src/Actions/TrapClass.cpp
