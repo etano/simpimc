@@ -171,9 +171,9 @@ RealType Nodal::GetGij(Tvector& r, int sliceDiff)
 }
 
 void Nodal::Accept() {
-  int nCheck = nPart;
-  for (int iB=startB; iB<=endB; ++iB)
-    rho_F_c(iB) = rho_F(iB);
+  //int nCheck = nPart;
+  //for (int iB=startB; iB<=endB; ++iB)
+  //  rho_F_c(iB) = rho_F(iB);
 }
 
 void Nodal::Write() {}
