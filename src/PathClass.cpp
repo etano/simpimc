@@ -35,7 +35,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   nSpecies = speciesInput.size();
   nPart = 0;
   for (int iS=0; iS<nSpecies; iS++) {
-    speciesList.push_back(new Species(speciesInput[iS],out,iS,nBead,nD));
+    speciesList.push_back(new Species(speciesInput[iS],out,iS));
     nPart += speciesList[iS]->nPart;
   }
   out.Write("System/nPart",nPart);
