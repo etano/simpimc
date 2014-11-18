@@ -57,7 +57,7 @@ class Scalar(Observable):
     def DoStatistics(self, data):
         dStats = []
         for d in data:
-            dStats.append(Stats.stats(d))
+            dStats.append(Stats.stats(np.array(d)))
         stats = Stats.UnweightedAvg(np.array(dStats))
         return stats
 
@@ -76,7 +76,7 @@ class Histogram(Observable):
         xs,ys = [],[]
         for file in files:
             f = h5.File(file,'r')
-            xs = f[self.prefix+self.section+"/x"]
+            xs = np.array(f[self.prefix+self.section+"/x"])
             ys.append(np.transpose(f[self.prefix+self.section+"/y"][startCut:]))
             f.flush()
             f.close()
@@ -88,7 +88,7 @@ class Histogram(Observable):
         for i in range(len(xs)):
             yStats = []
             for y in ys:
-                yStats.append(Stats.stats(y[i]))
+                yStats.append(Stats.stats(np.array(y[i])))
             stats.append(Stats.UnweightedAvg(np.array(yStats)))
         return (xs, stats)
 
