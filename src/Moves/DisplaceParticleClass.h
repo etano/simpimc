@@ -5,19 +5,26 @@
 
 class DisplaceParticle : public Move
 {
-private: 
-  int DoDisplaceParticle( const int iPart );
+private:
+  string species;
+  int iSpecies, offset;
+  vector<Bead*> affBeads;
+  RealType stepSize;
 protected:
 
 public:
-  DisplaceParticle( Path& pathIn , RNG& rngIn , double perAcceptDesiredIn , int nEqSweepIn , int nEqStepIn , int moveSkipIn )
-    : Move( pathIn , rngIn , perAcceptDesiredIn , nEqSweepIn , nEqStepIn , moveSkipIn )
-  { 
-    moveLabel = "Displace Particle";
-    stepSize = 1.0;
+  // Constructor
+  DisplaceParticle(Path &tmpPath, RNG &tmpRNG, vector<Action*> &actionList, Input &in, IOClass &out)
+    : Move(tmpPath, tmpRNG, actionList, in, out)
+  {
+    Init(in);
   }
 
-  virtual void MakeMove();
+  virtual void Init(Input &in);
+  virtual int Attempt();
+  virtual void Accept();
+  virtual void Reject();
+
 };
 
 #endif

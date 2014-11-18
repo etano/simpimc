@@ -36,6 +36,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
     string type = moveInputs[i].getAttribute<string>("type");
     if (type == "Bisect")
       events.push_back(new Bisect(path,rng,actions,moveInputs[i],out));
+    else if (type == "DisplaceParticle")
+      events.push_back(new DisplaceParticle(path,rng,actions,moveInputs[i],out));
     else if (type == "PermBisect")
       events.push_back(new PermBisect(path,rng,actions,moveInputs[i],out));
     else if (type == "PermBisectIterative")

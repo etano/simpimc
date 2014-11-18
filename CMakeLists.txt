@@ -174,6 +174,7 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Actions/TrapClass.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp
+  src/Moves/DisplaceParticleClass.cpp
   src/Moves/PermBisectClass.cpp
   src/Moves/PermBisectIterativeClass.cpp
   src/Observables/ObservableClass.cpp

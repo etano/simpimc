@@ -21,6 +21,7 @@
 #include "Actions/TrapClass.h"
 #include "Moves/MoveClass.h"
 #include "Moves/BisectClass.h"
+#include "Moves/DisplaceParticleClass.h"
 #include "Moves/PermBisectClass.h"
 #include "Moves/PermBisectIterativeClass.h"
 #include "Observables/ObservableClass.h"

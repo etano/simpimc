@@ -1,37 +1,80 @@
 #include "DisplaceParticleClass.h"
 
-void DisplaceParticle::MakeMove()
+void DisplaceParticle::Init(Input &in)
 {
-  for (unsigned int iPart = 0; iPart < path.nPart; iPart += 1) {
-    nAccept += DoDisplaceParticle(iPart);
-    nAttempt++;
-  }
+  species = in.getAttribute<string>("species");
+  path.GetSpeciesInfo(species,iSpecies,offset);
+  stepSize = in.getAttribute<RealType>("stepSize");
 }
 
-// Make a single particle displace move
-int DisplaceParticle::DoDisplaceParticle( const int iPart )
+// Accept current move
+void DisplaceParticle::Accept()
 {
-  path.partAction(iPart, path.storeRp); // Store coordinates
+  // Move Accepted, so copy new coordinates
+  path.storeR(affBeads);
+  path.storeRhoKP(affBeads);
+  for (int iB=0; iB<path.nBead; ++iB)
+    path.storeRhoK(iB,iSpecies);
 
-  path.mode = 0;
-  double V0 = path.getV(iPart);  // Calculate old potential action
-  double K0 = path.getK(iPart, 0) + path.getK(iPart, path.nBead-1);  // Calculate old kinetic action
-  double A0 = V0 + K0;
-  
-  // Make a whole particle move  
+  // Call accept for each action
+  for (int iAction=0; iAction<actionList.size(); ++iAction)
+    actionList[iAction]->Accept();
+}
+
+// Reject current move
+void DisplaceParticle::Reject()
+{
+  // Move rejected, so return old coordinates
+  path.restoreR(affBeads);
+  path.restoreRhoKP(affBeads);
+  for (int iB=0; iB<path.nBead; ++iB)
+    path.restoreRhoK(iB,iSpecies);
+
+  // Call reject for each action
+  for (int iAction=0; iAction<actionList.size(); ++iAction)
+    actionList[iAction]->Reject();
+}
+
+// Displace particle Move
+int DisplaceParticle::Attempt()
+{
+  unsigned int iP = offset + rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
+
+  // New sampling
+  path.SetMode(1);
+  Tvector dr(path.nD);
   rng.unifRand(dr, stepSize);
-  for (unsigned int iBead = 0; iBead < path.nBead; iBead += 1) path.bead(iPart,iBead) -> move(dr);
 
-  path.mode = 1;
-  double V1 = path.getV(iPart);  // Calculate new potential action 
-  double K1 = path.getK(iPart, 0) + path.getK(iPart, path.nBead-1);  // Calculate new kinetic action 
-  double A1 = V1 + K1;
+  // Set which particles are affected by the move
+  vector<int> particles;
+  particles.push_back(iP);
 
-  // Decide whether or not to accept move
-  if ((A0 - A1) < log(rng.unifRand())) {    
-    path.partAction(iPart, path.restoreRp); // Restore coordinates
-    return 0;   
+  // Set which beads are affected by the move
+  Bead *b;
+  affBeads.clear();
+  for(b = path(iP,0); b != path(iP,path.nBead-1); b = b -> next) {
+    affBeads.push_back(b);
+    b->move(dr);
   }
-   
-  return 1; 
+
+  // Calculate action change
+  RealType oldAction = 0.;
+  RealType newAction = 0.;
+  for (int iAction=0; iAction<actionList.size(); ++iAction) {
+    // Old action
+    path.SetMode(0);
+    oldAction += actionList[iAction]->GetAction(0, path.nBead, particles, 0);
+
+    // New action
+    path.SetMode(1);
+    newAction += actionList[iAction]->GetAction(0, path.nBead, particles, 0);
+  }
+
+  RealType logAcceptProb = oldAction - newAction;
+
+  // Metropolis reject step
+  if (logAcceptProb < log(rng.unifRand()))
+    return 0;
+  else
+   return 1;
 }
