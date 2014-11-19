@@ -19,31 +19,43 @@ void PathDump::Write()
   if (!(nWriteCalls % skip)) {
     nDump += 1;
 
-    // Get positions
-    Tmatrix pathPositions(path.nPart*path.nBead,path.nD);
-    for (int iP=0; iP<path.nPart; ++iP)
-      for (int iB=0; iB<path.nBead; ++iB)
-        for (int iD=0; iD<path.nD; ++iD)
-          pathPositions(iP*path.nBead + iB,iD) = path(iP,iB)->r(iD);
+    // Loop through species
+    for (int iS=0; iS<path.nSpecies; ++iS) {
+       // Get species info
+      int offset;
+      path.GetSpeciesInfo(path.speciesList[iS]->name,iS,offset);
+      int nPart = path.speciesList[iS]->nPart;
 
-    // Get permutation
-    Tmatrix pathPermutation(path.nPart,2);
-    for (int iP=0; iP<path.nPart; ++iP) {
-      pathPermutation(iP,0) = path(iP,0)->prev->p;
-      pathPermutation(iP,1) = path(iP,path.nBead-1)->next->p;
+      // Get positions
+      Tmatrix pathPositions(nPart*path.nBead,path.nD);
+      for (int iP=0; iP<nPart; ++iP)
+        for (int iB=0; iB<path.nBead; ++iB)
+          for (int iD=0; iD<path.nD; ++iD)
+            pathPositions(iP*path.nBead + iB,iD) = path(iP+offset,iB)->r(iD);
+
+      // Get permutation
+      Tmatrix pathPermutation(nPart,2);
+      for (int iP=0; iP<nPart; ++iP) {
+        pathPermutation(iP,0) = path(iP+offset,0)->prev->p;
+        pathPermutation(iP,1) = path(iP+offset,path.nBead-1)->next->p;
+      }
+
+      // Write to file
+      if (firstTime) {
+        out.CreateGroup(prefix+path.speciesList[iS]->name+"/");
+        out.Write(prefix+path.speciesList[iS]->name+"/nDump", nDump);
+        out.CreateExtendableDataSet(prefix+path.speciesList[iS]->name+"/", "positions", pathPositions);
+        out.CreateExtendableDataSet(prefix+path.speciesList[iS]->name+"/", "permutation", pathPermutation);
+      } else {
+        out.Rewrite(prefix+path.speciesList[iS]->name+"/nDump", nDump);
+        out.AppendDataSet(prefix+path.speciesList[iS]->name+"/", "positions", pathPositions);
+        out.AppendDataSet(prefix+path.speciesList[iS]->name+"/", "permutation", pathPermutation);
+      }
+
     }
 
-    // Write to file
-    if (firstTime) {
+    if (firstTime)
       firstTime = 0;
-      out.Write("/Observables/"+name+"/nDump", nDump);
-      out.CreateExtendableDataSet("/Observables/"+name+"/", "positions", pathPositions);
-      out.CreateExtendableDataSet("/Observables/"+name+"/", "permutation", pathPermutation);
-    } else {
-      out.Rewrite("/Observables/"+name+"/nDump", nDump);
-      out.AppendDataSet("/Observables/"+name+"/", "positions", pathPositions);
-      out.AppendDataSet("/Observables/"+name+"/", "permutation", pathPermutation);
-    }
 
     Reset();
   }

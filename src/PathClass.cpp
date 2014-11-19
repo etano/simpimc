@@ -29,14 +29,16 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   tau = beta/(1.*nBead);
   out.Write("System/tau",tau);
 
-  // Initialize Particles
+  // Initialize species
   out.CreateGroup("System/Particles");
   vector<Input> speciesInput = in.getChild("Particles").getChildList("Species");
   nSpecies = speciesInput.size();
   nPart = 0;
+  int offset = 0;
   for (int iS=0; iS<nSpecies; iS++) {
-    speciesList.push_back(new Species(speciesInput[iS],out,iS));
+    speciesList.push_back(new Species(speciesInput[iS],out,iS,offset,nD,nBead));
     nPart += speciesList[iS]->nPart;
+    offset = nPart;
   }
   out.Write("System/nPart",nPart);
 
@@ -61,7 +63,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
     GetSpeciesInfo(speciesList[iS]->name,iS,offset);
     for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
       for (unsigned int iB=0; iB<nBead; iB++) {
-        bead(iP,iB) = new Bead(nD,*speciesList[iS],iP,iB,unique_id);
+        bead(iP,iB) = new Bead(nD,iS,iP,iB,unique_id);
         unique_id++;
       }
     }
@@ -81,8 +83,9 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
     }
   }
 
-  // Initialize paths
-  InitPaths(in,out,rng);
+  // Initialize paths within each species
+  for (int iS=0; iS<nSpecies; iS++)
+    speciesList[iS]->InitPaths(speciesInput[iS],out,rng,bead,InterComm,L);
 
   // Reset kCut
   kC = 0.;
@@ -300,7 +303,7 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
   vector<int> species;
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
-    int iS = bead(iP,beadLoop(b0))->species.iS;
+    int iS = bead(iP,beadLoop(b0))->s;
     species.push_back(iS);
   }
 
@@ -314,7 +317,7 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
   // Update C values of changed particles
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
-    int iS = bead(iP,0)->species.iS;
+    int iS = bead(iP,0)->s;
     for (int iB=b0; iB<b1; iB+=skip) {
       // Calculate new values
       CalcRhoKP(bead(iP,beadLoop(iB)));
@@ -339,7 +342,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
   vector<int> species;
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
-    int iS = bead(iP,beadLoop(b0))->species.iS;
+    int iS = bead(iP,beadLoop(b0))->s;
     species.push_back(iS);
   }
 
@@ -353,7 +356,7 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
   // Update C values of changed particles
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
-    int iS = bead(iP,0)->species.iS;
+    int iS = bead(iP,0)->s;
     for (int iB=b0; iB<b1; iB+=skip) {
       // Add in new values
       SetMode(1);

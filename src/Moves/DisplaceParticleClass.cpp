@@ -38,23 +38,22 @@ void DisplaceParticle::Reject()
 // Displace particle Move
 int DisplaceParticle::Attempt()
 {
+  // Set which particles are affected by the move
   unsigned int iP = offset + rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
+  vector<int> particles;
+  particles.push_back(iP);
 
   // New sampling
   path.SetMode(1);
   Tvector dr(path.nD);
   rng.unifRand(dr, stepSize);
 
-  // Set which particles are affected by the move
-  vector<int> particles;
-  particles.push_back(iP);
-
   // Set which beads are affected by the move
-  Bead *b;
+  // and move them
   affBeads.clear();
-  for(b = path(iP,0); b != path(iP,path.nBead-1); b = b -> next) {
-    affBeads.push_back(b);
-    b->move(dr);
+  for(unsigned int iB=0; iB<path.nBead; ++iB) {
+    affBeads.push_back(path(iP,iB));
+    path(iP,iB)->move(dr);
   }
 
   // Calculate action change
@@ -76,5 +75,5 @@ int DisplaceParticle::Attempt()
   if (logAcceptProb < log(rng.unifRand()))
     return 0;
   else
-   return 1;
+    return 1;
 }

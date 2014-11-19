@@ -57,10 +57,10 @@ RealType Coulomb::GetAction(int b0, int b1, vector<int> &particles, int level)
     for (int iB=b0; iB<b1; iB+=skip) {
       int iS = 0;
       int offset = 0;
-      if (path(iP,iB)->species.name == speciesA) {
+      if (path(iP,iB)->s == iSpeciesA) {
         iS = iSpeciesB;
         offset = offsetB;
-      } else if (path(iP,iB)->species.name == speciesB) {
+      } else if (path(iP,iB)->s == iSpeciesB) {
         iS = iSpeciesA;
         offset = offsetA;
       } else

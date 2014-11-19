@@ -159,7 +159,6 @@ SET (SRCS ${SRCS} src/main.cpp
   src/BeadClass.cpp
   src/LoopClass.cpp
   src/PathClass.cpp
-  src/InitPaths.cpp
   src/SimulationClass.cpp
   src/SpeciesClass.cpp
   src/WriteClass.cpp

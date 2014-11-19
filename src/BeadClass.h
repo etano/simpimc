@@ -2,7 +2,6 @@
 #define BeadClass_H
 
 #include "Utils/config.h"
-#include "SpeciesClass.h"
 
 class Bead
 {
@@ -12,17 +11,14 @@ protected:
 
 public:
   // Constructor
-  Bead(unsigned int tmpND, Species &tmpSpecies, unsigned int tmpP, unsigned int tmpB, unsigned int tmpId)
-    : nD(tmpND), species(tmpSpecies), p(tmpP), b(tmpB), id(tmpId)
+  Bead(unsigned int tmpND, int tmpS, unsigned int tmpP, unsigned int tmpB, unsigned int tmpId)
+    : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), id(tmpId)
   {
     self = this;
     r.zeros(nD);
     r(0) = 0.5*(p - 1.);
     storeR();
-    s = species.iS;
   }
-
-  Species &species;
 
   inline void store();
   inline void restore();
