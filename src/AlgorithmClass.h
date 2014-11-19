@@ -12,7 +12,6 @@
 #include "Utils/IO/IOClass.h"
 #include "Utils/RNG/RNGClass.h"
 #include "Actions/ActionClass.h"
-#include "Actions/CoulombClass.h"
 #include "Actions/KineticClass.h"
 #include "Actions/NodalClass.h"
 #include "Actions/BarePairActionClass.h"

@@ -3,7 +3,7 @@
 void DisplaceParticle::Init(Input &in)
 {
   species = in.getAttribute<string>("species");
-  path.GetSpeciesInfo(species,iSpecies,offset);
+  path.GetSpeciesInfo(species,iSpecies);
   stepSize = in.getAttribute<RealType>("stepSize");
 }
 
@@ -39,9 +39,10 @@ void DisplaceParticle::Reject()
 int DisplaceParticle::Attempt()
 {
   // Set which particles are affected by the move
-  unsigned int iP = offset + rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
-  vector<int> particles;
-  particles.push_back(iP);
+  unsigned int iP = rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
+  vector< pair<int,int> > particles;
+  pair<int,int> particle(iSpecies,iP);
+  particles.push_back(particle);
 
   // New sampling
   path.SetMode(1);
@@ -52,8 +53,8 @@ int DisplaceParticle::Attempt()
   // and move them
   affBeads.clear();
   for(unsigned int iB=0; iB<path.nBead; ++iB) {
-    affBeads.push_back(path(iP,iB));
-    path(iP,iB)->move(dr);
+    affBeads.push_back(path(iSpecies,iP,iB));
+    path(iSpecies,iP,iB)->move(dr);
   }
 
   // Calculate action change

@@ -21,7 +21,7 @@ void PermBisectIterative::Init(Input &in)
     targetRatio = in.getAttribute<RealType>("targetRatio");
 
   // Set species things
-  path.GetSpeciesInfo(species,iSpecies,offset);
+  path.GetSpeciesInfo(species,iSpecies);
   nPart = path.speciesList[iSpecies]->nPart;
 
   // Initialize constant cofactor
@@ -47,9 +47,9 @@ void PermBisectIterative::Accept()
     path.sign *= -1;
 
   // Accept move, so store things
-  for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
-    path.bead(iP,path.beadLoop(bead1)) -> storePrev();
-    path.bead(iP,path.beadLoop(bead1-1)) -> storeNext();
+  for (unsigned int iP=0; iP<nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
+    path(iSpecies,iP,bead1) -> storePrev();
+    path(iSpecies,iP,bead1-1) -> storeNext();
   }
   if (nPermPart > 1) // only need to reassign particle labels if actual permutation
     assignParticleLabels();
@@ -70,9 +70,9 @@ void PermBisectIterative::Reject()
     permAttempt(nPermPart-1) += 1;
 
     // Restore things
-    for (unsigned int iP=offset; iP<offset+nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
-      path.bead(iP,path.beadLoop(bead1)) -> restorePrev();
-      path.bead(iP,path.beadLoop(bead1-1)) -> restoreNext();
+    for (unsigned int iP=0; iP<nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
+      path(iSpecies,iP,bead1) -> restorePrev();
+      path(iSpecies,iP,bead1-1) -> restoreNext();
     }
     path.restoreR(affBeads);
     path.restoreRhoKP(affBeads);
@@ -116,17 +116,17 @@ int PermBisectIterative::Attempt()
   nPermPart = c.part.size();
 
   // Set up pointers
-  vector<int> particles;
+  vector< pair<int,int> > particles;
   field<Bead*> beadI(nPermPart), beadFm1(nPermPart), beadF(nPermPart);
   for (unsigned int i=0; i<nPermPart; i++) {
-    beadI(i) = path.bead(c.part(i),bead0);
+    beadI(i) = path(iSpecies,c.part(i),bead0);
     beadFm1(i) = beadI(i)->nextB(nBisectBeads-1);
     beadF(i) = beadFm1(i)->next;
-    particles.push_back(c.part(i));
+    particles.push_back(std::make_pair(iSpecies,c.part(i)));
   }
   if (rollOver) {
     for (int i=0; i<nPermPart; ++i)
-      particles.push_back(beadF(i)->p);
+      particles.push_back(std::make_pair(iSpecies,beadF(i)->p));
     sort(particles.begin(), particles.end());
     particles.erase(unique(particles.begin(), particles.end()), particles.end());
   }
@@ -234,7 +234,7 @@ void PermBisectIterative::updatePermTable()
   // Set initial and final beads
   field<Bead*> b0(nPart), b1(nPart);
   for (unsigned int iP=0; iP<nPart; iP++) {
-    b0(iP) = path.bead(iP+offset,bead0);
+    b0(iP) = path(iSpecies,iP,bead0);
     b1(iP) = b0(iP) -> nextB(nBisectBeads);
   }
 
@@ -314,8 +314,6 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
 
   // Set particles
   c.part = ps;
-  for (int i=0; i<nPerm; ++i)
-    c.part(i) += offset;
 
   // Set perms
   c.perm.set_size(nPerm);
@@ -351,18 +349,18 @@ void PermBisectIterative::assignParticleLabels()
 {
   Bead *b;
 
-  for (unsigned int iP=offset; iP<offset+nPart; iP++) {
-    b = path.bead(iP,path.beadLoop(bead1-1));
+  for (unsigned int iP=0; iP<nPart; iP++) {
+    b = path(iSpecies,iP,bead1-1);
     for (unsigned int iB=path.beadLoop(bead1-1); iB<path.nBead; iB++) {
-      path.bead(iP,iB) = b;
-      path.bead(iP,iB)->p = iP;
+      path.speciesList[iSpecies]->bead(iP,iB) = b; // fixme: make cleaner using operator
+      path(iSpecies,iP,iB)->p = iP;
       b = b->next;
     }
   }
 
-  //for (unsigned int iP=offset; iP<offset+nPart; iP++) {
+  //for (unsigned int iP=0; iP<nPart; iP++) {
   //  for (unsigned int iB=0; iB<path.nBead; iB++) {
-  //    cout << iP << " " << iB << "   " << path.bead(iP,iB)->prev->p << " " << path.bead(iP,iB)->p << " " << path.bead(iP,iB)->next->p << "   " << path.bead(iP,iB)->prev->b << " " << path.bead(iP,iB)->b << " " << path.bead(iP,iB)->next->b << endl;
+  //    cout << iP << " " << iB << "   " << path(iSpecies,iP,iB)->prev->p << " " << path(iSpecies,iP,iB)->p << " " << path(iSpecies,iP,iB)->next->p << "   " << path(iSpecies,iP,iB)->prev->b << " " << path(iSpecies,iP,iB)->b << " " << path(iSpecies,iP,iB)->next->b << endl;
   //  }
   //}
 }

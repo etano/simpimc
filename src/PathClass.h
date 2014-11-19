@@ -39,7 +39,7 @@ public:
   // Species
   unsigned int nSpecies;
   vector<Species*> speciesList;
-  void GetSpeciesInfo(string species, int &iSpecies, int &offset);
+  void GetSpeciesInfo(string species, int &iSpecies);
 
   // Fast math
   bool approximate;
@@ -51,10 +51,9 @@ public:
   bool GetMode() { return mode; };
 
   // Beads
-  field<Bead*> bead;
   vector<Bead*>::const_iterator beadIter;
   Ivector beadLoop;
-  Bead* operator() (int iP, int iB) { return bead(iP,beadLoop(iB)); };
+  Bead* operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
   void storeR(vector<Bead*> &affBeads);
   void restoreR(vector<Bead*> &affBeads);
   inline Tvector& GetR(Bead* b) { return mode ? b->r : b->rC; };
@@ -64,7 +63,7 @@ public:
   inline void Dr(Bead* b0, Tvector &r1, Tvector &dr) { Dr(GetR(b0), r1, dr); };
   inline void Dr(Bead* b0, Bead* b1, Tvector &dr) { Dr(GetR(b0), GetR(b1), dr); };
   inline void RBar(Bead* b0, Bead* b1, Tvector &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
-  inline void DrDrPDrrP(const int b0, const int b1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r0, Tvector &r1, Tvector &dr);
+  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r0, Tvector &r1, Tvector &dr);
   void PrintPath();
 
   // Periodic Boundary Condition
@@ -84,8 +83,9 @@ public:
   void SetupKs(RealType kCut);
   void InitRhoK();
   void UpdateRhoK();
-  void UpdateRhoK(int b0, int b1, vector<int> &particles, int level);
-  void UpdateRhoKP(int b0, int b1, vector<int> &particles, int level);
+  void UpdateRhoK(int b0, int b1, vector< pair<int,int> > &particles, int level);
+  void UpdateRhoKP(int b0, int b1, vector< pair<int,int> > &particles, int level);
+  void UpdateRhoKP(int b0, int b1, int iS, vector<int> &particles, int level);
   void CalcC(Tvector &r);
   void AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm);
   inline void CalcRhoKP(Bead* b);
@@ -125,10 +125,10 @@ public:
 };
 
 // Get dr, drP, and drrP
-inline void Path::DrDrPDrrP(const int b0, const int b1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r, Tvector &rP, Tvector &rrP)
+inline void Path::DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r, Tvector &rP, Tvector &rrP)
 {
-  Dr(bead(p1,beadLoop(b0)),bead(p0,beadLoop(b0)),r);
-  Dr(bead(p1,beadLoop(b1)),bead(p0,beadLoop(b1)),rP);
+  Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
+  Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);
   rMag = mag(r);
   rPMag = mag(rP);
   Dr(r,rP,rrP);

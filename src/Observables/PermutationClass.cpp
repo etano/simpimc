@@ -9,7 +9,7 @@ void Permutation::Init(Input &in)
   out.Write("/Observables/"+name+"/sectorMax", sectorMax);
 
   // Set up permutation sectors
-  path.GetSpeciesInfo(species, iSpecies, offset);
+  path.GetSpeciesInfo(species, iSpecies);
   cycles.set_size(path.speciesList[iSpecies]->nPart);
   path.SetupPermSectors(path.speciesList[iSpecies]->nPart, sectorMax);
   firstSector = true;

@@ -11,9 +11,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   vector<Input> actionInputs = in.getChild("Actions").getChildList("Action");
   for (int i=0; i<actionInputs.size(); ++i) {
     string type = actionInputs[i].getAttribute<string>("type");
-    if (type == "Coulomb")
-      actions.push_back(new Coulomb(path,actionInputs[i],out));
-    else if (type == "Kinetic")
+    if (type == "Kinetic")
       actions.push_back(new Kinetic(path,actionInputs[i],out));
     else if (type == "HarmonicTrap")
       actions.push_back(new Trap(path,actionInputs[i],out));

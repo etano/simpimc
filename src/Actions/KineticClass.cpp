@@ -22,11 +22,9 @@ RealType Kinetic::DActionDBeta()
     if (!fequal(lambda,0.,1e-10)) {
       RealType i4LambdaTau = 1./(4.*lambda*path.tau);
       RealType gaussProd, dist, dist2i4LambdaTau, expPart, scalarNumSum;
-      int offset;
-      GetOffset(path.speciesList[iS]->name,iS,offset);
-      for (int iP=offset; iP<offset+path.speciesList[iS]->nPart; iP++) {
+      for (int iP=0; iP<path.speciesList[iS]->nPart; iP++) {
         for (int iB=0; iB<path.nBead; iB++) {
-          path.Dr(path(iP,iB),path.GetNextBead(path(iP,iB),1),dr);
+          path.Dr(path(iS,iP,iB),path.GetNextBead(path(iS,iP,iB),1),dr);
           gaussProd = 1.;
           gaussSum.zeros();
           numSum.zeros();
@@ -60,7 +58,7 @@ RealType Kinetic::DActionDBeta()
   return tot;
 }
 
-RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
+RealType Kinetic::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
 {
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
@@ -68,13 +66,13 @@ RealType Kinetic::GetAction(int b0, int b1, vector<int> &particles, int level)
   Tvector dr(path.nD);
   Bead *beadA, *beadB, *beadC, *beadF;
   for (int p=0; p<particles.size(); ++p) {
-    int iP = particles[p];
-    int iS = path(iP,b0)->s;
+    int iS = particles[p].first;
+    int iP = particles[p].second;
     RealType lambda = path.speciesList[iS]->lambda;
     if (!fequal(lambda,0.,1e-10)) {
       RealType i4LambdaTau = 1./(4.*lambda*levelTau);
       RealType gaussProd, gaussSum, dist;
-      beadA = path(iP,b0);
+      beadA = path(iS,iP,b0);
       beadF = path.GetNextBead(beadA,b1-b0);
       while(beadA != beadF) {
         beadB = path.GetNextBead(beadA,skip);

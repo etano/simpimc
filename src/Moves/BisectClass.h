@@ -8,7 +8,6 @@ class Bisect : public Move
 private:
   string species;
   int iSpecies;
-  int offset;
   int nImages;
   unsigned int nLevel, nBisectBeads;
   unsigned int bead0, bead1;

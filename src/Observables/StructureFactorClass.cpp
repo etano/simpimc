@@ -5,8 +5,8 @@ void StructureFactor::Init(Input &in)
   // Read in species info
   speciesA = in.getAttribute<string>("speciesA");
   speciesB = in.getAttribute<string>("speciesB");
-  path.GetSpeciesInfo(speciesA, iSpeciesA, offsetA);
-  path.GetSpeciesInfo(speciesB, iSpeciesB, offsetB);
+  path.GetSpeciesInfo(speciesA, iSpeciesA);
+  path.GetSpeciesInfo(speciesB, iSpeciesB);
   kCut = in.getAttribute<RealType>("kCut", path.kC);
 
   // Resize

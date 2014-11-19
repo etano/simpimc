@@ -20,9 +20,37 @@ void Species::Init(Input &in, IOClass &out)
 
   // Set defaults
   needUpdateRhoK = true;
+
+  // Initiate beads
+  bead.set_size(nPart,nBead);
+  unsigned int unique_id = 0;
+  for (unsigned int iP=0; iP<nPart; iP++) {
+    for (unsigned int iB=0; iB<nBead; iB++) {
+      bead(iP,iB) = new Bead(nD,iS,iP,iB,unique_id);
+      unique_id++;
+    }
+  }
+
+  // Initiate bead connections
+  for (unsigned int iP = 0; iP < nPart; iP++) {
+    bead(iP,0) -> next = bead(iP,1);
+    bead(iP,0) -> nextC = bead(iP,1);
+    bead(iP,0) -> prev = bead(iP,nBead-1);
+    bead(iP,0) -> prevC = bead(iP,nBead-1);
+    for (unsigned int iB = 1; iB < nBead-1; iB++) {
+      bead(iP,iB) -> next = bead(iP,iB+1);
+      bead(iP,iB) -> nextC = bead(iP,iB+1);
+      bead(iP,iB) -> prev = bead(iP,iB-1);
+      bead(iP,iB) -> prevC = bead(iP,iB-1);
+    }
+    bead(iP,nBead-1) -> next = bead(iP,0);
+    bead(iP,nBead-1) -> nextC = bead(iP,0);
+    bead(iP,nBead-1) -> prev = bead(iP,nBead-2);
+    bead(iP,nBead-1) -> prevC = bead(iP,nBead-2);
+  }
 }
 
-void Species::InitPaths(Input &in, IOClass &out, RNG &rng, field<Bead*>& bead, CommunicatorClass& InterComm, int L)
+void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& InterComm, int L)
 {
   // Read configuration from xyz file
   if (initType == "File") {
@@ -37,16 +65,16 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, field<Bead*>& bead, C
         if (allBeads) {
           for (int iB=0; iB<nBead; ++iB) {
             for (int iD=0; iD<nD; ++iD)
-              initFile >> bead(iP+offset,iB)->r(iD);
-            bead(iP+offset,iB)->storeR();
+              initFile >> bead(iP,iB)->r(iD);
+            bead(iP,iB)->storeR();
           }
         } else {
           Tvector r(nD);
           for (int iD=0; iD<nD; ++iD)
             initFile >> r(iD);
           for (int iB=0; iB<nBead; ++iB) {
-            bead(iP+offset,iB)->r = r;
-            bead(iP+offset,iB)->storeR();
+            bead(iP,iB)->r = r;
+            bead(iP,iB)->storeR();
           }
         }
       }
@@ -63,8 +91,8 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, field<Bead*>& bead, C
       RealType tmpRand = rng.unifRand(-cofactor*L/2.,cofactor*L/2.);
       for (int iB=0; iB<nBead; ++iB) {
         for (int iD=0; iD<nD; ++iD)
-          bead(iP+offset,iB)->r(iD) = tmpRand;
-        bead(iP+offset,iB)->storeR();
+          bead(iP,iB)->r(iD) = tmpRand;
+        bead(iP,iB)->storeR();
       }
     }
 
@@ -88,8 +116,8 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, field<Bead*>& bead, C
       if (iP % 2)
         r += 0.5*delta;
       for (int iB=0; iB<nBead; ++iB) {
-        bead(iP+offset,iB)->r = r;
-        bead(iP+offset,iB)->storeR();
+        bead(iP,iB)->r = r;
+        bead(iP,iB)->storeR();
       }
     }
 
@@ -117,9 +145,10 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, field<Bead*>& bead, C
     restartFile.Read("Observables/PathDump/"+name+"/positions",pathPositions);
     for (int iP=0; iP<nPart; ++iP) {
       for (int iB=0; iB<nBead; ++iB) {
-        for (int iD=0; iD<nD; ++iD)
-          bead(iP+offset,iB)->r(iD) = pathPositions(iP*nBead + iB,iD,nDump-1);
-        bead(iP+offset,iB)->storeR();
+        for (int iD=0; iD<nD; ++iD) {
+          bead(iP,iB)->r(iD) = pathPositions(iP*nBead + iB,iD,nDump-1);
+        }
+        bead(iP,iB)->storeR();
       }
     }
 
@@ -127,10 +156,10 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, field<Bead*>& bead, C
     Tcube pathPermutation(nPart,2,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/permutation",pathPermutation);
     for (int iP=0; iP<nPart; ++iP) {
-      bead(iP+offset,0)->prev = bead(pathPermutation(iP,0,nDump-1),nBead-1);
-      bead(iP+offset,0)->storePrev();
-      bead(iP+offset,nBead-1)->next = bead(pathPermutation(iP,1,nDump-1),0);
-      bead(iP+offset,nBead-1)->storeNext();
+      bead(iP,0)->prev = bead(pathPermutation(iP,0,nDump-1),nBead-1);
+      bead(iP,0)->storePrev();
+      bead(iP,nBead-1)->next = bead(pathPermutation(iP,1,nDump-1),0);
+      bead(iP,nBead-1)->storeNext();
     }
 
   }

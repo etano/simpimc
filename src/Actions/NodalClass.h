@@ -13,7 +13,7 @@ private:
 protected:
   int nImages, maxLevel;
   string species;
-  int iSpecies, offset, nPart;
+  int iSpecies, nPart;
   RealType i4LambdaTau;
   int startB, endB;
 
@@ -43,7 +43,7 @@ public:
   // Functions
   virtual void Init(Input &in);
   virtual RealType DActionDBeta();
-  virtual RealType GetAction(int b0, int b1, vector<int> &particles, int level);
+  virtual RealType GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level);
   virtual void Write();
   virtual void Accept();
 

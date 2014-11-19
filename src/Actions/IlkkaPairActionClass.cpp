@@ -287,7 +287,7 @@ RealType IlkkaPairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-RealType IlkkaPairAction::CalcULong(int b0, int b1, vector<int> &particles, int level)
+RealType IlkkaPairAction::CalcULong(int b0, int b1, int level)
 {
   // Get rho k
   arma::field<Cvector>& rhoK(path.GetRhoK());

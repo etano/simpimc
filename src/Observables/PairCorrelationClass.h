@@ -8,7 +8,6 @@ class PairCorrelation : public Observable
 private:
   string speciesA, speciesB;
   int iSpeciesA, iSpeciesB;
-  int offsetA, offsetB;
   Histogram gr;
 protected:
 public:

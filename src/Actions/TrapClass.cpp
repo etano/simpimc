@@ -6,10 +6,7 @@ void Trap::Init(Input &in)
   nOrder = in.getAttribute<int>("nOrder");
   omega = in.getAttribute<RealType>("omega");
   species = in.getAttribute<string>("species");
-  for (unsigned int iS=0; iS<path.nSpecies; iS+=1) {
-    if (path.speciesList[iS]->name == species)
-      iSpecies = iS;
-  }
+  path.GetSpeciesInfo(species,iSpecies);
 
   out.Write("/Actions/"+name+"/nImages", nImages);
   out.Write("/Actions/"+name+"/nOrder", nOrder);
@@ -23,27 +20,40 @@ RealType Trap::DActionDBeta()
 
   for (unsigned int iP=0; iP<path.nPart; iP+=1) {
     for (unsigned int iB=0; iB<path.nBead; iB+=1) {
-      tot += dot(path(iP,iB)->r, path(iP,iB)->r);
+      tot += dot(path(iSpecies,iP,iB)->r, path(iSpecies,iP,iB)->r);
     }
   }
 
   return 0.5*omega*omega*(1. + 3.*path.tau*path.tau*omega*omega/12.)*tot;
 }
 
-RealType Trap::GetAction(int b0, int b1, vector<int> &particles, int level)
+RealType Trap::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
 {
   if (level > maxLevel)
     return 0.;
+
+  bool check = false;
+  for (int p=0; p<particles.size(); ++p) {
+    if (particles[p].first == iSpecies) {
+      check = true;
+      break;
+    }
+  }
+  if (!check)
+    return 0.;
+
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
   RealType tot = 0.;
-  for (int iP=0; iP<particles.size(); ++iP) {
+  for (int p=0; p<particles.size(); ++p) {
+    int iS = particles[p].first;
+    int iP = particles[p].second;
     for (int iB=b0; iB<b1; iB+=skip) {
       Tvector dr(path.nD);
       if(path.mode)
-        dr = path(iP,iB)->r;
+        dr = path(iS,iP,iB)->r;
       else
-        dr = path(iP,iB)->rC;
+        dr = path(iS,iP,iB)->rC;
       tot += dot(dr, dr);
     }
   }

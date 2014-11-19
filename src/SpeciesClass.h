@@ -16,17 +16,20 @@ protected:
 
 public:
   // Constructor
-  Species(Input &in, IOClass &out, int t_iS, int t_offset, int t_nD, int t_nBead)
-    : iS(t_iS), offset(t_offset), nD(t_nD), nBead(t_nBead)
+  Species(Input &in, IOClass &out, int t_iS, int t_nD, int t_nBead)
+    : iS(t_iS), nD(t_nD), nBead(t_nBead)
   {
     Init(in, out);
   };
   void Init(Input &in, IOClass &out);
-  void InitPaths(Input &in, IOClass &out, RNG &rng, field<Bead*>& bead, CommunicatorClass& InterComm, int L);
+  void InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& InterComm, int L);
+
+  // Beads
+  field<Bead*> bead;
   string initType;
 
   // Given Global Constants
-  unsigned int nPart, nD, nBead, iS, offset;
+  unsigned int nPart, nD, nBead, iS;
   string name;
   RealType lambda;
 

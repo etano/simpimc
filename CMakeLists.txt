@@ -163,7 +163,6 @@ SET (SRCS ${SRCS} src/main.cpp
   src/SpeciesClass.cpp
   src/WriteClass.cpp
   src/Actions/ActionClass.cpp
-  src/Actions/CoulombClass.cpp
   src/Actions/KineticClass.cpp
   src/Actions/PairActionClass.cpp
   src/Actions/NodalClass.cpp

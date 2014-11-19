@@ -22,8 +22,7 @@ void PathDump::Write()
     // Loop through species
     for (int iS=0; iS<path.nSpecies; ++iS) {
        // Get species info
-      int offset;
-      path.GetSpeciesInfo(path.speciesList[iS]->name,iS,offset);
+      path.GetSpeciesInfo(path.speciesList[iS]->name,iS);
       int nPart = path.speciesList[iS]->nPart;
 
       // Get positions
@@ -31,13 +30,13 @@ void PathDump::Write()
       for (int iP=0; iP<nPart; ++iP)
         for (int iB=0; iB<path.nBead; ++iB)
           for (int iD=0; iD<path.nD; ++iD)
-            pathPositions(iP*path.nBead + iB,iD) = path(iP+offset,iB)->r(iD);
+            pathPositions(iP*path.nBead + iB,iD) = path(iS,iP,iB)->r(iD);
 
       // Get permutation
       Tmatrix pathPermutation(nPart,2);
       for (int iP=0; iP<nPart; ++iP) {
-        pathPermutation(iP,0) = path(iP+offset,0)->prev->p;
-        pathPermutation(iP,1) = path(iP+offset,path.nBead-1)->next->p;
+        pathPermutation(iP,0) = path(iS,iP,0)->prev->p;
+        pathPermutation(iP,1) = path(iS,iP,path.nBead-1)->next->p;
       }
 
       // Write to file

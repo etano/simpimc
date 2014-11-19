@@ -7,7 +7,7 @@ void Nodal::Init(Input &in)
   species = in.getAttribute<string>("species");
   cout << "Setting up nodal action for " << species << "..." << endl;
   maxLevel = in.getAttribute<int>("maxLevel",0);
-  GetOffset(species,iSpecies,offset);
+  path.GetSpeciesInfo(species,iSpecies);
   nPart = path.speciesList[iSpecies]->nPart;
   i4LambdaTau = 1./(4.*path.speciesList[iSpecies]->lambda*path.tau);
 
@@ -69,7 +69,7 @@ RealType Nodal::DActionDBeta()
   return 0.;
 }
 
-RealType Nodal::GetAction(int b0, int b1, vector<int> &particles, int level)
+RealType Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
 {
   // Currently old node should be fine
   if (path.mode == 0)
@@ -80,7 +80,7 @@ RealType Nodal::GetAction(int b0, int b1, vector<int> &particles, int level)
     return 0.;
   bool checkNode = false;
   for (int p=0; p<particles.size(); ++p) {
-    if (path(particles[p],b0)->s == iSpecies) {
+    if (particles[p].first == iSpecies) {
       checkNode = true;
       break;
     }
@@ -113,13 +113,13 @@ RealType Nodal::GetAction(int b0, int b1, vector<int> &particles, int level)
   int sliceDiff0 = path.beadLoop(startB) - path.refBead;
   int absSliceDiff0 = abs(sliceDiff0);
   for (int iP=0; iP<nPart; ++iP) {
-    refBeads.push_back(path(iP+offset,path.refBead));
+    refBeads.push_back(path(iSpecies,iP,path.refBead));
     if (absSliceDiff0 >= 0) {
       //otherBeads.push_back(path.GetNextBead(refBeads[iP],absSliceDiff0)); // fixme: This may be the only correct form
-      otherBeads.push_back(path(iP+offset,startB));
+      otherBeads.push_back(path(iSpecies,iP,startB));
     } else {
       //otherBeads.push_back(path.GetPrevBead(refBeads[iP],absSliceDiff0));
-      otherBeads.push_back(path(iP+offset,startB));
+      otherBeads.push_back(path(iSpecies,iP,startB));
     }
   }
 

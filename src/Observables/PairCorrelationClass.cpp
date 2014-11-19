@@ -5,8 +5,8 @@ void PairCorrelation::Init(Input &in)
   // Read in species info
   speciesA = in.getAttribute<string>("speciesA");
   speciesB = in.getAttribute<string>("speciesB");
-  path.GetSpeciesInfo(speciesA, iSpeciesA, offsetA);
-  path.GetSpeciesInfo(speciesB, iSpeciesB, offsetB);
+  path.GetSpeciesInfo(speciesA, iSpeciesA);
+  path.GetSpeciesInfo(speciesB, iSpeciesB);
 
   // Read in grid info
   RealType rMin = in.getAttribute<RealType>("rMin",0.);
@@ -52,9 +52,9 @@ void PairCorrelation::Accumulate()
   // Homogeneous
   if (iSpeciesA == iSpeciesB) {
     for (int iB=0; iB<path.nBead; ++iB) {
-      for (int iP=offsetA; iP<offsetA+path.speciesList[iSpeciesA]->nPart-1; ++iP) {
-        for (int jP=iP+1; jP<offsetA+path.speciesList[iSpeciesA]->nPart; ++jP) {
-          path.Dr(path(iP,iB),path(jP,iB),dr);
+      for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
+        for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
+          path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB),dr);
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
             gr.y(i) = gr.y(i) + 1.*path.sign;
@@ -64,9 +64,9 @@ void PairCorrelation::Accumulate()
   // Homologous
   } else {
     for (int iB=0; iB<path.nBead; ++iB) {
-      for (int iP=offsetA; iP<offsetA+path.speciesList[iSpeciesA]->nPart; ++iP) {
-        for (int jP=offsetB; jP<offsetB+path.speciesList[iSpeciesB]->nPart; ++jP) {
-          path.Dr(path(iP,iB),path(jP,iB),dr);
+      for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
+        for (int jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
+          path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB),dr);
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
             gr.y(i) = gr.y(i) + 1.*path.sign;

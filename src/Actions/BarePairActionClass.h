@@ -37,7 +37,7 @@ public:
   virtual RealType CalcV(RealType &r, RealType &rP, int level);
   virtual RealType CalcVLong();
   virtual RealType CalcU(RealType &r, RealType &rP, RealType &s, int level);
-  virtual RealType CalcULong(int b0, int b1, vector<int> &particles, int level);
+  virtual RealType CalcULong(int b0, int b1, int level);
   virtual RealType CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level);
   virtual RealType CalcdUdBetaLong();
 

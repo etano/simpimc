@@ -57,19 +57,19 @@ void Energy::Write()
       Vs = Vs/norm;
       RealType V = sum(Vs);
       if (firstTime) {
-        out.CreateGroup(prefix+"Total");
-        out.CreateExtendableDataSet("/"+prefix+"Total/", "x", V);
+        out.CreateGroup(prefix+"VTotal");
+        out.CreateExtendableDataSet("/"+prefix+"VTotal/", "x", V);
         string data_type = "scalar";
-        out.Write(prefix+"Total/data_type",data_type);
+        out.Write(prefix+"VTotal/data_type",data_type);
         for (int i=0; i<actionList.size(); ++i) {
-          out.CreateGroup(prefix+actionList[i]->name);
-          out.CreateExtendableDataSet("/"+prefix+actionList[i]->name+"/", "x", Vs(i));
-          out.Write(prefix+actionList[i]->name+"/data_type", data_type);
+          out.CreateGroup(prefix+"V"+actionList[i]->name);
+          out.CreateExtendableDataSet("/"+prefix+"V"+actionList[i]->name+"/", "x", Vs(i));
+          out.Write(prefix+"V"+actionList[i]->name+"/data_type", data_type);
         }
       } else {
-        out.AppendDataSet("/"+prefix+"Total", "x", V);
+        out.AppendDataSet("/"+prefix+"VTotal/", "x", V);
         for (int i=0; i<actionList.size(); ++i)
-          out.AppendDataSet("/"+prefix+actionList[i]->name+"/", "x", Vs(i));
+          out.AppendDataSet("/"+prefix+"V"+actionList[i]->name+"/", "x", Vs(i));
       }
     }
 

@@ -11,7 +11,7 @@ void Bisect::Init(Input &in)
   else
     nImages = 0;
   species = in.getAttribute<string>("species");
-  path.GetSpeciesInfo(species,iSpecies,offset);
+  path.GetSpeciesInfo(species,iSpecies);
 
   // Compute constants
   lambda = path.speciesList[iSpecies]->lambda;
@@ -49,19 +49,19 @@ void Bisect::Reject()
 // Bisection Move
 int Bisect::Attempt()
 {
-  unsigned int iP = offset + rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
+  unsigned int iP = rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   bead1 = bead0 + nBisectBeads;
 
   // Set up pointers
-  Bead *beadI = path(iP,bead0);
+  Bead *beadI = path(iSpecies,iP,bead0);
   Bead *beadF = beadI -> nextB(nBisectBeads);
 
   // Set which particles are affected by the move
-  vector<int> particles;
-  particles.push_back(iP);
-  if (beadF->p != iP) // fixme: may be overkill
-    particles.push_back(beadF->p);
+  vector< pair<int,int> > particles;
+  particles.push_back(std::make_pair(iSpecies,iP));
+  if (beadF->p != iP)  // fixme: may be overkill
+    particles.push_back(std::make_pair(iSpecies,beadF->p));
 
   // Set which beads are affected by the move
   Bead *beadA;

@@ -7,7 +7,7 @@ class DisplaceParticle : public Move
 {
 private:
   string species;
-  int iSpecies, offset;
+  int iSpecies;
   vector<Bead*> affBeads;
   RealType stepSize;
 protected:

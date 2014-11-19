@@ -34,11 +34,9 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   vector<Input> speciesInput = in.getChild("Particles").getChildList("Species");
   nSpecies = speciesInput.size();
   nPart = 0;
-  int offset = 0;
   for (int iS=0; iS<nSpecies; iS++) {
-    speciesList.push_back(new Species(speciesInput[iS],out,iS,offset,nD,nBead));
+    speciesList.push_back(new Species(speciesInput[iS],out,iS,nD,nBead));
     nPart += speciesList[iS]->nPart;
-    offset = nPart;
   }
   out.Write("System/nPart",nPart);
 
@@ -55,37 +53,9 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   // Initiate mode
   SetMode(1);
 
-  // Initiate beads
-  bead.set_size(nPart,nBead);
-  unsigned int unique_id = 0;
-  for (int iS=0; iS<nSpecies; iS++) {
-    int offset;
-    GetSpeciesInfo(speciesList[iS]->name,iS,offset);
-    for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-      for (unsigned int iB=0; iB<nBead; iB++) {
-        bead(iP,iB) = new Bead(nD,iS,iP,iB,unique_id);
-        unique_id++;
-      }
-    }
-  }
-
-  // Initiate bead connections
-  for (unsigned int iP = 0; iP < nPart; iP++) {
-    bead(iP,0) -> next = bead(iP,1);
-    bead(iP,0) -> nextC = bead(iP,1);
-    bead(iP,0) -> prev = bead(iP,nBead-1);
-    bead(iP,0) -> prevC = bead(iP,nBead-1);
-    for (unsigned int iB = 1; iB < nBead; iB++) {
-      bead(iP,iB) -> next = bead(iP,beadLoop(iB+1));
-      bead(iP,iB) -> nextC = bead(iP,beadLoop(iB+1));
-      bead(iP,iB) -> prev = bead(iP,iB-1);
-      bead(iP,iB) -> prevC = bead(iP,iB-1);
-    }
-  }
-
   // Initialize paths within each species
   for (int iS=0; iS<nSpecies; iS++)
-    speciesList[iS]->InitPaths(speciesInput[iS],out,rng,bead,InterComm,L);
+    speciesList[iS]->InitPaths(speciesInput[iS],out,rng,InterComm,L);
 
   // Reset kCut
   kC = 0.;
@@ -115,30 +85,29 @@ void Path::restoreR(vector<Bead*>& affBeads)
 void Path::PrintPath()
 {
   SetMode(0);
-  for (int iP=0; iP<nPart; ++iP) {
-    for (int iB=0; iB<nBead; ++iB) {
-      cout << iP << " " << iB << " ";
-      Tvector r = GetR(bead(iP,iB));
-      for (int iD=0; iD<nD; ++iD) {
-         cout << r(iD) << " ";
+  for (int iS=0; iS<nSpecies; ++iS) {
+    for (int iP=0; iP<speciesList[iS]->nPart; ++iP) {
+      for (int iB=0; iB<nBead; ++iB) {
+        cout << iP << " " << iB << " ";
+        Tvector r = GetR((*this)(iS,iP,iB));
+        for (int iD=0; iD<nD; ++iD) {
+           cout << r(iD) << " ";
+        }
+        cout << endl;
       }
-      cout << endl;
     }
   }
   cout << endl;
 }
 
 // Get species info
-void Path::GetSpeciesInfo(string species, int &iSpecies, int &offset)
+void Path::GetSpeciesInfo(string species, int &iSpecies)
 {
-  int tmpOffset = 0;
   for (unsigned int iS=0; iS<nSpecies; iS++) {
     if (speciesList[iS]->name == species) {
       iSpecies = iS;
-      offset = tmpOffset;
       break;
     }
-    tmpOffset += speciesList[iS]->nPart;
   }
 }
 
@@ -243,9 +212,9 @@ void Path::InitRhoK()
     for (int iS=0; iS<nSpecies; iS++) {
       rhoK(iB,iS).zeros(kIndices.size());
       rhoKC(iB,iS).zeros(kIndices.size());
-      for (int iP=0; iP<nPart; ++iP) {
-        bead(iP,iB)->rhoK.zeros(kIndices.size());
-        bead(iP,iB)->rhoKC.zeros(kIndices.size());
+      for (int iP=0; iP<speciesList[iS]->nPart; ++iP) {
+        (*this)(iS,iP,iB)->rhoK.zeros(kIndices.size());
+        (*this)(iS,iP,iB)->rhoKC.zeros(kIndices.size());
       }
     }
   }
@@ -253,15 +222,11 @@ void Path::InitRhoK()
   // Calculate rho_k's
   for (int iB=0; iB<nBead; iB++) {
     for (int iS=0; iS<nSpecies; iS++) {
-      // Get species info
-      int offset;
-      GetSpeciesInfo(speciesList[iS]->name,iS,offset);
-
       // Calculate rho_kp values
-      for (int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-        CalcRhoKP(bead(iP,iB));
-        bead(iP,iB)->restoreRhoK();
-        rhoKC(iB,iS) += bead(iP,iB)->rhoKC;
+      for (int iP=0; iP<speciesList[iS]->nPart; iP++) {
+        CalcRhoKP((*this)(iS,iP,iB));
+        (*this)(iS,iP,iB) -> restoreRhoK();
+        rhoKC(iB,iS) += (*this)(iS,iP,iB)->rhoKC;
       }
       rhoK(iB,iS) = rhoKC(iB,iS);
     }
@@ -279,13 +244,9 @@ void Path::UpdateRhoK()
       // Zero out rho_k array
       rhoK(iB,iS).zeros();
 
-      // Get species info
-      int offset;
-      GetSpeciesInfo(speciesList[iS]->name,iS,offset);
-
       // Calculate rho_kp values
-      for (int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-        rhoK(iB,iS) += bead(iP,iB)->rhoK;
+      for (int iP=0; iP<speciesList[iS]->nPart; iP++) {
+        rhoK(iB,iS) += (*this)(iS,iP,iB)->rhoK;
       }
     }
   }
@@ -293,37 +254,48 @@ void Path::UpdateRhoK()
 }
 
 // Update rho k values for specific particles and slices
-void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
+void Path::UpdateRhoKP(int b0, int b1, vector< pair<int,int> > &particles, int level)
 {
   bool tmpMode = GetMode();
   SetMode(1);
   int skip = 1<<level;
 
   // Get species numbers
-  vector<int> species;
+  vector<int> species, ps;
   for (int p=0; p<particles.size(); p++) {
-    int iP = particles[p];
-    int iS = bead(iP,beadLoop(b0))->s;
+    int iS = particles[p].first;
+    int iP = particles[p].second;
     species.push_back(iS);
+    ps.push_back(iP);
   }
 
+  for (int s=0; s<species.size(); ++s)
+    UpdateRhoKP(b0, b1, species[s], ps, level);
+
+  SetMode(tmpMode);
+
+}
+
+// Update rho k values for specific particles and slices
+void Path::UpdateRhoKP(int b0, int b1, int iS, vector<int> &particles, int level)
+{
+  bool tmpMode = GetMode();
+  SetMode(1);
+  int skip = 1<<level;
+
   // Reset to old copy
-  for (int s=0; s<species.size(); s++) {
-    int iS = species[s];
-    for (int iB=b0; iB<b1; iB+=skip)
-      rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS);
-  }
+  for (int iB=b0; iB<b1; iB+=skip)
+    rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS);
 
   // Update C values of changed particles
   for (int p=0; p<particles.size(); p++) {
     int iP = particles[p];
-    int iS = bead(iP,0)->s;
     for (int iB=b0; iB<b1; iB+=skip) {
       // Calculate new values
-      CalcRhoKP(bead(iP,beadLoop(iB)));
+      CalcRhoKP((*this)(iS,iP,iB));
 
       // Add in new values and subtract out old values
-      rhoK(beadLoop(iB),iS) += bead(iP,beadLoop(iB))->rhoK - bead(iP,beadLoop(iB))->rhoKC;
+      rhoK(beadLoop(iB),iS) += (*this)(iS,iP,iB)->rhoK - (*this)(iS,iP,iB)->rhoKC;
 
     }
   }
@@ -333,7 +305,7 @@ void Path::UpdateRhoKP(int b0, int b1, vector<int> &particles, int level)
 }
 
 // Update rho k values for specific particles and slices
-void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
+void Path::UpdateRhoK(int b0, int b1, vector< pair<int,int > > &particles, int level)
 {
   bool tmpMode = GetMode();
   int skip = 1<<level;
@@ -341,8 +313,8 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
   // Get species numbers
   vector<int> species;
   for (int p=0; p<particles.size(); p++) {
-    int iP = particles[p];
-    int iS = bead(iP,beadLoop(b0))->s;
+    int iS = particles[p].first;
+    int iP = particles[p].second;
     species.push_back(iS);
   }
 
@@ -355,8 +327,8 @@ void Path::UpdateRhoK(int b0, int b1, vector<int> &particles, int level)
 
   // Update C values of changed particles
   for (int p=0; p<particles.size(); p++) {
-    int iP = particles[p];
-    int iS = bead(iP,0)->s;
+    int iS = particles[p].first;
+    int iP = particles[p].second;
     for (int iB=b0; iB<b1; iB+=skip) {
       // Add in new values
       SetMode(1);
@@ -390,7 +362,7 @@ void Path::CalcC(Tvector &r)
 // Add rho_k for a single particle
 void Path::AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
 {
-  Tvector r = GetR((*this)(iP,beadLoop(iB)));
+  Tvector r = GetR((*this)(iS,iP,iB));
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
     Ivector &ki = kIndices[iK];
@@ -449,18 +421,17 @@ int Path::CalcSign()
 // Retrieve list of cycles
 void Path::SetCycleCount(int iS, vector<int>& cycles)
 {
-  int offset;
-  GetSpeciesInfo(speciesList[iS]->name,iS,offset);
+  GetSpeciesInfo(speciesList[iS]->name,iS);
   Ivector alreadyCounted(speciesList[iS]->nPart);
   alreadyCounted.zeros();
-  for (unsigned int iP=offset; iP<offset+speciesList[iS]->nPart; iP++) {
-    if (!alreadyCounted(iP-offset)) {
+  for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP++) {
+    if (!alreadyCounted(iP)) {
       int cycleLength = 1;
-      Bead* b = bead(iP,nBead-1);
-      alreadyCounted(iP-offset) = 1;
-      while (GetNextBead(b,1) != bead(iP,0)) {
+      Bead* b = (*this)(iS,iP,nBead-1);
+      alreadyCounted(iP) = 1;
+      while (GetNextBead(b,1) != (*this)(iS,iP,0)) {
         cycleLength++;
-        b = GetNextBead(b,nBead);//bead(b->next->p,nBead-1);
+        b = GetNextBead(b,nBead);
         alreadyCounted(b->p) = 1;
       }
       cycles.push_back(cycleLength);

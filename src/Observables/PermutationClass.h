@@ -9,7 +9,7 @@ private:
   Tvector cycles;
   vector<int> sectors;
   string species;
-  int iSpecies, offset;
+  int iSpecies;
   bool firstSector;
 protected:
 public:

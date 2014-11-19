@@ -15,7 +15,7 @@ private:
 protected:
   int nImages, nOrder, nVal, nTau, maxLevel;
   string speciesA, speciesB;
-  int iSpeciesA, iSpeciesB, offsetA, offsetB;
+  int iSpeciesA, iSpeciesB;
   bool isConstant, isFirstTime;
   RealType dUdBConstant, VConstant;
 
@@ -32,7 +32,7 @@ protected:
   virtual RealType CalcV(RealType &r, RealType &rP, int level) = 0;
   virtual RealType CalcVLong() = 0;
   virtual RealType CalcU(RealType &r, RealType &rP, RealType &s, int level) = 0;
-  virtual RealType CalcULong(int b0, int b1, vector<int> &particles, int level) = 0;
+  virtual RealType CalcULong(int b0, int b1, int level) = 0;
   virtual RealType CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level) = 0;
   virtual RealType CalcdUdBetaLong() = 0;
 
@@ -45,7 +45,7 @@ public:
   // Functions
   virtual void Init(Input &in);
   virtual RealType DActionDBeta();
-  virtual RealType GetAction(int b0, int b1, vector<int> &particles, int level);
+  virtual RealType GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level);
   virtual RealType Potential();
   virtual void Write();
   virtual void Accept();
