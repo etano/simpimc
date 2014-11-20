@@ -89,7 +89,7 @@ void PairCorrelation::Write()
     if (iSpeciesA == iSpeciesB)
       norm = 0.5*nMeasure*NA*(NA-1.)*path.nBead/vol;
     else
-      norm = 0.5*nMeasure*NA*NB*path.nBead/vol;
+      norm = nMeasure*NA*NB*path.nBead/vol;
     for (int i=0; i<gr.x.nR; i++) {
       RealType r1 = gr.x(i);
       RealType r2 = (i<(gr.x.nR-1)) ? gr.x(i+1):(2.0*gr.x(i)-gr.x(i-1));
