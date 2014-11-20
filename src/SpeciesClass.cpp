@@ -88,17 +88,19 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
   } else if (initType == "Random") {
     RealType cofactor = in.getAttribute<RealType>("cofactor",1.);
     for (int iP=0; iP<nPart; ++iP) {
-      RealType tmpRand = rng.unifRand(-cofactor*L/2.,cofactor*L/2.);
-      for (int iB=0; iB<nBead; ++iB) {
-        for (int iD=0; iD<nD; ++iD)
+      for (int iD=0; iD<nD; ++iD) {
+        RealType tmpRand = rng.unifRand(-cofactor*L/2.,cofactor*L/2.);
+        for (int iB=0; iB<nBead; ++iB)
           bead(iP,iB)->r(iD) = tmpRand;
-        bead(iP,iB)->storeR();
       }
     }
+    for (int iP=0; iP<nPart; ++iP)
+      for (int iB=0; iB<nBead; ++iB)
+        bead(iP,iB)->storeR();
 
   // BCC Lattice
   } else if (initType == "BCC") {
-    int nPartPerND = (int) ceil (pow(0.5*nPart, 1.0/nD)-1.0e-6);
+    int nPartPerND = (int) ceil (pow(0.5*nPart, 1.0/nD));
     RealType delta = L/nPartPerND;
     for (unsigned int iP=0; iP<nPart; iP++) {
       int p = iP/2;
@@ -110,9 +112,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
         tmp(2) = p - tmp(0)*nPartPerND*nPartPerND - tmp(1)*nPartPerND;
       Tvector r(nD);
       for (int iD=0; iD<nD; ++iD)
-        r(iD) = 1.*tmp(iD);
-      r *= delta;
-      r -= 0.5*L;
+        r(iD) = delta*tmp(iD) - 0.5*L;
       if (iP % 2)
         r += 0.5*delta;
       for (int iB=0; iB<nBead; ++iB) {
@@ -121,7 +121,28 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
       }
     }
 
-  // Restart from previous run
+  // Cubic Lattice
+  } else if (initType == "Cubic") {
+    RealType cofactor = in.getAttribute<RealType>("cofactor",1.);
+    int nPartPerND = (int) ceil (pow(0.5*nPart, 1.0/nD));
+    RealType delta = cofactor*L/(1.*nPartPerND);
+    for (unsigned int iP=0; iP<nPart; iP++) {
+      Ivector tmp(nD);
+      tmp(0) = iP/(nPartPerND*nPartPerND);
+      if (nD > 1)
+        tmp(1) = (iP-(tmp(0)*nPartPerND*nPartPerND))/nPartPerND;
+      if (nD > 2)
+        tmp(2) = iP - tmp(0)*nPartPerND*nPartPerND - tmp(1)*nPartPerND;
+      Tvector r(nD);
+      for (int iD=0; iD<nD; ++iD)
+        r(iD) = delta*tmp(iD) - 0.5*L;
+      for (int iB=0; iB<nBead; ++iB) {
+        bead(iP,iB)->r = r;
+        bead(iP,iB)->storeR();
+      }
+    }
+
+  // Restart from previous run (fixme: This is broken now)
   } else if (initType == "Restart") {
     string prefix = in.getAttribute<string>("prefix");
     int parallel = in.getAttribute<bool>("parallel",0);
