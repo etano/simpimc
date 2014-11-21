@@ -148,7 +148,14 @@ SET(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 SET(SCAFFOLD_DIR "${CMAKE_SOURCE_DIR}/src/Utils")
 SET(SCAFFOLD_DEPENDS_DIR "${CMAKE_SOURCE_DIR}/depends")
 SET(SCAFFOLD_INSTALL_DIR "${CMAKE_SOURCE_DIR}")
+SET(SCAFFOLD_INCLUDE_EINSPLINE TRUE)
 INCLUDE("${SCAFFOLD_DIR}/CMakeLists.txt")
+
+#-------------------------------------------------------------------
+# Einspline
+#-------------------------------------------------------------------
+INCLUDE(CMake/FindSSE.cmake)
+INCLUDE(CMake/FindEinspline.cmake)
 
 #-------------------------------------------------------------------
 # Sources and target
