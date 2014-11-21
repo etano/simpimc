@@ -106,9 +106,10 @@ void Path::GetSpeciesInfo(string species, int &iSpecies)
   for (unsigned int iS=0; iS<nSpecies; iS++) {
     if (speciesList[iS]->name == species) {
       iSpecies = iS;
-      break;
+      return;
     }
   }
+  cout << "ERROR: No species of name " << species << " !" << endl;
 }
 
 // Put R in the Box
