@@ -8,56 +8,26 @@ SET(CMAKE_VERBOSE_MAKEFILE OFF)
 #-------------------------------------------------------------------
 # Options
 #-------------------------------------------------------------------
-
 SET(PRECISION double) #double float
 SET(USE_MPI TRUE)
 SET(USE_OPENMP TRUE)
 SET(BUILD_STATIC FALSE)
-SET(COMPILER_MAKE "GNU") # INTEL, GNU, or IBM
+SET(COMPILER_MAKE "GNU") # INTEL, GNU, or CLANG
+SET(SCAFFOLD_MATRIX_LIBRARY "EIGEN") # ARMADILLO or EIGEN
+SET(OPTIMIZE TRUE)
 SET(DEBUG TRUE)
 
 #-------------------------------------------------------------------
 # Compilers
 #-------------------------------------------------------------------
-IF(${COMPILER_MAKE} MATCHES "IBM")
-  # set the compiler
-  IF(USE_MPI)
-    SET(CMAKE_C_COMPILER mpixlc_r)
-    SET(CMAKE_CXX_COMPILER mpixlcxx_r)
-  ELSE()
-    SET(CMAKE_C_COMPILER xlc_r)
-    SET(CMAKE_CXX_COMPILER xlc++_r)
-  ENDIF()
-
-  SET(AIX_ARCH "qp")
-  SET(AIX_ARCH_FLAGS "-qarch=${AIX_ARCH} -qstrict -qhot=level=1 -qtune=qp -qsimd=auto")
-  IF(USE_OPENMP)
-    SET(AIX_ARCH_FLAGS "${AIX_ARCH_FLAGS} -qsmp=omp -qthreaded")
-  ENDIF()
-
-  SET(AIX_CXX_COMMON_FLAGS "-qinline=auto:level=10")
-  SET(AIX_OPT_FLAGS "-qmaxmem=-1")
-
-  SET(CMAKE_CXX_FLAGS "${AIX_ARCH_FLAGS} ${AIX_CXX_COMMON_FLAGS} ${AIX_OPT_FLAGS}")
-  SET(CMAKE_C_FLAGS "${AIX_ARCH_FLAGS} ${AIX_OPT_FLAGS}")
-ENDIF()
-
 IF(${COMPILER_MAKE} MATCHES "INTEL")
   IF(USE_MPI)
-    SET(CMAKE_C_COMPILER mpicc)
-    SET(CMAKE_CXX_COMPILER mpic++)
+    SET(CMAKE_C_COMPILER mpiicc)
+    SET(CMAKE_CXX_COMPILER mpiicpc)
   ELSE()
     SET(CMAKE_C_COMPILER icc)
     SET(CMAKE_CXX_COMPILER icpc)
   ENDIF()
-
-  SET(INTEL_C_FLAGS "-w")
-  IF(USE_OPENMP)
-    SET(INTEL_C_FLAGS "${INTEL_C_FLAGS} -fopenmp")
-  ENDIF(USE_OPENMP)
-
-  SET(CMAKE_CXX_FLAGS "${INTEL_C_FLAGS}")
-  SET(CMAKE_C_FLAGS "${INTEL_C_FLAGS}")
 ENDIF()
 
 IF(${COMPILER_MAKE} MATCHES "GNU")
@@ -65,17 +35,9 @@ IF(${COMPILER_MAKE} MATCHES "GNU")
     SET(CMAKE_C_COMPILER mpicc)
     SET(CMAKE_CXX_COMPILER mpicxx)
   ELSE()
-    SET(CMAKE_C_COMPILER $ENV{CC})
-    SET(CMAKE_CXX_COMPILER $ENV{CXX})
+    SET(CMAKE_C_COMPILER gcc)
+    SET(CMAKE_CXX_COMPILER g++)
   ENDIF()
-
-  SET(GNU_C_FLAGS "-w")
-  IF(USE_OPENMP)
-    SET(GNU_C_FLAGS "${GNU_C_FLAGS} -fopenmp")
-  ENDIF(USE_OPENMP)
-
-  SET(CMAKE_CXX_FLAGS "${GNU_C_FLAGS}")
-  SET(CMAKE_C_FLAGS "${GNU_C_FLAGS}")
 ENDIF()
 
 IF(${COMPILER_MAKE} MATCHES "CLANG")
@@ -86,29 +48,30 @@ IF(${COMPILER_MAKE} MATCHES "CLANG")
     SET(CMAKE_C_COMPILER clang)
     SET(CMAKE_CXX_COMPILER clang)
   ENDIF()
-
-  SET(CLANG_C_FLAGS "-w")
-  IF(USE_OPENMP)
-    SET(CLANG_C_FLAGS "${CLANG_C_FLAGS} -fopenmp")
-  ENDIF(USE_OPENMP)
-
-  SET(CMAKE_CXX_FLAGS "${CLANG_C_FLAGS}")
-  SET(CMAKE_C_FLAGS "${CLANG_C_FLAGS}")
 ENDIF()
 
-SET(COMMON_FLAGS "-O3 -ffast-math")
+#-------------------------------------------------------------------
+# Flags
+#-------------------------------------------------------------------
+SET(COMMON_FLAGS "-w")
+
 IF(DEBUG)
-  SET(COMMON_FLAGS "${COMMON_FLAGS} -pg")
+  SET(COMMON_FLAGS "${COMMON_FLAGS} -pg -Wall")
 ENDIF(DEBUG)
+
+IF(OPTIMIZE)
+  SET(COMMON_FLAGS "${COMMON_FLAGS} -O3 -ffast-math")
+ENDIF(OPTIMIZE)
 
 IF(USE_MPI)
   SET(COMMON_FLAGS "${COMMON_FLAGS} -DUSE_MPI")
 ENDIF(USE_MPI)
+
 IF(USE_OPENMP)
-  SET(COMMON_FLAGS "${COMMON_FLAGS} -DUSE_OPENMP")
+  SET(COMMON_FLAGS "${COMMON_FLAGS} -fopenmp -DUSE_OPENMP")
 ENDIF(USE_OPENMP)
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -Wall ${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
 SET(CMAKE_CXX_SOURCE_FILE_EXTENSIONS ,"cpp")
 
 SET(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS} ${COMMON_FLAGS}")
@@ -148,7 +111,6 @@ SET(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 SET(SCAFFOLD_DIR "${CMAKE_SOURCE_DIR}/src/Utils")
 SET(SCAFFOLD_DEPENDS_DIR "${CMAKE_SOURCE_DIR}/depends")
 SET(SCAFFOLD_INSTALL_DIR "${CMAKE_SOURCE_DIR}")
-SET(SCAFFOLD_INCLUDE_EINSPLINE TRUE)
 INCLUDE("${SCAFFOLD_DIR}/CMakeLists.txt")
 
 #-------------------------------------------------------------------

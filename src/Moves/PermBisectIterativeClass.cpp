@@ -313,7 +313,9 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
   c.weight *= t(ps[nPerm-1],ps[0])/t(ps[nPerm-1],ps[nPerm-1]);
 
   // Set particles
-  c.part = ps;
+  c.part.set_size(nPerm);
+  for (int i=0; i<nPerm; ++i)
+    c.part(i) = ps[i];
 
   // Set perms
   c.perm.set_size(nPerm);

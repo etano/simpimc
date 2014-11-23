@@ -6,7 +6,7 @@
 #include "LoopClass.h"
 #include "EventClass.h"
 #include "WriteClass.h"
-#include "Utils/config.h"
+#include "config.h"
 #include "Utils/Communication/Communication.h"
 #include "Utils/IO/InputClass.h"
 #include "Utils/IO/IOClass.h"

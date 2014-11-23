@@ -60,7 +60,7 @@ void Nodal::SetupSpline()
     }
     BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
     UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
-    rho_free_r_splines[iSpline] = rho_free_r_spline;
+    rho_free_r_splines(iSpline) = rho_free_r_spline;
   }
 }
 
@@ -164,7 +164,7 @@ RealType Nodal::GetGij(Tvector& r, int sliceDiff)
   RealType gaussProd = 1.;
   for (int iD=0; iD<path.nD; iD++) {
     RealType gaussSum;
-    eval_UBspline_1d_d(rho_free_r_splines[sliceDiff-1],r(iD),&gaussSum);
+    eval_UBspline_1d_d(rho_free_r_splines(sliceDiff-1),r(iD),&gaussSum);
     gaussProd *= gaussSum/path.fexp(-(r(iD)*r(iD)*i4LambdaTau/sliceDiff));
   }
   return gaussProd;

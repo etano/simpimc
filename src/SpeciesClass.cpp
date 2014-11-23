@@ -8,7 +8,7 @@ void Species::Init(Input &in, IOClass &out)
   lambda = in.getAttribute<RealType>("lambda");
   fermi = in.getAttribute<int>("fermi", 0);
   fixedNode = in.getAttribute<int>("fixedNode", 0);
-  initType = in.getAttribute<string>("initType");
+  initType = in.getAttribute<string>("initType","Random");
 
   // Write to file
   out.CreateGroup("System/Particles/"+name);
@@ -111,10 +111,11 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
       if (nD > 2)
         tmp(2) = p - tmp(0)*nPartPerND*nPartPerND - tmp(1)*nPartPerND;
       Tvector r(nD);
-      for (int iD=0; iD<nD; ++iD)
+      for (int iD=0; iD<nD; ++iD) {
         r(iD) = delta*tmp(iD) - 0.5*L;
-      if (iP % 2)
-        r += 0.5*delta;
+        if (iP % 2)
+          r(iD) += 0.5*delta;
+      }
       for (int iB=0; iB<nBead; ++iB) {
         bead(iP,iB)->r = r;
         bead(iP,iB)->storeR();

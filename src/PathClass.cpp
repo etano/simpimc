@@ -423,8 +423,8 @@ int Path::CalcSign()
 void Path::SetCycleCount(int iS, vector<int>& cycles)
 {
   GetSpeciesInfo(speciesList[iS]->name,iS);
-  Ivector alreadyCounted(speciesList[iS]->nPart);
-  alreadyCounted.zeros();
+  Ivector alreadyCounted;
+  alreadyCounted.zeros(speciesList[iS]->nPart);
   for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP++) {
     if (!alreadyCounted(iP)) {
       int cycleLength = 1;

@@ -114,7 +114,7 @@ RealType BarePairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int
 RealType BarePairAction::CalcVLong()
 {
   // Get rho k
-  arma::field<Cvector>& rhoK(path.GetRhoK());
+  field<Cvector>& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   RealType tot = 0.;
@@ -137,7 +137,7 @@ RealType BarePairAction::CalcVLong()
 RealType BarePairAction::CalcULong(int b0, int b1, int level)
 {
   // Get rho k
-  arma::field<Cvector>& rhoK(path.GetRhoK());
+  field<Cvector>& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   int skip = 1<<level;

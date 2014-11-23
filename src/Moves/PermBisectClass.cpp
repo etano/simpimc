@@ -50,12 +50,16 @@ void PermBisect::BuildCycles()
   for (int i=0; i<nPermType; ++i) {
     Imatrix iP(nPermPart,nPermPart);
     iP.zeros();
-    possible_cycles(i).perm = tmpPossCycles[i];
-    for (int j=0; j<nPermPart; ++j)
+    possible_cycles(i).perm.set_size(nPermPart);
+    for (int j=0; j<nPermPart; ++j) {
+      possible_cycles(i).perm(j) = tmpPossCycles[i][j];
       for (int k=0; k<nPermPart; ++k)
         if (tmpPossCycles[i][k] == j)
           iP(j,k) = 1;
-    Ivector ic(tmpPossCycle);
+    }
+    Ivector ic(nPermPart);
+    for (int j=0; j<nPermPart; ++j)
+      ic(j) = tmpPossCycle[j];
     ic = iP * ic;
     possible_cycles(i).iPerm = ic;
   }
@@ -74,7 +78,9 @@ void PermBisect::BuildCycles()
       Cycle& c = all_cycles(permIndex);
       c.type = iPermType;
       c.index = permIndex;
-      c.part = tmpCycles[iCycle];
+      c.part.set_size(tmpCycles.size());
+      for (int i=0; i<tmpCycles.size(); ++i)
+        c.part(i) = tmpCycles[iCycle][i];
       c.perm = possible_cycles(iPermType).perm;
       c.iPerm = possible_cycles(iPermType).iPerm;
       permIndex += 1;

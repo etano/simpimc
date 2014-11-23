@@ -1,7 +1,7 @@
 #ifndef BeadClass_H
 #define BeadClass_H
 
-#include "Utils/config.h"
+#include "config.h"
 
 class Bead
 {

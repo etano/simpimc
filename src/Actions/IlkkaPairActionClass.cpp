@@ -267,7 +267,7 @@ RealType IlkkaPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, in
 RealType IlkkaPairAction::CalcVLong()
 {
   // Get rho k
-  arma::field<Cvector>& rhoK(path.GetRhoK());
+  field<Cvector>& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   RealType tot = 0.;
@@ -290,7 +290,7 @@ RealType IlkkaPairAction::CalcVLong()
 RealType IlkkaPairAction::CalcULong(int b0, int b1, int level)
 {
   // Get rho k
-  arma::field<Cvector>& rhoK(path.GetRhoK());
+  field<Cvector>& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   int skip = 1<<level;
@@ -314,7 +314,7 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, int level)
 RealType IlkkaPairAction::CalcdUdBetaLong()
 {
   // Get rho k
-  arma::field<Cvector>& rhoK(path.GetRhoK());
+  field<Cvector>& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   RealType tot = 0.;

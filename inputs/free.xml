@@ -1,5 +1,5 @@
 <Input>
-  <!--RNG seed="12345" /-->
+  <RNG seed="12345" />
   <IO outputPrefix="free" />
   <Parallel procsPerGroup="1" />
   <System nD="3" nBead="10" beta="10.0" L="100.0" PBC="1" />

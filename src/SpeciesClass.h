@@ -1,7 +1,7 @@
 #ifndef SpeciesClass_H
 #define SpeciesClass_H
 
-#include "Utils/config.h"       // Standard libraries
+#include "config.h"
 #include "Utils/Communication/Communication.h"
 #include "Utils/IO/InputClass.h"
 #include "Utils/IO/IOClass.h"
