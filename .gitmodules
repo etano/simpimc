@@ -3,4 +3,4 @@
 	url = git://github.com/etano/scaffold.git
 [submodule "scripts/pagen"]
 	path = scripts/pagen
-	url = git@github.com:etano/pagen.git
+	url = git://github.com/etano/pagen.git
