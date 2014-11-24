@@ -22,8 +22,7 @@ Build like:
 
     git clone https://github.com/etano/simpimc.git
     cd simpimc
-    git submodule init
-    git submodule update
+    git submodule update --init --recursive
     mkdir build && cd build
     cmake ..
     make
