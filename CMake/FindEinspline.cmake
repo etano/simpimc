@@ -12,10 +12,11 @@ ELSE()
     ENDIF()
     ExternalProject_Add(
       meinspline_project
-      URL http://github.com/etano/meinspline/archive/master.tar.gz
-      SOURCE_DIR ${SCAFFOLD_DEPENDS_DIR}/meinspline
+      DOWNLOAD_COMMAND curl -L -k https://github.com/etano/meinspline/archive/master.tar.gz | tar xz
+      DOWNLOAD_DIR ${SCAFFOLD_DEPENDS_DIR}/meinspline
+      SOURCE_DIR ${SCAFFOLD_DEPENDS_DIR}/meinspline/meinspline-master
       UPDATE_COMMAND autoreconf -i
-      CONFIGURE_COMMAND ${SCAFFOLD_DEPENDS_DIR}/meinspline/configure ${ENABLE_SSE} --prefix=${SCAFFOLD_INSTALL_DIR}
+      CONFIGURE_COMMAND ${SCAFFOLD_DEPENDS_DIR}/meinspline/meinspline-master/configure ${ENABLE_SSE} --prefix=${SCAFFOLD_INSTALL_DIR}
       BUILD_COMMAND make
     )
     SET(EINSPLINE_LIBS einspline)
