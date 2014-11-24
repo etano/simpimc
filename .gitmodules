@@ -1,3 +1,6 @@
 [submodule "src/Utils"]
 	path = src/Utils
 	url = git://github.com/etano/scaffold.git
+[submodule "scripts/pagen"]
+	path = scripts/pagen
+	url = git@github.com:etano/pagen.git
