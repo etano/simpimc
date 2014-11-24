@@ -22,7 +22,7 @@ public:
   NUBspline_1d_d *v_r_spline, *vLong_r_spline;
 
   // K values
-  Tvector vLong_k;
+  vec<RealType> vLong_k;
 
   // Constant corrections
   RealType vLong_r0, vLong_k0;

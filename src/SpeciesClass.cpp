@@ -69,7 +69,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
             bead(iP,iB)->storeR();
           }
         } else {
-          Tvector r(nD);
+          vec<RealType> r(nD);
           for (int iD=0; iD<nD; ++iD)
             initFile >> r(iD);
           for (int iB=0; iB<nBead; ++iB) {
@@ -104,13 +104,13 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     RealType delta = L/nPartPerND;
     for (unsigned int iP=0; iP<nPart; iP++) {
       int p = iP/2;
-      Ivector tmp(nD);
+      vec<int> tmp(nD);
       tmp(0) = p/(nPartPerND*nPartPerND);
       if (nD > 1)
         tmp(1) = (p-(tmp(0)*nPartPerND*nPartPerND))/nPartPerND;
       if (nD > 2)
         tmp(2) = p - tmp(0)*nPartPerND*nPartPerND - tmp(1)*nPartPerND;
-      Tvector r(nD);
+      vec<RealType> r(nD);
       for (int iD=0; iD<nD; ++iD) {
         r(iD) = delta*tmp(iD) - 0.5*L;
         if (iP % 2)
@@ -128,13 +128,13 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     int nPartPerND = (int) ceil (pow(0.5*nPart, 1.0/nD));
     RealType delta = cofactor*L/(1.*nPartPerND);
     for (unsigned int iP=0; iP<nPart; iP++) {
-      Ivector tmp(nD);
+      vec<int> tmp(nD);
       tmp(0) = iP/(nPartPerND*nPartPerND);
       if (nD > 1)
         tmp(1) = (iP-(tmp(0)*nPartPerND*nPartPerND))/nPartPerND;
       if (nD > 2)
         tmp(2) = iP - tmp(0)*nPartPerND*nPartPerND - tmp(1)*nPartPerND;
-      Tvector r(nD);
+      vec<RealType> r(nD);
       for (int iD=0; iD<nD; ++iD)
         r(iD) = delta*tmp(iD) - 0.5*L;
       for (int iB=0; iB<nBead; ++iB) {
@@ -163,7 +163,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     restartFile.Read("Observables/PathDump/"+name+"/nDump",nDump);
 
     // Get positions
-    Tcube pathPositions(nPart*nBead,nD,nDump);
+    cube<RealType> pathPositions(nPart*nBead,nD,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/positions",pathPositions);
     for (int iP=0; iP<nPart; ++iP) {
       for (int iB=0; iB<nBead; ++iB) {
@@ -175,7 +175,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     }
 
     // Get permutation
-    Tcube pathPermutation(nPart,2,nDump);
+    cube<RealType> pathPermutation(nPart,2,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/permutation",pathPermutation);
     for (int iP=0; iP<nPart; ++iP) {
       bead(iP,0)->prev = bead(pathPermutation(iP,0,nDump-1),nBead-1);

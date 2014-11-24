@@ -52,45 +52,45 @@ public:
 
   // Beads
   vector<Bead*>::const_iterator beadIter;
-  Ivector beadLoop;
+  vec<int> beadLoop;
   Bead* operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
   void storeR(vector<Bead*> &affBeads);
   void restoreR(vector<Bead*> &affBeads);
-  inline Tvector& GetR(Bead* b) { return mode ? b->r : b->rC; };
+  inline vec<RealType>& GetR(Bead* b) { return mode ? b->r : b->rC; };
   inline Bead* GetNextBead(Bead* b, int n) { return mode ? b->nextB(n) : b->nextBC(n); };
   inline Bead* GetPrevBead(Bead* b, int n) { return mode ? b->prevB(n) : b->prevBC(n); };
-  inline void Dr(Tvector &r0, Tvector &r1, Tvector &dr) { dr = r0 - r1; PutInBox(dr); };
-  inline void Dr(Bead* b0, Tvector &r1, Tvector &dr) { Dr(GetR(b0), r1, dr); };
-  inline void Dr(Bead* b0, Bead* b1, Tvector &dr) { Dr(GetR(b0), GetR(b1), dr); };
-  inline void RBar(Bead* b0, Bead* b1, Tvector &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
-  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r0, Tvector &r1, Tvector &dr);
+  inline void Dr(vec<RealType> &r0, vec<RealType> &r1, vec<RealType> &dr) { dr = r0 - r1; PutInBox(dr); };
+  inline void Dr(Bead* b0, vec<RealType> &r1, vec<RealType> &dr) { Dr(GetR(b0), r1, dr); };
+  inline void Dr(Bead* b0, Bead* b1, vec<RealType> &dr) { Dr(GetR(b0), GetR(b1), dr); };
+  inline void RBar(Bead* b0, Bead* b1, vec<RealType> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
+  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, vec<RealType> &r0, vec<RealType> &r1, vec<RealType> &dr);
   void PrintPath();
 
   // Periodic Boundary Condition
   bool PBC;
-  void PutInBox(Tvector& r);
+  void PutInBox(vec<RealType>& r);
 
   // k vectors and rho_k
-  vector<Tvector> ks;
-  vector<Ivector> kIndices;
+  vector< vec<RealType> > ks;
+  vector< vec<int> > kIndices;
   vector<RealType> magKs;
-  field<Cvector> C;
-  field<Cvector> rhoK, rhoKC;
-  Tvector kBox;
+  field< vec<ComplexType> > C;
+  field< vec<ComplexType> > rhoK, rhoKC;
+  vec<RealType> kBox;
   RealType kC;
-  Ivector maxKIndex;
-  bool Include(Tvector &k, RealType kCut);
+  vec<int> maxKIndex;
+  bool Include(vec<RealType> &k, RealType kCut);
   void SetupKs(RealType kCut);
   void InitRhoK();
   void UpdateRhoK();
   void UpdateRhoK(int b0, int b1, vector< pair<int,int> > &particles, int level);
   void UpdateRhoKP(int b0, int b1, vector< pair<int,int> > &particles, int level);
   void UpdateRhoKP(int b0, int b1, int iS, vector<int> &particles, int level);
-  void CalcC(Tvector &r);
-  void AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm);
+  void CalcC(vec<RealType> &r);
+  void AddRhoKP(field< vec<ComplexType> >& tmpRhoK, int iP, int iB, int iS, int pm);
   inline void CalcRhoKP(Bead* b);
-  inline field<Cvector>& GetRhoK() { return mode ? (rhoK) : (rhoKC); };
-  inline Cvector& GetRhoK(Bead* b) { return mode ? (b->rhoK) : (b->rhoKC); };
+  inline field< vec<ComplexType> >& GetRhoK() { return mode ? (rhoK) : (rhoKC); };
+  inline vec<ComplexType>& GetRhoK(Bead* b) { return mode ? (b->rhoK) : (b->rhoKC); };
   inline void storeRhoK(int iB, int iS) { rhoKC(beadLoop(iB),iS) = rhoK(beadLoop(iB),iS); };
   inline void restoreRhoK(int iB, int iS) { rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS); };
   void storeRhoKP(vector<Bead*>& affBeads);
@@ -125,15 +125,23 @@ public:
 };
 
 // Get dr, drP, and drrP
-inline void Path::DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, Tvector &r, Tvector &rP, Tvector &rrP)
+inline void Path::DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, vec<RealType> &r, vec<RealType> &rP, vec<RealType> &rrP)
 {
-  Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
-  Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);
+  //Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
+  //Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);
+
+  r = GetR((*this)(s1,p1,b0)) - GetR((*this)(s0,p0,b0));
+  rP = GetR((*this)(s1,p1,b1)) - GetR((*this)(s0,p0,b1));
+  for (int iD=0; iD<nD; ++iD) {
+    r(iD) -= nearbyint(r(iD)*iL)*L;
+    rP(iD) += nearbyint((r(iD)-rP(iD))*iL)*L;
+    rrP(iD) = r(iD) - rP(iD);
+    rrP(iD) -= nearbyint(rrP(iD)*iL)*L;
+  }
   rMag = mag(r);
   rPMag = mag(rP);
-  Dr(r,rP,rrP);
   rrPMag = mag(rrP);
-}
 
+}
 
 #endif

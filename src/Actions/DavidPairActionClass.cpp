@@ -18,7 +18,7 @@ void DavidPairAction::ReadFile(string fileName)
   RealType rStart, rEnd;
   int nGrid;
   string gridType;
-  Tvector gridPoints;
+  vec<RealType> gridPoints;
   in.Read(UkjStr + "/Grid/Start", rStart);
   in.Read(UkjStr + "/Grid/End", rEnd);
   in.Read(UkjStr + "/Grid/NumGridPoints", nGrid);
@@ -47,7 +47,7 @@ void DavidPairAction::ReadFile(string fileName)
   }
 
   // Read in potential
-  Tvector V(nGrid);
+  vec<RealType> V(nGrid);
   in.Read("/Potential/Data", V);
 
   // Determine number of values for k,j sum
@@ -56,14 +56,14 @@ void DavidPairAction::ReadFile(string fileName)
     nVal += 1+i;
 
   // Read in Ukj
-  Tcube tmpUkj(nVal,nGrid,nTau);
+  cube<RealType> tmpUkj(nVal,nGrid,nTau);
   in.Read(UkjStr + "/Data", tmpUkj);
 
   // Boundary conditions
   BCtype_d xBC = {NATURAL, FLAT}; // HACK: Is this correct?
 
   // Spline Ukj
-  Tcube tmpUkj2(nVal+1,nGrid,nTau);
+  cube<RealType> tmpUkj2(nVal+1,nGrid,nTau);
   for(int iTau=0; iTau<nTau; iTau++) {
     for (int iGrid=0; iGrid<nGrid-1; ++iGrid) {
       tmpUkj2(0,iGrid,iTau) = V(iGrid);
@@ -78,7 +78,7 @@ void DavidPairAction::ReadFile(string fileName)
   for(int iTau=0; iTau<nTau; iTau++) {
     Ukj(iTau) = create_multi_NUBspline_1d_d(grid, xBC, nVal+1);
     for (int iVal=0; iVal<nVal+1; ++iVal) {
-      Tvector tmpV(nGrid);
+      vec<RealType> tmpV(nGrid);
       for (int iGrid=0; iGrid<nGrid; ++iGrid)
         tmpV(iGrid) = tmpUkj2(iVal,iGrid,iTau);
       set_multi_NUBspline_1d_d(Ukj(iTau), iVal, tmpV.memptr());
@@ -86,11 +86,11 @@ void DavidPairAction::ReadFile(string fileName)
   }
 
   // Read in dUkjdBeta
-  Tcube tmpdUkjdBeta(nVal,nGrid,nTau);
+  cube<RealType> tmpdUkjdBeta(nVal,nGrid,nTau);
   in.Read(dUkjdBetaStr + "/Data", tmpdUkjdBeta);
 
   // Spline dUkjdBeta
-  Tcube tmpdUkjdBeta2(nVal+1,nGrid,nTau);
+  cube<RealType> tmpdUkjdBeta2(nVal+1,nGrid,nTau);
   for(int iTau=0; iTau<nTau; iTau++) {
     for (int iGrid=0; iGrid<nGrid-1; ++iGrid) {
       tmpdUkjdBeta2(0,iGrid,iTau) = V(iGrid);
@@ -104,7 +104,7 @@ void DavidPairAction::ReadFile(string fileName)
   for(int iTau=0; iTau<nTau; iTau++) {
     dUkjdBeta(iTau) = create_multi_NUBspline_1d_d(grid, xBC, nVal+1);
     for (int iVal=0; iVal<nVal+1; ++iVal) {
-      Tvector tmpV(nGrid);
+      vec<RealType> tmpV(nGrid);
       for (int iGrid=0; iGrid<nGrid; ++iGrid)
         tmpV(iGrid) = tmpdUkjdBeta2(iVal,iGrid,iTau);
       set_multi_NUBspline_1d_d(dUkjdBeta(iTau), iVal, tmpV.memptr());
@@ -122,7 +122,7 @@ RealType DavidPairAction::CalcV(RealType &r, RealType &rP, int level)
 
   // This is the endpoint action
   RealType V;
-  Tvector rVals(nVal+1), rPVals(nVal+1), qVals(nVal+1);
+  vec<RealType> rVals(nVal+1), rPVals(nVal+1), qVals(nVal+1);
   eval_multi_NUBspline_1d_d(Ukj(level),r,rVals.memptr());
   eval_multi_NUBspline_1d_d(Ukj(level),rP,rPVals.memptr());
   V = 0.5*(rVals(0) + rPVals(0));
@@ -143,14 +143,14 @@ RealType DavidPairAction::CalcU(RealType &r, RealType &rP, RealType &s, int leve
 
   // This is the endpoint action
   RealType U;
-  Tvector rVals(nVal+1), rPVals(nVal+1), qVals(nVal+1);
+  vec<RealType> rVals(nVal+1), rPVals(nVal+1), qVals(nVal+1);
   eval_multi_NUBspline_1d_d(Ukj(level),r,rVals.memptr());
   eval_multi_NUBspline_1d_d(Ukj(level),rP,rPVals.memptr());
   U = 0.5*(rVals(1) + rPVals(1));
 
   // Add in off-diagonal terms
   if (s>0.0 && q<rMax) {
-    Tvector UqVals(nVal+1);
+    vec<RealType> UqVals(nVal+1);
     eval_multi_NUBspline_1d_d(Ukj(level),q,UqVals.memptr());
     RealType z2 = z*z;
     RealType s2 = s*s;
@@ -187,7 +187,7 @@ RealType DavidPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, in
 
   // This is the endpoint action
   RealType U, V, dU;
-  Tvector rVals(nVal+1), rPVals(nVal+1);
+  vec<RealType> rVals(nVal+1), rPVals(nVal+1);
   eval_multi_NUBspline_1d_d(Ukj(level),r,rVals.memptr());
   eval_multi_NUBspline_1d_d(Ukj(level),rP,rPVals.memptr());
   V = 0.5*(rVals(0) + rPVals(0));
@@ -201,7 +201,7 @@ RealType DavidPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, in
 
   // Add in off-diagonal terms
   if (s > 0.0 && q<rMax) {
-    Tvector UqVals(nVal+1), dUqVals(nVal+1);
+    vec<RealType> UqVals(nVal+1), dUqVals(nVal+1);
     eval_multi_NUBspline_1d_d(Ukj(level),q,UqVals.memptr());
     eval_multi_NUBspline_1d_d(dUkjdBeta(level),q,dUqVals.memptr());
     RealType z2 = z*z;

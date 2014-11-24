@@ -12,8 +12,8 @@ void BarePairAction::ReadFile(string fileName)
     // Read in v
   int nr_v;
   in.Read("v/diag/nr", nr_v);
-  Tvector r_v(nr_v);
-  Tvector v_r(nr_v);
+  vec<RealType> r_v(nr_v);
+  vec<RealType> v_r(nr_v);
   in.Read("v/diag/r", r_v);
   in.Read("v/diag/v_r", v_r);
 
@@ -28,8 +28,8 @@ void BarePairAction::ReadFile(string fileName)
     // Read in r
     int nr_vLong;
     in.Read("v/diag/nrLong", nr_vLong);
-    Tvector r_vLong(nr_vLong);
-    Tvector vLong_r(nr_vLong);
+    vec<RealType> r_vLong(nr_vLong);
+    vec<RealType> vLong_r(nr_vLong);
     in.Read("v/diag/rLong",r_vLong);
     in.Read("v/diag/vLong_r",vLong_r);
     in.Read("v/diag/vLong_r0",vLong_r0);
@@ -43,8 +43,8 @@ void BarePairAction::ReadFile(string fileName)
     // Read in k
     int nk_v;
     in.Read("v/diag/nk", nk_v);
-    Tvector k_v(nk_v);
-    Tvector tmpVLong_k(nk_v);
+    vec<RealType> k_v(nk_v);
+    vec<RealType> tmpVLong_k(nk_v);
     in.Read("v/diag/k",k_v);
     in.Read("v/diag/vLong_k",tmpVLong_k);
     in.Read("v/diag/vLong_k0",vLong_k0);
@@ -114,7 +114,7 @@ RealType BarePairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int
 RealType BarePairAction::CalcVLong()
 {
   // Get rho k
-  field<Cvector>& rhoK(path.GetRhoK());
+  field< vec<ComplexType> >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   RealType tot = 0.;
@@ -137,7 +137,7 @@ RealType BarePairAction::CalcVLong()
 RealType BarePairAction::CalcULong(int b0, int b1, int level)
 {
   // Get rho k
-  field<Cvector>& rhoK(path.GetRhoK());
+  field< vec<ComplexType> >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   int skip = 1<<level;

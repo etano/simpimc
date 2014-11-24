@@ -15,7 +15,7 @@ void Permutation::Init(Input &in)
   firstSector = true;
 
   // Write out possible sectors
-  Imatrix tmpPerms;
+  mat<int> tmpPerms;
   tmpPerms.zeros(path.speciesList[iSpecies]->nPart,path.possPerms.size());
   map<vector<int>,int>::iterator tmpIt;
   for(tmpIt = path.possPerms.begin(); tmpIt != path.possPerms.end(); tmpIt++) {
@@ -26,14 +26,14 @@ void Permutation::Init(Input &in)
   out.CreateGroup(prefix+"sectors");
   string data_type = "pairs";
   out.Write(prefix+"sectors/data_type",data_type);
-  Ivector tmpPermIndices(path.possPerms.size());
+  vec<int> tmpPermIndices(path.possPerms.size());
   for (int i=0; i<path.possPerms.size(); ++i)
     tmpPermIndices(i) = i;
   out.Write(prefix+"sectors/x", tmpPermIndices);
   out.Write(prefix+"sectors/possPerms", tmpPerms);
 
   // Write out possible cycles
-  Ivector tmpCycles(path.speciesList[iSpecies]->nPart);
+  vec<int> tmpCycles(path.speciesList[iSpecies]->nPart);
   for (int iP=0; iP<path.speciesList[iSpecies]->nPart; ++iP)
     tmpCycles(iP) = iP+1;
   out.CreateGroup(prefix+"cycles");
@@ -81,7 +81,7 @@ void Permutation::Write()
     // Put the map into an array and write
     map<int,int>::iterator it;
     for(it = sectorMap.begin(); it != sectorMap.end(); it++) {
-      Ivector tmpSectorCount(2);
+      vec<int> tmpSectorCount(2);
       tmpSectorCount(0) = (*it).first;
       tmpSectorCount(1) = (*it).second;
       if (firstTime && firstSector) {

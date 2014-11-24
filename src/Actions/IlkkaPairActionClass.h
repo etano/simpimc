@@ -24,7 +24,7 @@ public:
   NUBspline_2d_d *u_xy_spline, *du_xy_spline;
 
   // K values
-  Tvector uLong_k, duLong_k, vLong_k;
+  vec<RealType> uLong_k, duLong_k, vLong_k;
 
   // Constant corrections
   RealType uLong_r0, uLong_k0, duLong_r0, duLong_k0, vLong_r0, vLong_k0;

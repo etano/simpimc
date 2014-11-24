@@ -49,7 +49,7 @@ RealType Trap::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int
     int iS = particles[p].first;
     int iP = particles[p].second;
     for (int iB=b0; iB<b1; iB+=skip) {
-      Tvector dr(path.nD);
+      vec<RealType> dr(path.nD);
       if(path.mode)
         dr = path(iS,iP,iB)->r;
       else

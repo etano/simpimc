@@ -40,7 +40,7 @@ void Nodal::SetupSpline()
 
   // Create splines
   for (int iSpline=0; iSpline<nSpline; ++iSpline) {
-    Tvector rho_free_r(r_grid.num);
+    vec<RealType> rho_free_r(r_grid.num);
     RealType t_i4LambdaTau = i4LambdaTau/(iSpline+1);
 
     // Make rho_0
@@ -124,8 +124,8 @@ RealType Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, in
   }
 
   // Compute action
-  Tvector dr(path.nD);
-  Tmatrix g(nPart,nPart);
+  vec<RealType> dr(path.nD);
+  mat<RealType> g(nPart,nPart);
   RealType tot = 0.;
   for (int iB=startB; iB<=endB; iB+=skip) {
     if (iB != path.refBead) {
@@ -159,7 +159,7 @@ RealType Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, in
   return tot;
 }
 
-RealType Nodal::GetGij(Tvector& r, int sliceDiff)
+RealType Nodal::GetGij(vec<RealType>& r, int sliceDiff)
 {
   RealType gaussProd = 1.;
   for (int iD=0; iD<path.nD; iD++) {

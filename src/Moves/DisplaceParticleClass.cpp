@@ -46,7 +46,7 @@ int DisplaceParticle::Attempt()
 
   // New sampling
   path.SetMode(1);
-  Tvector dr(path.nD);
+  vec<RealType> dr(path.nD);
   rng.unifRand(dr, stepSize);
 
   // Set which beads are affected by the move

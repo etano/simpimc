@@ -120,6 +120,7 @@ INCLUDE("${SCAFFOLD_DIR}/CMakeLists.txt")
 #-------------------------------------------------------------------
 INCLUDE(CMake/FindSSE.cmake)
 INCLUDE(CMake/FindEinspline.cmake)
+SET(LIBS ${EINSPLINE_LIBS})
 
 #-------------------------------------------------------------------
 # Sources and target

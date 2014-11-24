@@ -16,7 +16,7 @@ void Kinetic::Init(Input &in)
 RealType Kinetic::DActionDBeta()
 {
   RealType tot = 0.;
-  Tvector gaussSum(path.nD), numSum(path.nD), numProd(path.nD), dr(path.nD);
+  vec<RealType> gaussSum(path.nD), numSum(path.nD), numProd(path.nD), dr(path.nD);
   for (int iS=0; iS<path.nSpecies; iS++) {
     RealType lambda = path.speciesList[iS]->lambda;
     if (!fequal(lambda,0.,1e-10)) {
@@ -63,7 +63,7 @@ RealType Kinetic::GetAction(int b0, int b1, vector< pair<int,int> > &particles, 
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
   RealType tot = 0.;
-  Tvector dr(path.nD);
+  vec<RealType> dr(path.nD);
   Bead *beadA, *beadB, *beadC, *beadF;
   for (int p=0; p<particles.size(); ++p) {
     int iS = particles[p].first;

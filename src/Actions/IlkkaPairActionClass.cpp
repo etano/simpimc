@@ -15,9 +15,9 @@ void IlkkaPairAction::ReadFile(string fileName)
   int nx_u, ny_u;
   in.Read("u/offDiag/nx", nx_u);
   in.Read("u/offDiag/ny", ny_u);
-  Tvector x_u(nx_u);
-  Tvector y_u(ny_u);
-  Tmatrix u_xy(nx_u,ny_u);
+  vec<RealType> x_u(nx_u);
+  vec<RealType> y_u(ny_u);
+  mat<RealType> u_xy(nx_u,ny_u);
   in.Read("u/offDiag/x", x_u);
   in.Read("u/offDiag/y", y_u);
   in.Read("u/offDiag/u_xy", u_xy);
@@ -32,8 +32,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in r
     int nr_u;
     in.Read("u/diag/nrLong", nr_u);
-    Tvector r_u(nr_u);
-    Tvector uLong_r(nr_u);
+    vec<RealType> r_u(nr_u);
+    vec<RealType> uLong_r(nr_u);
     in.Read("u/diag/rLong", r_u);
     in.Read("u/diag/uLong_r", uLong_r);
     in.Read("u/diag/uLong_r0",uLong_r0);
@@ -47,8 +47,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in k
     int nk_u;
     in.Read("u/diag/nk", nk_u);
-    Tvector k_u(nk_u);
-    Tvector tmpULong_k(nk_u);
+    vec<RealType> k_u(nk_u);
+    vec<RealType> tmpULong_k(nk_u);
     in.Read("u/diag/k",k_u);
     in.Read("u/diag/uLong_k",tmpULong_k);
     in.Read("u/diag/uLong_k0",uLong_k0);
@@ -67,9 +67,9 @@ void IlkkaPairAction::ReadFile(string fileName)
   int nx_du, ny_du;
   in.Read("du/offDiag/nx", nx_du);
   in.Read("du/offDiag/ny", ny_du);
-  Tvector x_du(nx_du);
-  Tvector y_du(ny_du);
-  Tmatrix du_xy(nx_du,ny_du);
+  vec<RealType> x_du(nx_du);
+  vec<RealType> y_du(ny_du);
+  mat<RealType> du_xy(nx_du,ny_du);
   in.Read("du/offDiag/x", x_du);
   in.Read("du/offDiag/y", y_du);
   in.Read("du/offDiag/du_xy", du_xy);
@@ -84,8 +84,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in r
     int nr_du;
     in.Read("du/diag/nrLong", nr_du);
-    Tvector r_du(nr_du);
-    Tvector duLong_r(nr_du);
+    vec<RealType> r_du(nr_du);
+    vec<RealType> duLong_r(nr_du);
     in.Read("du/diag/rLong", r_du);
     in.Read("du/diag/duLong_r", duLong_r);
     in.Read("du/diag/duLong_r0",duLong_r0);
@@ -99,8 +99,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in k
     int nk_du;
     in.Read("du/diag/nk", nk_du);
-    Tvector k_du(nk_du);
-    Tvector tmpDULong_k(nk_du);
+    vec<RealType> k_du(nk_du);
+    vec<RealType> tmpDULong_k(nk_du);
     in.Read("du/diag/k",k_du);
     in.Read("du/diag/duLong_k",tmpDULong_k);
     in.Read("du/diag/duLong_k0",duLong_k0);
@@ -119,8 +119,8 @@ void IlkkaPairAction::ReadFile(string fileName)
   // Read in v
   int nr_v;
   in.Read("v/diag/nr", nr_v);
-  Tvector r_v(nr_v);
-  Tvector v_r(nr_v);
+  vec<RealType> r_v(nr_v);
+  vec<RealType> v_r(nr_v);
   in.Read("v/diag/r", r_v);
   in.Read("v/diag/v_r", v_r);
 
@@ -135,8 +135,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in r
     int nr_vLong;
     in.Read("v/diag/nrLong", nr_vLong);
-    Tvector r_vLong(nr_vLong);
-    Tvector vLong_r(nr_vLong);
+    vec<RealType> r_vLong(nr_vLong);
+    vec<RealType> vLong_r(nr_vLong);
     in.Read("v/diag/rLong",r_vLong);
     in.Read("v/diag/vLong_r",vLong_r);
     in.Read("v/diag/vLong_r0",vLong_r0);
@@ -150,8 +150,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in k
     int nk_v;
     in.Read("v/diag/nk", nk_v);
-    Tvector k_v(nk_v);
-    Tvector tmpVLong_k(nk_v);
+    vec<RealType> k_v(nk_v);
+    vec<RealType> tmpVLong_k(nk_v);
     in.Read("v/diag/k",k_v);
     in.Read("v/diag/vLong_k",tmpVLong_k);
     in.Read("v/diag/vLong_k0",vLong_k0);
@@ -267,7 +267,7 @@ RealType IlkkaPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, in
 RealType IlkkaPairAction::CalcVLong()
 {
   // Get rho k
-  field<Cvector>& rhoK(path.GetRhoK());
+  field< vec<ComplexType> >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   RealType tot = 0.;
@@ -290,7 +290,7 @@ RealType IlkkaPairAction::CalcVLong()
 RealType IlkkaPairAction::CalcULong(int b0, int b1, int level)
 {
   // Get rho k
-  field<Cvector>& rhoK(path.GetRhoK());
+  field< vec<ComplexType> >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   int skip = 1<<level;
@@ -314,7 +314,7 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, int level)
 RealType IlkkaPairAction::CalcdUdBetaLong()
 {
   // Get rho k
-  field<Cvector>& rhoK(path.GetRhoK());
+  field< vec<ComplexType> >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   RealType tot = 0.;

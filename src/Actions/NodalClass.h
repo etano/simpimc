@@ -19,7 +19,7 @@ protected:
 
   // Rho matrix
   field<RealType> rho_F, rho_F_c;
-  RealType GetGij(Tvector &r, int sliceDiff);
+  RealType GetGij(vec<RealType> &r, int sliceDiff);
 
   // Ref beads
   vector<Bead*> refBeads;

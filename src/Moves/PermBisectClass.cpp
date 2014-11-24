@@ -48,7 +48,7 @@ void PermBisect::BuildCycles()
   field<Cycle> possible_cycles;
   possible_cycles.set_size(nPermType);
   for (int i=0; i<nPermType; ++i) {
-    Imatrix iP(nPermPart,nPermPart);
+    mat<int> iP(nPermPart,nPermPart);
     iP.zeros();
     possible_cycles(i).perm.set_size(nPermPart);
     for (int j=0; j<nPermPart; ++j) {
@@ -57,7 +57,7 @@ void PermBisect::BuildCycles()
         if (tmpPossCycles[i][k] == j)
           iP(j,k) = 1;
     }
-    Ivector ic(nPermPart);
+    vec<int> ic(nPermPart);
     for (int j=0; j<nPermPart; ++j)
       ic(j) = tmpPossCycle[j];
     ic = iP * ic;
@@ -178,7 +178,7 @@ int PermBisect::Attempt()
   RealType oldCycleWeight = -log(c->weight);
   RealType prevActionChange = oldCycleWeight;
   RealType prefactorOfSampleProb = 0.;
-  Tvector rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
+  vec<RealType> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
   RealType gaussProdOld, gaussSumOld, distOld, gaussProdNew, gaussSumNew, distNew;
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
 
@@ -303,7 +303,7 @@ void PermBisect::updatePermTable()
   }
 
   // Construct t table
-  Tvector dr_ij(path.nD), dr_ii(path.nD);
+  vec<RealType> dr_ij(path.nD), dr_ii(path.nD);
   RealType exponent;
   for (unsigned int i=0; i<nPart; i++) {
     path.Dr(b0(i), b1(i), dr_ii);

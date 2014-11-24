@@ -8,7 +8,7 @@ class StructureFactor : public Observable
 private:
   string speciesA, speciesB;
   int iSpeciesA, iSpeciesB;
-  Tvector sk;
+  vec<RealType> sk;
   RealType kCut;
 protected:
 public:

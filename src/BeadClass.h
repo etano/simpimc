@@ -32,7 +32,7 @@ public:
   inline void restoreNext() { next = nextC; };
   inline void storeNodeDistance() { nDistC = nDist; };
   inline void restoreNodeDistance() { nDist = nDistC; };
-  inline void move( Tvector& dr ) { r += dr; };
+  inline void move( vec<RealType>& dr ) { r += dr; };
   inline void storePartRecord();
   inline void restorePartRecord();
   Bead* nextB( unsigned int n );
@@ -45,8 +45,8 @@ public:
   unsigned int s;
   unsigned int id;
   RealType nDist, nDistC;
-  Tvector r, rC;
-  Cvector rhoK, rhoKC;
+  vec<RealType> r, rC;
+  vec<ComplexType> rhoK, rhoKC;
   Bead *self;
   Bead *next, *nextC;
   Bead *prev, *prevC;

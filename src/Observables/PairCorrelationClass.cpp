@@ -16,7 +16,7 @@ void PairCorrelation::Init(Input &in)
   gr.y.zeros(nR);
 
   // Compute rs
-  Tvector rs(gr.x.nR-1);
+  vec<RealType> rs(gr.x.nR-1);
   for (int i=0; i<gr.x.nR-1; i++) {
     RealType r1 = gr.x(i);
     RealType r2 = gr.x(i+1);
@@ -48,7 +48,7 @@ void PairCorrelation::Reset()
 void PairCorrelation::Accumulate()
 {
   path.SetMode(1);
-  Tvector dr(path.nD);
+  vec<RealType> dr(path.nD);
   // Homogeneous
   if (iSpeciesA == iSpeciesB) {
     for (int iB=0; iB<path.nBead; ++iB) {

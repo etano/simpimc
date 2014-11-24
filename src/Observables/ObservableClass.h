@@ -17,7 +17,7 @@ protected:
 
   struct LinearGrid
   {
-    Tvector rs;
+    vec<RealType> rs;
     RealType rMin, rMax, dr, iDr;
     int nR;
 
@@ -44,7 +44,7 @@ protected:
 
   struct Histogram
   {
-    Tvector y;
+    vec<RealType> y;
     LinearGrid x;
   };
 

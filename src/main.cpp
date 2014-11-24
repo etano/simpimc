@@ -1,7 +1,5 @@
 #include "main.h"
 
-using namespace std;
-
 int main(int argc, char** argv)
 {
   COMM::Init(argc, argv);

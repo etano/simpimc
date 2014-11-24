@@ -50,7 +50,7 @@ RealType PairAction::Potential()
     return VConstant;
   else {
     RealType tot = 0.;
-    Tvector dr(path.nD);
+    vec<RealType> dr(path.nD);
     if (iSpeciesA == iSpeciesB) {
       for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
         for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
@@ -97,7 +97,7 @@ RealType PairAction::DActionDBeta()
     return dUdBConstant;
   else {
     RealType tot = 0.;
-    Tvector r(path.nD), rP(path.nD), rrP(path.nD);
+    vec<RealType> r(path.nD), rP(path.nD), rrP(path.nD);
     if (iSpeciesA == iSpeciesB) {
       for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
         for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
@@ -175,7 +175,7 @@ RealType PairAction::GetAction(int b0, int b1, vector< pair<int,int> > &particle
   int skip = 1<<level;
   RealType levelTau = skip*path.tau;
   RealType tot = 0.;
-  Tvector r(path.nD), rP(path.nD), rrP(path.nD);
+  vec<RealType> r(path.nD), rP(path.nD), rrP(path.nD);
 
   // Homologous
   if (iSpeciesA == iSpeciesB) {

@@ -17,7 +17,7 @@ public:
 
   // Data
   NUgrid* grid;
-  Tvector taus;
+  vec<RealType> taus;
   field<multi_NUBspline_1d_d*> Ukj, dUkjdBeta;
 
   // Functions

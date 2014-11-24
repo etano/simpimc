@@ -146,7 +146,7 @@ int PermBisectIterative::Attempt()
   field<Bead*> beadB(nPermPart), beadC(nPermPart);
   RealType prevActionChange = -log(c.weight);
   RealType prefactorOfSampleProb = 0.;
-  Tvector rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
+  vec<RealType> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
   RealType gaussProdOld, gaussSumOld, distOld, gaussProdNew, gaussSumNew, distNew;
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
 
@@ -239,7 +239,7 @@ void PermBisectIterative::updatePermTable()
   }
 
   // Construct t table
-  Tvector dr_ij(path.nD), dr_ii(path.nD);
+  vec<RealType> dr_ij(path.nD), dr_ii(path.nD);
   RealType exponent;
   for (unsigned int i=0; i<nPart; i++) {
     for (unsigned int j=0; j<nPart; j++) {
@@ -258,7 +258,7 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
 {
   // Update t
   updatePermTable();
-  Tmatrix t_c = t;
+  mat<RealType> t_c = t;
 
   // Choose particles
   int p0 = rng.unifRand(nPart) - 1;  // Pick first particle at random

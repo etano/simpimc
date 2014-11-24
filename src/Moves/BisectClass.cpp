@@ -76,7 +76,7 @@ int Bisect::Attempt()
   Bead *beadB, *beadC;
   RealType prevActionChange = 0.;
   RealType prefactorOfSampleProb = 0.;
-  Tvector rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
+  vec<RealType> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
     int skip = 1<<iLevel; //pow(2,iLevel);
     RealType levelTau = path.tau*skip;

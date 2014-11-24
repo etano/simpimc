@@ -89,7 +89,7 @@ void Path::PrintPath()
     for (int iP=0; iP<speciesList[iS]->nPart; ++iP) {
       for (int iB=0; iB<nBead; ++iB) {
         cout << iP << " " << iB << " ";
-        Tvector r = GetR((*this)(iS,iP,iB));
+        vec<RealType> r = GetR((*this)(iS,iP,iB));
         for (int iD=0; iD<nD; ++iD) {
            cout << r(iD) << " ";
         }
@@ -113,17 +113,14 @@ void Path::GetSpeciesInfo(string species, int &iSpecies)
 }
 
 // Put R in the Box
-void Path::PutInBox(Tvector& r)
+void Path::PutInBox(vec<RealType>& r)
 {
-  Ivector n(nD);
-  for (int iD=0; iD<nD; ++iD) {
-    n(iD) = -rint(r(iD)*iL);
-    r(iD) += n(iD)*L;
-  }
+  for (int iD=0; iD<nD; ++iD)
+    r(iD) -= nearbyint(r(iD)*iL)*L;
 }
 
 // Avoid negative and 0 k vectors
-bool Path::Include(Tvector &k, RealType kCut)
+bool Path::Include(vec<RealType> &k, RealType kCut)
 {
   RealType k2 = dot(k,k);
   if (k2 < kCut*kCut && k2 != 0.) {
@@ -176,8 +173,8 @@ void Path::SetupKs(RealType kCut)
 
   // Iterate through indices, form k vectors, and include only those that should be included
   for (int iK=0; iK<tmpKIndices.size(); iK++) {
-    Tvector k(nD);
-    Ivector ki(nD);
+    vec<RealType> k(nD);
+    vec<int> ki(nD);
     for (int iD=0; iD<nD; iD++) {
       k(iD) = tmpKIndices[iK][iD]*kBox(iD);
       ki(iD) = maxKIndex(iD) + tmpKIndices[iK][iD];
@@ -346,7 +343,7 @@ void Path::UpdateRhoK(int b0, int b1, vector< pair<int,int > > &particles, int l
 }
 
 // Calculate C values for rho_k
-void Path::CalcC(Tvector &r)
+void Path::CalcC(vec<RealType> &r)
 {
   for (int iD=0; iD<nD; iD++) {
     ComplexType tmpC;
@@ -361,12 +358,12 @@ void Path::CalcC(Tvector &r)
 }
 
 // Add rho_k for a single particle
-void Path::AddRhoKP(field<Cvector>& tmpRhoK, int iP, int iB, int iS, int pm)
+void Path::AddRhoKP(field< vec<ComplexType> >& tmpRhoK, int iP, int iB, int iS, int pm)
 {
-  Tvector r = GetR((*this)(iS,iP,iB));
+  vec<RealType> r = GetR((*this)(iS,iP,iB));
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
-    Ivector &ki = kIndices[iK];
+    vec<int> &ki = kIndices[iK];
     ComplexType factor = pm;
     for (int iD=0; iD<nD; iD++)
       factor *= C(iD)(ki(iD));
@@ -393,11 +390,11 @@ void Path::restoreRhoKP(vector<Bead*>& affBeads)
 // Calc rho_k for a single particle
 inline void Path::CalcRhoKP(Bead* b)
 {
-  Tvector r = GetR(b);
-  Cvector& tmpRhoK = GetRhoK(b);
+  vec<RealType> r = GetR(b);
+  vec<ComplexType>& tmpRhoK = GetRhoK(b);
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
-    Ivector &ki = kIndices[iK];
+    vec<int> &ki = kIndices[iK];
     ComplexType factor = 1.;
     for (int iD=0; iD<nD; iD++)
       factor *= C(iD)(ki(iD));
@@ -423,7 +420,7 @@ int Path::CalcSign()
 void Path::SetCycleCount(int iS, vector<int>& cycles)
 {
   GetSpeciesInfo(speciesList[iS]->name,iS);
-  Ivector alreadyCounted;
+  vec<int> alreadyCounted;
   alreadyCounted.zeros(speciesList[iS]->nPart);
   for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP++) {
     if (!alreadyCounted(iP)) {

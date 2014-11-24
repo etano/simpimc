@@ -18,13 +18,13 @@ private:
   {
     RealType weight, contribution;
     int index, type;
-    Ivector perm, iPerm, part;
+    vec<int> perm, iPerm, part;
   };
   vector<Cycle*> cycles;
   field<Cycle> all_cycles;
-  Tmatrix t;
+  mat<RealType> t;
 
-  Ivector permAttempt, permAccept;
+  vec<int> permAttempt, permAccept;
 
   void updatePermTable();
   int selectCycleIterative(Cycle& c);

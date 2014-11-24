@@ -12,7 +12,7 @@ void Simulation::SetupSimulation(string inFile)
   int nGroups = N/procsPerGroup;
   int myGroup = WorldComm.MyProc()/procsPerGroup;
   WorldComm.Split(myGroup, IntraComm);
-  Ivector ranks(nGroups);
+  vec<int> ranks(nGroups);
   for (int group=0; group<nGroups; group++)
     ranks(group) = group*procsPerGroup;
   WorldComm.Subset(ranks, InterComm);
