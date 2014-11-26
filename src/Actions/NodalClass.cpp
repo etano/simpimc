@@ -69,7 +69,7 @@ double Nodal::DActionDBeta()
   return 0.;
 }
 
-double Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
+double Nodal::GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
 {
   // Currently old node should be fine
   if (path.mode == 0)

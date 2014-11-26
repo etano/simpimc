@@ -27,7 +27,7 @@ double Trap::DActionDBeta()
   return 0.5*omega*omega*(1. + 3.*path.tau*path.tau*omega*omega/12.)*tot;
 }
 
-double Trap::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
+double Trap::GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
 {
   if (level > maxLevel)
     return 0.;
