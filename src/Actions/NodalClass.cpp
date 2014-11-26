@@ -32,7 +32,7 @@ void Nodal::SetupSpline()
   r_grid.start = -path.L/2.;
   r_grid.end = path.L/2.;
   r_grid.num = 1000;
-  RealType dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
+  double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
   int nSpline = path.nBead/2 + (path.nBead%2) + 1;
@@ -40,21 +40,21 @@ void Nodal::SetupSpline()
 
   // Create splines
   for (int iSpline=0; iSpline<nSpline; ++iSpline) {
-    vec<RealType> rho_free_r(r_grid.num);
-    RealType t_i4LambdaTau = i4LambdaTau/(iSpline+1);
+    vec<double> rho_free_r(r_grid.num);
+    double t_i4LambdaTau = i4LambdaTau/(iSpline+1);
 
     // Make rho_0
-    RealType rho0 = 0.;
+    double rho0 = 0.;
     for (int image=-nImages; image<=nImages; image++)
       rho0 += path.fexp(-path.L*path.L*t_i4LambdaTau);
-    RealType logRho0 = -log(rho0);
+    double logRho0 = -log(rho0);
 
     // Make rho_free
     for (int i=0; i<r_grid.num; ++i) {
-      RealType r = r_grid.start + i*dr;
+      double r = r_grid.start + i*dr;
       rho_free_r(i) = 0.;
       for (int image=-nImages; image<=nImages; image++) {
-        RealType t_r = r + image*path.L;
+        double t_r = r + image*path.L;
         rho_free_r(i) += path.fexp(-(t_r*t_r + r*r)*t_i4LambdaTau);
       }
     }
@@ -64,12 +64,12 @@ void Nodal::SetupSpline()
   }
 }
 
-RealType Nodal::DActionDBeta()
+double Nodal::DActionDBeta()
 {
   return 0.;
 }
 
-RealType Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
+double Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
 {
   // Currently old node should be fine
   if (path.mode == 0)
@@ -90,7 +90,7 @@ RealType Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, in
 
   // Constants
   int skip = 1<<level;
-  RealType levelTau = skip*path.tau;
+  double levelTau = skip*path.tau;
 
   // See if ref slice included
   bool checkAll = false;
@@ -124,9 +124,9 @@ RealType Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, in
   }
 
   // Compute action
-  vec<RealType> dr(path.nD);
-  mat<RealType> g(nPart,nPart);
-  RealType tot = 0.;
+  vec<double> dr(path.nD);
+  mat<double> g(nPart,nPart);
+  double tot = 0.;
   for (int iB=startB; iB<=endB; iB+=skip) {
     if (iB != path.refBead) {
       // Form rho_F
@@ -159,11 +159,11 @@ RealType Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, in
   return tot;
 }
 
-RealType Nodal::GetGij(vec<RealType>& r, int sliceDiff)
+double Nodal::GetGij(vec<double>& r, int sliceDiff)
 {
-  RealType gaussProd = 1.;
+  double gaussProd = 1.;
   for (int iD=0; iD<path.nD; iD++) {
-    RealType gaussSum;
+    double gaussSum;
     eval_UBspline_1d_d(rho_free_r_splines(sliceDiff-1),r(iD),&gaussSum);
     gaussProd *= gaussSum/path.fexp(-(r(iD)*r(iD)*i4LambdaTau/sliceDiff));
   }

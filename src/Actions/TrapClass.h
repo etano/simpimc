@@ -8,7 +8,7 @@ class Trap : public Action
 private:
   int nImages;
   int nOrder;
-  RealType omega;
+  double omega;
   string species;
   int iSpecies;
   int maxLevel;
@@ -24,8 +24,8 @@ public:
 
   // Functions
   virtual void Init(Input &in);
-  virtual RealType DActionDBeta();
-  virtual RealType GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level);
+  virtual double DActionDBeta();
+  virtual double GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level);
   virtual void Write();
 };
 

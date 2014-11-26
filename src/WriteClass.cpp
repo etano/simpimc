@@ -13,9 +13,9 @@ void Writes::DoEvent()
   cout << "---" << endl;
   cout << "Block #: " << iBlock << endl;
   gettimeofday(&time, NULL); // Current Time
-  RealType blockTime = start - end;
+  double blockTime = start - end;
   cout << "Block Time: " << blockTime << endl;
-  RealType totalTime = start - initial;
+  double totalTime = start - initial;
   cout << "Total Time: " << totalTime << endl;
   iBlock += 1;
 

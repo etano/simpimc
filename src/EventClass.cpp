@@ -2,7 +2,7 @@
 
 void Event::WriteTime()
 {
-  RealType norm = 1./nIterations;
+  double norm = 1./nIterations;
   timeSpent *= norm;
 
   if (FirstTimeTime) {

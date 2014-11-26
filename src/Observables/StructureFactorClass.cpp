@@ -7,7 +7,7 @@ void StructureFactor::Init(Input &in)
   speciesB = in.getAttribute<string>("speciesB");
   path.GetSpeciesInfo(speciesA, iSpeciesA);
   path.GetSpeciesInfo(speciesB, iSpeciesB);
-  kCut = in.getAttribute<RealType>("kCut", path.kC);
+  kCut = in.getAttribute<double>("kCut", path.kC);
 
   // Resize
   path.SetupKs(kCut);
@@ -53,7 +53,7 @@ void StructureFactor::Write()
     // Normalize histograms
     int NA = path.speciesList[iSpeciesA]->nPart;
     int NB = path.speciesList[iSpeciesB]->nPart;
-    RealType norm = nMeasure*path.nBead*NA*NB;
+    double norm = nMeasure*path.nBead*NA*NB;
     sk = sk/norm;
 
     // Write to file

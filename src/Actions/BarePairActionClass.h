@@ -16,30 +16,30 @@ public:
   }
 
   // Parameters
-  RealType kCutoff;
+  double kCutoff;
 
   // Splines
   NUBspline_1d_d *v_r_spline, *vLong_r_spline;
 
   // K values
-  vec<RealType> vLong_k;
+  vec<double> vLong_k;
 
   // Constant corrections
-  RealType vLong_r0, vLong_k0;
+  double vLong_r0, vLong_k0;
 
   // Grid limits
-  RealType r_v_min, r_v_max, r_vLong_min, r_vLong_max;
+  double r_v_min, r_v_max, r_vLong_min, r_vLong_max;
 
   // Functions
   virtual void ReadFile(string fileName);
 
   // Pair actions
-  virtual RealType CalcV(RealType &r, RealType &rP, int level);
-  virtual RealType CalcVLong();
-  virtual RealType CalcU(RealType &r, RealType &rP, RealType &s, int level);
-  virtual RealType CalcULong(int b0, int b1, int level);
-  virtual RealType CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level);
-  virtual RealType CalcdUdBetaLong();
+  virtual double CalcV(double &r, double &rP, int level);
+  virtual double CalcVLong();
+  virtual double CalcU(double &r, double &rP, double &s, int level);
+  virtual double CalcULong(int b0, int b1, int level);
+  virtual double CalcdUdBeta(double &r, double &rP, double &s, int level);
+  virtual double CalcdUdBetaLong();
 
 };
 

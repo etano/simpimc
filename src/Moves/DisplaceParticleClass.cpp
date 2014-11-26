@@ -4,7 +4,7 @@ void DisplaceParticle::Init(Input &in)
 {
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies);
-  stepSize = in.getAttribute<RealType>("stepSize");
+  stepSize = in.getAttribute<double>("stepSize");
 }
 
 // Accept current move
@@ -46,7 +46,7 @@ int DisplaceParticle::Attempt()
 
   // New sampling
   path.SetMode(1);
-  vec<RealType> dr(path.nD);
+  vec<double> dr(path.nD);
   rng.unifRand(dr, stepSize);
 
   // Set which beads are affected by the move
@@ -58,8 +58,8 @@ int DisplaceParticle::Attempt()
   }
 
   // Calculate action change
-  RealType oldAction = 0.;
-  RealType newAction = 0.;
+  double oldAction = 0.;
+  double newAction = 0.;
   for (int iAction=0; iAction<actionList.size(); ++iAction) {
     // Old action
     path.SetMode(0);
@@ -70,7 +70,7 @@ int DisplaceParticle::Attempt()
     newAction += actionList[iAction]->GetAction(0, path.nBead, particles, 0);
   }
 
-  RealType logAcceptProb = oldAction - newAction;
+  double logAcceptProb = oldAction - newAction;
 
   // Metropolis reject step
   if (logAcceptProb < log(rng.unifRand()))

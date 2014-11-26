@@ -6,7 +6,7 @@
 class Sign : public Observable
 {
 private:
-  RealType sign;
+  double sign;
 protected:
 public:
   Sign(Path &tmpPath, Input &in, IOClass &out)

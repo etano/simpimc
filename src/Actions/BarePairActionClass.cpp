@@ -12,8 +12,8 @@ void BarePairAction::ReadFile(string fileName)
     // Read in v
   int nr_v;
   in.Read("v/diag/nr", nr_v);
-  vec<RealType> r_v(nr_v);
-  vec<RealType> v_r(nr_v);
+  vec<double> r_v(nr_v);
+  vec<double> v_r(nr_v);
   in.Read("v/diag/r", r_v);
   in.Read("v/diag/v_r", v_r);
 
@@ -28,8 +28,8 @@ void BarePairAction::ReadFile(string fileName)
     // Read in r
     int nr_vLong;
     in.Read("v/diag/nrLong", nr_vLong);
-    vec<RealType> r_vLong(nr_vLong);
-    vec<RealType> vLong_r(nr_vLong);
+    vec<double> r_vLong(nr_vLong);
+    vec<double> vLong_r(nr_vLong);
     in.Read("v/diag/rLong",r_vLong);
     in.Read("v/diag/vLong_r",vLong_r);
     in.Read("v/diag/vLong_r0",vLong_r0);
@@ -43,8 +43,8 @@ void BarePairAction::ReadFile(string fileName)
     // Read in k
     int nk_v;
     in.Read("v/diag/nk", nk_v);
-    vec<RealType> k_v(nk_v);
-    vec<RealType> tmpVLong_k(nk_v);
+    vec<double> k_v(nk_v);
+    vec<double> tmpVLong_k(nk_v);
     in.Read("v/diag/k",k_v);
     in.Read("v/diag/vLong_k",tmpVLong_k);
     in.Read("v/diag/vLong_k0",vLong_k0);
@@ -73,14 +73,14 @@ void BarePairAction::ReadFile(string fileName)
 }
 
 /// Calculate the V(r,r') value when given r and r' and the level 
-RealType BarePairAction::CalcV(RealType &r, RealType &rP, int level)
+double BarePairAction::CalcV(double &r, double &rP, int level)
 {
   // Limits
   SetLimits(r_v_min, r_v_max, r, rP);
 
   // Calculate V
-  RealType V = 0.;
-  RealType tmpV;
+  double V = 0.;
+  double tmpV;
   eval_NUBspline_1d_d(v_r_spline,r,&tmpV);
   V += 0.5*tmpV;
   eval_NUBspline_1d_d(v_r_spline,rP,&tmpV);
@@ -97,31 +97,31 @@ RealType BarePairAction::CalcV(RealType &r, RealType &rP, int level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-RealType BarePairAction::CalcU(RealType &r, RealType &rP, RealType &s, int level)
+double BarePairAction::CalcU(double &r, double &rP, double &s, int level)
 {
   int skip = 1>>level;
-  RealType levelTau = skip*path.tau;
+  double levelTau = skip*path.tau;
   return levelTau*CalcV(r,rP,level);
 }
 
 /// Calculate the dU(r,r') value when given r and r' and the level 
-RealType BarePairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level)
+double BarePairAction::CalcdUdBeta(double &r, double &rP, double &s, int level)
 {
   return CalcV(r,rP,level);
 }
 
 /// Calculate the ULong value
-RealType BarePairAction::CalcVLong()
+double BarePairAction::CalcVLong()
 {
   // Get rho k
-  field< vec<ComplexType> >& rhoK(path.GetRhoK());
+  field< vec< complex<double> > >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
-  RealType tot = 0.;
+  double tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=0; iB<path.nBead; iB++) {
-        RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+        double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += rhok2*vLong_k(iK);
       }
     }
@@ -134,18 +134,18 @@ RealType BarePairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-RealType BarePairAction::CalcULong(int b0, int b1, int level)
+double BarePairAction::CalcULong(int b0, int b1, int level)
 {
   // Get rho k
-  field< vec<ComplexType> >& rhoK(path.GetRhoK());
+  field< vec< complex<double> > >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   int skip = 1<<level;
-  RealType tot = 0.;
+  double tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=b0; iB<b1; iB+=skip) {
-        RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+        double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += vLong_k(iK)*rhok2;
       }
     }
@@ -158,7 +158,7 @@ RealType BarePairAction::CalcULong(int b0, int b1, int level)
 }
 
 /// Calculate the dUdBetaLong value
-RealType BarePairAction::CalcdUdBetaLong()
+double BarePairAction::CalcdUdBetaLong()
 {
   return CalcVLong();
 }

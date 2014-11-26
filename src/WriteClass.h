@@ -2,14 +2,12 @@
 #define WritesClass_H
 
 #include "EventClass.h"
-#include "Utils/IO/InputClass.h"
-#include "Utils/IO/IOClass.h"
 
 class Writes : public Event
 {
 private:
   int iBlock;
-  RealType initial, start, end;
+  double initial, start, end;
 protected:
   // Output
   IOClass &Out;

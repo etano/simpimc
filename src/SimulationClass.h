@@ -2,12 +2,8 @@
 #define SimulationClass_H
 
 #include "config.h"
-#include "Utils/Communication/Communication.h"
-#include "Utils/IO/InputClass.h"
-#include "Utils/IO/IOClass.h"
-#include "Utils/RNG/RNGClass.h" // RNG class
-#include "PathClass.h" // paths class
-#include "AlgorithmClass.h" // paths class
+#include "PathClass.h"
+#include "AlgorithmClass.h"
 
 class Simulation
 {

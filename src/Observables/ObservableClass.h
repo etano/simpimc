@@ -3,8 +3,6 @@
 
 #include "../EventClass.h"
 #include "../PathClass.h"
-#include "../Utils/IO/InputClass.h"
-#include "../Utils/IO/IOClass.h"
 
 class Observable : public Event
 {
@@ -17,11 +15,11 @@ protected:
 
   struct LinearGrid
   {
-    vec<RealType> rs;
-    RealType rMin, rMax, dr, iDr;
+    vec<double> rs;
+    double rMin, rMax, dr, iDr;
     int nR;
 
-    void CreateGrid(RealType t_rMin, RealType t_rMax, int t_nR)
+    void CreateGrid(double t_rMin, double t_rMax, int t_nR)
     {
       rMin = t_rMin;
       rMax = t_rMax;
@@ -32,8 +30,8 @@ protected:
       for (int i=0; i<nR; ++i)
         rs(i) = rMin + i*dr;
     };
-    inline RealType operator() (int i) { return rs(i); };
-    int ReverseMap(RealType r) {
+    inline double operator() (int i) { return rs(i); };
+    int ReverseMap(double r) {
       int i = (int) nearbyint((r-rMin)*iDr-0.5);
       if (i < 0)
         return 0;
@@ -44,7 +42,7 @@ protected:
 
   struct Histogram
   {
-    vec<RealType> y;
+    vec<double> y;
     LinearGrid x;
   };
 
@@ -73,10 +71,10 @@ public:
   inline void DoEvent() {
     struct timeval time;
     gettimeofday(&time, NULL); // Start Time
-    RealType start = time.tv_sec + (time.tv_usec / 1000000.);
+    double start = time.tv_sec + (time.tv_usec / 1000000.);
     Accumulate();
     gettimeofday(&time, NULL); //END-TIME
-    RealType end = time.tv_sec + (time.tv_usec / 1000000.);
+    double end = time.tv_sec + (time.tv_usec / 1000000.);
     timeSpent += end - start;
   }
   virtual void Init(Input &in) {};

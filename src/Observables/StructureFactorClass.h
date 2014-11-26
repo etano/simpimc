@@ -8,8 +8,8 @@ class StructureFactor : public Observable
 private:
   string speciesA, speciesB;
   int iSpeciesA, iSpeciesB;
-  vec<RealType> sk;
-  RealType kCut;
+  vec<double> sk;
+  double kCut;
 protected:
 public:
   StructureFactor(Path &tmpPath, Input &in, IOClass &out)

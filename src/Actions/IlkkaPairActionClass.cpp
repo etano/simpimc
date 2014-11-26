@@ -15,9 +15,9 @@ void IlkkaPairAction::ReadFile(string fileName)
   int nx_u, ny_u;
   in.Read("u/offDiag/nx", nx_u);
   in.Read("u/offDiag/ny", ny_u);
-  vec<RealType> x_u(nx_u);
-  vec<RealType> y_u(ny_u);
-  mat<RealType> u_xy(nx_u,ny_u);
+  vec<double> x_u(nx_u);
+  vec<double> y_u(ny_u);
+  mat<double> u_xy(nx_u,ny_u);
   in.Read("u/offDiag/x", x_u);
   in.Read("u/offDiag/y", y_u);
   in.Read("u/offDiag/u_xy", u_xy);
@@ -32,8 +32,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in r
     int nr_u;
     in.Read("u/diag/nrLong", nr_u);
-    vec<RealType> r_u(nr_u);
-    vec<RealType> uLong_r(nr_u);
+    vec<double> r_u(nr_u);
+    vec<double> uLong_r(nr_u);
     in.Read("u/diag/rLong", r_u);
     in.Read("u/diag/uLong_r", uLong_r);
     in.Read("u/diag/uLong_r0",uLong_r0);
@@ -47,8 +47,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in k
     int nk_u;
     in.Read("u/diag/nk", nk_u);
-    vec<RealType> k_u(nk_u);
-    vec<RealType> tmpULong_k(nk_u);
+    vec<double> k_u(nk_u);
+    vec<double> tmpULong_k(nk_u);
     in.Read("u/diag/k",k_u);
     in.Read("u/diag/uLong_k",tmpULong_k);
     in.Read("u/diag/uLong_k0",uLong_k0);
@@ -67,9 +67,9 @@ void IlkkaPairAction::ReadFile(string fileName)
   int nx_du, ny_du;
   in.Read("du/offDiag/nx", nx_du);
   in.Read("du/offDiag/ny", ny_du);
-  vec<RealType> x_du(nx_du);
-  vec<RealType> y_du(ny_du);
-  mat<RealType> du_xy(nx_du,ny_du);
+  vec<double> x_du(nx_du);
+  vec<double> y_du(ny_du);
+  mat<double> du_xy(nx_du,ny_du);
   in.Read("du/offDiag/x", x_du);
   in.Read("du/offDiag/y", y_du);
   in.Read("du/offDiag/du_xy", du_xy);
@@ -84,8 +84,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in r
     int nr_du;
     in.Read("du/diag/nrLong", nr_du);
-    vec<RealType> r_du(nr_du);
-    vec<RealType> duLong_r(nr_du);
+    vec<double> r_du(nr_du);
+    vec<double> duLong_r(nr_du);
     in.Read("du/diag/rLong", r_du);
     in.Read("du/diag/duLong_r", duLong_r);
     in.Read("du/diag/duLong_r0",duLong_r0);
@@ -99,8 +99,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in k
     int nk_du;
     in.Read("du/diag/nk", nk_du);
-    vec<RealType> k_du(nk_du);
-    vec<RealType> tmpDULong_k(nk_du);
+    vec<double> k_du(nk_du);
+    vec<double> tmpDULong_k(nk_du);
     in.Read("du/diag/k",k_du);
     in.Read("du/diag/duLong_k",tmpDULong_k);
     in.Read("du/diag/duLong_k0",duLong_k0);
@@ -119,8 +119,8 @@ void IlkkaPairAction::ReadFile(string fileName)
   // Read in v
   int nr_v;
   in.Read("v/diag/nr", nr_v);
-  vec<RealType> r_v(nr_v);
-  vec<RealType> v_r(nr_v);
+  vec<double> r_v(nr_v);
+  vec<double> v_r(nr_v);
   in.Read("v/diag/r", r_v);
   in.Read("v/diag/v_r", v_r);
 
@@ -135,8 +135,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in r
     int nr_vLong;
     in.Read("v/diag/nrLong", nr_vLong);
-    vec<RealType> r_vLong(nr_vLong);
-    vec<RealType> vLong_r(nr_vLong);
+    vec<double> r_vLong(nr_vLong);
+    vec<double> vLong_r(nr_vLong);
     in.Read("v/diag/rLong",r_vLong);
     in.Read("v/diag/vLong_r",vLong_r);
     in.Read("v/diag/vLong_r0",vLong_r0);
@@ -150,8 +150,8 @@ void IlkkaPairAction::ReadFile(string fileName)
     // Read in k
     int nk_v;
     in.Read("v/diag/nk", nk_v);
-    vec<RealType> k_v(nk_v);
-    vec<RealType> tmpVLong_k(nk_v);
+    vec<double> k_v(nk_v);
+    vec<double> tmpVLong_k(nk_v);
     in.Read("v/diag/k",k_v);
     in.Read("v/diag/vLong_k",tmpVLong_k);
     in.Read("v/diag/vLong_k0",vLong_k0);
@@ -184,14 +184,14 @@ void IlkkaPairAction::ReadFile(string fileName)
 }
 
 /// Calculate the V(r,r') value when given r and r' and the level 
-RealType IlkkaPairAction::CalcV(RealType &r, RealType &rP, int level)
+double IlkkaPairAction::CalcV(double &r, double &rP, int level)
 {
   // Limits
   SetLimits(r_v_min, r_v_max, r, rP);
 
   // Calculate V
-  RealType V = 0.;
-  RealType tmpV;
+  double V = 0.;
+  double tmpV;
   eval_NUBspline_1d_d(v_r_spline,r,&tmpV);
   V += 0.5*tmpV;
   eval_NUBspline_1d_d(v_r_spline,rP,&tmpV);
@@ -208,15 +208,15 @@ RealType IlkkaPairAction::CalcV(RealType &r, RealType &rP, int level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-RealType IlkkaPairAction::CalcU(RealType &r, RealType &rP, RealType &s, int level)
+double IlkkaPairAction::CalcU(double &r, double &rP, double &s, int level)
 {
   // Constants
-  RealType q = 0.5*(r + rP);
-  RealType x = q + 0.5*s;
-  RealType y = q - 0.5*s;
+  double q = 0.5*(r + rP);
+  double x = q + 0.5*s;
+  double y = q - 0.5*s;
 
   // Calculate U
-  RealType U = 0.;
+  double U = 0.;
   eval_NUBspline_2d_d(u_xy_spline,x,y,&U);
 
   // Subtract out long range part
@@ -225,7 +225,7 @@ RealType IlkkaPairAction::CalcU(RealType &r, RealType &rP, RealType &s, int leve
     SetLimits(r_u_min, r_u_max, r, rP);
 
     // Splines
-    RealType tmpU;
+    double tmpU;
     eval_NUBspline_1d_d(uLong_r_spline,r,&tmpU);
     U -= 0.5*tmpU;
     eval_NUBspline_1d_d(uLong_r_spline,rP,&tmpU);
@@ -236,15 +236,15 @@ RealType IlkkaPairAction::CalcU(RealType &r, RealType &rP, RealType &s, int leve
 }
 
 /// Calculate the dU(r,r') value when given r and r' and the level 
-RealType IlkkaPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level)
+double IlkkaPairAction::CalcdUdBeta(double &r, double &rP, double &s, int level)
 {
   // Constants
-  RealType q = 0.5*(r + rP);
-  RealType x = q + 0.5*s;
-  RealType y = q - 0.5*s;
+  double q = 0.5*(r + rP);
+  double x = q + 0.5*s;
+  double y = q - 0.5*s;
 
   // Calculate dU
-  RealType dU = 0.;
+  double dU = 0.;
   eval_NUBspline_2d_d(du_xy_spline,x,y,&dU);
 
   // Subtract out long range part
@@ -253,7 +253,7 @@ RealType IlkkaPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, in
     SetLimits(r_du_min, r_du_max, r, rP);
 
     // Splines
-    RealType tmpDU;
+    double tmpDU;
     eval_NUBspline_1d_d(duLong_r_spline,r,&tmpDU);
     dU -= 0.5*tmpDU;
     eval_NUBspline_1d_d(duLong_r_spline,rP,&tmpDU);
@@ -264,17 +264,17 @@ RealType IlkkaPairAction::CalcdUdBeta(RealType &r, RealType &rP, RealType &s, in
 }
 
 /// Calculate the ULong value
-RealType IlkkaPairAction::CalcVLong()
+double IlkkaPairAction::CalcVLong()
 {
   // Get rho k
-  field< vec<ComplexType> >& rhoK(path.GetRhoK());
+  field< vec< complex<double> > >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
-  RealType tot = 0.;
+  double tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=0; iB<path.nBead; iB++) {
-        RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+        double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += rhok2*vLong_k(iK);
       }
     }
@@ -287,18 +287,18 @@ RealType IlkkaPairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-RealType IlkkaPairAction::CalcULong(int b0, int b1, int level)
+double IlkkaPairAction::CalcULong(int b0, int b1, int level)
 {
   // Get rho k
-  field< vec<ComplexType> >& rhoK(path.GetRhoK());
+  field< vec< complex<double> > >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
   int skip = 1<<level;
-  RealType tot = 0.;
+  double tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=b0; iB<b1; iB+=skip) {
-        RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+        double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += uLong_k(iK)*rhok2;
       }
     }
@@ -311,17 +311,17 @@ RealType IlkkaPairAction::CalcULong(int b0, int b1, int level)
 }
 
 /// Calculate the dUdBetaLong value
-RealType IlkkaPairAction::CalcdUdBetaLong()
+double IlkkaPairAction::CalcdUdBetaLong()
 {
   // Get rho k
-  field< vec<ComplexType> >& rhoK(path.GetRhoK());
+  field< vec< complex<double> > >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
-  RealType tot = 0.;
+  double tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
       for (int iB=0; iB<path.nBead; iB++) {
-        RealType rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+        double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += duLong_k(iK)*rhok2;
       }
     }

@@ -5,7 +5,7 @@ void Species::Init(Input &in, IOClass &out)
   // Read inputs
   name = in.getAttribute<string>("name");
   nPart = in.getAttribute<int>("nPart");
-  lambda = in.getAttribute<RealType>("lambda");
+  lambda = in.getAttribute<double>("lambda");
   fermi = in.getAttribute<int>("fermi", 0);
   fixedNode = in.getAttribute<int>("fixedNode", 0);
   initType = in.getAttribute<string>("initType","Random");
@@ -69,7 +69,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
             bead(iP,iB)->storeR();
           }
         } else {
-          vec<RealType> r(nD);
+          vec<double> r(nD);
           for (int iD=0; iD<nD; ++iD)
             initFile >> r(iD);
           for (int iB=0; iB<nBead; ++iB) {
@@ -86,10 +86,10 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
 
   // Random configuration
   } else if (initType == "Random") {
-    RealType cofactor = in.getAttribute<RealType>("cofactor",1.);
+    double cofactor = in.getAttribute<double>("cofactor",1.);
     for (int iP=0; iP<nPart; ++iP) {
       for (int iD=0; iD<nD; ++iD) {
-        RealType tmpRand = rng.unifRand(-cofactor*L/2.,cofactor*L/2.);
+        double tmpRand = rng.unifRand(-cofactor*L/2.,cofactor*L/2.);
         for (int iB=0; iB<nBead; ++iB)
           bead(iP,iB)->r(iD) = tmpRand;
       }
@@ -101,7 +101,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
   // BCC Lattice
   } else if (initType == "BCC") {
     int nPartPerND = (int) ceil (pow(0.5*nPart, 1.0/nD));
-    RealType delta = L/nPartPerND;
+    double delta = L/nPartPerND;
     for (unsigned int iP=0; iP<nPart; iP++) {
       int p = iP/2;
       vec<int> tmp(nD);
@@ -110,7 +110,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
         tmp(1) = (p-(tmp(0)*nPartPerND*nPartPerND))/nPartPerND;
       if (nD > 2)
         tmp(2) = p - tmp(0)*nPartPerND*nPartPerND - tmp(1)*nPartPerND;
-      vec<RealType> r(nD);
+      vec<double> r(nD);
       for (int iD=0; iD<nD; ++iD) {
         r(iD) = delta*tmp(iD) - 0.5*L;
         if (iP % 2)
@@ -124,9 +124,9 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
 
   // Cubic Lattice
   } else if (initType == "Cubic") {
-    RealType cofactor = in.getAttribute<RealType>("cofactor",1.);
+    double cofactor = in.getAttribute<double>("cofactor",1.);
     int nPartPerND = (int) ceil (pow(0.5*nPart, 1.0/nD));
-    RealType delta = cofactor*L/(1.*nPartPerND);
+    double delta = cofactor*L/(1.*nPartPerND);
     for (unsigned int iP=0; iP<nPart; iP++) {
       vec<int> tmp(nD);
       tmp(0) = iP/(nPartPerND*nPartPerND);
@@ -134,7 +134,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
         tmp(1) = (iP-(tmp(0)*nPartPerND*nPartPerND))/nPartPerND;
       if (nD > 2)
         tmp(2) = iP - tmp(0)*nPartPerND*nPartPerND - tmp(1)*nPartPerND;
-      vec<RealType> r(nD);
+      vec<double> r(nD);
       for (int iD=0; iD<nD; ++iD)
         r(iD) = delta*tmp(iD) - 0.5*L;
       for (int iB=0; iB<nBead; ++iB) {
@@ -163,7 +163,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     restartFile.Read("Observables/PathDump/"+name+"/nDump",nDump);
 
     // Get positions
-    cube<RealType> pathPositions(nPart*nBead,nD,nDump);
+    cube<double> pathPositions(nPart*nBead,nD,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/positions",pathPositions);
     for (int iP=0; iP<nPart; ++iP) {
       for (int iB=0; iB<nBead; ++iB) {
@@ -175,7 +175,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     }
 
     // Get permutation
-    cube<RealType> pathPermutation(nPart,2,nDump);
+    cube<double> pathPermutation(nPart,2,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/permutation",pathPermutation);
     for (int iP=0; iP<nPart; ++iP) {
       bead(iP,0)->prev = bead(pathPermutation(iP,0,nDump-1),nBead-1);

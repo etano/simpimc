@@ -11,18 +11,18 @@ private:
   int nImages;
   unsigned int nLevel, nBisectBeads, nPart, nPermPart, nPermType;
   unsigned int bead0, bead1;
-  RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon, targetRatio;
+  double lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon, targetRatio;
   bool adaptive, rollOver, fixedNode;
 
   struct Cycle
   {
-    RealType weight, contribution;
+    double weight, contribution;
     int index, type;
     vec<int> perm, iPerm, part;
   };
   vector<Cycle*> cycles;
   field<Cycle> all_cycles;
-  mat<RealType> t;
+  mat<double> t;
 
   vec<int> permAttempt, permAccept;
 

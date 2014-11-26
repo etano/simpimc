@@ -17,19 +17,19 @@ public:
 
   // Data
   NUgrid* grid;
-  vec<RealType> taus;
+  vec<double> taus;
   field<multi_NUBspline_1d_d*> Ukj, dUkjdBeta;
 
   // Functions
   virtual void ReadFile(string fileName);
 
   // Pair actions
-  virtual RealType CalcV(RealType &r, RealType &rP, int level);
-  virtual RealType CalcVLong() { return 0.; };
-  virtual RealType CalcU(RealType &r, RealType &rP, RealType &s, int level);
-  virtual RealType CalcULong(int b0, int b1, int level) { return 0.; };
-  virtual RealType CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level);
-  virtual RealType CalcdUdBetaLong() { return 0.; };
+  virtual double CalcV(double &r, double &rP, int level);
+  virtual double CalcVLong() { return 0.; };
+  virtual double CalcU(double &r, double &rP, double &s, int level);
+  virtual double CalcULong(int b0, int b1, int level) { return 0.; };
+  virtual double CalcdUdBeta(double &r, double &rP, double &s, int level);
+  virtual double CalcdUdBetaLong() { return 0.; };
 
 };
 

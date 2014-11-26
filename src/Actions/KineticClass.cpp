@@ -13,15 +13,15 @@ void Kinetic::Init(Input &in)
   out.Write("/Actions/"+name+"/nImages", nImages);
 }
 
-RealType Kinetic::DActionDBeta()
+double Kinetic::DActionDBeta()
 {
-  RealType tot = 0.;
-  vec<RealType> gaussSum(path.nD), numSum(path.nD), numProd(path.nD), dr(path.nD);
+  double tot = 0.;
+  vec<double> gaussSum(path.nD), numSum(path.nD), numProd(path.nD), dr(path.nD);
   for (int iS=0; iS<path.nSpecies; iS++) {
-    RealType lambda = path.speciesList[iS]->lambda;
+    double lambda = path.speciesList[iS]->lambda;
     if (!fequal(lambda,0.,1e-10)) {
-      RealType i4LambdaTau = 1./(4.*lambda*path.tau);
-      RealType gaussProd, dist, dist2i4LambdaTau, expPart, scalarNumSum;
+      double i4LambdaTau = 1./(4.*lambda*path.tau);
+      double gaussProd, dist, dist2i4LambdaTau, expPart, scalarNumSum;
       for (int iP=0; iP<path.speciesList[iS]->nPart; iP++) {
         for (int iB=0; iB<path.nBead; iB++) {
           path.Dr(path(iS,iP,iB),path.GetNextBead(path(iS,iP,iB),1),dr);
@@ -58,20 +58,20 @@ RealType Kinetic::DActionDBeta()
   return tot;
 }
 
-RealType Kinetic::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
+double Kinetic::GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
 {
   int skip = 1<<level;
-  RealType levelTau = skip*path.tau;
-  RealType tot = 0.;
-  vec<RealType> dr(path.nD);
+  double levelTau = skip*path.tau;
+  double tot = 0.;
+  vec<double> dr(path.nD);
   Bead *beadA, *beadB, *beadC, *beadF;
   for (int p=0; p<particles.size(); ++p) {
     int iS = particles[p].first;
     int iP = particles[p].second;
-    RealType lambda = path.speciesList[iS]->lambda;
+    double lambda = path.speciesList[iS]->lambda;
     if (!fequal(lambda,0.,1e-10)) {
-      RealType i4LambdaTau = 1./(4.*lambda*levelTau);
-      RealType gaussProd, gaussSum, dist;
+      double i4LambdaTau = 1./(4.*lambda*levelTau);
+      double gaussProd, gaussSum, dist;
       beadA = path(iS,iP,b0);
       beadF = path.GetNextBead(beadA,b1-b0);
       while(beadA != beadF) {
@@ -82,7 +82,7 @@ RealType Kinetic::GetAction(int b0, int b1, vector< pair<int,int> > &particles, 
           gaussSum = 0.;
           for (int image=-nImages; image<=nImages; image++) {
             dist = dr(iD) + image*path.L;
-            gaussSum += path.fexp(-dist*dist*i4LambdaTau);
+            gaussSum += exp(-dist*dist*i4LambdaTau);
           }
           gaussProd *= gaussSum;
         }

@@ -29,11 +29,11 @@ void Time::Write()
   struct timeval time;
   gettimeofday(&time, NULL); //END-TIME
   end = time.tv_sec + (time.tv_usec / 1000000.);
-  RealType totalTime = end - start;
-  RealType norm = 1.;
+  double totalTime = end - start;
+  double norm = 1.;
   if (totalTime != 0)
     norm /= totalTime;
-  vector<RealType> eventTimes(eventList.size());
+  vector<double> eventTimes(eventList.size());
   for (int i=0; i<eventTimes.size(); ++i)
     eventTimes[i] = eventList[i]->timeSpent;
 

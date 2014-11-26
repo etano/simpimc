@@ -95,7 +95,7 @@ void Permutation::Write()
     int nCycles = 0;
     for (int i=0; i<cycles.size(); i++)
       nCycles += cycles(i);
-    RealType norm = 1./nCycles;
+    double norm = 1./nCycles;
     cycles *= norm;
     if (firstTime)
       out.CreateExtendableDataSet("/"+prefix+"/cycles/", "y", cycles);

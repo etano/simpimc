@@ -12,13 +12,13 @@ void PermBisectIterative::Init(Input &in)
   else
     nImages = 0;
   species = in.getAttribute<string>("species");
-  epsilon = in.getAttribute<RealType>("epsilon",1.e-100);
+  epsilon = in.getAttribute<double>("epsilon",1.e-100);
   logEpsilon = log(epsilon);
 
   // Adaptive bisection level
   adaptive = in.getAttribute<int>("adaptive",0);
   if (adaptive)
-    targetRatio = in.getAttribute<RealType>("targetRatio");
+    targetRatio = in.getAttribute<double>("targetRatio");
 
   // Set species things
   path.GetSpeciesInfo(species,iSpecies);
@@ -88,7 +88,7 @@ void PermBisectIterative::Reject()
 void PermBisectIterative::Reset()
 {
   if (adaptive) {
-    RealType acceptRatio = (RealType) nAccept / (RealType) nAttempt;
+    double acceptRatio = (double) nAccept / (double) nAttempt;
     if (acceptRatio < targetRatio && nLevel > 0)
       nLevel--;
     else
@@ -144,21 +144,21 @@ int PermBisectIterative::Attempt()
 
   // Perform the bisection (move exactly through kinetic action)
   field<Bead*> beadB(nPermPart), beadC(nPermPart);
-  RealType prevActionChange = -log(c.weight);
-  RealType prefactorOfSampleProb = 0.;
-  vec<RealType> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
-  RealType gaussProdOld, gaussSumOld, distOld, gaussProdNew, gaussSumNew, distNew;
+  double prevActionChange = -log(c.weight);
+  double prefactorOfSampleProb = 0.;
+  vec<double> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
+  double gaussProdOld, gaussSumOld, distOld, gaussProdNew, gaussSumNew, distNew;
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
 
     // Level specific quantities
     int skip = 1<<iLevel;
-    RealType levelTau = path.tau*skip;
-    RealType sigma2 = lambda*levelTau;
-    RealType sigma = sqrt(sigma2);
+    double levelTau = path.tau*skip;
+    double sigma2 = lambda*levelTau;
+    double sigma = sqrt(sigma2);
 
     // Calculate sampling probability
-    RealType oldLogSampleProb = 0.;
-    RealType newLogSampleProb = 0.;
+    double oldLogSampleProb = 0.;
+    double newLogSampleProb = 0.;
     for (unsigned int i=0; i<nPermPart; i++) {
       beadA(i) = beadI(i);
       while(beadA(i) != beadF(i)) {
@@ -174,7 +174,7 @@ int PermBisectIterative::Attempt()
         beadB(i) = path.GetNextBead(beadA(i),skip);
         beadC(i) = path.GetNextBead(beadB(i),skip);
         path.RBar(beadC(i), beadA(i), rBarNew);
-        rng.normRand(deltaNew, 0, sigma);
+        rng.normRand(deltaNew, 0., sigma);
         path.PutInBox(deltaNew);
         beadB(i)->r = rBarNew + deltaNew;
 
@@ -185,8 +185,8 @@ int PermBisectIterative::Attempt()
           gaussSumOld = 0.;
           gaussSumNew = 0.;
           for (int image=-nImages; image<=nImages; image++) {
-            distOld = deltaOld(iD) + (RealType)image*path.L;
-            distNew = deltaNew(iD) + (RealType)image*path.L;
+            distOld = deltaOld(iD) + (double)image*path.L;
+            distNew = deltaNew(iD) + (double)image*path.L;
             gaussSumOld += path.fexp(-0.5*distOld*distOld/sigma2);
             gaussSumNew += path.fexp(-0.5*distNew*distNew/sigma2);
           }
@@ -202,8 +202,8 @@ int PermBisectIterative::Attempt()
     }
 
     // Calculate action change
-    RealType oldAction = 0.;
-    RealType newAction = 0.;
+    double oldAction = 0.;
+    double newAction = 0.;
     for (int iAction=0; iAction<actionList.size(); ++iAction) {
       // Old action
       path.SetMode(0);
@@ -215,9 +215,9 @@ int PermBisectIterative::Attempt()
     }
 
     // Calculate acceptance ratio
-    RealType logSampleRatio = -newLogSampleProb + oldLogSampleProb;
-    RealType currActionChange = newAction - oldAction;
-    RealType logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
+    double logSampleRatio = -newLogSampleProb + oldLogSampleProb;
+    double currActionChange = newAction - oldAction;
+    double logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
 
     // Metropolis step
     if (logAcceptProb < log(rng.unifRand()))
@@ -239,8 +239,8 @@ void PermBisectIterative::updatePermTable()
   }
 
   // Construct t table
-  vec<RealType> dr_ij(path.nD), dr_ii(path.nD);
-  RealType exponent;
+  vec<double> dr_ij(path.nD), dr_ii(path.nD);
+  double exponent;
   for (unsigned int i=0; i<nPart; i++) {
     for (unsigned int j=0; j<nPart; j++) {
       path.Dr(b0(i), b1(j), dr_ij);
@@ -258,7 +258,7 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
 {
   // Update t
   updatePermTable();
-  mat<RealType> t_c = t;
+  mat<double> t_c = t;
 
   // Choose particles
   int p0 = rng.unifRand(nPart) - 1;  // Pick first particle at random
@@ -281,8 +281,8 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
       t_c(p,p0) = 0.;
 
     // Calculate row total
-    RealType Q_p = 0.;
-    RealType Q_p_c = 0.;
+    double Q_p = 0.;
+    double Q_p_c = 0.;
     for (int i=0; i<nPart; ++i) {
       Q_p += t(p,i);
       Q_p_c += t_c(p,i);
@@ -293,8 +293,8 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
       return 0;
 
     // Select next particle with bisective search
-    RealType x = rng.unifRand();
-    RealType t_Q = 0.;
+    double x = rng.unifRand();
+    double t_Q = 0.;
     for (int i=0; i<nPart; ++i) { // fixme: not doing bisection
       t_Q += t_c(p,i)/Q_p_c;
       if (t_Q > x) {

@@ -24,7 +24,7 @@ void Sign::Accumulate()
 void Sign::Write()
 {
   if (nMeasure > 0) {
-    RealType norm = 1.*nMeasure;
+    double norm = 1.*nMeasure;
 
     // Write sign
     sign /= norm;

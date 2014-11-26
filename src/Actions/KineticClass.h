@@ -9,7 +9,7 @@ class Kinetic : public Action
 {
 private:
   int nImages;
-  RealType normalization;
+  double normalization;
 
 protected:
 
@@ -23,8 +23,8 @@ public:
 
   // Functions
   virtual void Init(Input &in);
-  virtual RealType DActionDBeta();
-  virtual RealType GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level);
+  virtual double DActionDBeta();
+  virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level);
   virtual void Write();
 };
 

@@ -17,24 +17,24 @@ protected:
   string speciesA, speciesB;
   int iSpeciesA, iSpeciesB;
   bool isConstant, isFirstTime;
-  RealType dUdBConstant, VConstant;
+  double dUdBConstant, VConstant;
 
   // Long Range
   int useLongRange;
-  RealType kCut;
+  double kCut;
 
   // Helpers
   virtual void ReadFile(string fileName) = 0;
-  inline void GetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rPrime, NUgrid *g);
-  inline void SetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rPrime);
+  inline void GetLimits(double &rMin, double &rMax, double &r, double &rPrime, NUgrid *g);
+  inline void SetLimits(double &rMin, double &rMax, double &r, double &rPrime);
 
   // Pair actions
-  virtual RealType CalcV(RealType &r, RealType &rP, int level) = 0;
-  virtual RealType CalcVLong() = 0;
-  virtual RealType CalcU(RealType &r, RealType &rP, RealType &s, int level) = 0;
-  virtual RealType CalcULong(int b0, int b1, int level) = 0;
-  virtual RealType CalcdUdBeta(RealType &r, RealType &rP, RealType &s, int level) = 0;
-  virtual RealType CalcdUdBetaLong() = 0;
+  virtual double CalcV(double &r, double &rP, int level) = 0;
+  virtual double CalcVLong() = 0;
+  virtual double CalcU(double &r, double &rP, double &s, int level) = 0;
+  virtual double CalcULong(int b0, int b1, int level) = 0;
+  virtual double CalcdUdBeta(double &r, double &rP, double &s, int level) = 0;
+  virtual double CalcdUdBetaLong() = 0;
 
 public:
   // Constructor
@@ -44,23 +44,23 @@ public:
 
   // Functions
   virtual void Init(Input &in);
-  virtual RealType DActionDBeta();
-  virtual RealType GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level);
-  virtual RealType Potential();
+  virtual double DActionDBeta();
+  virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level);
+  virtual double Potential();
   virtual void Write();
   virtual void Accept();
   virtual void Reject();
 
 };
 
-inline void PairAction::GetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rP, NUgrid *g)
+inline void PairAction::GetLimits(double &rMin, double &rMax, double &r, double &rP, NUgrid *g)
 {
   rMin = g->start;
   rMax = g->end;
   SetLimits(rMin,rMax,r,rP);
 }
 
-inline void PairAction::SetLimits(RealType &rMin, RealType &rMax, RealType &r, RealType &rP)
+inline void PairAction::SetLimits(double &rMin, double &rMax, double &r, double &rP)
 {
   if (r > rMax)
     r = rMax;

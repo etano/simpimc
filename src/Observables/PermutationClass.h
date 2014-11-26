@@ -6,7 +6,7 @@
 class Permutation : public Observable
 {
 private:
-  vec<RealType> cycles;
+  vec<double> cycles;
   vector<int> sectors;
   string species;
   int iSpecies;

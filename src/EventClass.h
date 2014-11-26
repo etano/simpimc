@@ -15,7 +15,7 @@ public:
   Event() { timeSpent = 0.; }
 
   string name;
-  RealType timeSpent;
+  double timeSpent;
   virtual void DoEvent() {};
   virtual void Write() {};
 };

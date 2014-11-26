@@ -12,7 +12,7 @@ void PermBisect::Init(Input &in)
     nImages = 0;
   species = in.getAttribute<string>("species");
   nPermPart = in.getAttribute<int>("nPermPart");
-  epsilon = in.getAttribute<RealType>("epsilon",1.e-100);
+  epsilon = in.getAttribute<double>("epsilon",1.e-100);
   logEpsilon = log(epsilon);
 
   // Set species things
@@ -147,7 +147,7 @@ int PermBisect::Attempt()
 
   // Set up permutation
   cycles.clear();
-  RealType permTot0 = constructPermTable(); // Permutation weight table
+  double permTot0 = constructPermTable(); // Permutation weight table
   int cycleIndex = selectCycle(permTot0);
   Cycle* c = cycles[cycleIndex];
 
@@ -175,22 +175,22 @@ int PermBisect::Attempt()
 
   // Perform the bisection (move exactly through kinetic action)
   field<Bead*> beadB(nPartPerm), beadC(nPartPerm);
-  RealType oldCycleWeight = -log(c->weight);
-  RealType prevActionChange = oldCycleWeight;
-  RealType prefactorOfSampleProb = 0.;
-  vec<RealType> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
-  RealType gaussProdOld, gaussSumOld, distOld, gaussProdNew, gaussSumNew, distNew;
+  double oldCycleWeight = -log(c->weight);
+  double prevActionChange = oldCycleWeight;
+  double prefactorOfSampleProb = 0.;
+  vec<double> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
+  double gaussProdOld, gaussSumOld, distOld, gaussProdNew, gaussSumNew, distNew;
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
 
     // Level specific quantities
     int skip = 1<<iLevel;
-    RealType levelTau = path.tau*skip;
-    RealType sigma2 = lambda*levelTau;
-    RealType sigma = sqrt(sigma2);
+    double levelTau = path.tau*skip;
+    double sigma2 = lambda*levelTau;
+    double sigma = sqrt(sigma2);
 
     // Calculate sampling probability
-    RealType oldLogSampleProb = 0.;
-    RealType newLogSampleProb = 0.;
+    double oldLogSampleProb = 0.;
+    double newLogSampleProb = 0.;
     for (unsigned int i=0; i<nPartPerm; i++) {
       beadA(i) = beadI(i);
       while(beadA(i) != beadF(i)) {
@@ -206,7 +206,7 @@ int PermBisect::Attempt()
         beadB(i) = path.GetNextBead(beadA(i),skip);
         beadC(i) = path.GetNextBead(beadB(i),skip);
         path.RBar(beadC(i), beadA(i), rBarNew);
-        rng.normRand(deltaNew, 0, sigma);
+        rng.normRand(deltaNew, 0., sigma);
         path.PutInBox(deltaNew);
         beadB(i)->r = rBarNew + deltaNew;
 
@@ -217,8 +217,8 @@ int PermBisect::Attempt()
           gaussSumOld = 0.;
           gaussSumNew = 0.;
           for (int image=-nImages; image<=nImages; image++) {
-            distOld = deltaOld(iD) + (RealType)image*path.L;
-            distNew = deltaNew(iD) + (RealType)image*path.L;
+            distOld = deltaOld(iD) + (double)image*path.L;
+            distNew = deltaNew(iD) + (double)image*path.L;
             gaussSumOld += path.fexp(-0.5*distOld*distOld/sigma2);
             gaussSumNew += path.fexp(-0.5*distNew*distNew/sigma2);
           }
@@ -233,8 +233,8 @@ int PermBisect::Attempt()
     }
 
     // Calculate action change
-    RealType oldAction = 0.;
-    RealType newAction = 0.;
+    double oldAction = 0.;
+    double newAction = 0.;
     for (int iAction=0; iAction<actionList.size(); ++iAction) {
       // Old action
       path.SetMode(0);
@@ -246,9 +246,9 @@ int PermBisect::Attempt()
     }
 
     // Calculate acceptance ratio
-    RealType logSampleRatio = -newLogSampleProb + oldLogSampleProb;
-    RealType currActionChange = newAction - oldAction;
-    RealType logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
+    double logSampleRatio = -newLogSampleProb + oldLogSampleProb;
+    double currActionChange = newAction - oldAction;
+    double logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
 
     // Metropolis step
     if (logAcceptProb < log(rng.unifRand()))
@@ -261,7 +261,7 @@ int PermBisect::Attempt()
   if (nPermPart < nPart) {
     // Construct Permutation Table
     path.SetMode(1);
-    RealType permTot1 = constructPermTable();
+    double permTot1 = constructPermTable();
   
     // Decide whether or not to accept whole bisection
     if ((oldCycleWeight*permTot0/permTot1) < rng.unifRand())
@@ -272,13 +272,13 @@ int PermBisect::Attempt()
 }
 
 // Construct permutation table and probabilities
-RealType PermBisect::constructPermTable()
+double PermBisect::constructPermTable()
 {
   // Update t
   updatePermTable();
 
   // Run through permatation types
-  RealType totalWeight = 0.;
+  double totalWeight = 0.;
   for (unsigned int permIndex=0; permIndex<all_cycles.size(); permIndex++) {
     Cycle& c = all_cycles(permIndex);
     c.weight = 1.;
@@ -303,8 +303,8 @@ void PermBisect::updatePermTable()
   }
 
   // Construct t table
-  vec<RealType> dr_ij(path.nD), dr_ii(path.nD);
-  RealType exponent;
+  vec<double> dr_ij(path.nD), dr_ii(path.nD);
+  double exponent;
   for (unsigned int i=0; i<nPart; i++) {
     path.Dr(b0(i), b1(i), dr_ii);
     for (unsigned int j=0; j<nPart; j++) {
@@ -319,9 +319,9 @@ void PermBisect::updatePermTable()
 
 }
 
-int PermBisect::selectCycle(RealType permTot)
+int PermBisect::selectCycle(double permTot)
 {
-  RealType x = rng.unifRand(0.,permTot);
+  double x = rng.unifRand(0.,permTot);
   int hi = cycles.size();
   int lo = 0;
   if (x < cycles[0]->contribution)

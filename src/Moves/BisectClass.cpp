@@ -55,7 +55,13 @@ int Bisect::Attempt()
 
   // Set up pointers
   Bead *beadI = path(iSpecies,iP,bead0);
-  Bead *beadF = beadI -> nextB(nBisectBeads);
+  Bead *beadF = beadI;
+  affBeads.clear();
+  affBeads.push_back(beadI);
+  for (int i=0; i<nBisectBeads; ++i) {
+    beadF = beadF->next;
+    affBeads.push_back(beadF);
+  }
 
   // Set which particles are affected by the move
   vector< pair<int,int> > particles;
@@ -63,28 +69,19 @@ int Bisect::Attempt()
   if (beadF->p != iP)  // fixme: may be overkill
     particles.push_back(std::make_pair(iSpecies,beadF->p));
 
-  // Set which beads are affected by the move
-  Bead *beadA;
-  affBeads.clear();
-  for(beadA = beadI->next; beadA != beadF; beadA = beadA -> next)
-    affBeads.push_back(beadA);
-
   // Perform the bisection (move exactly through kinetic action)
-  RealType vOld, vNew, dA[nLevel+1], dAold;
-  dA[nLevel] = 0.0;
-  dAold = 0.0;
-  Bead *beadB, *beadC;
-  RealType prevActionChange = 0.;
-  RealType prefactorOfSampleProb = 0.;
-  vec<RealType> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
+  Bead *beadA, *beadB, *beadC;
+  double prevActionChange = 0.;
+  double prefactorOfSampleProb = 0.;
+  vec<double> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
-    int skip = 1<<iLevel; //pow(2,iLevel);
-    RealType levelTau = path.tau*skip;
-    RealType sigma2 = lambda*levelTau;
-    RealType sigma = sqrt(sigma2);
+    int skip = 1<<iLevel;
+    double levelTau = path.tau*skip;
+    double sigma2 = lambda*levelTau;
+    double sigma = sqrt(sigma2);
 
-    RealType oldLogSampleProb = 0.;
-    RealType newLogSampleProb = 0.;
+    double oldLogSampleProb = 0.;
+    double newLogSampleProb = 0.;
     beadA = beadI;
     while(beadA != beadF) {
       // Set beads
@@ -99,19 +96,19 @@ int Bisect::Attempt()
       // New sampling
       path.SetMode(1);
       path.RBar(beadC, beadA, rBarNew);
-      rng.normRand(deltaNew, 0, sigma);
+      rng.normRand(deltaNew, 0., sigma);
       path.PutInBox(deltaNew);
       beadB->r = rBarNew + deltaNew;
 
       // Get sampling probs
-      RealType gaussProdOld = 1.;
-      RealType gaussProdNew = 1.;
+      double gaussProdOld = 1.;
+      double gaussProdNew = 1.;
       for (int iD=0; iD<path.nD; iD++) {
-        RealType gaussSumOld = 0.;
-        RealType gaussSumNew = 0.;
+        double gaussSumOld = 0.;
+        double gaussSumNew = 0.;
         for (int image=-nImages; image<=nImages; image++) {
-          RealType distOld = deltaOld(iD) + (RealType)image*path.L;
-          RealType distNew = deltaNew(iD) + (RealType)image*path.L;
+          double distOld = deltaOld(iD) + (double)image*path.L;
+          double distNew = deltaNew(iD) + (double)image*path.L;
           gaussSumOld += path.fexp(-0.5*distOld*distOld/sigma2);
           gaussSumNew += path.fexp(-0.5*distNew*distNew/sigma2);
         }
@@ -125,8 +122,8 @@ int Bisect::Attempt()
     }
 
     // Calculate action change
-    RealType oldAction = 0.;
-    RealType newAction = 0.;
+    double oldAction = 0.;
+    double newAction = 0.;
     for (int iAction=0; iAction<actionList.size(); ++iAction) {
       // Old action
       path.SetMode(0);
@@ -137,9 +134,9 @@ int Bisect::Attempt()
       newAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
     }
 
-    RealType logSampleRatio = -newLogSampleProb + oldLogSampleProb;
-    RealType currActionChange = newAction - oldAction;
-    RealType logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
+    double logSampleRatio = -newLogSampleProb + oldLogSampleProb;
+    double currActionChange = newAction - oldAction;
+    double logAcceptProb = logSampleRatio - currActionChange + prevActionChange;
 
     // Metropolis reject step
     if (logAcceptProb < log(rng.unifRand()))

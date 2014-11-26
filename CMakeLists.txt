@@ -114,6 +114,8 @@ SET(SCAFFOLD_DIR "${CMAKE_SOURCE_DIR}/src/Utils")
 SET(SCAFFOLD_DEPENDS_DIR "${CMAKE_SOURCE_DIR}/depends")
 SET(SCAFFOLD_INSTALL_DIR "${CMAKE_SOURCE_DIR}")
 INCLUDE("${SCAFFOLD_DIR}/CMakeLists.txt")
+SET(LIBS ${LIBS} ${SCAFFOLD_LIBS})
+SET(SRCS ${SRCS} ${SCAFFOLD_SRCS})
 
 #-------------------------------------------------------------------
 # Einspline
@@ -128,7 +130,6 @@ SET(LIBS ${LIBS} ${EINSPLINE_LIBS})
 # simpimc
 SET (SRCS ${SRCS} src/main.cpp
   src/AlgorithmClass.cpp
-  src/BeadClass.cpp
   src/LoopClass.cpp
   src/PathClass.cpp
   src/SimulationClass.cpp

@@ -4,11 +4,6 @@
 #include "SpeciesClass.h"
 #include "BeadClass.h"
 #include "config.h"
-#include "Utils/Communication/Communication.h"
-#include "Utils/IO/InputClass.h"
-#include "Utils/IO/IOClass.h"
-#include "Utils/RNG/RNGClass.h"
-#include "Utils/Algorithm/Algorithm.h"
 
 class Path
 {
@@ -30,10 +25,10 @@ public:
 
   // Given Global Constants
   unsigned int nPart, nD, nBead;
-  RealType beta, L, iL, vol;
+  double beta, L, iL, vol;
 
   // Calculated Global Constants
-  RealType tau;
+  double tau;
   unsigned int maxLevel;
 
   // Species
@@ -43,7 +38,7 @@ public:
 
   // Fast math
   bool approximate;
-  inline RealType fexp(RealType x) { return exp(x); };
+  inline double fexp(double x) { return exp(x); };
 
   // Mode (use copy or true)
   bool mode;
@@ -56,41 +51,41 @@ public:
   Bead* operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
   void storeR(vector<Bead*> &affBeads);
   void restoreR(vector<Bead*> &affBeads);
-  inline vec<RealType>& GetR(Bead* b) { return mode ? b->r : b->rC; };
+  inline vec<double>& GetR(Bead* b) { return mode ? b->r : b->rC; };
   inline Bead* GetNextBead(Bead* b, int n) { return mode ? b->nextB(n) : b->nextBC(n); };
   inline Bead* GetPrevBead(Bead* b, int n) { return mode ? b->prevB(n) : b->prevBC(n); };
-  inline void Dr(vec<RealType> &r0, vec<RealType> &r1, vec<RealType> &dr) { dr = r0 - r1; PutInBox(dr); };
-  inline void Dr(Bead* b0, vec<RealType> &r1, vec<RealType> &dr) { Dr(GetR(b0), r1, dr); };
-  inline void Dr(Bead* b0, Bead* b1, vec<RealType> &dr) { Dr(GetR(b0), GetR(b1), dr); };
-  inline void RBar(Bead* b0, Bead* b1, vec<RealType> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
-  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, vec<RealType> &r0, vec<RealType> &r1, vec<RealType> &dr);
+  inline void Dr(vec<double> &r0, vec<double> &r1, vec<double> &dr) { dr = r0 - r1; PutInBox(dr); };
+  inline void Dr(Bead* b0, vec<double> &r1, vec<double> &dr) { Dr(GetR(b0), r1, dr); };
+  inline void Dr(Bead* b0, Bead* b1, vec<double> &dr) { Dr(GetR(b0), GetR(b1), dr); };
+  inline void RBar(Bead* b0, Bead* b1, vec<double> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
+  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag, vec<double> &r0, vec<double> &r1, vec<double> &dr);
   void PrintPath();
 
   // Periodic Boundary Condition
   bool PBC;
-  void PutInBox(vec<RealType>& r);
+  void PutInBox(vec<double>& r);
 
   // k vectors and rho_k
-  vector< vec<RealType> > ks;
+  vector< vec<double> > ks;
   vector< vec<int> > kIndices;
-  vector<RealType> magKs;
-  field< vec<ComplexType> > C;
-  field< vec<ComplexType> > rhoK, rhoKC;
-  vec<RealType> kBox;
-  RealType kC;
+  vector<double> magKs;
+  field< vec< complex<double> > > C;
+  field< vec< complex<double> > > rhoK, rhoKC;
+  vec<double> kBox;
+  double kC;
   vec<int> maxKIndex;
-  bool Include(vec<RealType> &k, RealType kCut);
-  void SetupKs(RealType kCut);
+  bool Include(vec<double> &k, double kCut);
+  void SetupKs(double kCut);
   void InitRhoK();
   void UpdateRhoK();
   void UpdateRhoK(int b0, int b1, vector< pair<int,int> > &particles, int level);
   void UpdateRhoKP(int b0, int b1, vector< pair<int,int> > &particles, int level);
   void UpdateRhoKP(int b0, int b1, int iS, vector<int> &particles, int level);
-  void CalcC(vec<RealType> &r);
-  void AddRhoKP(field< vec<ComplexType> >& tmpRhoK, int iP, int iB, int iS, int pm);
+  void CalcC(vec<double> &r);
+  void AddRhoKP(field< vec< complex<double> > >& tmpRhoK, int iP, int iB, int iS, int pm);
   inline void CalcRhoKP(Bead* b);
-  inline field< vec<ComplexType> >& GetRhoK() { return mode ? (rhoK) : (rhoKC); };
-  inline vec<ComplexType>& GetRhoK(Bead* b) { return mode ? (b->rhoK) : (b->rhoKC); };
+  inline field< vec< complex<double> > >& GetRhoK() { return mode ? (rhoK) : (rhoKC); };
+  inline vec< complex<double> >& GetRhoK(Bead* b) { return mode ? (b->rhoK) : (b->rhoKC); };
   inline void storeRhoK(int iB, int iS) { rhoKC(beadLoop(iB),iS) = rhoK(beadLoop(iB),iS); };
   inline void restoreRhoK(int iB, int iS) { rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS); };
   void storeRhoKP(vector<Bead*>& affBeads);
@@ -125,7 +120,7 @@ public:
 };
 
 // Get dr, drP, and drrP
-inline void Path::DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, RealType &rMag, RealType &rPMag, RealType &rrPMag, vec<RealType> &r, vec<RealType> &rP, vec<RealType> &rrP)
+inline void Path::DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag, vec<double> &r, vec<double> &rP, vec<double> &rrP)
 {
   //Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
   //Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);

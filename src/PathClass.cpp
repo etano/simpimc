@@ -7,12 +7,12 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   out.Write("System/nD",nD);
   nBead = in.getChild("System").getAttribute<int>("nBead");
   out.Write("System/nBead",nBead);
-  beta = in.getChild("System").getAttribute<RealType>("beta");
+  beta = in.getChild("System").getAttribute<double>("beta");
   out.Write("System/beta",beta);
   PBC = in.getChild("System").getAttribute<int>("PBC", 1);
   out.Write("System/PBC",PBC);
   if (PBC) {
-    L = in.getChild("System").getAttribute<RealType>("L");
+    L = in.getChild("System").getAttribute<double>("L");
     iL = 1./L;
     vol = pow(L,nD);
   } else {
@@ -59,7 +59,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
 
   // Reset kCut
   kC = 0.;
-  RealType kCut = in.getChild("System").getAttribute<RealType>("kCut",2.*M_PI/(pow(vol,1./nD)));
+  double kCut = in.getChild("System").getAttribute<double>("kCut",2.*M_PI/(pow(vol,1./nD)));
   SetupKs(kCut);
 
   // Initiate nodal things
@@ -89,7 +89,7 @@ void Path::PrintPath()
     for (int iP=0; iP<speciesList[iS]->nPart; ++iP) {
       for (int iB=0; iB<nBead; ++iB) {
         cout << iP << " " << iB << " ";
-        vec<RealType> r = GetR((*this)(iS,iP,iB));
+        vec<double> r = GetR((*this)(iS,iP,iB));
         for (int iD=0; iD<nD; ++iD) {
            cout << r(iD) << " ";
         }
@@ -113,16 +113,16 @@ void Path::GetSpeciesInfo(string species, int &iSpecies)
 }
 
 // Put R in the Box
-void Path::PutInBox(vec<RealType>& r)
+void Path::PutInBox(vec<double>& r)
 {
   for (int iD=0; iD<nD; ++iD)
     r(iD) -= nearbyint(r(iD)*iL)*L;
 }
 
 // Avoid negative and 0 k vectors
-bool Path::Include(vec<RealType> &k, RealType kCut)
+bool Path::Include(vec<double> &k, double kCut)
 {
-  RealType k2 = dot(k,k);
+  double k2 = dot(k,k);
   if (k2 < kCut*kCut && k2 != 0.) {
     if(k(0) > 0.)
       return true;
@@ -137,7 +137,7 @@ bool Path::Include(vec<RealType> &k, RealType kCut)
 }
 
 // Setup universal k vectors according to k cutoff value
-void Path::SetupKs(RealType kCut)
+void Path::SetupKs(double kCut)
 {
   if (kCut <= kC)
     return;
@@ -173,7 +173,7 @@ void Path::SetupKs(RealType kCut)
 
   // Iterate through indices, form k vectors, and include only those that should be included
   for (int iK=0; iK<tmpKIndices.size(); iK++) {
-    vec<RealType> k(nD);
+    vec<double> k(nD);
     vec<int> ki(nD);
     for (int iD=0; iD<nD; iD++) {
       k(iD) = tmpKIndices[iK][iD]*kBox(iD);
@@ -343,12 +343,12 @@ void Path::UpdateRhoK(int b0, int b1, vector< pair<int,int > > &particles, int l
 }
 
 // Calculate C values for rho_k
-void Path::CalcC(vec<RealType> &r)
+void Path::CalcC(vec<double> &r)
 {
   for (int iD=0; iD<nD; iD++) {
-    ComplexType tmpC;
-    RealType phi = r(iD)*kBox(iD);
-    tmpC = ComplexType(cos(phi), sin(phi));
+    complex<double> tmpC;
+    double phi = r(iD)*kBox(iD);
+    tmpC = complex<double>(cos(phi), sin(phi));
     C(iD)(maxKIndex(iD)) = 1.;
     for (int iK=1; iK<=maxKIndex(iD); iK++) {
       C(iD)(maxKIndex(iD)+iK) = tmpC * C(iD)(maxKIndex(iD)+iK-1);
@@ -358,13 +358,13 @@ void Path::CalcC(vec<RealType> &r)
 }
 
 // Add rho_k for a single particle
-void Path::AddRhoKP(field< vec<ComplexType> >& tmpRhoK, int iP, int iB, int iS, int pm)
+void Path::AddRhoKP(field< vec< complex<double> > >& tmpRhoK, int iP, int iB, int iS, int pm)
 {
-  vec<RealType> r = GetR((*this)(iS,iP,iB));
+  vec<double> r = GetR((*this)(iS,iP,iB));
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
     vec<int> &ki = kIndices[iK];
-    ComplexType factor = pm;
+    complex<double> factor = pm;
     for (int iD=0; iD<nD; iD++)
       factor *= C(iD)(ki(iD));
     tmpRhoK(beadLoop(iB),iS)(iK) += factor;
@@ -390,12 +390,12 @@ void Path::restoreRhoKP(vector<Bead*>& affBeads)
 // Calc rho_k for a single particle
 inline void Path::CalcRhoKP(Bead* b)
 {
-  vec<RealType> r = GetR(b);
-  vec<ComplexType>& tmpRhoK = GetRhoK(b);
+  vec<double> r = GetR(b);
+  vec< complex<double> >& tmpRhoK = GetRhoK(b);
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
     vec<int> &ki = kIndices[iK];
-    ComplexType factor = 1.;
+    complex<double> factor = 1.;
     for (int iD=0; iD<nD; iD++)
       factor *= C(iD)(ki(iD));
     tmpRhoK(iK) = factor;

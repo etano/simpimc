@@ -2,7 +2,6 @@
 #define NodalClass_H
 
 #include "ActionClass.h"
-#include "../Utils/RNG/RNGClass.h"
 #include <einspline/multi_bspline.h>
 #include <einspline/bspline.h>
 
@@ -14,12 +13,12 @@ protected:
   int nImages, maxLevel;
   string species;
   int iSpecies, nPart;
-  RealType i4LambdaTau;
+  double i4LambdaTau;
   int startB, endB;
 
   // Rho matrix
-  field<RealType> rho_F, rho_F_c;
-  RealType GetGij(vec<RealType> &r, int sliceDiff);
+  field<double> rho_F, rho_F_c;
+  double GetGij(vec<double> &r, int sliceDiff);
 
   // Ref beads
   vector<Bead*> refBeads;
@@ -42,8 +41,8 @@ public:
 
   // Functions
   virtual void Init(Input &in);
-  virtual RealType DActionDBeta();
-  virtual RealType GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level);
+  virtual double DActionDBeta();
+  virtual double GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level);
   virtual void Write();
   virtual void Accept();
 

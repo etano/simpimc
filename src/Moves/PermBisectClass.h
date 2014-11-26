@@ -11,25 +11,25 @@ private:
   int nImages;
   unsigned int nLevel, nBisectBeads, nPart, nPermPart, nPermType;
   unsigned int bead0, bead1;
-  RealType lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
+  double lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon;
 
   struct Cycle
   {
-    RealType weight, contribution;
+    double weight, contribution;
     int index, type;
     vec<int> perm, iPerm, part;
   };
   vector<Cycle*> cycles;
   field<Cycle> all_cycles;
-  mat<RealType> t;
+  mat<double> t;
 
   int permType;
   vec<int> permAttempt, permAccept;
 
-  RealType constructPermTable();
+  double constructPermTable();
   void updatePermTable();
   void BuildCycles();
-  int selectCycle(RealType permTot);
+  int selectCycle(double permTot);
   void permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c);
   void assignParticleLabels();
   void Write();

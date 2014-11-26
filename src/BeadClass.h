@@ -3,25 +3,21 @@
 
 #include "config.h"
 
-class Bead
+struct Bead
 {
-private:
-  unsigned int nD;
-protected:
-
 public:
-  // Constructor
+  Bead();
+  ~Bead();
   Bead(unsigned int tmpND, int tmpS, unsigned int tmpP, unsigned int tmpB, unsigned int tmpId)
-    : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), id(tmpId)
-  {
-    self = this;
-    r.zeros(nD);
-    r(0) = 0.5*(p - 1.);
-    storeR();
-  }
+    : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), id(tmpId), r(tmpND), rC(tmpND)
+  {}
 
-  inline void store();
-  inline void restore();
+  unsigned int p, b, s, id, nD;
+  double nDist, nDistC;
+  vec<double> r, rC;
+  vec< complex<double> > rhoK, rhoKC;
+  Bead *next, *nextC, *prev, *prevC;
+
   inline void storeR() { rC = r; };
   inline void restoreR() { r = rC; };
   inline void storeRhoK() { rhoKC = rhoK; };
@@ -32,24 +28,64 @@ public:
   inline void restoreNext() { next = nextC; };
   inline void storeNodeDistance() { nDistC = nDist; };
   inline void restoreNodeDistance() { nDist = nDistC; };
-  inline void move( vec<RealType>& dr ) { r += dr; };
-  inline void storePartRecord();
-  inline void restorePartRecord();
-  Bead* nextB( unsigned int n );
-  Bead* nextBC( unsigned int n );
-  Bead* prevB( unsigned int n );
-  Bead* prevBC( unsigned int n );
+  inline void move( vec<double>& dr ) { r += dr; };
 
-  unsigned int p;
-  unsigned int b;
-  unsigned int s;
-  unsigned int id;
-  RealType nDist, nDistC;
-  vec<RealType> r, rC;
-  vec<ComplexType> rhoK, rhoKC;
-  Bead *self;
-  Bead *next, *nextC;
-  Bead *prev, *prevC;
+  inline void store()
+  {
+    storeR();
+    storeRhoK();
+    storePartRecord();
+    storeNodeDistance();
+  }
+
+  inline void restore()
+  {
+    restoreR();
+    restoreRhoK();
+    restorePartRecord();
+    restoreNodeDistance();
+  }
+
+  inline void storePartRecord()
+  {
+    nextC = next;
+    prevC = prev;
+  }
+
+  inline void restorePartRecord()
+  {
+    next = nextC;
+    prev = prevC;
+  }
+
+  Bead* nextB(unsigned int const n)
+  {
+    Bead *bead = this;
+    for (unsigned int i=0; i<n; i++) bead = bead -> next;
+    return bead;
+  }
+
+  Bead* nextBC(unsigned int const n)
+  {
+    Bead *bead = this;
+    for (unsigned int i=0; i<n; i++) bead = bead -> nextC;
+    return bead;
+  }
+
+  Bead* prevB(unsigned int const n)
+  {
+    Bead *bead = this;
+    for (unsigned int i=0; i<n; i++) bead = bead -> prev;
+    return bead;
+  }
+
+  Bead* prevBC(unsigned int const n)
+  {
+    Bead *bead = this;
+    for (unsigned int i=0; i<n; i++) bead = bead -> prevC;
+    return bead;
+  }
+
 };
 
 #endif

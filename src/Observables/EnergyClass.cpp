@@ -31,11 +31,11 @@ void Energy::Accumulate()
 void Energy::Write()
 {
   if (nMeasure > 0) {
-    RealType norm = path.nBead*nMeasure;
+    double norm = path.nBead*nMeasure;
 
     // Write Es
     Es = Es/norm;
-    RealType E = sum(Es);
+    double E = sum(Es);
     if (firstTime) {
       out.CreateGroup(prefix+"Total");
       out.CreateExtendableDataSet("/"+prefix+"Total/", "x", E);
@@ -55,7 +55,7 @@ void Energy::Write()
     // Write Vs
     if (measureV) {
       Vs = Vs/norm;
-      RealType V = sum(Vs);
+      double V = sum(Vs);
       if (firstTime) {
         out.CreateGroup(prefix+"VTotal");
         out.CreateExtendableDataSet("/"+prefix+"VTotal/", "x", V);

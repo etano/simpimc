@@ -9,17 +9,17 @@ void PairCorrelation::Init(Input &in)
   path.GetSpeciesInfo(speciesB, iSpeciesB);
 
   // Read in grid info
-  RealType rMin = in.getAttribute<RealType>("rMin",0.);
-  RealType rMax = in.getAttribute<RealType>("rMax",path.L/2.);
-  int nR = in.getAttribute<RealType>("nR",100);
+  double rMin = in.getAttribute<double>("rMin",0.);
+  double rMax = in.getAttribute<double>("rMax",path.L/2.);
+  int nR = in.getAttribute<double>("nR",100);
   gr.x.CreateGrid(rMin,rMax,nR);
   gr.y.zeros(nR);
 
   // Compute rs
-  vec<RealType> rs(gr.x.nR-1);
+  vec<double> rs(gr.x.nR-1);
   for (int i=0; i<gr.x.nR-1; i++) {
-    RealType r1 = gr.x(i);
-    RealType r2 = gr.x(i+1);
+    double r1 = gr.x(i);
+    double r2 = gr.x(i+1);
     if (path.nD == 3)
       rs(i) = 0.75 * (r2*r2*r2*r2-r1*r1*r1*r1)/(r2*r2*r2-r1*r1*r1);
     else if (path.nD == 2)
@@ -48,7 +48,7 @@ void PairCorrelation::Reset()
 void PairCorrelation::Accumulate()
 {
   path.SetMode(1);
-  vec<RealType> dr(path.nD);
+  vec<double> dr(path.nD);
   // Homogeneous
   if (iSpeciesA == iSpeciesB) {
     for (int iB=0; iB<path.nBead; ++iB) {
@@ -84,17 +84,17 @@ void PairCorrelation::Write()
     // Normalize histograms
     int NA = path.speciesList[iSpeciesA]->nPart;
     int NB = path.speciesList[iSpeciesB]->nPart;
-    RealType vol = path.vol;
-    RealType norm;
+    double vol = path.vol;
+    double norm;
     if (iSpeciesA == iSpeciesB)
       norm = 0.5*nMeasure*NA*(NA-1.)*path.nBead/vol;
     else
       norm = nMeasure*NA*NB*path.nBead/vol;
     for (int i=0; i<gr.x.nR; i++) {
-      RealType r1 = gr.x(i);
-      RealType r2 = (i<(gr.x.nR-1)) ? gr.x(i+1):(2.0*gr.x(i)-gr.x(i-1));
-      RealType r = 0.5*(r1+r2);
-      RealType binVol;
+      double r1 = gr.x(i);
+      double r2 = (i<(gr.x.nR-1)) ? gr.x(i+1):(2.0*gr.x(i)-gr.x(i-1));
+      double r = 0.5*(r1+r2);
+      double binVol;
       if (path.nD == 3)
         binVol = 4.0*M_PI/3 * (r2*r2*r2-r1*r1*r1);
       else if (path.nD == 2)

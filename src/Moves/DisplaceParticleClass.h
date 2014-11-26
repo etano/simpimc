@@ -9,7 +9,7 @@ private:
   string species;
   int iSpecies;
   vector<Bead*> affBeads;
-  RealType stepSize;
+  double stepSize;
 protected:
 
 public:

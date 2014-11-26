@@ -3,7 +3,7 @@
 void Move::DoEvent() {
   struct timeval time;
   gettimeofday(&time, NULL); // Start Time
-  RealType start = time.tv_sec + (time.tv_usec / 1000000.);
+  double start = time.tv_sec + (time.tv_usec / 1000000.);
 
   // Attempt move
   nAttempt++;
@@ -14,7 +14,7 @@ void Move::DoEvent() {
     Reject();
 
   gettimeofday(&time, NULL); //END-TIME
-  RealType end = time.tv_sec + (time.tv_usec / 1000000.);
+  double end = time.tv_sec + (time.tv_usec / 1000000.);
   timeSpent += end - start;
 }
 
@@ -26,7 +26,7 @@ void Move::Reset()
 
 void Move::Write()
 {
-  RealType acceptRatio = (1.*nAccept)/(1.*nAttempt);
+  double acceptRatio = (1.*nAccept)/(1.*nAttempt);
   if (firstTime) {
     firstTime = 0;
     out.CreateExtendableDataSet("/Moves/"+name+"/", "nAttempt", nAttempt);

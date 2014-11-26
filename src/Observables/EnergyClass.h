@@ -8,7 +8,7 @@ class Energy : public Observable
 {
 private:
   vector<Action*> &actionList;
-  vec<RealType> Es, Vs;
+  vec<double> Es, Vs;
   bool measureV;
 protected:
 public:

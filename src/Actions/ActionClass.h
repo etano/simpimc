@@ -3,8 +3,6 @@
 
 #include "../EventClass.h"
 #include "../PathClass.h"
-#include "../Utils/IO/InputClass.h"
-#include "../Utils/IO/IOClass.h"
 
 class Action : public Event
 {
@@ -35,9 +33,9 @@ public:
 
   // Functions
   virtual void Init(Input &in) {};
-  virtual RealType DActionDBeta() {};
-  virtual RealType GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level) {};
-  virtual RealType Potential() { return 0.; };
+  virtual double DActionDBeta() {};
+  virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> >& particles, const int level) {};
+  virtual double Potential() { return 0.; };
   virtual void Write() {};
   virtual void Accept() {};
   virtual void Reject() {};

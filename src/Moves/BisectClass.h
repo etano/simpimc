@@ -11,7 +11,7 @@ private:
   int nImages;
   unsigned int nLevel, nBisectBeads;
   unsigned int bead0, bead1;
-  RealType lambda;
+  double lambda;
 
   std::vector<Bead*> affBeads;
 protected:

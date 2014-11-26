@@ -2,10 +2,6 @@
 #define SpeciesClass_H
 
 #include "config.h"
-#include "Utils/Communication/Communication.h"
-#include "Utils/IO/InputClass.h"
-#include "Utils/IO/IOClass.h"
-#include "Utils/RNG/RNGClass.h"
 #include "BeadClass.h"
 
 class Species
@@ -31,7 +27,7 @@ public:
   // Given Global Constants
   unsigned int nPart, nD, nBead, iS;
   string name;
-  RealType lambda;
+  double lambda;
 
   // Fermions
   bool fermi;
