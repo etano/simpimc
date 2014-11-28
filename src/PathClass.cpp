@@ -186,7 +186,7 @@ void Path::SetupKs(double kCut)
     }
   }
 
-  cout << "kCut: " << kCut << ", # k vecs: " << ks.size() << endl;
+  //cout << "kCut: " << kCut << ", # k vecs: " << ks.size() << endl;
 
   // Initiate rho k
   InitRhoK();

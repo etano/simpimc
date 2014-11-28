@@ -23,10 +23,13 @@ void Simulation::SetupSimulation(string inFile)
     nThreads = omp_get_num_threads();
   }
 #endif
-  if (WorldComm.MyProc() == 0)
+  if (WorldComm.MyProc() == 0) {
+    cout << "Running simpimc on " << inFile << endl;
     cout <<"# Processes: "<<N<< ", # Groups: "<<nGroups
          <<", # Processes/Group: "<<procsPerGroup
          <<", # Threads/Process: "<<nThreads<<endl;
+
+  }
 
   // Output
   stringstream tmpSS;
@@ -38,8 +41,8 @@ void Simulation::SetupSimulation(string inFile)
   // Write input data
   out.CreateGroup("Input");
   out.Write("Input/fileName",inFile);
-  //string inString = in.getString();
-  //out.Write("Input/contents",inString);
+  string inString = in.getString();
+  out.Write("Input/contents",inString);
 }
 
 void Simulation::Run()
@@ -58,6 +61,5 @@ void Simulation::Run()
   algorithm.Init(in, out, rng);
   algorithm.Run();
 
-  cout << "Done." << endl;
 }
 
