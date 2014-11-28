@@ -4,9 +4,8 @@
   <Parallel procsPerGroup="1" />
   <System nD="3" nBead="10" beta="10.0" L="100.0" PBC="1" />
   <Particles>
-    <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
+    <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" fixedNode="0" initType="Random" cofactor="0.9" />
   </Particles>
-  <Init type="Random" />
   <Actions>
     <Action name="Kinetic" type="Kinetic" nImages="1" />
   </Actions>
@@ -19,10 +18,8 @@
   </Observables>
   <Algorithm>
     <Loop nStep="10">
-      <Loop nStep="10">
-        <Loop nStep="10">
-          <Move name="Bisect" />
-        </Loop>
+      <Loop nStep="100000">
+        <Move name="Bisect" />
         <Observable name="Energy" />
       </Loop>
       <Write />
