@@ -89,7 +89,7 @@ void PermBisectIterative::Reset()
 {
   if (adaptive) {
     double acceptRatio = (double) nAccept / (double) nAttempt;
-    if (acceptRatio < targetRatio && nLevel > 0)
+    if (acceptRatio < targetRatio && nLevel > 1)
       nLevel--;
     else
       nLevel++;
