@@ -13,6 +13,7 @@ private:
   unsigned int bead0, bead1;
   double lambda, i4LambdaTauNBisectBeads, epsilon, logEpsilon, targetRatio;
   bool adaptive, rollOver, fixedNode;
+  int refAccept, refAttempt;
 
   struct Cycle
   {

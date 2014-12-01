@@ -98,6 +98,9 @@ void PermBisectIterative::Reset()
     i4LambdaTauNBisectBeads = 1./(4.*lambda*path.tau*nBisectBeads);
   }
 
+  refAccept = 0;
+  refAttempt = 0;
+
   Move::Reset();
 }
 
@@ -107,6 +110,8 @@ int PermBisectIterative::Attempt()
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
+  if (rollOver || bead0 == path.refBead)
+    refAttempt++;
 
   // Set up permutation
   Cycle c;
@@ -225,6 +230,9 @@ int PermBisectIterative::Attempt()
 
     prevActionChange = currActionChange;
   }
+
+  if (rollOver || bead0 == path.refBead)
+    refAccept++;
 
   return 1;
 }
@@ -373,11 +381,15 @@ void PermBisectIterative::Write()
   if (firstTime) {
     out.CreateExtendableDataSet("/Moves/"+name+"/", "permAttempt", permAttempt);
     out.CreateExtendableDataSet("/Moves/"+name+"/", "permAccept", permAccept);
+    out.CreateExtendableDataSet("/Moves/"+name+"/", "refAccept", refAccept);
+    out.CreateExtendableDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
     if (adaptive)
       out.CreateExtendableDataSet("/Moves/"+name+"/", "nLevel", nLevel);
   } else {
     out.AppendDataSet("/Moves/"+name+"/", "permAttempt", permAttempt);
     out.AppendDataSet("/Moves/"+name+"/", "permAccept", permAccept);
+    out.AppendDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
+    out.AppendDataSet("/Moves/"+name+"/", "refAccept", refAccept);
     if (adaptive)
       out.AppendDataSet("/Moves/"+name+"/", "nLevel", nLevel);
   }
