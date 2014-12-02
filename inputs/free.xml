@@ -19,10 +19,8 @@
   </Observables>
   <Algorithm>
     <Loop nStep="10">
-      <Loop nStep="10">
-        <Loop nStep="10">
-          <Move name="Bisect" />
-        </Loop>
+      <Loop nStep="100000">
+        <Move name="Bisect" />
         <Observable name="Energy" />
       </Loop>
       <Write />

@@ -22,6 +22,17 @@ void Nodal::Init(Input &in)
   // Set up determinants
   rho_F.set_size(path.nBead);
   rho_F_c.set_size(path.nBead);
+
+  // Test initial configuration
+  std::vector< std::pair<int,int> > particles;
+  for (int iP=0; iP<nPart; ++iP)
+    particles.push_back(std::make_pair(iSpecies,iP));
+  int initGood = 1;
+  if (GetAction(0, path.nBead, particles, 0) == 1.e100) {
+    cout << "Warning: initializing with broken nodes!" << endl;
+    initGood = 0;
+  }
+  out.Write("Actions/"+name+"/initGood", initGood);
 }
 
 // Create spline
@@ -31,7 +42,7 @@ void Nodal::SetupSpline()
   Ugrid r_grid;
   r_grid.start = -path.L/2.;
   r_grid.end = path.L/2.;
-  r_grid.num = 1000;
+  r_grid.num = 10000;
   double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
@@ -54,9 +65,12 @@ void Nodal::SetupSpline()
       double r = r_grid.start + i*dr;
       rho_free_r(i) = 0.;
       for (int image=-nImages; image<=nImages; image++) {
-        double t_r = r + image*path.L;
-        rho_free_r(i) += path.fexp(-(t_r*t_r + r*r)*t_i4LambdaTau);
+        if (image != 0) {
+          double t_r = r + image*path.L;
+          rho_free_r(i) += path.fexp(-(t_r*t_r - r*r)*t_i4LambdaTau);
+        }
       }
+      rho_free_r(i) = log1p(min(10.,rho_free_r(i)));
     }
     BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
     UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
@@ -69,7 +83,7 @@ double Nodal::DActionDBeta()
   return 0.;
 }
 
-double Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int level)
+double Nodal::GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
 {
   // Currently old node should be fine
   if (path.mode == 0)
@@ -132,7 +146,7 @@ double Nodal::GetAction(int b0, int b1, vector< pair<int,int> > &particles, int 
       // Form rho_F
       int sliceDiff = path.beadLoop(iB) - path.refBead;
       int absSliceDiff = abs(sliceDiff);
-      int invSliceDiff = path.nBead-absSliceDiff;
+      int invSliceDiff = path.nBead - absSliceDiff;
       int minSliceDiff = min(absSliceDiff, invSliceDiff);
 
       for (int iP=0; iP<nPart; ++iP) {
@@ -165,7 +179,9 @@ double Nodal::GetGij(vec<double>& r, int sliceDiff)
   for (int iD=0; iD<path.nD; iD++) {
     double gaussSum;
     eval_UBspline_1d_d(rho_free_r_splines(sliceDiff-1),r(iD),&gaussSum);
-    gaussProd *= gaussSum/path.fexp(-(r(iD)*r(iD)*i4LambdaTau/sliceDiff));
+    gaussSum = exp(0.9999*gaussSum);
+    gaussSum *= exp(-(r(iD)*r(iD)*i4LambdaTau/sliceDiff));
+    gaussProd *= path.fexp(gaussSum);
   }
   return gaussProd;
 }

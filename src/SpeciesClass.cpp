@@ -153,7 +153,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     else
       tmpSS << prefix << "." << 0 << ".h5";
     string fileName = tmpSS.str();
-    cout << "Restarting from " << fileName << "..." << endl;
+    cout << "Restarting " << name << " from " << fileName << "..." << endl;
     IOClass restartFile;
     restartFile.load(fileName);
     out.Write("System/Particles/"+name+"/fileName",fileName);
@@ -163,24 +163,24 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     restartFile.Read("Observables/PathDump/"+name+"/nDump",nDump);
 
     // Get positions
-    cube<double> pathPositions(nPart*nBead,nD,nDump);
+    cube<double> pathPositions(nD,nPart*nBead,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/positions",pathPositions);
     for (int iP=0; iP<nPart; ++iP) {
       for (int iB=0; iB<nBead; ++iB) {
         for (int iD=0; iD<nD; ++iD) {
-          bead(iP,iB)->r(iD) = pathPositions(iP*nBead + iB,iD,nDump-1);
+          bead(iP,iB)->r(iD) = pathPositions(iD,iP*nBead + iB,nDump-1);
         }
         bead(iP,iB)->storeR();
       }
     }
 
     // Get permutation
-    cube<double> pathPermutation(nPart,2,nDump);
+    cube<double> pathPermutation(2,nPart,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/permutation",pathPermutation);
     for (int iP=0; iP<nPart; ++iP) {
-      bead(iP,0)->prev = bead(pathPermutation(iP,0,nDump-1),nBead-1);
+      bead(iP,0)->prev = bead(pathPermutation(0,iP,nDump-1),nBead-1);
       bead(iP,0)->storePrev();
-      bead(iP,nBead-1)->next = bead(pathPermutation(iP,1,nDump-1),0);
+      bead(iP,nBead-1)->next = bead(pathPermutation(1,iP,nDump-1),0);
       bead(iP,nBead-1)->storeNext();
     }
 

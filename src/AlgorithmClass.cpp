@@ -68,7 +68,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   }
 
   // Initialize Write
-  events.push_back(new Writes(out,events));
+  events.push_back(new Writes(out,events,InterComm));
 
   // Initialize Algorithm
   vector<Input> loopList = in.getChild("Algorithm").getChildList("Loop");

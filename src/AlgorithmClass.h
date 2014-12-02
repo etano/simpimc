@@ -32,11 +32,14 @@ class Algorithm
 {
 public:
   // Constructor
-  Algorithm(CommunicatorClass& WorldComm, CommunicatorClass& InterComm, CommunicatorClass& IntraComm)
-   : path(WorldComm,InterComm,IntraComm)
+  Algorithm(CommunicatorClass& WorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& IntraComm)
+   : path(WorldComm,tmpInterComm,IntraComm), InterComm(tmpInterComm)
   {}
   void Init(Input &in, IOClass &out, RNG &rng);
   void Run();
+
+  // Communicator
+  CommunicatorClass& InterComm;
 
   // Algorithm Events
   std::vector<Event*> events;

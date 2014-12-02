@@ -10,13 +10,11 @@ void Writes::DoEvent()
   for (iter=events.begin(); iter!=events.end(); ++iter)
     (*iter)->Write();
 
-  cout << "---" << endl;
-  cout << "Block #: " << iBlock << endl;
   gettimeofday(&time, NULL); // Current Time
   double blockTime = start - end;
-  cout << "Block Time: " << blockTime << endl;
   double totalTime = start - initial;
-  cout << "Total Time: " << totalTime << endl;
+  cout << "Clone #: " << InterComm.MyProc() << ", Block #: " << iBlock << ", Block Time: " << blockTime << ", Total Time: " << totalTime << endl;
+
   iBlock += 1;
 
   gettimeofday(&time, NULL); // End Time

@@ -14,10 +14,13 @@ protected:
 
   // Event list
   vector<Event*> &events;
+
+  // Communicator
+  CommunicatorClass &InterComm;
 public:
   // Constructor
-  Writes(IOClass &tmpOut, vector<Event*> &tmpEvents)
-    : Event(), Out(tmpOut), events(tmpEvents)
+  Writes(IOClass &tmpOut, vector<Event*> &tmpEvents, CommunicatorClass &tmpInterComm)
+    : Event(), Out(tmpOut), events(tmpEvents), InterComm(tmpInterComm)
   {
     name = "Write";
     iBlock = 0;
