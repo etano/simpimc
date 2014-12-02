@@ -4,11 +4,11 @@
   <Parallel procsPerGroup="1" />
   <System nD="3" nBead="10" beta="10.0" L="100.0" PBC="1" />
   <Particles>
-    <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
+    <Species name="e" type="e" nPart="5" lambda="0.5" fermi="1" fixedNode="1" initType="Random" cofactor="0.9" />
   </Particles>
-  <Init type="Random" />
   <Actions>
     <Action name="Kinetic" type="Kinetic" nImages="1" />
+    <Action name="NodalEU" type="Nodal" nImages="10" species="e" maxLevel=    "0" />
   </Actions>
   <Moves>
     <Move name="Bisect" type="Bisect" species="e" nLevel="3" nImages="1" />
