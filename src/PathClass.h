@@ -58,7 +58,6 @@ public:
   inline void Dr(Bead* b0, vec<double> &r1, vec<double> &dr) { Dr(GetR(b0), r1, dr); };
   inline void Dr(Bead* b0, Bead* b1, vec<double> &dr) { Dr(GetR(b0), GetR(b1), dr); };
   inline void RBar(Bead* b0, Bead* b1, vec<double> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
-  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag, vec<double> &r0, vec<double> &r1, vec<double> &dr);
   void PrintPath();
 
   // Periodic Boundary Condition
@@ -117,26 +116,27 @@ public:
 
   // Path initialization
   void InitPaths(Input &in, IOClass &out, RNG &rng);
+
+  // Get dr, drP, and drrP
+  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag, vec<double> &r, vec<double> &rP, vec<double> &rrP)
+  {
+    //Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
+    //Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);
+  
+    r = GetR((*this)(s1,p1,b0)) - GetR((*this)(s0,p0,b0));
+    rP = GetR((*this)(s1,p1,b1)) - GetR((*this)(s0,p0,b1));
+    for (int iD=0; iD<nD; ++iD) {
+      r(iD) -= nearbyint(r(iD)*iL)*L;
+      rP(iD) += nearbyint((r(iD)-rP(iD))*iL)*L;
+      rrP(iD) = r(iD) - rP(iD);
+      rrP(iD) -= nearbyint(rrP(iD)*iL)*L;
+    }
+    rMag = mag(r);
+    rPMag = mag(rP);
+    rrPMag = mag(rrP);
+  
+  };
 };
 
-// Get dr, drP, and drrP
-inline void Path::DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag, vec<double> &r, vec<double> &rP, vec<double> &rrP)
-{
-  //Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
-  //Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);
-
-  r = GetR((*this)(s1,p1,b0)) - GetR((*this)(s0,p0,b0));
-  rP = GetR((*this)(s1,p1,b1)) - GetR((*this)(s0,p0,b1));
-  for (int iD=0; iD<nD; ++iD) {
-    r(iD) -= nearbyint(r(iD)*iL)*L;
-    rP(iD) += nearbyint((r(iD)-rP(iD))*iL)*L;
-    rrP(iD) = r(iD) - rP(iD);
-    rrP(iD) -= nearbyint(rrP(iD)*iL)*L;
-  }
-  rMag = mag(r);
-  rPMag = mag(rP);
-  rrPMag = mag(rrP);
-
-}
 
 #endif
