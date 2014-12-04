@@ -7,11 +7,13 @@ class Bisect : public Move
 {
 private:
   string species;
+  bool rollOver, adaptive;
+  double targetRatio;
   int iSpecies;
-  int nImages;
-  unsigned int nLevel, nBisectBeads;
+  unsigned int nImages, nLevel, nBisectBeads;
   unsigned int bead0, bead1;
-  double lambda;
+  double i4LambdaTauNBisectBeads, lambda;
+  int refAccept, refAttempt;
 
   std::vector<Bead*> affBeads;
 protected:
@@ -28,6 +30,8 @@ public:
   virtual int Attempt();
   virtual void Accept();
   virtual void Reject();
+  virtual void Reset();
+  virtual void Write();
 
 };
 

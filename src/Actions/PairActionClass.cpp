@@ -97,26 +97,30 @@ double PairAction::DActionDBeta()
     return dUdBConstant;
   else {
     double tot = 0.;
-    vec<double> r(path.nD), rP(path.nD), rrP(path.nD);
     if (iSpeciesA == iSpeciesB) {
-      for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
-        for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
-          for (int iB=0; iB<path.nBead; iB+=1) {
-            int jB = iB + 1;
-            double rMag, rPMag, rrPMag;
-            path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesA,iP,jP,rMag,rPMag,rrPMag,r,rP,rrP);
-            tot += CalcdUdBeta(rMag,rPMag,rrPMag,0);
+      #pragma omp parallel
+      {
+        for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
+          #pragma omp for collapse(2) reduction(+:tot)
+          for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
+            for (int iB=0; iB<path.nBead; ++iB) {
+              double rMag, rPMag, rrPMag;
+              path.DrDrPDrrP(iB,iB+1,iSpeciesA,iSpeciesA,iP,jP,rMag,rPMag,rrPMag);
+              double dUdB = CalcdUdBeta(rMag,rPMag,rrPMag,0);
+              tot += dUdB;
+            }
           }
         }
       }
     } else {
+      #pragma omp parallel for collapse(3) reduction(+:tot)
       for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
         for (int jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
-          for (int iB=0; iB<path.nBead; iB+=1) {
-            int jB = iB + 1;
+          for (int iB=0; iB<path.nBead; ++iB) {
             double rMag, rPMag, rrPMag;
-            path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag,r,rP,rrP);
-            tot += CalcdUdBeta(rMag,rPMag,rrPMag,0);
+            path.DrDrPDrrP(iB,iB+1,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
+            double dUdB = CalcdUdBeta(rMag,rPMag,rrPMag,0);
+            tot += dUdB;
           }
         }
       }
@@ -175,74 +179,62 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
   int skip = 1<<level;
   double levelTau = skip*path.tau;
   double tot = 0.;
-  vec<double> r(path.nD), rP(path.nD), rrP(path.nD);
 
+  
   // Homologous
   if (iSpeciesA == iSpeciesB) {
-    // Loop over A particles with other A particles
-    for (int p=0; p<nA; ++p) {
-      int iP = particlesA[p];
-      for (int q=0; q<otherParticlesA.size(); ++q) {
-        int jP = otherParticlesA[q];
-        for (int iB=b0; iB<b1; iB+=skip) {
-          int jB = iB + skip;
+    // Loop over beads
+    for (int iB=b0; iB<b1; iB+=skip) {
+      int jB = iB+skip;
+      // Loop over A particles with other A particles
+      for (int p=0; p<nA; ++p) {
+        for (int q=0; q<otherParticlesA.size(); ++q) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesA,iP,jP,rMag,rPMag,rrPMag,r,rP,rrP);
-          tot += CalcU(rMag,rPMag,rrPMag,level);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesA,particlesA[p],otherParticlesA[q],rMag,rPMag,rrPMag);
+          double U = CalcU(rMag,rPMag,rrPMag,level);
+          tot += U;
         }
       }
-    }
-    // Loop over A particles with A particles
-    for (int p=0; p<nA-1; ++p) {
-      int iP = particlesA[p];
-      for (int q=p+1; q<nA; ++q) {
-        int jP = particlesA[q];
-        for (int iB=b0; iB<b1; iB+=skip) {
-          int jB = iB + skip;
+      // Loop over A particles with A particles
+      for (int p=0; p<nA-1; ++p) {
+        for (int q=p+1; q<nA; ++q) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag,r,rP,rrP);
-          tot += CalcU(rMag,rPMag,rrPMag,level);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,particlesA[p],particlesA[q],rMag,rPMag,rrPMag);
+          double U = CalcU(rMag,rPMag,rrPMag,level);
+          tot += U;
         }
       }
     }
   // Heterologous
   } else {
-    // Loop over A particles with other B particles
-    for (int p=0; p<nA; ++p) {
-      int iP = particlesA[p];
-      for (int q=0; q<otherParticlesB.size(); ++q) {
-        int jP = otherParticlesB[q];
-        for (int iB=b0; iB<b1; iB+=skip) {
-          int jB = iB + skip;
+    // Loop over beads
+    for (int iB=b0; iB<b1; iB+=skip) {
+      int jB = iB+skip;
+      // Loop over A particles with other B particles
+      for (int p=0; p<nA; ++p) {
+        for (int q=0; q<otherParticlesB.size(); ++q) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag,r,rP,rrP);
-          tot += CalcU(rMag,rPMag,rrPMag,level);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,particlesA[p],otherParticlesB[q],rMag,rPMag,rrPMag);
+          double U = CalcU(rMag,rPMag,rrPMag,level);
+          tot += U;
         }
       }
-    }
-    // Loop other A particles with B particles
-    for (int q=0; q<otherParticlesA.size(); ++q) {
-      int iP = otherParticlesA[q];
-      for (int p=0; p<nB; ++p) {
-        int jP = particlesB[p];
-        for (int iB=b0; iB<b1; iB+=skip) {
-          int jB = iB + skip;
+      // Loop other A particles with B particles
+      for (int q=0; q<otherParticlesA.size(); ++q) {
+        for (int p=0; p<nB; ++p) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag,r,rP,rrP);
-          tot += CalcU(rMag,rPMag,rrPMag,level);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,otherParticlesA[q],particlesB[p],rMag,rPMag,rrPMag);
+          double U = CalcU(rMag,rPMag,rrPMag,level);
+          tot += U;
         }
       }
-    }
-    // Loop over A particles with B particles
-    for (int p=0; p<nA; ++p) {
-      int iP = particlesA[p];
-      for (int q=0; q<nB; ++q) {
-        int jP = particlesB[q];
-        for (int iB=b0; iB<b1; iB+=skip) {
-          int jB = iB + skip;
+      // Loop over A particles with B particles
+      for (int p=0; p<nA; ++p) {
+        for (int q=0; q<nB; ++q) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag,r,rP,rrP);
-          tot += CalcU(rMag,rPMag,rrPMag,level);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,particlesA[p],particlesB[q],rMag,rPMag,rrPMag);
+          double U = CalcU(rMag,rPMag,rrPMag,level);
+          tot += U;
         }
       }
     }
@@ -266,7 +258,7 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
 
 void PairAction::Write() {}
 
-void PairAction::Accept()
+void PairAction::Accept() // fixme: will accept even when unaffected
 {
   if (useLongRange && iSpeciesA >= 0 && iSpeciesB >= 0) {
     path.speciesList[iSpeciesA]->needUpdateRhoK = true;
@@ -275,7 +267,7 @@ void PairAction::Accept()
 
 }
 
-void PairAction::Reject()
+void PairAction::Reject() // fixme: will accept even when unaffected, why is this true?
 {
   if (useLongRange && iSpeciesA >= 0 && iSpeciesB >= 0) {
     path.speciesList[iSpeciesA]->needUpdateRhoK = true;

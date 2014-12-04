@@ -29,11 +29,11 @@ protected:
   inline void SetLimits(double &rMin, double &rMax, double &r, double &rPrime);
 
   // Pair actions
-  virtual double CalcV(double &r, double &rP, int level) = 0;
+  virtual double CalcV(double &r, double &rP, const int level) = 0;
   virtual double CalcVLong() = 0;
-  virtual double CalcU(double &r, double &rP, double &s, int level) = 0;
-  virtual double CalcULong(int b0, int b1, int level) = 0;
-  virtual double CalcdUdBeta(double &r, double &rP, double &s, int level) = 0;
+  virtual double CalcU(double &r, double &rP, double &s, const int level) = 0;
+  virtual double CalcULong(const int b0, const int b1, const int level) = 0;
+  virtual double CalcdUdBeta(double &r, double &rP, double &s, const int level) = 0;
   virtual double CalcdUdBetaLong() = 0;
 
 public:

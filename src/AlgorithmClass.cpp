@@ -40,6 +40,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
       events.push_back(new PermBisect(path,rng,actions,moveInputs[i],out));
     else if (type == "PermBisectIterative")
       events.push_back(new PermBisectIterative(path,rng,actions,moveInputs[i],out));
+    else if (type == "ShiftRefSlice")
+      events.push_back(new ShiftRefSlice(path,rng,actions,moveInputs[i],out));
     else
       std::cerr << "Warning: Unrecognized Move, " << type << endl;
   }

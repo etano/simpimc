@@ -19,6 +19,7 @@
 #include "Moves/DisplaceParticleClass.h"
 #include "Moves/PermBisectClass.h"
 #include "Moves/PermBisectIterativeClass.h"
+#include "Moves/ShiftRefSliceClass.h"
 #include "Observables/ObservableClass.h"
 #include "Observables/EnergyClass.h"
 #include "Observables/PairCorrelationClass.h"

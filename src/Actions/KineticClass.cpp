@@ -16,42 +16,42 @@ void Kinetic::Init(Input &in)
 double Kinetic::DActionDBeta()
 {
   double tot = 0.;
-  vec<double> gaussSum(path.nD), numSum(path.nD), numProd(path.nD), dr(path.nD);
   for (int iS=0; iS<path.nSpecies; iS++) {
     double lambda = path.speciesList[iS]->lambda;
     if (!fequal(lambda,0.,1e-10)) {
       double i4LambdaTau = 1./(4.*lambda*path.tau);
-      double gaussProd, dist, dist2i4LambdaTau, expPart, scalarNumSum;
+      tot += path.speciesList[iS]->nPart*path.nBead*path.nD/(2.*path.tau); // Constant term
+      #pragma omp parallel for collapse(2) reduction(+:tot)
       for (int iP=0; iP<path.speciesList[iS]->nPart; iP++) {
         for (int iB=0; iB<path.nBead; iB++) {
+          vec<double> gaussSum, numSum, dr(path.nD);
           path.Dr(path(iS,iP,iB),path.GetNextBead(path(iS,iP,iB),1),dr);
-          gaussProd = 1.;
-          gaussSum.zeros();
-          numSum.zeros();
+          double gaussProd = 1.;
+          gaussSum.zeros(path.nD);
+          numSum.zeros(path.nD);
           for (int iD=0; iD<path.nD; iD++) {
             for (int image=-nImages; image<=nImages; image++) {
-              dist = dr(iD) + image*path.L;
-              dist2i4LambdaTau = dist*dist*i4LambdaTau;
-              expPart = path.fexp(-dist2i4LambdaTau);
+              double dist = dr(iD) + image*path.L;
+              double dist2i4LambdaTau = dist*dist*i4LambdaTau;
+              double expPart = path.fexp(-dist2i4LambdaTau);
               gaussSum(iD) += expPart;
               numSum(iD) += -(dist2i4LambdaTau/path.tau)*expPart;
             }
             gaussProd *= gaussSum(iD);
           }
-          scalarNumSum = 0.;
+          double scalarNumSum = 0.;
           for (int iD=0; iD<path.nD; iD++) {
-            numProd.ones(path.nD);
+            double numProd = 1.;
             for (int jD=0; jD<path.nD; jD++) {
               if (iD != jD)
-                numProd(iD) *= gaussSum(jD);
+                numProd *= gaussSum(jD);
               else
-                numProd(iD) *= numSum(jD);
+                numProd *= numSum(jD);
             }
-            scalarNumSum += numProd(iD);
+            scalarNumSum += numProd;
           }
           tot += scalarNumSum/gaussProd;
         }
-        tot += path.nBead*path.nD/(2.*path.tau);
       }
     }
   }

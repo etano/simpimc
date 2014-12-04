@@ -73,7 +73,7 @@ void BarePairAction::ReadFile(string fileName)
 }
 
 /// Calculate the V(r,r') value when given r and r' and the level 
-double BarePairAction::CalcV(double &r, double &rP, int level)
+double BarePairAction::CalcV(double &r, double &rP, const int level)
 {
   // Limits
   SetLimits(r_v_min, r_v_max, r, rP);
@@ -97,7 +97,7 @@ double BarePairAction::CalcV(double &r, double &rP, int level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-double BarePairAction::CalcU(double &r, double &rP, double &s, int level)
+double BarePairAction::CalcU(double &r, double &rP, double &s, const int level)
 {
   int skip = 1>>level;
   double levelTau = skip*path.tau;
@@ -105,7 +105,7 @@ double BarePairAction::CalcU(double &r, double &rP, double &s, int level)
 }
 
 /// Calculate the dU(r,r') value when given r and r' and the level 
-double BarePairAction::CalcdUdBeta(double &r, double &rP, double &s, int level)
+double BarePairAction::CalcdUdBeta(double &r, double &rP, double &s, const int level)
 {
   return CalcV(r,rP,level);
 }
@@ -134,7 +134,7 @@ double BarePairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-double BarePairAction::CalcULong(int b0, int b1, int level)
+double BarePairAction::CalcULong(const int b0, const int b1, const int level)
 {
   // Get rho k
   field< vec< complex<double> > >& rhoK(path.GetRhoK());

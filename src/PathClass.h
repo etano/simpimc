@@ -118,19 +118,20 @@ public:
   void InitPaths(Input &in, IOClass &out, RNG &rng);
 
   // Get dr, drP, and drrP
-  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag, vec<double> &r, vec<double> &rP, vec<double> &rrP)
+  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag)
   {
     //Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
     //Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);
   
-    r = GetR((*this)(s1,p1,b0)) - GetR((*this)(s0,p0,b0));
-    rP = GetR((*this)(s1,p1,b1)) - GetR((*this)(s0,p0,b1));
+    vec<double> r = GetR((*this)(s1,p1,b0)) - GetR((*this)(s0,p0,b0));
+    vec<double> rP = GetR((*this)(s1,p1,b1)) - GetR((*this)(s0,p0,b1));
     for (int iD=0; iD<nD; ++iD) {
       r(iD) -= nearbyint(r(iD)*iL)*L;
       rP(iD) += nearbyint((r(iD)-rP(iD))*iL)*L;
-      rrP(iD) = r(iD) - rP(iD);
-      rrP(iD) -= nearbyint(rrP(iD)*iL)*L;
     }
+    vec<double> rrP = r - rP;
+    for (int iD=0; iD<nD; ++iD)
+      rrP(iD) -= nearbyint(rrP(iD)*iL)*L;
     rMag = mag(r);
     rPMag = mag(rP);
     rrPMag = mag(rrP);

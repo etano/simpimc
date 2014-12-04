@@ -13,9 +13,36 @@ void Bisect::Init(Input &in)
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies);
 
+  // Adaptive bisection level
+  adaptive = in.getAttribute<int>("adaptive",0);
+  if (adaptive)
+    targetRatio = in.getAttribute<double>("targetRatio");
+
   // Compute constants
-  lambda = path.speciesList[iSpecies]->lambda;
   nBisectBeads = 1<<nLevel; // Number of beads in bisection
+  lambda = path.speciesList[iSpecies]->lambda;
+  i4LambdaTauNBisectBeads = 1./(4.*lambda*path.tau*nBisectBeads);
+}
+
+// Reset counters
+void Bisect::Reset()
+{
+  if (adaptive) {
+    double acceptRatio = (double) nAccept / (double) nAttempt;
+    if (acceptRatio < targetRatio && nLevel > 1)
+      nLevel--;
+    else
+      nLevel++;
+    nBisectBeads = 1<<nLevel; // Number of beads in bisection
+    lambda = path.speciesList[iSpecies]->lambda;
+    i4LambdaTauNBisectBeads = 1./(4.*lambda*path.tau*nBisectBeads);
+  }
+
+  refAccept = 0;
+  refAttempt = 0;
+
+  Move::Reset();
+
 }
 
 // Accept current move
@@ -51,7 +78,13 @@ int Bisect::Attempt()
 {
   unsigned int iP = rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
-  bead1 = bead0 + nBisectBeads;
+  bead1 = bead0 + nBisectBeads; // Set last bead in bisection
+  rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
+  bool includeRef = path.speciesList[iSpecies]->fixedNode &&
+                    ((bead0<=path.refBead && bead1>=path.refBead) ||
+                    (rollOver && path.beadLoop[bead1]>=path.refBead));
+  if (includeRef)
+    refAttempt++;
 
   // Set up pointers
   Bead *beadI = path(iSpecies,iP,bead0);
@@ -145,5 +178,26 @@ int Bisect::Attempt()
     prevActionChange = currActionChange;
   }
 
+  if (includeRef)
+    refAccept++;
+
   return 1;
+}
+
+void Bisect::Write()
+{
+  // Write
+  if (firstTime) {
+    out.CreateExtendableDataSet("/Moves/"+name+"/", "refAccept", refAccept);
+    out.CreateExtendableDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
+    if (adaptive)
+      out.CreateExtendableDataSet("/Moves/"+name+"/", "nLevel", nLevel);
+  } else {
+    out.AppendDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
+    out.AppendDataSet("/Moves/"+name+"/", "refAccept", refAccept);
+    if (adaptive)
+      out.AppendDataSet("/Moves/"+name+"/", "nLevel", nLevel);
+  }
+
+  Move::Write();
 }

@@ -110,7 +110,10 @@ int PermBisectIterative::Attempt()
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
-  if (rollOver || bead0 == path.refBead)
+  bool includeRef = path.speciesList[iSpecies]->fixedNode &&
+                    ((bead0<=path.refBead && bead1>=path.refBead) ||
+                    (rollOver && path.beadLoop[bead1]>=path.refBead));
+  if (includeRef)
     refAttempt++;
 
   // Set up permutation
@@ -231,7 +234,7 @@ int PermBisectIterative::Attempt()
     prevActionChange = currActionChange;
   }
 
-  if (rollOver || bead0 == path.refBead)
+  if (includeRef)
     refAccept++;
 
   return 1;

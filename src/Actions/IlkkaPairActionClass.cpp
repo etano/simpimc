@@ -184,7 +184,7 @@ void IlkkaPairAction::ReadFile(string fileName)
 }
 
 /// Calculate the V(r,r') value when given r and r' and the level 
-double IlkkaPairAction::CalcV(double &r, double &rP, int level)
+double IlkkaPairAction::CalcV(double &r, double &rP, const int level)
 {
   // Limits
   SetLimits(r_v_min, r_v_max, r, rP);
@@ -208,7 +208,7 @@ double IlkkaPairAction::CalcV(double &r, double &rP, int level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-double IlkkaPairAction::CalcU(double &r, double &rP, double &s, int level)
+double IlkkaPairAction::CalcU(double &r, double &rP, double &s, const int level)
 {
   // Constants
   double q = 0.5*(r + rP);
@@ -236,7 +236,7 @@ double IlkkaPairAction::CalcU(double &r, double &rP, double &s, int level)
 }
 
 /// Calculate the dU(r,r') value when given r and r' and the level 
-double IlkkaPairAction::CalcdUdBeta(double &r, double &rP, double &s, int level)
+double IlkkaPairAction::CalcdUdBeta(double &r, double &rP, double &s, const int level)
 {
   // Constants
   double q = 0.5*(r + rP);
@@ -271,12 +271,11 @@ double IlkkaPairAction::CalcVLong()
 
   // Sum over k vectors
   double tot = 0.;
+  #pragma omp parallel for collapse(2) reduction(+:tot)
   for (int iK=0; iK<path.ks.size(); iK++) {
-    if (path.magKs[iK] < kCut) {
-      for (int iB=0; iB<path.nBead; iB++) {
-        double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
-        tot += rhok2*vLong_k(iK);
-      }
+    for (int iB=0; iB<path.nBead; iB++) {
+      double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+      tot += rhok2*vLong_k(iK);
     }
   }
 
@@ -287,7 +286,7 @@ double IlkkaPairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-double IlkkaPairAction::CalcULong(int b0, int b1, int level)
+double IlkkaPairAction::CalcULong(const int b0, const int b1, const int level)
 {
   // Get rho k
   field< vec< complex<double> > >& rhoK(path.GetRhoK());
@@ -296,11 +295,9 @@ double IlkkaPairAction::CalcULong(int b0, int b1, int level)
   int skip = 1<<level;
   double tot = 0.;
   for (int iK=0; iK<path.ks.size(); iK++) {
-    if (path.magKs[iK] < kCut) {
-      for (int iB=b0; iB<b1; iB+=skip) {
-        double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
-        tot += uLong_k(iK)*rhok2;
-      }
+    for (int iB=b0; iB<b1; iB+=skip) {
+      double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+      tot += uLong_k(iK)*rhok2;
     }
   }
 
@@ -318,12 +315,11 @@ double IlkkaPairAction::CalcdUdBetaLong()
 
   // Sum over k vectors
   double tot = 0.;
+  #pragma omp parallel for collapse(2) reduction(+:tot)
   for (int iK=0; iK<path.ks.size(); iK++) {
-    if (path.magKs[iK] < kCut) {
-      for (int iB=0; iB<path.nBead; iB++) {
-        double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
-        tot += duLong_k(iK)*rhok2;
-      }
+    for (int iB=0; iB<path.nBead; iB++) {
+      double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
+      tot += duLong_k(iK)*rhok2;
     }
   }
 

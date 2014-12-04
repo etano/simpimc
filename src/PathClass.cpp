@@ -394,10 +394,9 @@ inline void Path::CalcRhoKP(Bead* b)
   vec< complex<double> >& tmpRhoK = GetRhoK(b);
   CalcC(r);
   for (int iK=0; iK<kIndices.size(); iK++) {
-    vec<int> &ki = kIndices[iK];
     complex<double> factor = 1.;
     for (int iD=0; iD<nD; iD++)
-      factor *= C(iD)(ki(iD));
+      factor *= C(iD)(kIndices[iK](iD));
     tmpRhoK(iK) = factor;
   }
 }
