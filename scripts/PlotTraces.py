@@ -2,7 +2,7 @@ import sys
 import os
 import h5py as h5
 import numpy as np
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 
 # Get start cut
 try:
@@ -17,12 +17,14 @@ except:
 print section
 
 # Plot traces
-fig = matplotlib.pyplot.figure()
+fig = plt.figure()
 ax  = fig.add_subplot(111)
 for file in sys.argv[firstArg:]:
     f = h5.File(file,'r')
     data = np.array(f[section][startCut:])
-    ax.plot(data)
+    ax.plot(data,label=file)
 
 # Show plot
-matplotlib.pyplot.show()
+plt.title(section)
+ax.legend()
+plt.show()
