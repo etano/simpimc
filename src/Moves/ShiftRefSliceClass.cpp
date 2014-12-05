@@ -51,12 +51,12 @@ int ShiftRefSlice::Attempt()
       // Old action
       path.SetMode(0);
       path.refBead = refBead0;
-      oldAction += actionList[iAction]->GetAction(0, path.nBead, particles, 0);
+      oldAction += actionList[iAction]->GetAction(0, path.nBead-1, particles, 0);
 
       // New action
       path.SetMode(1);
       path.refBead = refBead1;
-      newAction += actionList[iAction]->GetAction(0, path.nBead, particles, 0);
+      newAction += actionList[iAction]->GetAction(0, path.nBead-1, particles, 0);
     }
   }
 

@@ -43,7 +43,7 @@ void Nodal::SetupSpline()
   Ugrid r_grid;
   r_grid.start = -path.L/2.;
   r_grid.end = path.L/2.;
-  r_grid.num = 1000;
+  r_grid.num = 5000;
   double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
