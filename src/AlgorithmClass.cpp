@@ -12,17 +12,17 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   for (int i=0; i<actionInputs.size(); ++i) {
     string type = actionInputs[i].getAttribute<string>("type");
     if (type == "Kinetic")
-      actions.push_back(new Kinetic(path,actionInputs[i],out));
+      actions.emplace_back(new Kinetic(path,actionInputs[i],out));
     else if (type == "HarmonicTrap")
-      actions.push_back(new Trap(path,actionInputs[i],out));
+      actions.emplace_back(new Trap(path,actionInputs[i],out));
     else if (type == "Nodal")
-      actions.push_back(new Nodal(path,rng,actionInputs[i],out));
+      actions.emplace_back(new Nodal(path,rng,actionInputs[i],out));
     else if (type == "BarePairAction")
-      actions.push_back(new BarePairAction(path,actionInputs[i],out));
+      actions.emplace_back(new BarePairAction(path,actionInputs[i],out));
     else if (type == "DavidPairAction")
-      actions.push_back(new DavidPairAction(path,actionInputs[i],out));
+      actions.emplace_back(new DavidPairAction(path,actionInputs[i],out));
     else if (type == "IlkkaPairAction")
-      actions.push_back(new IlkkaPairAction(path,actionInputs[i],out));
+      actions.emplace_back(new IlkkaPairAction(path,actionInputs[i],out));
     else
       std::cerr << "Warning: Unrecognized Action, " << type << endl;
   }
@@ -33,15 +33,15 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   for (int i=0; i<moveInputs.size(); ++i) {
     string type = moveInputs[i].getAttribute<string>("type");
     if (type == "Bisect")
-      events.push_back(new Bisect(path,rng,actions,moveInputs[i],out));
+      events.emplace_back(new Bisect(path,rng,actions,moveInputs[i],out));
     else if (type == "DisplaceParticle")
-      events.push_back(new DisplaceParticle(path,rng,actions,moveInputs[i],out));
+      events.emplace_back(new DisplaceParticle(path,rng,actions,moveInputs[i],out));
     else if (type == "PermBisect")
-      events.push_back(new PermBisect(path,rng,actions,moveInputs[i],out));
+      events.emplace_back(new PermBisect(path,rng,actions,moveInputs[i],out));
     else if (type == "PermBisectIterative")
-      events.push_back(new PermBisectIterative(path,rng,actions,moveInputs[i],out));
+      events.emplace_back(new PermBisectIterative(path,rng,actions,moveInputs[i],out));
     else if (type == "ShiftRefSlice")
-      events.push_back(new ShiftRefSlice(path,rng,actions,moveInputs[i],out));
+      events.emplace_back(new ShiftRefSlice(path,rng,actions,moveInputs[i],out));
     else
       std::cerr << "Warning: Unrecognized Move, " << type << endl;
   }
@@ -52,25 +52,25 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   for (int i=0; i<observableInputs.size(); ++i) {
     string type = observableInputs[i].getAttribute<string>("type");
     if (type == "Energy")
-      events.push_back(new Energy(path,actions,observableInputs[i],out));
+      events.emplace_back(new Energy(path,actions,observableInputs[i],out));
     else if (type == "PairCorrelation")
-      events.push_back(new PairCorrelation(path,observableInputs[i],out));
+      events.emplace_back(new PairCorrelation(path,observableInputs[i],out));
     else if (type == "PathDump")
-      events.push_back(new PathDump(path,observableInputs[i],out));
+      events.emplace_back(new PathDump(path,observableInputs[i],out));
     else if (type == "Permutation")
-      events.push_back(new Permutation(path,observableInputs[i],out));
+      events.emplace_back(new Permutation(path,observableInputs[i],out));
     else if (type == "Sign")
-      events.push_back(new Sign(path,observableInputs[i],out));
+      events.emplace_back(new Sign(path,observableInputs[i],out));
     else if (type == "StructureFactor")
-      events.push_back(new StructureFactor(path,observableInputs[i],out));
+      events.emplace_back(new StructureFactor(path,observableInputs[i],out));
     else if (type == "Time")
-      events.push_back(new Time(path,events,observableInputs[i],out));
+      events.emplace_back(new Time(path,events,observableInputs[i],out));
     else
       std::cerr << "WARNING: Unrecognized observable, " << type << endl;
   }
 
   // Initialize Write
-  events.push_back(new Writes(out,events,InterComm));
+  events.emplace_back(new Writes(out,events,InterComm));
 
   // Initialize Algorithm
   vector<Input> loopList = in.getChild("Algorithm").getChildList("Loop");
