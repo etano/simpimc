@@ -55,8 +55,8 @@ void Bisect::Accept()
     path.storeRhoK(iB,iSpecies);
 
   // Call accept for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction)
-    actionList[iAction]->Accept();
+  for (auto& action: actionList)
+    action->Accept();
 }
 
 // Reject current move
@@ -69,8 +69,8 @@ void Bisect::Reject()
     path.restoreRhoK(iB,iSpecies);
 
   // Call reject for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction)
-    actionList[iAction]->Reject();
+  for (auto& action: actionList)
+    action->Reject();
 }
 
 // Bisection Move
@@ -157,14 +157,14 @@ int Bisect::Attempt()
     // Calculate action change
     double oldAction = 0.;
     double newAction = 0.;
-    for (int iAction=0; iAction<actionList.size(); ++iAction) {
+    for (auto& action: actionList) {
       // Old action
       path.SetMode(0);
-      oldAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
+      oldAction += action->GetAction(bead0, bead1, particles, iLevel);
 
       // New action
       path.SetMode(1);
-      newAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
+      newAction += action->GetAction(bead0, bead1, particles, iLevel);
     }
 
     double logSampleRatio = -newLogSampleProb + oldLogSampleProb;

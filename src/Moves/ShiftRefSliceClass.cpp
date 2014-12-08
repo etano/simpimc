@@ -13,9 +13,9 @@ void ShiftRefSlice::Accept()
   path.refBead = refBead1;
 
   // Call accept for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction) {
-    if (actionList[iAction]->type == "Nodal") // fixme: will affect other species nodal actions
-      actionList[iAction]->Accept();
+  for (auto& action: actionList) {
+    if (action->type == "Nodal") // fixme: will affect other species nodal actions
+      action->Accept();
   }
 }
 
@@ -26,9 +26,9 @@ void ShiftRefSlice::Reject()
   path.refBead = refBead0;
 
   // Call reject for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction) {
-    if (actionList[iAction]->type == "Nodal") // fixme: will affect other species nodal actions
-      actionList[iAction]->Reject();
+  for (auto& action: actionList) {
+    if (action->type == "Nodal") // fixme: will affect other species nodal actions
+      action->Reject();
   }
 }
 
@@ -45,18 +45,18 @@ int ShiftRefSlice::Attempt()
   // Calculate action change
   double oldAction = 0.;
   double newAction = 0.;
-  for (int iAction=0; iAction<actionList.size(); ++iAction) {
+  for (auto& action: actionList) {
     // Only check nodal action change
-    if (actionList[iAction]->type == "Nodal") {
+    if (action->type == "Nodal") {
       // Old action
       path.SetMode(0);
       path.refBead = refBead0;
-      oldAction += actionList[iAction]->GetAction(0, path.nBead-1, particles, 0);
+      oldAction += action->GetAction(0, path.nBead-1, particles, 0);
 
       // New action
       path.SetMode(1);
       path.refBead = refBead1;
-      newAction += actionList[iAction]->GetAction(0, path.nBead-1, particles, 0);
+      newAction += action->GetAction(0, path.nBead-1, particles, 0);
     }
   }
 

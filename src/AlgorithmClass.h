@@ -36,6 +36,14 @@ public:
   Algorithm(CommunicatorClass& WorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& IntraComm)
    : path(WorldComm,tmpInterComm,IntraComm), InterComm(tmpInterComm)
   {}
+  ~Algorithm()
+  {
+    for (auto &event: events)
+      delete event;
+    for (auto &action: actions)
+      delete action;
+  }
+
   void Init(Input &in, IOClass &out, RNG &rng);
   void Run();
 

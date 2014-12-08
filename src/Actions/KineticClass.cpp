@@ -65,9 +65,9 @@ double Kinetic::GetAction(const int b0, const int b1, const vector< pair<int,int
   double tot = 0.;
   vec<double> dr(path.nD);
   Bead *beadA, *beadB, *beadC, *beadF;
-  for (int p=0; p<particles.size(); ++p) {
-    int iS = particles[p].first;
-    int iP = particles[p].second;
+  for (auto& p: particles) {
+    int iS = p.first;
+    int iP = p.second;
     double lambda = path.speciesList[iS]->lambda;
     if (!fequal(lambda,0.,1e-10)) {
       double i4LambdaTau = 1./(4.*lambda*levelTau);

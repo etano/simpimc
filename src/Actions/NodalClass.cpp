@@ -94,8 +94,8 @@ double Nodal::GetAction(const int b0, const int b1, const vector< pair<int,int> 
   if (level > maxLevel || !path.speciesList[iSpecies]->fermi)
     return 0.;
   bool checkNode = false;
-  for (int p=0; p<particles.size(); ++p) {
-    if (particles[p].first == iSpecies) {
+  for (auto& p: particles) {
+    if (p.first == iSpecies) {
       checkNode = true;
       break;
     }

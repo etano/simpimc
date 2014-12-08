@@ -7,10 +7,16 @@ struct Bead
 {
 public:
   Bead();
-  ~Bead();
   Bead(unsigned int tmpND, int tmpS, unsigned int tmpP, unsigned int tmpB, unsigned int tmpId)
     : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), id(tmpId), r(tmpND), rC(tmpND)
   {}
+  //~Bead()
+  //{
+  //  delete next;
+  //  delete nextC;
+  //  delete prev;
+  //  delete prevC;
+  //}
 
   unsigned int p, b, s, id, nD;
   double nDist, nDistC;

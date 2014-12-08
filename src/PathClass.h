@@ -16,6 +16,11 @@ public:
   Path(CommunicatorClass& tmpWorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& tmpIntraComm)
    : WorldComm(tmpWorldComm), InterComm(tmpInterComm), IntraComm(tmpIntraComm)
   {}
+  ~Path()
+  {
+    for (auto& species: speciesList)
+      delete species;
+  }
   void Init(Input &in, IOClass &out, RNG &rng);
 
   // Parallel communicators
@@ -46,7 +51,6 @@ public:
   bool GetMode() { return mode; };
 
   // Beads
-  vector<Bead*>::const_iterator beadIter;
   vec<int> beadLoop;
   Bead* operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
   void storeR(vector<Bead*> &affBeads);

@@ -58,8 +58,8 @@ void Permutation::Accumulate()
   path.SetCycleCount(iSpecies, cycle);
   int sector = path.GetPermSector(iSpecies, cycle);
   sectors.push_back(sector);
-  for (vector<int>::size_type j=0; j != cycle.size(); j++)
-    cycles(cycle[j]-1) += 1.;
+  for (auto& c: cycle)
+    cycles(c-1) += 1.;
   nMeasure += 1;
 }
 

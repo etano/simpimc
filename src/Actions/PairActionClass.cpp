@@ -147,9 +147,9 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
   // Make sure particles are of species A or B and organize them accordingly
   vector<int> particlesA, particlesB;
   int nA(0), nB(0);
-  for (int p=0; p<particles.size(); ++p) {
-    int iS = particles[p].first;
-    int iP = particles[p].second;
+  for (auto& p: particles) {
+    int iS = p.first;
+    int iP = p.second;
     if (iS == iSpeciesA) {
       particlesA.push_back(iP);
       nA++;
@@ -187,10 +187,10 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
     for (int iB=b0; iB<b1; iB+=skip) {
       int jB = iB+skip;
       // Loop over A particles with other A particles
-      for (int p=0; p<nA; ++p) {
-        for (int q=0; q<otherParticlesA.size(); ++q) {
+      for (auto& p: particlesA) {
+        for (auto& q: otherParticlesA) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesA,particlesA[p],otherParticlesA[q],rMag,rPMag,rrPMag);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesA,p,q,rMag,rPMag,rrPMag);
           double U = CalcU(rMag,rPMag,rrPMag,level);
           tot += U;
         }
@@ -211,28 +211,28 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
     for (int iB=b0; iB<b1; iB+=skip) {
       int jB = iB+skip;
       // Loop over A particles with other B particles
-      for (int p=0; p<nA; ++p) {
-        for (int q=0; q<otherParticlesB.size(); ++q) {
+      for (auto& p: particlesA) {
+        for (auto& q: otherParticlesB) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,particlesA[p],otherParticlesB[q],rMag,rPMag,rrPMag);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,p,q,rMag,rPMag,rrPMag);
           double U = CalcU(rMag,rPMag,rrPMag,level);
           tot += U;
         }
       }
       // Loop other A particles with B particles
-      for (int q=0; q<otherParticlesA.size(); ++q) {
-        for (int p=0; p<nB; ++p) {
+      for (auto& q: otherParticlesA) {
+        for (auto& p: particlesB) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,otherParticlesA[q],particlesB[p],rMag,rPMag,rrPMag);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,q,p,rMag,rPMag,rrPMag);
           double U = CalcU(rMag,rPMag,rrPMag,level);
           tot += U;
         }
       }
       // Loop over A particles with B particles
-      for (int p=0; p<nA; ++p) {
-        for (int q=0; q<nB; ++q) {
+      for (auto& p: particlesA) {
+        for (auto& q: particlesB) {
           double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,particlesA[p],particlesB[q],rMag,rPMag,rrPMag);
+          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,p,q,rMag,rPMag,rrPMag);
           double U = CalcU(rMag,rPMag,rrPMag,level);
           tot += U;
         }

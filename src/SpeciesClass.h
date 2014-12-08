@@ -17,6 +17,11 @@ public:
   {
     Init(in, out);
   };
+  ~Species()
+  {
+    for (field<Bead*>::iterator b=bead.begin();  b!=bead.end(); ++b)
+      delete *b;
+  }
   void Init(Input &in, IOClass &out);
   void InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& InterComm, int L);
 
