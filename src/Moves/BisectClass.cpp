@@ -13,6 +13,11 @@ void Bisect::Init(Input &in)
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies);
 
+  // Generate action list
+  std::vector<std::string> speciesList;
+  speciesList.push_back(species);
+  GenerateActionList(speciesList);
+
   // Adaptive bisection level
   adaptive = in.getAttribute<int>("adaptive",0);
   if (adaptive)
@@ -87,8 +92,8 @@ int Bisect::Attempt()
     refAttempt++;
 
   // Set up pointers
-  Bead *beadI = path(iSpecies,iP,bead0);
-  Bead *beadF = beadI;
+  std::shared_ptr<Bead> beadI(path(iSpecies,iP,bead0));
+  std::shared_ptr<Bead> beadF(beadI);
   affBeads.clear();
   affBeads.push_back(beadI);
   for (int i=0; i<nBisectBeads; ++i) {
@@ -103,7 +108,7 @@ int Bisect::Attempt()
     particles.push_back(std::make_pair(iSpecies,beadF->p));
 
   // Perform the bisection (move exactly through kinetic action)
-  Bead *beadA, *beadB, *beadC;
+  std::shared_ptr<Bead> beadA, beadB, beadC;
   double prevActionChange = 0.;
   double prefactorOfSampleProb = 0.;
   vec<double> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);

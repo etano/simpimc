@@ -18,6 +18,18 @@ void Move::DoEvent() {
   timeSpent += end - start;
 }
 
+void Move::GenerateActionList(const std::vector<std::string> &species)
+{
+  for (auto& action: fullActionList) {
+    for (auto& sA: species) {
+      if (std::find(action->speciesList.begin(), action->speciesList.end(), sA) != action->speciesList.end()) {
+        actionList.push_back(action);
+        break;
+      }
+    }
+  }
+}
+
 void Move::Reset()
 {
   nAccept = 0;

@@ -36,13 +36,6 @@ public:
   Algorithm(CommunicatorClass& WorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& IntraComm)
    : path(WorldComm,tmpInterComm,IntraComm), InterComm(tmpInterComm)
   {}
-  ~Algorithm()
-  {
-    for (auto &event: events)
-      delete event;
-    for (auto &action: actions)
-      delete action;
-  }
 
   void Init(Input &in, IOClass &out, RNG &rng);
   void Run();
@@ -51,11 +44,11 @@ public:
   CommunicatorClass& InterComm;
 
   // Algorithm Events
-  std::vector<Event*> events;
+  std::vector< std::shared_ptr<Event> > events;
   Loop mainLoop;
 
   // Actions
-  std::vector<Action*> actions;
+  std::vector< std::shared_ptr<Action> > actions;
 
   // Datastructure
   Path path;

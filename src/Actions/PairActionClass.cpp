@@ -6,7 +6,9 @@ void PairAction::Init(Input &in)
   nImages = in.getAttribute<int>("nImages");
   nOrder = in.getAttribute<int>("nOrder",-1);
   speciesA = in.getAttribute<string>("speciesA");
+  speciesList.push_back(speciesA);
   speciesB = in.getAttribute<string>("speciesB");
+  speciesList.push_back(speciesB);
   cout << "Setting up pair action between " << speciesA << " and " << speciesB << "..." << endl;
   maxLevel = in.getAttribute<int>("maxLevel",0);
   useLongRange = in.getAttribute<int>("useLongRange",0);

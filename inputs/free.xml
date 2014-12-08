@@ -2,15 +2,15 @@
   <RNG seed="12345" />
   <IO outputPrefix="free" />
   <Parallel procsPerGroup="1" />
-  <System nD="3" nBead="10" beta="10.0" L="100.0" PBC="1" />
+  <System nD="3" nBead="10" beta="100.0" L="100.0" PBC="1" />
   <Particles>
-    <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" fixedNode="0" initType="Random" cofactor="0.9" />
+    <Species name="e" type="e" nPart="5" lambda="0.5" fermi="0" fixedNode="0" initType="Random" cofactor="0.9" />
   </Particles>
   <Actions>
-    <Action name="Kinetic" type="Kinetic" nImages="1" />
+    <Action name="Kinetic" type="Kinetic" nImages="1" species="e" />
   </Actions>
   <Moves>
-    <Move name="Bisect" type="Bisect" species="e" nLevel="3" nImages="1" />
+    <Move name="Bisect" type="PermBisectIterative" species="e" nLevel="3" nImages="1" />
   </Moves>
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />
@@ -18,7 +18,7 @@
   </Observables>
   <Algorithm>
     <Loop nStep="10">
-      <Loop nStep="100000">
+      <Loop nStep="10">
         <Move name="Bisect" />
         <Observable name="Energy" />
       </Loop>

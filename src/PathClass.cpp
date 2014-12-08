@@ -69,14 +69,14 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
 }
 
 // Store R
-void Path::storeR(vector<Bead*>& affBeads)
+void Path::storeR(vector< std::shared_ptr<Bead> > &affBeads)
 {
   for (auto& b: affBeads)
     b->storeR();
 }
 
 // Restore R
-void Path::restoreR(vector<Bead*>& affBeads)
+void Path::restoreR(vector< std::shared_ptr<Bead> > &affBeads)
 {
   for (auto& b: affBeads)
     b->restoreR();
@@ -254,8 +254,6 @@ void Path::UpdateRhoK()
 // Update rho k values for specific particles and slices
 void Path::UpdateRhoKP(int b0, int b1, vector< pair<int,int> > &particles, int level)
 {
-  bool tmpMode = GetMode();
-  SetMode(1);
   int skip = 1<<level;
 
   // Get species numbers
@@ -269,8 +267,6 @@ void Path::UpdateRhoKP(int b0, int b1, vector< pair<int,int> > &particles, int l
 
   for (auto& s: species)
     UpdateRhoKP(b0, b1, s, ps, level);
-
-  SetMode(tmpMode);
 
 }
 
@@ -293,7 +289,6 @@ void Path::UpdateRhoKP(int b0, int b1, int iS, vector<int> &particles, int level
 
       // Add in new values and subtract out old values
       rhoK(beadLoop(iB),iS) += (*this)(iS,iP,iB)->rhoK - (*this)(iS,iP,iB)->rhoKC;
-
     }
   }
 
@@ -370,7 +365,7 @@ void Path::AddRhoKP(field< vec< complex<double> > >& tmpRhoK, int iP, int iB, in
 }
 
 // Store rhoK
-void Path::storeRhoKP(vector<Bead*>& affBeads)
+void Path::storeRhoKP(vector< std::shared_ptr<Bead> > & affBeads)
 {
   if (kC > 0)
     for (auto& b: affBeads)
@@ -378,7 +373,7 @@ void Path::storeRhoKP(vector<Bead*>& affBeads)
 }
 
 // Restore rhoK
-void Path::restoreRhoKP(vector<Bead*>& affBeads)
+void Path::restoreRhoKP(vector< std::shared_ptr<Bead> > & affBeads)
 {
   if (kC > 0)
     for (auto& b: affBeads)
@@ -386,7 +381,7 @@ void Path::restoreRhoKP(vector<Bead*>& affBeads)
 }
 
 // Calc rho_k for a single particle
-inline void Path::CalcRhoKP(Bead* b)
+inline void Path::CalcRhoKP(std::shared_ptr<Bead> b)
 {
   vec<double> r = GetR(b);
   vec< complex<double> >& tmpRhoK = GetRhoK(b);
@@ -422,7 +417,7 @@ void Path::SetCycleCount(int iS, vector<int>& cycles)
   for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP++) {
     if (!alreadyCounted(iP)) {
       int cycleLength = 1;
-      Bead* b = (*this)(iS,iP,nBead-1);
+      std::shared_ptr<Bead> b((*this)(iS,iP,nBead-1));
       alreadyCounted(iP) = 1;
       while (GetNextBead(b,1) != (*this)(iS,iP,0)) {
         cycleLength++;

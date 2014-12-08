@@ -5,6 +5,7 @@ void Nodal::Init(Input &in)
   // Read in things
   nImages = in.getAttribute<int>("nImages");
   species = in.getAttribute<string>("species");
+  speciesList.push_back(species);
   cout << "Setting up nodal action for " << species << "..." << endl;
   maxLevel = in.getAttribute<int>("maxLevel",0);
   path.GetSpeciesInfo(species,iSpecies);
@@ -124,7 +125,7 @@ double Nodal::GetAction(const int b0, const int b1, const vector< pair<int,int> 
   }
 
   // Set ref beads and initial beads
-  vector<Bead*> refBeads, otherBeads;
+  vector< std::shared_ptr<Bead> > refBeads, otherBeads;
   int sliceDiff0 = path.beadLoop(startB) - path.refBead;
   int absSliceDiff0 = abs(sliceDiff0);
   for (int iP=0; iP<nPart; ++iP) {

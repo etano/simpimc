@@ -13,13 +13,13 @@ public:
   // Constructor
   Loop() {};
 
-  void Init(Input &In, vector<Event*> &eventList);
-  void ReadLoop(Input &In, vector<Event*> &eventList);
-  Event* FindEvent(string name, vector<Event*> &eventList);
+  void Init(Input &In, std::vector< std::shared_ptr<Event> > &eventList);
+  void ReadLoop(Input &In, std::vector< std::shared_ptr<Event> > &eventList);
+  std::shared_ptr<Event> FindEvent(string name, std::vector< std::shared_ptr<Event> > &eventList);
   void DoEvent();
 
   int nSteps;
-  vector<Event*> events;
+  vector< std::shared_ptr<Event> > events;
 };
 
 #endif

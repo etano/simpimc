@@ -13,13 +13,13 @@ protected:
   IOClass &Out;
 
   // Event list
-  vector<Event*> &events;
+  std::vector< std::shared_ptr<Event> > &events;
 
   // Communicator
   CommunicatorClass &InterComm;
 public:
   // Constructor
-  Writes(IOClass &tmpOut, vector<Event*> &tmpEvents, CommunicatorClass &tmpInterComm)
+  Writes(IOClass &tmpOut, std::vector< std::shared_ptr<Event> > &tmpEvents, CommunicatorClass &tmpInterComm)
     : Event(), Out(tmpOut), events(tmpEvents), InterComm(tmpInterComm)
   {
     name = "Write";

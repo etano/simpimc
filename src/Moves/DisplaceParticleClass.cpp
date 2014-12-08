@@ -5,6 +5,11 @@ void DisplaceParticle::Init(Input &in)
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies);
   stepSize = in.getAttribute<double>("stepSize");
+
+  // Generate action list
+  std::vector<std::string> speciesList;
+  speciesList.push_back(species);
+  GenerateActionList(speciesList);
 }
 
 // Accept current move
