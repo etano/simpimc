@@ -1,28 +1,36 @@
 <Input>
   <RNG seed="12345" />
-  <IO outputPrefix="free" />
+  <IO outputPrefix="free.1" />
   <Parallel procsPerGroup="1" />
-  <System nD="3" nBead="10" beta="10.0" L="100.0" PBC="1" />
+  <System nD="3" nBead="10" beta="100.0" L="10.0" PBC="1" />
   <Particles>
-    <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" fixedNode="0" initType="Random" cofactor="0.9" />
+    <Species name="eU" nPart="5" lambda="0.5" fermi="0" fixedNode="0" initType="Restart" cofactor="0.9" prefix="free.0" />
+    <Species name="eD" nPart="5" lambda="0.5" fermi="0" fixedNode="0" initType="Restart" cofactor="0.9" prefix="free.0" />
   </Particles>
   <Actions>
     <Action name="Kinetic" type="Kinetic" nImages="1" />
   </Actions>
   <Moves>
-    <Move name="Bisect" type="Bisect" species="e" nLevel="3" nImages="1" />
+    <Move name="BisectD" type="PermBisectIterative" species="eD" nLevel="3" nImages="1" />
+    <Move name="BisectU" type="PermBisectIterative" species="eU" nLevel="3" nImages="1" />
   </Moves>
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />
+    <Observable name="PermutationD" type="Permutation" species="eD" skip="1" />
+    <Observable name="PermutationU" type="Permutation" species="eU" skip="1" />
+    <Observable name="PathDump" type="PathDump" skip="9" />
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
-    <Loop nStep="10">
-      <Loop nStep="100000">
-        <Move name="Bisect" />
-        <Observable name="Energy" />
-      </Loop>
+    <Loop nStep="2">
       <Write />
+      <Loop nStep="2">
+        <Move name="BisectU" />
+        <Move name="BisectD" />
+        <Observable name="Energy" />
+        <Observable name="PermutationU" />
+        <Observable name="PermutationD" />
+      </Loop>
     </Loop>
   </Algorithm>
 </Input>
