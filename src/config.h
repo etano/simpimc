@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <assert.h>
+#include <memory>
 #include "Utils/scaffold.hpp"
 
 using namespace std;

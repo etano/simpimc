@@ -1,29 +1,28 @@
 #include "LoopClass.h"
 
-void Loop::Init(Input &in, vector<Event*> &eventList)
+void Loop::Init(Input &in, std::vector< std::shared_ptr<Event> > &eventList)
 {
   name = "Loop";
   nSteps = in.getAttribute<int>("nStep");
   ReadLoop(in, eventList);
 }
 
-void Loop::ReadLoop(Input &in, vector<Event*> &eventList)
+void Loop::ReadLoop(Input &in, std::vector< std::shared_ptr<Event> > &eventList)
 {
   vector<Input> inList = in.getChildList();
   for (auto& in: inList) {
     string type = in.getName();
     if (type == "Move" || type == "Observable") {
       string name = in.getAttribute<string>("name");
-      Event *event = FindEvent(name,eventList);
-      if (event != NULL)
+      std::shared_ptr<Event> event(FindEvent(name,eventList));
+      if (event != nullptr)
         events.push_back(event);
       else
         std::cerr << "WARNING: Event not found, " << name << endl;
     } else if (type == "Write") {
-      Event *event = FindEvent("Write",eventList);
-      events.push_back(event);
+      events.push_back(FindEvent("Write",eventList));
     } else if (type == "Loop") {
-      Loop *newLoop = new Loop();
+      std::shared_ptr<Loop> newLoop(new Loop());
       newLoop->Init(in,eventList);
       events.push_back(newLoop);
     } else if (type == "nStep") {
@@ -32,13 +31,13 @@ void Loop::ReadLoop(Input &in, vector<Event*> &eventList)
   }
 }
 
-Event* Loop::FindEvent(string name, vector<Event*> &eventList)
+std::shared_ptr<Event> Loop::FindEvent(string name, std::vector< std::shared_ptr<Event> > &eventList)
 {
-  vector<Event*>::iterator iter;
+  std::vector< std::shared_ptr<Event> >::iterator iter;
   for (iter=eventList.begin(); iter!=eventList.end(); ++iter)
     if ((*iter)->name == name)
       return (*iter);
-  return NULL;
+  return nullptr;
 }
 
 void Loop::DoEvent()

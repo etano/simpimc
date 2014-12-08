@@ -4,6 +4,11 @@ void ShiftRefSlice::Init(Input &in)
 {
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies);
+
+  // Generate action list
+  std::vector<std::string> speciesList;
+  speciesList.push_back(species);
+  GenerateActionList(speciesList);
 }
 
 // Accept current move

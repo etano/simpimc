@@ -6,7 +6,7 @@ void Writes::DoEvent()
   gettimeofday(&time, NULL); // Start Time
   start = time.tv_sec + (time.tv_usec / 1000000.);
 
-  vector<Event*>::iterator iter;
+  std::vector< std::shared_ptr<Event> >::iterator iter;
   for (iter=events.begin(); iter!=events.end(); ++iter)
     (*iter)->Write();
 

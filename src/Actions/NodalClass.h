@@ -20,10 +20,6 @@ protected:
   field<double> rho_F, rho_F_c;
   double GetGij(vec<double> &r, int sliceDiff);
 
-  // Ref beads
-  vector<Bead*> refBeads;
-  field<Bead*> otherBeads;
-
   // Splines
   field<UBspline_1d_d*> rho_free_r_splines;
   void SetupSpline();

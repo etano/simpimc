@@ -7,11 +7,11 @@
 class Time : public Observable
 {
 private:
-  vector<Event*> &eventList;
+  std::vector< std::shared_ptr<Event> > &eventList;
   double start, end;
 protected:
 public:
-  Time(Path &tmpPath, vector<Event*> &tmpEventList, Input &in, IOClass &out)
+  Time(Path &tmpPath, std::vector< std::shared_ptr<Event> > &tmpEventList, Input &in, IOClass &out)
     : eventList(tmpEventList), Observable(tmpPath, in, out)
   {
     Init(in);

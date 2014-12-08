@@ -16,11 +16,7 @@ public:
   Path(CommunicatorClass& tmpWorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& tmpIntraComm)
    : WorldComm(tmpWorldComm), InterComm(tmpInterComm), IntraComm(tmpIntraComm)
   {}
-  ~Path()
-  {
-    for (auto& species: speciesList)
-      delete species;
-  }
+
   void Init(Input &in, IOClass &out, RNG &rng);
 
   // Parallel communicators
@@ -52,16 +48,16 @@ public:
 
   // Beads
   vec<int> beadLoop;
-  Bead* operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
-  void storeR(vector<Bead*> &affBeads);
-  void restoreR(vector<Bead*> &affBeads);
-  inline vec<double>& GetR(Bead* b) { return mode ? b->r : b->rC; };
-  inline Bead* GetNextBead(Bead* b, int n) { return mode ? b->nextB(n) : b->nextBC(n); };
-  inline Bead* GetPrevBead(Bead* b, int n) { return mode ? b->prevB(n) : b->prevBC(n); };
+  std::shared_ptr<Bead> operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
+  void storeR(std::vector< std::shared_ptr<Bead> > &affBeads);
+  void restoreR(std::vector< std::shared_ptr<Bead> > &affBeads);
+  inline vec<double>& GetR(std::shared_ptr<Bead> b) { return mode ? b->r : b->rC; };
+  inline std::shared_ptr<Bead> GetNextBead(std::shared_ptr<Bead> b, int n) { return mode ? b->nextB(n) : b->nextBC(n); };
+  inline std::shared_ptr<Bead> GetPrevBead(std::shared_ptr<Bead> b, int n) { return mode ? b->prevB(n) : b->prevBC(n); };
   inline void Dr(vec<double> &r0, vec<double> &r1, vec<double> &dr) { dr = r0 - r1; PutInBox(dr); };
-  inline void Dr(Bead* b0, vec<double> &r1, vec<double> &dr) { Dr(GetR(b0), r1, dr); };
-  inline void Dr(Bead* b0, Bead* b1, vec<double> &dr) { Dr(GetR(b0), GetR(b1), dr); };
-  inline void RBar(Bead* b0, Bead* b1, vec<double> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
+  inline void Dr(std::shared_ptr<Bead> b0, vec<double> &r1, vec<double> &dr) { Dr(GetR(b0), r1, dr); };
+  inline void Dr(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1, vec<double> &dr) { Dr(GetR(b0), GetR(b1), dr); };
+  inline void RBar(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1, vec<double> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
   void PrintPath();
 
   // Periodic Boundary Condition
@@ -86,13 +82,13 @@ public:
   void UpdateRhoKP(int b0, int b1, int iS, vector<int> &particles, int level);
   void CalcC(vec<double> &r);
   void AddRhoKP(field< vec< complex<double> > >& tmpRhoK, int iP, int iB, int iS, int pm);
-  inline void CalcRhoKP(Bead* b);
+  inline void CalcRhoKP(std::shared_ptr<Bead> b);
   inline field< vec< complex<double> > >& GetRhoK() { return mode ? (rhoK) : (rhoKC); };
-  inline vec< complex<double> >& GetRhoK(Bead* b) { return mode ? (b->rhoK) : (b->rhoKC); };
+  inline vec< complex<double> >& GetRhoK(std::shared_ptr<Bead> b) { return mode ? (b->rhoK) : (b->rhoKC); };
   inline void storeRhoK(int iB, int iS) { rhoKC(beadLoop(iB),iS) = rhoK(beadLoop(iB),iS); };
   inline void restoreRhoK(int iB, int iS) { rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS); };
-  void storeRhoKP(vector<Bead*>& affBeads);
-  void restoreRhoKP(vector<Bead*>& affBeads);
+  void storeRhoKP(vector<std::shared_ptr<Bead>>& affBeads);
+  void restoreRhoKP(vector<std::shared_ptr<Bead>>& affBeads);
 
   // Nodes
   int sign;

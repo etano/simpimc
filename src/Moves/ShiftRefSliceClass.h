@@ -13,7 +13,7 @@ protected:
 
 public:
   // Constructor
-  ShiftRefSlice(Path &tmpPath, RNG &tmpRNG, vector<Action*> &actionList, Input &in, IOClass &out)
+  ShiftRefSlice(Path &tmpPath, RNG &tmpRNG, std::vector< std::shared_ptr<Action> > &actionList, Input &in, IOClass &out)
     : Move(tmpPath, tmpRNG, actionList, in, out)
   {
     Init(in);
