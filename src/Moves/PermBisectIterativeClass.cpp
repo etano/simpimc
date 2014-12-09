@@ -98,7 +98,7 @@ void PermBisectIterative::Reset()
     double acceptRatio = (double) nAccept / (double) nAttempt;
     if (acceptRatio < targetRatio && nLevel > 1)
       nLevel--;
-    else if (1<<nLevel <= path.nBead/2)
+    else if (1<<nLevel < path.nBead/2)
       nLevel++;
     nBisectBeads = 1<<nLevel; // Number of beads in bisection
     lambda = path.speciesList[iSpecies]->lambda;

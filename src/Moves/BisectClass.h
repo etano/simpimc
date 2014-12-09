@@ -9,8 +9,8 @@ private:
   string species;
   bool rollOver, adaptive;
   double targetRatio;
-  int iSpecies;
-  unsigned int nImages, nLevel, nBisectBeads;
+  int iSpecies, nImages;
+  unsigned int nLevel, nBisectBeads;
   unsigned int bead0, bead1;
   double i4LambdaTauNBisectBeads, lambda;
   int refAccept, refAttempt;
