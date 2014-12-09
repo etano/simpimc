@@ -193,13 +193,17 @@ void Bisect::Write()
 {
   // Write
   if (firstTime) {
-    out.CreateExtendableDataSet("/Moves/"+name+"/", "refAccept", refAccept);
-    out.CreateExtendableDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
+    if (path.speciesList[iSpecies]->fixedNode) {
+      out.CreateExtendableDataSet("/Moves/"+name+"/", "refAccept", refAccept);
+      out.CreateExtendableDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
+    }
     if (adaptive)
       out.CreateExtendableDataSet("/Moves/"+name+"/", "nLevel", nLevel);
   } else {
-    out.AppendDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
-    out.AppendDataSet("/Moves/"+name+"/", "refAccept", refAccept);
+    if (path.speciesList[iSpecies]->fixedNode) {
+      out.AppendDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
+      out.AppendDataSet("/Moves/"+name+"/", "refAccept", refAccept);
+    }
     if (adaptive)
       out.AppendDataSet("/Moves/"+name+"/", "nLevel", nLevel);
   }
