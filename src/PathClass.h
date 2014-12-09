@@ -34,7 +34,7 @@ public:
 
   // Species
   unsigned int nSpecies;
-  vector<Species*> speciesList;
+  vector< std::shared_ptr<Species> > speciesList;
   void GetSpeciesInfo(string species, int &iSpecies);
 
   // Fast math
