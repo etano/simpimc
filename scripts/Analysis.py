@@ -109,8 +109,8 @@ class Pair(Observable):
         xs,ys = [],{}
         for file in files:
             f = h5.File(file,'r')
-            xs = f[self.prefix+self.section+"/x"]
-            pairs = f[self.prefix+self.section+"/y"][startCut:]
+            xs = np.array(f[self.prefix+self.section+"/x"])
+            pairs = np.array(f[self.prefix+self.section+"/y"][startCut:])
             f.flush()
             f.close()
             for pair in pairs:
