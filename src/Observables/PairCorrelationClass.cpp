@@ -11,7 +11,7 @@ void PairCorrelation::Init(Input &in)
   // Read in grid info
   double rMin = in.getAttribute<double>("rMin",0.);
   double rMax = in.getAttribute<double>("rMax",path.L/2.);
-  int nR = in.getAttribute<double>("nR",100);
+  int nR = in.getAttribute<double>("nR",1000);
   gr.x.CreateGrid(rMin,rMax,nR);
   gr.y.zeros(nR);
 
@@ -92,11 +92,11 @@ void PairCorrelation::Write()
       norm = nMeasure*NA*NB*path.nBead/vol;
     for (int i=0; i<gr.x.nR; i++) {
       double r1 = gr.x(i);
-      double r2 = (i<(gr.x.nR-1)) ? gr.x(i+1):(2.0*gr.x(i)-gr.x(i-1));
+      double r2 = (i<(gr.x.nR-1)) ? gr.x(i+1):(2.*gr.x(i)-gr.x(i-1));
       double r = 0.5*(r1+r2);
       double binVol;
       if (path.nD == 3)
-        binVol = 4.0*M_PI/3 * (r2*r2*r2-r1*r1*r1);
+        binVol = 4.*M_PI/3. * (r2*r2*r2-r1*r1*r1);
       else if (path.nD == 2)
         binVol = M_PI * (r2*r2-r1*r1);
       else if (path.nD == 1)
