@@ -19,83 +19,85 @@ def GetSubsections(f, section_name):
 
 # Observable base class
 class Observable:
-    def __init__(self, basename, prefix, section, startCut):
-        self.basename = basename
-        self.prefix = prefix
-        self.section = section
+    def __init__(self, prefix, name, type, startCut):
+        self.basename = './'+prefix
+        self.prefix = prefix+'/'
+        self.name = name
+        self.type = type
         self.startCut = startCut
 
     def Process(self, files):
-        print 'Processing', self.prefix+self.section
-        data = self.GetData(files)
-        stats = self.DoStatistics(data)
+        print 'Processing', self.prefix+self.name
+        stats = self.GetDataStats(files)
         self.WriteToFile(stats)
 
-    def GetData(self, files):
-        print 'GetData not defined for', self.section
-        return 0
-
-    def DoStatistics(self, data):
-        print 'DoStatistics not defined for', self.section
+    def GetDataStats(self, files):
+        print 'GetDataStats not defined for', self.name
         return 0
 
     def WriteToFile(self, stats):
-        print 'WriteToFile not defined for', self.section
+        print 'WriteToFile not defined for', self.name
+        return 0
+
+    def AdjustBySign(self, sign_data):
+        print 'AdjustBySign not defined for', self.name
         return 0
 
 # Scalar variables
 class Scalar(Observable):
-    def GetData(self, files):
+    def GetDataStats(self, files):
         data = []
-        for file in files:
+        for f in files:
             f = h5.File(file,'r')
-            data.append(f[self.prefix+self.section+"/x"][startCut:])
+            data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][startCut:])))
             f.flush()
             f.close()
-        return data
-
-    def DoStatistics(self, data):
-        dStats = []
-        for d in data:
-            dStats.append(Stats.stats(np.array(d)))
-        stats = Stats.UnweightedAvg(np.array(dStats))
+        stats = Stats.UnweightedAvg(np.array(data))
         return stats
 
     def WriteToFile(self, stats):
         if not os.path.exists(self.basename):
             os.makedirs(self.basename)
-        g = open(self.basename+'/'+self.section+'.dat','w')
+        g = open(self.basename+'/'+self.name+'.dat','w')
         for s in stats:
             g.write('%.10e '%(s))
         g.write('\n')
         g.close()
 
+    def AdjustBySign(self, sign_data):
+        data = np.loadtxt(self.basename+'/'+self.name+'.dat')
+        mean = data[0]/sign_data[0]
+        if data[0] != 0:
+            err = mean*np.sqrt(pow(data[1]/data[0],2) + pow(sign_data[1]/sign_data[0],2))
+        kappa = data[2]
+        g = open(self.basename+'/'+self.name+'.adj.dat','w')
+        g.write('%.10e %.10e %.10e\n'%(mean,err,kappa))
+        g.close()
+
 # Histogram variables
 class Histogram(Observable):
-    def GetData(self, files):
-        xs,ys = [],[]
-        for file in files:
-            f = h5.File(file,'r')
-            xs = np.array(f[self.prefix+self.section+"/x"])
-            ys.append(np.transpose(f[self.prefix+self.section+"/y"][startCut:]))
+    def GetDataStats(self, files):
+        xs,yStats = [],[]
+        count = 0
+        for j in range(len(files)):
+            f = h5.File(files[j],'r')
+            xs = np.array(f[self.prefix+self.name+"/x"])
+            ys = np.transpose(f[self.prefix+self.name+"/y"][startCut:])
             f.flush()
             f.close()
-        return (xs, ys)
-
-    def DoStatistics(self, data):
-        (xs, ys) = data
+            yStats.append([])
+            for i in range(len(xs)):
+                yStats[j].append(Stats.stats(np.array(ys[i])))
         stats = []
         for i in range(len(xs)):
-            yStats = []
-            for y in ys:
-                yStats.append(Stats.stats(np.array(y[i])))
-            stats.append(Stats.UnweightedAvg(np.array(yStats)))
+            yStatsi = [x[i] for x in yStats]
+            stats.append(Stats.UnweightedAvg(np.array(yStatsi)))
         return (xs, stats)
 
     def WriteToFile(self, (xs, stats)):
         if not os.path.exists(self.basename):
             os.makedirs(self.basename)
-        g = open(self.basename+'/'+self.section+'.dat','w')
+        g = open(self.basename+'/'+self.name+'.dat','w')
         for i in range(len(xs)):
             g.write(str(xs[i])+' ')
             for s in stats[i]:
@@ -103,14 +105,28 @@ class Histogram(Observable):
             g.write('\n')
         g.close()
 
+    def AdjustBySign(self, sign_data):
+        data = np.loadtxt(self.basename+'/'+self.name+'.dat')
+        xs = data[:,0]
+        means = data[:,1]/sign_data[0]
+        errs = data[:,2]
+        for i in range(len(errs)):
+            if data[i,1] != 0:
+                errs[i] = np.abs(means[i])*np.sqrt(pow(errs[i]/data[i,1],2) + pow(sign_data[1]/sign_data[0],2))
+        kappas = data[:,3]
+        g = open(self.basename+'/'+self.name+'.adj.dat','w')
+        for (x,mean,err,kappa) in zip(xs,means,errs,kappas):
+            g.write('%.10e %.10e %.10e %.10e\n'%(x,mean,err,kappa))
+        g.close()
+
 # Pair variables
 class Pair(Observable):
-    def GetData(self, files):
+    def GetDataStats(self, files):
         xs,ys = [],{}
         for file in files:
             f = h5.File(file,'r')
-            xs = np.array(f[self.prefix+self.section+"/x"])
-            pairs = np.array(f[self.prefix+self.section+"/y"][startCut:])
+            xs = np.array(f[self.prefix+self.name+"/x"])
+            pairs = np.array(f[self.prefix+self.name+"/y"][startCut:])
             f.flush()
             f.close()
             for pair in pairs:
@@ -118,10 +134,6 @@ class Pair(Observable):
                     ys[pair[0]] += pair[1]
                 except:
                     ys[pair[0]] = pair[1]
-        return (xs, ys)
-
-    def DoStatistics(self, data):
-        (xs, ys) = data
         tot = 0
         for x in ys.keys():
             tot += ys[x]
@@ -132,7 +144,7 @@ class Pair(Observable):
     def WriteToFile(self, (xs, ys)):
         if not os.path.exists(self.basename):
             os.makedirs(self.basename)
-        g = open(self.basename+'/'+self.section+'.dat','w')
+        g = open(self.basename+'/'+self.name+'.dat','w')
         for x in xs:
             g.write(str(x)+' ')
             try:
@@ -155,14 +167,20 @@ def AddObservable(f, section, obs, startCut):
     except KeyError:
         data_type = "none"
 
+    # Try to find observable type
+    try:
+        section_type = f[section+'/type'][0]
+    except KeyError:
+        section_type = "none"
+
     section_name = section.split('/')[-1]
     prefix = '/'.join(section.split('/')[:-1])
     if data_type == "scalar":
-        obs.append(Scalar('./'+prefix, prefix+'/', section_name, startCut))
+        obs.append(Scalar(prefix, section_name, section_type, startCut))
     elif data_type == "histogram":
-        obs.append(Histogram('./'+prefix, prefix+'/', section_name, startCut))
-    elif data_type == "pairs":
-        obs.append(Pair('./'+prefix, prefix+'/', section_name, startCut))
+        obs.append(Histogram(prefix, section_name, section_type, startCut))
+    #if data_type == "pairs":
+    #    obs.append(Pair(prefix, section_name, section_type, startCut))
 
 # Get start cut
 try:
@@ -187,5 +205,17 @@ f0.flush()
 f0.close()
 
 # Compute statistics
+adjustBySign = 0
+sign_data = np.array((1,3))
 for ob in obs:
     ob.Process(files)
+    if ob.type == 'Sign':
+        adjustBySign = 1
+        sign_data = np.loadtxt(ob.basename+'/'+ob.name+'.dat')
+
+# Adjust by sign
+if adjustBySign:
+    for ob in obs:
+        if ('Observables' in ob.basename) and (not ('Time' in ob.basename)) and (not ('Permutation' in ob.basename)) and (ob.type != 'Sign'):
+            print 'Adjusting', ob.name, 'by sign weight'
+            ob.AdjustBySign(sign_data)
