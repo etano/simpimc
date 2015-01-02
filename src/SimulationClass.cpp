@@ -48,9 +48,9 @@ void Simulation::SetupSimulation(string inFile)
 void Simulation::Run()
 {
 #if USE_MPI
-  int seed = in.getChild("RNG").getAttribute<int>("Seed",(int)time(0)*(WorldComm.MyProc()+1));
+  int seed = in.getChild("RNG").getAttribute<int>("seed",(int)time(0)*(WorldComm.MyProc()+1));
 #else
-  int seed = in.getChild("RNG").getAttribute<int>("Seed",(int)time(0));
+  int seed = in.getChild("RNG").getAttribute<int>("seed",(int)time(0));
 #endif
   RNG rng(seed);
   out.CreateGroup("RNG");
