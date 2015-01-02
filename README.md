@@ -3,6 +3,7 @@
 Simple path integral monte carlo in c++.
 
 master: ![master build status](https://travis-ci.org/etano/simpimc.svg?branch=master)
+
 dev: ![dev build status](https://travis-ci.org/etano/simpimc.svg?branch=dev)
 
 ## Installation
