@@ -1,11 +1,11 @@
 <Input>
   <RNG seed="12345" />
-  <IO outputPrefix="free.1" />
+  <IO outputPrefix="free.0" />
   <Parallel procsPerGroup="1" />
   <System nD="3" nBead="10" beta="100.0" L="10.0" PBC="1" />
   <Particles>
-    <Species name="eU" nPart="5" lambda="0.5" fermi="0" fixedNode="0" initType="Restart" cofactor="0.9" prefix="free.0" />
-    <Species name="eD" nPart="5" lambda="0.5" fermi="0" fixedNode="0" initType="Restart" cofactor="0.9" prefix="free.0" />
+    <Species name="eU" nPart="5" lambda="0.5" fermi="0" fixedNode="0" initType="Random" cofactor="0.9" prefix="free.0" />
+    <Species name="eD" nPart="5" lambda="0.5" fermi="0" fixedNode="0" initType="Random" cofactor="0.9" prefix="free.0" />
   </Particles>
   <Actions>
     <Action name="KineticU" type="Kinetic" nImages="1" species="eU" />
@@ -23,9 +23,9 @@
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
-    <Loop nStep="2">
+    <Loop nStep="10">
       <Write />
-      <Loop nStep="2">
+      <Loop nStep="10">
         <Move name="BisectU" />
         <Move name="BisectD" />
         <Observable name="Energy" />

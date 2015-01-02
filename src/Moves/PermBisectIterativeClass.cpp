@@ -370,7 +370,7 @@ void PermBisectIterative::assignParticleLabels()
   for (unsigned int iP=0; iP<nPart; iP++) {
     std::shared_ptr<Bead> b(path(iSpecies,iP,bead1-1));
     for (unsigned int iB=path.beadLoop(bead1-1); iB<path.nBead; iB++) {
-      path.speciesList[iSpecies]->bead(iP,iB) = b; // fixme: make cleaner using operator
+      path.speciesList[iSpecies]->bead(iP,iB) = b;
       path(iSpecies,iP,iB)->p = iP;
       b = b->next;
     }

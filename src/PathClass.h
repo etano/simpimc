@@ -34,7 +34,7 @@ public:
 
   // Species
   unsigned int nSpecies;
-  vector<Species*> speciesList;
+  vector< std::shared_ptr<Species> > speciesList;
   void GetSpeciesInfo(string species, int &iSpecies);
 
   // Fast math
@@ -90,12 +90,15 @@ public:
   void storeRhoKP(vector<std::shared_ptr<Bead>>& affBeads);
   void restoreRhoKP(vector<std::shared_ptr<Bead>>& affBeads);
 
-  // Nodes
+  // Importance weight
+  double importance_weight;
   int sign;
+
+  // Nodes
   int refBead;
-  int CalcSign();
 
   // Permutations
+  int CalcSign();
   struct CompareVecInt
   {
     bool operator() (const vector<int> &a, const vector<int> &b) {

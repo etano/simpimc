@@ -258,6 +258,11 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
   return tot;
 }
 
+double PairAction::ImportanceWeight()
+{
+  return isImportanceWeight ? exp(DActionDBeta()/path.nBead) : 1.;
+}
+
 void PairAction::Write() {}
 
 void PairAction::Accept() // fixme: will accept even when unaffected

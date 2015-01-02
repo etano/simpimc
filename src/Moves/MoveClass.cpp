@@ -1,6 +1,7 @@
 #include "MoveClass.h"
 
-void Move::DoEvent() {
+void Move::DoEvent()
+{
   struct timeval time;
   gettimeofday(&time, NULL); // Start Time
   double start = time.tv_sec + (time.tv_usec / 1000000.);

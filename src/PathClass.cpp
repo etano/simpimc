@@ -35,7 +35,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   nSpecies = speciesInput.size();
   nPart = 0;
   for (int iS=0; iS<nSpecies; iS++) {
-    speciesList.push_back(new Species(speciesInput[iS],out,iS,nD,nBead));
+    speciesList.push_back(std::make_shared<Species>(speciesInput[iS],out,iS,nD,nBead));
     nPart += speciesList[iS]->nPart;
   }
   out.Write("System/nPart",nPart);
@@ -62,8 +62,9 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   double kCut = in.getChild("System").getAttribute<double>("kCut",2.*M_PI/(pow(vol,1./nD)));
   SetupKs(kCut);
 
-  // Initiate nodal things
+  // Initiate some global things
   sign = 1;
+  importance_weight = 1;
   refBead = 0;
   CalcSign();
 }

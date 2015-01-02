@@ -47,6 +47,7 @@ public:
   virtual double DActionDBeta();
   virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level);
   virtual double Potential();
+  virtual double ImportanceWeight();
   virtual void Write();
   virtual void Accept();
   virtual void Reject();

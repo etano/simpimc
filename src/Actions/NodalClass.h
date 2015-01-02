@@ -2,8 +2,6 @@
 #define NodalClass_H
 
 #include "ActionClass.h"
-#include <einspline/multi_bspline.h>
-#include <einspline/bspline.h>
 
 class Nodal : public Action
 {
@@ -18,11 +16,7 @@ protected:
 
   // Rho matrix
   field<double> rho_F, rho_F_c;
-  double GetGij(vec<double> &r, int sliceDiff);
-
-  // Splines
-  field<UBspline_1d_d*> rho_free_r_splines;
-  void SetupSpline();
+  virtual double GetGij(vec<double> &r, int sliceDiff) = 0;
 
   // RNG
   RNG &rng;
@@ -31,16 +25,20 @@ public:
   // Constructor
   Nodal(Path &path, RNG &t_rng, Input &in, IOClass &out)
     : Action(path,in,out), rng(t_rng)
-  {
-    Init(in);
-  }
+  {}
 
   // Functions
-  virtual void Init(Input &in);
+  virtual void Init(Input &in) {};
   virtual double DActionDBeta();
   virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level);
-  virtual void Write();
+  virtual void Write() {};
   virtual void Accept();
+
+  // FIXME: This only pertains to optimized nodes, but had to put it here for the associated move.
+  virtual int GetParamSet() {};
+  virtual int GetNumParamSets() {};
+  virtual void SetParamSet(int t_iParamSet) {};
+  virtual void SetRandomParamSet() {};
 
 };
 
