@@ -57,7 +57,7 @@ void PairCorrelation::Accumulate()
           path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB),dr);
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
-            gr.y(i) = gr.y(i) + 1.*path.sign;
+            gr.y(i) = gr.y(i) + 1.*path.importance_weight;
         }
       }
     }
@@ -69,7 +69,7 @@ void PairCorrelation::Accumulate()
           path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB),dr);
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
-            gr.y(i) = gr.y(i) + 1.*path.sign;
+            gr.y(i) = gr.y(i) + 1.*path.importance_weight;
         }
       }
     }
@@ -101,7 +101,8 @@ void PairCorrelation::Write()
         binVol = M_PI * (r2*r2-r1*r1);
       else if (path.nD == 1)
         binVol = r2-r1;
-      gr.y(i) = gr.y(i)/(binVol*norm);
+      //gr.y(i) = gr.y(i)/(binVol*norm);
+      gr.y(i) = gr.y(i)/(norm);
     }
 
     // Write to file

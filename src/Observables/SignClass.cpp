@@ -3,7 +3,7 @@
 void Sign::Init(Input &in)
 {
   string data_type = "scalar";
-  out.Write(prefix+"/data_type",data_type);
+  out.Write(prefix+"data_type",data_type);
 
   Reset();
 }
@@ -17,7 +17,7 @@ void Sign::Reset()
 void Sign::Accumulate()
 {
   path.SetMode(1);
-  sign += path.sign;
+  sign += path.importance_weight;
   nMeasure += 1;
 }
 
@@ -30,9 +30,9 @@ void Sign::Write()
     sign /= norm;
     if (firstTime) {
       firstTime = 0;
-      out.CreateExtendableDataSet("/Observables/"+name+"/", "x", sign);
+      out.CreateExtendableDataSet(prefix, "x", sign);
     } else {
-      out.AppendDataSet("/Observables/"+name+"/", "x", sign);
+      out.AppendDataSet(prefix, "x", sign);
     }
 
     Reset();

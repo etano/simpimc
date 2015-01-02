@@ -62,8 +62,9 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   double kCut = in.getChild("System").getAttribute<double>("kCut",2.*M_PI/(pow(vol,1./nD)));
   SetupKs(kCut);
 
-  // Initiate nodal things
+  // Initiate some global things
   sign = 1;
+  importance_weight = 1;
   refBead = 0;
   CalcSign();
 }

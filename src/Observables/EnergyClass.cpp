@@ -21,9 +21,11 @@ void Energy::Accumulate()
 {
   path.SetMode(1);
   for (int i=0; i<actionList.size(); ++i) {
-    Es(i) += path.sign*actionList[i]->DActionDBeta();
-    if (measureV)
-      Vs(i) += path.sign*actionList[i]->Potential();
+    if (!actionList[i]->isImportanceWeight) {
+      Es(i) += path.importance_weight*actionList[i]->DActionDBeta();
+      if (measureV)
+        Vs(i) += path.importance_weight*actionList[i]->Potential();
+    }
   }
   nMeasure += 1;
 }

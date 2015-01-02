@@ -46,7 +46,7 @@ IF(${COMPILER_MAKE} MATCHES "CLANG")
     SET(CMAKE_CXX_COMPILER mpicxx)
   ELSE()
     SET(CMAKE_C_COMPILER clang)
-    SET(CMAKE_CXX_COMPILER clang)
+    SET(CMAKE_CXX_COMPILER clang++)
   ENDIF()
 ENDIF()
 
@@ -139,9 +139,12 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Actions/KineticClass.cpp
   src/Actions/PairActionClass.cpp
   src/Actions/NodalClass.cpp
+  src/Actions/FreeNodalClass.cpp
+  src/Actions/OptimizedNodalClass.cpp
   src/Actions/BarePairActionClass.cpp
   src/Actions/DavidPairActionClass.cpp
   src/Actions/IlkkaPairActionClass.cpp
+  src/Actions/ImportancePairActionClass.cpp
   src/Actions/TrapClass.cpp
   src/Moves/MoveClass.cpp
   src/Moves/BisectClass.cpp
@@ -149,11 +152,14 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Moves/PermBisectClass.cpp
   src/Moves/PermBisectIterativeClass.cpp
   src/Moves/ShiftRefSliceClass.cpp
+  src/Moves/VaryOptimizedNodalClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
+  src/Observables/ImportanceWeightClass.cpp
   src/Observables/PairCorrelationClass.cpp
   src/Observables/PathDumpClass.cpp
   src/Observables/PermutationClass.cpp
+  src/Observables/RecordOptimizedNodalClass.cpp
   src/Observables/SignClass.cpp
   src/Observables/StructureFactorClass.cpp
   src/Observables/TimeClass.cpp)

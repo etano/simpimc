@@ -15,14 +15,18 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
       actions.push_back(std::make_shared<Kinetic>(path,actionInput,out));
     } else if (type == "HarmonicTrap") {
       actions.push_back(std::make_shared<Trap>(path,actionInput,out));
-    } else if (type == "Nodal") {
-      actions.push_back(std::make_shared<Nodal>(path,rng,actionInput,out));
+    } else if (type == "FreeNodal") {
+      actions.push_back(std::make_shared<FreeNodal>(path,rng,actionInput,out));
+    } else if (type == "OptimizedNodal") {
+      actions.push_back(std::make_shared<OptimizedNodal>(path,rng,actionInput,out));
     } else if (type == "BarePairAction") {
       actions.push_back(std::make_shared<BarePairAction>(path,actionInput,out));
     } else if (type == "DavidPairAction") {
       actions.push_back(std::make_shared<DavidPairAction>(path,actionInput,out));
     } else if (type == "IlkkaPairAction") {
       actions.push_back(std::make_shared<IlkkaPairAction>(path,actionInput,out));
+    } else if (type == "ImportancePairAction") {
+      actions.push_back(std::make_shared<ImportancePairAction>(path,actionInput,out));
     } else
       std::cerr << "Warning: Unrecognized Action, " << type << endl;
   }
@@ -42,6 +46,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
       events.push_back(std::make_shared<PermBisectIterative>(path,rng,actions,moveInput,out));
     else if (type == "ShiftRefSlice")
       events.push_back(std::make_shared<ShiftRefSlice>(path,rng,actions,moveInput,out));
+    else if (type == "VaryOptimizedNodal")
+      events.push_back(std::make_shared<VaryOptimizedNodal>(path,rng,actions,moveInput,out));
     else
       std::cerr << "Warning: Unrecognized Move, " << type << endl;
   }
@@ -53,12 +59,16 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
     string type = observableInput.getAttribute<string>("type");
     if (type == "Energy")
       events.push_back(std::make_shared<Energy>(path,actions,observableInput,out));
+    else if (type == "ImportanceWeight")
+      events.push_back(std::make_shared<ImportanceWeight>(path,actions,observableInput,out));
     else if (type == "PairCorrelation")
       events.push_back(std::make_shared<PairCorrelation>(path,observableInput,out));
     else if (type == "PathDump")
       events.push_back(std::make_shared<PathDump>(path,observableInput,out));
     else if (type == "Permutation")
       events.push_back(std::make_shared<Permutation>(path,observableInput,out));
+    else if (type == "RecordOptimizedNodal")
+      events.push_back(std::make_shared<RecordOptimizedNodal>(path,actions,observableInput,out));
     else if (type == "Sign")
       events.push_back(std::make_shared<Sign>(path,observableInput,out));
     else if (type == "StructureFactor")
