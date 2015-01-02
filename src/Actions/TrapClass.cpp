@@ -6,6 +6,7 @@ void Trap::Init(Input &in)
   nOrder = in.getAttribute<int>("nOrder");
   omega = in.getAttribute<double>("omega");
   species = in.getAttribute<string>("species");
+  speciesList.push_back(species);
   path.GetSpeciesInfo(species,iSpecies);
 
   out.Write("/Actions/"+name+"/nImages", nImages);

@@ -13,9 +13,41 @@ void Bisect::Init(Input &in)
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies);
 
+  // Generate action list
+  std::vector<std::string> speciesList;
+  speciesList.push_back(species);
+  GenerateActionList(speciesList);
+
+  // Adaptive bisection level
+  adaptive = in.getAttribute<int>("adaptive",0);
+  if (adaptive)
+    targetRatio = in.getAttribute<double>("targetRatio");
+
   // Compute constants
-  lambda = path.speciesList[iSpecies]->lambda;
   nBisectBeads = 1<<nLevel; // Number of beads in bisection
+  lambda = path.speciesList[iSpecies]->lambda;
+  i4LambdaTauNBisectBeads = 1./(4.*lambda*path.tau*nBisectBeads);
+}
+
+// Reset counters
+void Bisect::Reset()
+{
+  if (adaptive) {
+    double acceptRatio = (double) nAccept / (double) nAttempt;
+    if (acceptRatio < targetRatio && nLevel > 1)
+      nLevel--;
+    else if (1<<nLevel < path.nBead/2)
+      nLevel++;
+    nBisectBeads = 1<<nLevel; // Number of beads in bisection
+    lambda = path.speciesList[iSpecies]->lambda;
+    i4LambdaTauNBisectBeads = 1./(4.*lambda*path.tau*nBisectBeads);
+  }
+
+  refAccept = 0;
+  refAttempt = 0;
+
+  Move::Reset();
+
 }
 
 // Accept current move
@@ -28,8 +60,8 @@ void Bisect::Accept()
     path.storeRhoK(iB,iSpecies);
 
   // Call accept for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction)
-    actionList[iAction]->Accept();
+  for (auto& action: actionList)
+    action->Accept();
 }
 
 // Reject current move
@@ -42,8 +74,8 @@ void Bisect::Reject()
     path.restoreRhoK(iB,iSpecies);
 
   // Call reject for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction)
-    actionList[iAction]->Reject();
+  for (auto& action: actionList)
+    action->Reject();
 }
 
 // Bisection Move
@@ -51,11 +83,17 @@ int Bisect::Attempt()
 {
   unsigned int iP = rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
-  bead1 = bead0 + nBisectBeads;
+  bead1 = bead0 + nBisectBeads; // Set last bead in bisection
+  rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
+  bool includeRef = path.speciesList[iSpecies]->fixedNode &&
+                    ((bead0<=path.refBead && bead1>=path.refBead) ||
+                    (rollOver && path.beadLoop[bead1]>=path.refBead));
+  if (includeRef)
+    refAttempt++;
 
   // Set up pointers
-  Bead *beadI = path(iSpecies,iP,bead0);
-  Bead *beadF = beadI;
+  std::shared_ptr<Bead> beadI(path(iSpecies,iP,bead0));
+  std::shared_ptr<Bead> beadF(beadI);
   affBeads.clear();
   affBeads.push_back(beadI);
   for (int i=0; i<nBisectBeads; ++i) {
@@ -70,7 +108,7 @@ int Bisect::Attempt()
     particles.push_back(std::make_pair(iSpecies,beadF->p));
 
   // Perform the bisection (move exactly through kinetic action)
-  Bead *beadA, *beadB, *beadC;
+  std::shared_ptr<Bead> beadA, beadB, beadC;
   double prevActionChange = 0.;
   double prefactorOfSampleProb = 0.;
   vec<double> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
@@ -124,14 +162,14 @@ int Bisect::Attempt()
     // Calculate action change
     double oldAction = 0.;
     double newAction = 0.;
-    for (int iAction=0; iAction<actionList.size(); ++iAction) {
+    for (auto& action: actionList) {
       // Old action
       path.SetMode(0);
-      oldAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
+      oldAction += action->GetAction(bead0, bead1, particles, iLevel);
 
       // New action
       path.SetMode(1);
-      newAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
+      newAction += action->GetAction(bead0, bead1, particles, iLevel);
     }
 
     double logSampleRatio = -newLogSampleProb + oldLogSampleProb;
@@ -145,5 +183,30 @@ int Bisect::Attempt()
     prevActionChange = currActionChange;
   }
 
+  if (includeRef)
+    refAccept++;
+
   return 1;
+}
+
+void Bisect::Write()
+{
+  // Write
+  if (firstTime) {
+    if (path.speciesList[iSpecies]->fixedNode) {
+      out.CreateExtendableDataSet("/Moves/"+name+"/", "refAccept", refAccept);
+      out.CreateExtendableDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
+    }
+    if (adaptive)
+      out.CreateExtendableDataSet("/Moves/"+name+"/", "nLevel", nLevel);
+  } else {
+    if (path.speciesList[iSpecies]->fixedNode) {
+      out.AppendDataSet("/Moves/"+name+"/", "refAttempt", refAttempt);
+      out.AppendDataSet("/Moves/"+name+"/", "refAccept", refAccept);
+    }
+    if (adaptive)
+      out.AppendDataSet("/Moves/"+name+"/", "nLevel", nLevel);
+  }
+
+  Move::Write();
 }

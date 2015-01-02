@@ -14,12 +14,14 @@ protected:
   RNG& rng;
   IOClass& out;
 
-  vector<Action*> &actionList;
+  std::vector< std::shared_ptr<Action> > &fullActionList;
+  std::vector< std::shared_ptr<Action> > actionList;
+  void GenerateActionList(const std::vector<std::string> &species);
   string prefix;
 public:
   // Constructor
-  Move(Path &tmpPath, RNG &tmpRNG, vector<Action*> &tmpActionList, Input &in, IOClass &tmpOut)
-    : Event(), path(tmpPath), rng(tmpRNG), actionList(tmpActionList), out(tmpOut)
+  Move(Path &tmpPath, RNG &tmpRNG, std::vector< std::shared_ptr<Action> > &tmpActionList, Input &in, IOClass &tmpOut)
+    : Event(), path(tmpPath), rng(tmpRNG), fullActionList(tmpActionList), out(tmpOut)
   {
     name = in.getAttribute<string>("name");
     type = in.getAttribute<string>("type");

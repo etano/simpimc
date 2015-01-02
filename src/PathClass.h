@@ -16,6 +16,7 @@ public:
   Path(CommunicatorClass& tmpWorldComm, CommunicatorClass& tmpInterComm, CommunicatorClass& tmpIntraComm)
    : WorldComm(tmpWorldComm), InterComm(tmpInterComm), IntraComm(tmpIntraComm)
   {}
+
   void Init(Input &in, IOClass &out, RNG &rng);
 
   // Parallel communicators
@@ -46,19 +47,17 @@ public:
   bool GetMode() { return mode; };
 
   // Beads
-  vector<Bead*>::const_iterator beadIter;
   vec<int> beadLoop;
-  Bead* operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
-  void storeR(vector<Bead*> &affBeads);
-  void restoreR(vector<Bead*> &affBeads);
-  inline vec<double>& GetR(Bead* b) { return mode ? b->r : b->rC; };
-  inline Bead* GetNextBead(Bead* b, int n) { return mode ? b->nextB(n) : b->nextBC(n); };
-  inline Bead* GetPrevBead(Bead* b, int n) { return mode ? b->prevB(n) : b->prevBC(n); };
+  std::shared_ptr<Bead> operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
+  void storeR(std::vector< std::shared_ptr<Bead> > &affBeads);
+  void restoreR(std::vector< std::shared_ptr<Bead> > &affBeads);
+  inline vec<double>& GetR(std::shared_ptr<Bead> b) { return mode ? b->r : b->rC; };
+  inline std::shared_ptr<Bead> GetNextBead(std::shared_ptr<Bead> b, int n) { return mode ? b->nextB(n) : b->nextBC(n); };
+  inline std::shared_ptr<Bead> GetPrevBead(std::shared_ptr<Bead> b, int n) { return mode ? b->prevB(n) : b->prevBC(n); };
   inline void Dr(vec<double> &r0, vec<double> &r1, vec<double> &dr) { dr = r0 - r1; PutInBox(dr); };
-  inline void Dr(Bead* b0, vec<double> &r1, vec<double> &dr) { Dr(GetR(b0), r1, dr); };
-  inline void Dr(Bead* b0, Bead* b1, vec<double> &dr) { Dr(GetR(b0), GetR(b1), dr); };
-  inline void RBar(Bead* b0, Bead* b1, vec<double> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
-  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag, vec<double> &r0, vec<double> &r1, vec<double> &dr);
+  inline void Dr(std::shared_ptr<Bead> b0, vec<double> &r1, vec<double> &dr) { Dr(GetR(b0), r1, dr); };
+  inline void Dr(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1, vec<double> &dr) { Dr(GetR(b0), GetR(b1), dr); };
+  inline void RBar(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1, vec<double> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
   void PrintPath();
 
   // Periodic Boundary Condition
@@ -83,13 +82,13 @@ public:
   void UpdateRhoKP(int b0, int b1, int iS, vector<int> &particles, int level);
   void CalcC(vec<double> &r);
   void AddRhoKP(field< vec< complex<double> > >& tmpRhoK, int iP, int iB, int iS, int pm);
-  inline void CalcRhoKP(Bead* b);
+  inline void CalcRhoKP(std::shared_ptr<Bead> b);
   inline field< vec< complex<double> > >& GetRhoK() { return mode ? (rhoK) : (rhoKC); };
-  inline vec< complex<double> >& GetRhoK(Bead* b) { return mode ? (b->rhoK) : (b->rhoKC); };
+  inline vec< complex<double> >& GetRhoK(std::shared_ptr<Bead> b) { return mode ? (b->rhoK) : (b->rhoKC); };
   inline void storeRhoK(int iB, int iS) { rhoKC(beadLoop(iB),iS) = rhoK(beadLoop(iB),iS); };
   inline void restoreRhoK(int iB, int iS) { rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS); };
-  void storeRhoKP(vector<Bead*>& affBeads);
-  void restoreRhoKP(vector<Bead*>& affBeads);
+  void storeRhoKP(vector<std::shared_ptr<Bead>>& affBeads);
+  void restoreRhoKP(vector<std::shared_ptr<Bead>>& affBeads);
 
   // Nodes
   int sign;
@@ -117,26 +116,28 @@ public:
 
   // Path initialization
   void InitPaths(Input &in, IOClass &out, RNG &rng);
+
+  // Get dr, drP, and drrP
+  inline void DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag)
+  {
+    //Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
+    //Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);
+  
+    vec<double> r = GetR((*this)(s1,p1,b0)) - GetR((*this)(s0,p0,b0));
+    vec<double> rP = GetR((*this)(s1,p1,b1)) - GetR((*this)(s0,p0,b1));
+    for (int iD=0; iD<nD; ++iD) {
+      r(iD) -= nearbyint(r(iD)*iL)*L;
+      rP(iD) += nearbyint((r(iD)-rP(iD))*iL)*L;
+    }
+    vec<double> rrP = r - rP;
+    for (int iD=0; iD<nD; ++iD)
+      rrP(iD) -= nearbyint(rrP(iD)*iL)*L;
+    rMag = mag(r);
+    rPMag = mag(rP);
+    rrPMag = mag(rrP);
+  
+  };
 };
 
-// Get dr, drP, and drrP
-inline void Path::DrDrPDrrP(const int b0, const int b1, const int s0, const int s1, const int p0, const int p1, double &rMag, double &rPMag, double &rrPMag, vec<double> &r, vec<double> &rP, vec<double> &rrP)
-{
-  //Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
-  //Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),rP);
-
-  r = GetR((*this)(s1,p1,b0)) - GetR((*this)(s0,p0,b0));
-  rP = GetR((*this)(s1,p1,b1)) - GetR((*this)(s0,p0,b1));
-  for (int iD=0; iD<nD; ++iD) {
-    r(iD) -= nearbyint(r(iD)*iL)*L;
-    rP(iD) += nearbyint((r(iD)-rP(iD))*iL)*L;
-    rrP(iD) = r(iD) - rP(iD);
-    rrP(iD) -= nearbyint(rrP(iD)*iL)*L;
-  }
-  rMag = mag(r);
-  rPMag = mag(rP);
-  rrPMag = mag(rrP);
-
-}
 
 #endif

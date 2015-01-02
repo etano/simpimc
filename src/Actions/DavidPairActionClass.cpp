@@ -114,7 +114,7 @@ void DavidPairAction::ReadFile(string fileName)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-double DavidPairAction::CalcV(double &r, double &rP, int level)
+double DavidPairAction::CalcV(double &r, double &rP, const int level)
 {
   // Limits
   double rMin, rMax;
@@ -131,7 +131,7 @@ double DavidPairAction::CalcV(double &r, double &rP, int level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-double DavidPairAction::CalcU(double &r, double &rP, double &s, int level)
+double DavidPairAction::CalcU(double &r, double &rP, double &s, const int level)
 {
   // Constants
   double q = 0.5*(r + rP);
@@ -175,7 +175,7 @@ double DavidPairAction::CalcU(double &r, double &rP, double &s, int level)
 }
 
 /// Calculate the U(r,r'), dU(r,r'), and V(r,r') value when given r and r' and the level 
-double DavidPairAction::CalcdUdBeta(double &r, double &rP, double &s, int level)
+double DavidPairAction::CalcdUdBeta(double &r, double &rP, double &s, const int level)
 {
   // Constants
   double q = 0.5*(r + rP);

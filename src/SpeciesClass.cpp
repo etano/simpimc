@@ -26,7 +26,7 @@ void Species::Init(Input &in, IOClass &out)
   unsigned int unique_id = 0;
   for (unsigned int iP=0; iP<nPart; iP++) {
     for (unsigned int iB=0; iB<nBead; iB++) {
-      bead(iP,iB) = new Bead(nD,iS,iP,iB,unique_id);
+      bead(iP,iB).reset(new Bead(nD,iS,iP,iB,unique_id));
       unique_id++;
     }
   }

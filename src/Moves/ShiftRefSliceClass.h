@@ -1,20 +1,19 @@
-#ifndef DisplaceParticleClass_H
-#define DisplaceParticleClass_H
+#ifndef ShiftRefSliceClass_H
+#define ShiftRefSliceClass_H
 
 #include "MoveClass.h"
 
-class DisplaceParticle : public Move
+class ShiftRefSlice : public Move
 {
 private:
   string species;
   int iSpecies;
-  vector< std::shared_ptr<Bead> > affBeads;
-  double stepSize;
+  int refBead0, refBead1;
 protected:
 
 public:
   // Constructor
-  DisplaceParticle(Path &tmpPath, RNG &tmpRNG, std::vector< std::shared_ptr<Action> > &actionList, Input &in, IOClass &out)
+  ShiftRefSlice(Path &tmpPath, RNG &tmpRNG, std::vector< std::shared_ptr<Action> > &actionList, Input &in, IOClass &out)
     : Move(tmpPath, tmpRNG, actionList, in, out)
   {
     Init(in);

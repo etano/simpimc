@@ -7,18 +7,20 @@ class Bisect : public Move
 {
 private:
   string species;
-  int iSpecies;
-  int nImages;
+  bool rollOver, adaptive;
+  double targetRatio;
+  int iSpecies, nImages;
   unsigned int nLevel, nBisectBeads;
   unsigned int bead0, bead1;
-  double lambda;
+  double i4LambdaTauNBisectBeads, lambda;
+  int refAccept, refAttempt;
 
-  std::vector<Bead*> affBeads;
+  std::vector< std::shared_ptr<Bead> > affBeads;
 protected:
 
 public:
   // Constructor
-  Bisect(Path &tmpPath, RNG &tmpRNG, vector<Action*> &actionList, Input &in, IOClass &out)
+  Bisect(Path &tmpPath, RNG &tmpRNG, std::vector< std::shared_ptr<Action> > &actionList, Input &in, IOClass &out)
     : Move(tmpPath, tmpRNG, actionList, in, out)
   {
     Init(in);
@@ -28,6 +30,8 @@ public:
   virtual int Attempt();
   virtual void Accept();
   virtual void Reject();
+  virtual void Reset();
+  virtual void Write();
 
 };
 

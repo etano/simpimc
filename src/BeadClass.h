@@ -7,16 +7,22 @@ struct Bead
 {
 public:
   Bead();
-  ~Bead();
   Bead(unsigned int tmpND, int tmpS, unsigned int tmpP, unsigned int tmpB, unsigned int tmpId)
     : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), id(tmpId), r(tmpND), rC(tmpND)
   {}
+  //~Bead()
+  //{
+  //  delete next;
+  //  delete nextC;
+  //  delete prev;
+  //  delete prevC;
+  //}
 
   unsigned int p, b, s, id, nD;
   double nDist, nDistC;
   vec<double> r, rC;
   vec< complex<double> > rhoK, rhoKC;
-  Bead *next, *nextC, *prev, *prevC;
+  std::shared_ptr<Bead> next, nextC, prev, prevC;
 
   inline void storeR() { rC = r; };
   inline void restoreR() { r = rC; };
@@ -58,31 +64,31 @@ public:
     prev = prevC;
   }
 
-  Bead* nextB(unsigned int const n)
+  std::shared_ptr<Bead> nextB(unsigned int const n)
   {
-    Bead *bead = this;
-    for (unsigned int i=0; i<n; i++) bead = bead -> next;
+    std::shared_ptr<Bead> bead(next);
+    for (unsigned int i=1; i<n; i++) bead = bead -> next;
     return bead;
   }
 
-  Bead* nextBC(unsigned int const n)
+  std::shared_ptr<Bead> nextBC(unsigned int const n)
   {
-    Bead *bead = this;
-    for (unsigned int i=0; i<n; i++) bead = bead -> nextC;
+    std::shared_ptr<Bead> bead(nextC);
+    for (unsigned int i=1; i<n; i++) bead = bead -> nextC;
     return bead;
   }
 
-  Bead* prevB(unsigned int const n)
+  std::shared_ptr<Bead> prevB(unsigned int const n)
   {
-    Bead *bead = this;
-    for (unsigned int i=0; i<n; i++) bead = bead -> prev;
+    std::shared_ptr<Bead> bead(prev);
+    for (unsigned int i=1; i<n; i++) bead = bead -> prev;
     return bead;
   }
 
-  Bead* prevBC(unsigned int const n)
+  std::shared_ptr<Bead> prevBC(unsigned int const n)
   {
-    Bead *bead = this;
-    for (unsigned int i=0; i<n; i++) bead = bead -> prevC;
+    std::shared_ptr<Bead> bead(prevC);
+    for (unsigned int i=1; i<n; i++) bead = bead -> prevC;
     return bead;
   }
 

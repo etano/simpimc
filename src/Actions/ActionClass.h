@@ -30,6 +30,7 @@ public:
   }
 
   string type;
+  std::vector<std::string> speciesList;
 
   // Functions
   virtual void Init(Input &in) {};

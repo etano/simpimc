@@ -69,17 +69,17 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
 }
 
 // Store R
-void Path::storeR(vector<Bead*>& affBeads)
+void Path::storeR(vector< std::shared_ptr<Bead> > &affBeads)
 {
-  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
-    (*beadIter) -> storeR();
+  for (auto& b: affBeads)
+    b->storeR();
 }
 
 // Restore R
-void Path::restoreR(vector<Bead*>& affBeads)
+void Path::restoreR(vector< std::shared_ptr<Bead> > &affBeads)
 {
-  for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
-    (*beadIter) -> restoreR();
+  for (auto& b: affBeads)
+    b->restoreR();
 }
 
 void Path::PrintPath()
@@ -172,12 +172,12 @@ void Path::SetupKs(double kCut)
   genCombPermK(tmpKIndices, indices, nD, false, true);
 
   // Iterate through indices, form k vectors, and include only those that should be included
-  for (int iK=0; iK<tmpKIndices.size(); iK++) {
+  for (auto& iK: tmpKIndices) {
     vec<double> k(nD);
     vec<int> ki(nD);
     for (int iD=0; iD<nD; iD++) {
-      k(iD) = tmpKIndices[iK][iD]*kBox(iD);
-      ki(iD) = maxKIndex(iD) + tmpKIndices[iK][iD];
+      k(iD) = iK[iD]*kBox(iD);
+      ki(iD) = maxKIndex(iD) + iK[iD];
     }
     if (Include(k, kCut)) {
       ks.push_back(k);
@@ -254,23 +254,19 @@ void Path::UpdateRhoK()
 // Update rho k values for specific particles and slices
 void Path::UpdateRhoKP(int b0, int b1, vector< pair<int,int> > &particles, int level)
 {
-  bool tmpMode = GetMode();
-  SetMode(1);
   int skip = 1<<level;
 
   // Get species numbers
   vector<int> species, ps;
-  for (int p=0; p<particles.size(); p++) {
-    int iS = particles[p].first;
-    int iP = particles[p].second;
+  for (auto& p: particles) {
+    int iS = p.first;
+    int iP = p.second;
     species.push_back(iS);
     ps.push_back(iP);
   }
 
-  for (int s=0; s<species.size(); ++s)
-    UpdateRhoKP(b0, b1, species[s], ps, level);
-
-  SetMode(tmpMode);
+  for (auto& s: species)
+    UpdateRhoKP(b0, b1, s, ps, level);
 
 }
 
@@ -286,15 +282,13 @@ void Path::UpdateRhoKP(int b0, int b1, int iS, vector<int> &particles, int level
     rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS);
 
   // Update C values of changed particles
-  for (int p=0; p<particles.size(); p++) {
-    int iP = particles[p];
+  for (auto& iP: particles) {
     for (int iB=b0; iB<b1; iB+=skip) {
       // Calculate new values
       CalcRhoKP((*this)(iS,iP,iB));
 
       // Add in new values and subtract out old values
       rhoK(beadLoop(iB),iS) += (*this)(iS,iP,iB)->rhoK - (*this)(iS,iP,iB)->rhoKC;
-
     }
   }
 
@@ -310,23 +304,22 @@ void Path::UpdateRhoK(int b0, int b1, vector< pair<int,int > > &particles, int l
 
   // Get species numbers
   vector<int> species;
-  for (int p=0; p<particles.size(); p++) {
-    int iS = particles[p].first;
-    int iP = particles[p].second;
+  for (auto& p: particles) {
+    int iS = p.first;
+    int iP = p.second;
     species.push_back(iS);
   }
 
   // Reset to old copy
-  for (int s=0; s<species.size(); s++) {
-    int iS = species[s];
+  for (auto& iS: species) {
     for (int iB=b0; iB<b1; iB+=skip)
       rhoK(beadLoop(iB),iS) = rhoKC(beadLoop(iB),iS);
   }
 
   // Update C values of changed particles
-  for (int p=0; p<particles.size(); p++) {
-    int iS = particles[p].first;
-    int iP = particles[p].second;
+  for (auto& p: particles) {
+    int iS = p.first;
+    int iP = p.second;
     for (int iB=b0; iB<b1; iB+=skip) {
       // Add in new values
       SetMode(1);
@@ -372,32 +365,31 @@ void Path::AddRhoKP(field< vec< complex<double> > >& tmpRhoK, int iP, int iB, in
 }
 
 // Store rhoK
-void Path::storeRhoKP(vector<Bead*>& affBeads)
+void Path::storeRhoKP(vector< std::shared_ptr<Bead> > & affBeads)
 {
   if (kC > 0)
-    for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
-      (*beadIter) -> storeRhoK();
+    for (auto& b: affBeads)
+      b->storeRhoK();
 }
 
 // Restore rhoK
-void Path::restoreRhoKP(vector<Bead*>& affBeads)
+void Path::restoreRhoKP(vector< std::shared_ptr<Bead> > & affBeads)
 {
   if (kC > 0)
-    for (beadIter = affBeads.begin(); beadIter != affBeads.end(); ++beadIter)
-      (*beadIter) -> restoreRhoK();
+    for (auto& b: affBeads)
+      b->restoreRhoK();
 }
 
 // Calc rho_k for a single particle
-inline void Path::CalcRhoKP(Bead* b)
+inline void Path::CalcRhoKP(std::shared_ptr<Bead> b)
 {
   vec<double> r = GetR(b);
   vec< complex<double> >& tmpRhoK = GetRhoK(b);
   CalcC(r);
-  for (int iK=0; iK<kIndices.size(); iK++) {
-    vec<int> &ki = kIndices[iK];
+  for (int iK=0; iK<kIndices.size(); ++iK) {
     complex<double> factor = 1.;
     for (int iD=0; iD<nD; iD++)
-      factor *= C(iD)(ki(iD));
+      factor *= C(iD)(kIndices[iK](iD));
     tmpRhoK(iK) = factor;
   }
 }
@@ -410,8 +402,8 @@ int Path::CalcSign()
     if (speciesList[iS]->fermi) {
       vector<int> cycles;
       SetCycleCount(iS, cycles);
-      for (int i=0; i<cycles.size(); i++)
-        sign *= pow(-1,cycles[i]-1);
+      for (auto& cycle: cycles)
+        sign *= pow(-1,cycle-1);
     }
   }
 }
@@ -425,7 +417,7 @@ void Path::SetCycleCount(int iS, vector<int>& cycles)
   for (unsigned int iP=0; iP<speciesList[iS]->nPart; iP++) {
     if (!alreadyCounted(iP)) {
       int cycleLength = 1;
-      Bead* b = (*this)(iS,iP,nBead-1);
+      std::shared_ptr<Bead> b((*this)(iS,iP,nBead-1));
       alreadyCounted(iP) = 1;
       while (GetNextBead(b,1) != (*this)(iS,iP,0)) {
         cycleLength++;
@@ -452,8 +444,8 @@ int Path::GetPermSector(int iS, vector<int>& cycles)
   possPermsIterator = possPerms.find(cycles);
   if (possPermsIterator == possPerms.end()) {
     cout << "Broken Permutation: " << endl;
-    for (vector<int>::size_type i=0; i != cycles.size(); i++)
-      cout << cycles[i] << " ";
+    for (auto& cycle: cycles)
+      cout << cycle << " ";
     cout << endl;
     exit(1);
   }

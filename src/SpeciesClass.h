@@ -17,11 +17,12 @@ public:
   {
     Init(in, out);
   };
+
   void Init(Input &in, IOClass &out);
   void InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& InterComm, int L);
 
   // Beads
-  field<Bead*> bead;
+  field< std::shared_ptr<Bead> > bead;
   string initType;
 
   // Given Global Constants

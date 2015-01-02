@@ -19,6 +19,11 @@ void PermBisect::Init(Input &in)
   path.GetSpeciesInfo(species,iSpecies);
   nPart = path.speciesList[iSpecies]->nPart;
 
+  // Generate action list
+  std::vector<std::string> speciesList;
+  speciesList.push_back(species);
+  GenerateActionList(speciesList);
+
   // Initialize constant cofactor
   nBisectBeads = 1<<nLevel; // Number of beads in bisection
   lambda = path.speciesList[iSpecies]->lambda;
@@ -111,8 +116,8 @@ void PermBisect::Accept()
   permAccept(permType) += 1;
 
   // Call accept for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction)
-    actionList[iAction]->Accept();
+  for (auto& action: actionList)
+    action->Accept();
 }
 
 // Reject current move
@@ -134,8 +139,8 @@ void PermBisect::Reject()
   permAttempt(permType) += 1;
 
   // Call reject for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction)
-    actionList[iAction]->Reject();
+  for (auto& action: actionList)
+    action->Reject();
 }
 
 // Perform the permuting bisection
@@ -154,7 +159,7 @@ int PermBisect::Attempt()
   // Set up pointers
   vector< pair<int,int> > particles;
   int nPartPerm = c->part.size();
-  field<Bead*> beadI(nPartPerm), beadFm1(nPartPerm), beadF(nPartPerm);
+  field< std::shared_ptr<Bead> > beadI(nPartPerm), beadFm1(nPartPerm), beadF(nPartPerm);
   for (unsigned int i=0; i<nPartPerm; i++) {
     beadI(i) = path(iSpecies,c->part(i),bead0);
     beadFm1(i) = beadI(i)->nextB(nBisectBeads-1);
@@ -166,7 +171,7 @@ int PermBisect::Attempt()
   permuteBeads(beadFm1, beadF, c);
 
   // Note affected beads
-  field<Bead*> beadA(nPartPerm);
+  field< std::shared_ptr<Bead> > beadA(nPartPerm);
   affBeads.clear();
   for (unsigned int i=0; i<nPartPerm; i++) {
     for(beadA(i) = beadI(i); beadA(i) != beadF(i); beadA(i) = beadA(i) -> next)
@@ -174,7 +179,7 @@ int PermBisect::Attempt()
   }
 
   // Perform the bisection (move exactly through kinetic action)
-  field<Bead*> beadB(nPartPerm), beadC(nPartPerm);
+  field< std::shared_ptr<Bead> > beadB(nPartPerm), beadC(nPartPerm);
   double oldCycleWeight = -log(c->weight);
   double prevActionChange = oldCycleWeight;
   double prefactorOfSampleProb = 0.;
@@ -235,14 +240,14 @@ int PermBisect::Attempt()
     // Calculate action change
     double oldAction = 0.;
     double newAction = 0.;
-    for (int iAction=0; iAction<actionList.size(); ++iAction) {
+    for (auto& action: actionList) {
       // Old action
       path.SetMode(0);
-      oldAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
+      oldAction += action->GetAction(bead0, bead1, particles, iLevel);
 
       // New action
       path.SetMode(1);
-      newAction += actionList[iAction]->GetAction(bead0, bead1, particles, iLevel);
+      newAction += action->GetAction(bead0, bead1, particles, iLevel);
     }
 
     // Calculate acceptance ratio
@@ -296,7 +301,7 @@ double PermBisect::constructPermTable()
 void PermBisect::updatePermTable()
 {
   // Set initial and final beads
-  field<Bead*> b0(nPart), b1(nPart);
+  field< std::shared_ptr<Bead> > b0(nPart), b1(nPart);
   for (unsigned int iP=0; iP<nPart; iP++) {
     b0(iP) = path(iSpecies,iP,bead0);
     b1(iP) = path.GetNextBead(b0(iP),nBisectBeads);
@@ -337,7 +342,7 @@ int PermBisect::selectCycle(double permTot)
 }
 
 // Permute paths between b0 and b1 given cycle
-void PermBisect::permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c)
+void PermBisect::permuteBeads(field< std::shared_ptr<Bead> > &b0, field< std::shared_ptr<Bead> > &b1, Cycle* c)
 {
   // Set permutation type
   permType = c->type;
@@ -357,7 +362,6 @@ void PermBisect::permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c)
 // Reassign particle labels
 void PermBisect::assignParticleLabels()
 {
-  Bead *b;
 //  for (unsigned int iP=0; iP<nPart; iP++) {
 //    b = path(iSpecies,iP,0);
 //    for (unsigned int iB=0; iB<path.nBead; iB++) {
@@ -367,7 +371,7 @@ void PermBisect::assignParticleLabels()
 //    }
 //  }
   for (unsigned int iP=0; iP<nPart; iP++) {
-    b = path(iSpecies,iP,bead1-1);
+    std::shared_ptr<Bead> b(path(iSpecies,iP,bead1-1));
     for (unsigned int iB=path.beadLoop(bead1-1); iB<path.nBead; iB++) {
       path.speciesList[iSpecies]->bead(iP,iB) = b; // fixme: make cleaner using operator
       path(iSpecies,iP,iB)->p = iP;

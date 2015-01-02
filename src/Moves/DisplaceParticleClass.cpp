@@ -5,6 +5,11 @@ void DisplaceParticle::Init(Input &in)
   species = in.getAttribute<string>("species");
   path.GetSpeciesInfo(species,iSpecies);
   stepSize = in.getAttribute<double>("stepSize");
+
+  // Generate action list
+  std::vector<std::string> speciesList;
+  speciesList.push_back(species);
+  GenerateActionList(speciesList);
 }
 
 // Accept current move
@@ -17,8 +22,8 @@ void DisplaceParticle::Accept()
     path.storeRhoK(iB,iSpecies);
 
   // Call accept for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction)
-    actionList[iAction]->Accept();
+  for (auto& action: actionList)
+    action->Accept();
 }
 
 // Reject current move
@@ -31,8 +36,8 @@ void DisplaceParticle::Reject()
     path.restoreRhoK(iB,iSpecies);
 
   // Call reject for each action
-  for (int iAction=0; iAction<actionList.size(); ++iAction)
-    actionList[iAction]->Reject();
+  for (auto& action: actionList)
+    action->Reject();
 }
 
 // Displace particle Move
@@ -60,14 +65,14 @@ int DisplaceParticle::Attempt()
   // Calculate action change
   double oldAction = 0.;
   double newAction = 0.;
-  for (int iAction=0; iAction<actionList.size(); ++iAction) {
+  for (auto& action: actionList) {
     // Old action
     path.SetMode(0);
-    oldAction += actionList[iAction]->GetAction(0, path.nBead, particles, 0);
+    oldAction += action->GetAction(0, path.nBead, particles, 0);
 
     // New action
     path.SetMode(1);
-    newAction += actionList[iAction]->GetAction(0, path.nBead, particles, 0);
+    newAction += action->GetAction(0, path.nBead, particles, 0);
   }
 
   double logAcceptProb = oldAction - newAction;

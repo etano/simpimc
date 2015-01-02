@@ -34,11 +34,11 @@ public:
   virtual void ReadFile(string fileName);
 
   // Pair actions
-  virtual double CalcV(double &r, double &rP, int level);
+  virtual double CalcV(double &r, double &rP, const int level);
   virtual double CalcVLong();
-  virtual double CalcU(double &r, double &rP, double &s, int level);
-  virtual double CalcULong(int b0, int b1, int level);
-  virtual double CalcdUdBeta(double &r, double &rP, double &s, int level);
+  virtual double CalcU(double &r, double &rP, double &s, const int level);
+  virtual double CalcULong(const int b0, const int b1, const int level);
+  virtual double CalcdUdBeta(double &r, double &rP, double &s, const int level);
   virtual double CalcdUdBetaLong();
 
 };

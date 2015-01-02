@@ -30,16 +30,16 @@ private:
   void updatePermTable();
   void BuildCycles();
   int selectCycle(double permTot);
-  void permuteBeads(field<Bead*>& b0, field<Bead*>& b1, Cycle* c);
+  void permuteBeads(field< std::shared_ptr<Bead> > &b0, field< std::shared_ptr<Bead> > &b1, Cycle* c);
   void assignParticleLabels();
   void Write();
 
-  std::vector<Bead*> affBeads;
+  std::vector< std::shared_ptr<Bead> > affBeads;
 protected:
 
 public:
   // Constructor
-  PermBisect(Path &tmpPath, RNG &tmpRNG, vector<Action*> &actionList, Input &in, IOClass &out)
+  PermBisect(Path &tmpPath, RNG &tmpRNG, std::vector< std::shared_ptr<Action> > &actionList, Input &in, IOClass &out)
     : Move(tmpPath, tmpRNG, actionList, in, out)
   {
     Init(in);

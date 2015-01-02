@@ -148,6 +148,7 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Moves/DisplaceParticleClass.cpp
   src/Moves/PermBisectClass.cpp
   src/Moves/PermBisectIterativeClass.cpp
+  src/Moves/ShiftRefSliceClass.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/PairCorrelationClass.cpp
