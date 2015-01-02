@@ -23,9 +23,9 @@
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
-    <Loop nStep="100">
+    <Loop nStep="10">
       <Write />
-      <Loop nStep="100">
+      <Loop nStep="10">
         <Move name="BisectU" />
         <Move name="BisectD" />
         <Observable name="Energy" />
