@@ -2,14 +2,13 @@
 
 void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
 {
-
   // Initialize Path
   path.Init(in, out, rng);
+  cout << in.getName() << endl;
 
   // Initialize Actions
   out.CreateGroup("Actions");
-  vector<Input> actionInputs = in.getChild("Actions").getChildList("Action");
-  for (auto& actionInput: actionInputs) {
+  for (auto& actionInput: in.getChild("Actions").getChildList("Action")) {
     string type = actionInput.getAttribute<string>("type");
     if (type == "Kinetic") {
       actions.push_back(std::make_shared<Kinetic>(path,actionInput,out));
@@ -33,8 +32,7 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
 
   // Initialize Moves
   out.CreateGroup("Moves");
-  vector<Input> moveInputs = in.getChild("Moves").getChildList("Move");
-  for (auto& moveInput: moveInputs) {
+  for (auto& moveInput: in.getChild("Moves").getChildList("Move")) {
     string type = moveInput.getAttribute<string>("type");
     if (type == "Bisect")
       events.push_back(std::make_shared<Bisect>(path,rng,actions,moveInput,out));
@@ -61,6 +59,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
       events.push_back(std::make_shared<Energy>(path,actions,observableInput,out));
     else if (type == "ImportanceWeight")
       events.push_back(std::make_shared<ImportanceWeight>(path,actions,observableInput,out));
+    else if (type == "ImprovedPairCorrelation")
+      events.push_back(std::make_shared<ImprovedPairCorrelation>(path,actions,observableInput,out));
     else if (type == "PairCorrelation")
       events.push_back(std::make_shared<PairCorrelation>(path,observableInput,out));
     else if (type == "PathDump")

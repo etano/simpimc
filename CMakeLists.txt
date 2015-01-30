@@ -156,6 +156,7 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Observables/ObservableClass.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/ImportanceWeightClass.cpp
+  src/Observables/ImprovedPairCorrelationClass.cpp
   src/Observables/PairCorrelationClass.cpp
   src/Observables/PathDumpClass.cpp
   src/Observables/PermutationClass.cpp

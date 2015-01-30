@@ -26,6 +26,7 @@
 #include "Observables/ObservableClass.h"
 #include "Observables/EnergyClass.h"
 #include "Observables/ImportanceWeightClass.h"
+#include "Observables/ImprovedPairCorrelationClass.h"
 #include "Observables/PairCorrelationClass.h"
 #include "Observables/PathDumpClass.h"
 #include "Observables/PermutationClass.h"
