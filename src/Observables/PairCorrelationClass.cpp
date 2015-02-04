@@ -101,8 +101,8 @@ void PairCorrelation::Write()
         binVol = M_PI * (r2*r2-r1*r1);
       else if (path.nD == 1)
         binVol = r2-r1;
-      //gr.y(i) = gr.y(i)/(binVol*norm);
-      gr.y(i) = gr.y(i)/(norm);
+      gr.y(i) = gr.y(i)/(binVol*norm);
+      //gr.y(i) = gr.y(i)/(norm);
     }
 
     // Write to file

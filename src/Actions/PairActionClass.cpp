@@ -140,14 +140,9 @@ double PairAction::DActionDBeta()
   }
 }
 
-double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+void PairAction::GenerateParticlePairs(const vector<pair<int,int> > &particles, vector<int> &particlesA, vector<int> &particlesB, vector< pair<int,int> > &particlePairs)
 {
-
-  if (level > maxLevel || isConstant || iSpeciesA < 0 || iSpeciesB < 0)
-    return 0.;
-
   // Make sure particles are of species A or B and organize them accordingly
-  vector<int> particlesA, particlesB;
   int nA(0), nB(0);
   for (auto& p: particles) {
     int iS = p.first;
@@ -155,95 +150,86 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
     if (iS == iSpeciesA) {
       particlesA.push_back(iP);
       nA++;
-    }
-    else if (iS == iSpeciesB) {
+    } else if (iS == iSpeciesB) {
       particlesB.push_back(iP);
       nB++;
     }
   }
   if (nA==0)
     if ((iSpeciesA==iSpeciesB) || (nB==0))
-      return 0.;
+      return;
 
-  // Make vectors of other particles of species A and B
+  // Make vectors of other particles of species A
   vector<int> otherParticlesA;
   for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
     if (find(particlesA.begin(), particlesA.end(), iP)==particlesA.end())
       otherParticlesA.push_back(iP);
   }
+  // Make vectors of other particles of species B
   vector<int> otherParticlesB;
   for (int iP=0; iP<path.speciesList[iSpeciesB]->nPart; ++iP) {
     if (find(particlesB.begin(), particlesB.end(), iP)==particlesB.end())
       otherParticlesB.push_back(iP);
   }
 
-  // Sum up contributing terms
-  int skip = 1<<level;
-  double levelTau = skip*path.tau;
-  double tot = 0.;
-
-  
   // Homologous
   if (iSpeciesA == iSpeciesB) {
-    // Loop over beads
-    for (int iB=b0; iB<b1; iB+=skip) {
-      int jB = iB+skip;
-      // Loop over A particles with other A particles
-      for (auto& p: particlesA) {
-        for (auto& q: otherParticlesA) {
-          double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesA,p,q,rMag,rPMag,rrPMag);
-          double U = CalcU(rMag,rPMag,rrPMag,level);
-          tot += U;
-        }
-      }
-      // Loop over A particles with A particles
-      for (int p=0; p<nA-1; ++p) {
-        for (int q=p+1; q<nA; ++q) {
-          double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,particlesA[p],particlesA[q],rMag,rPMag,rrPMag);
-          double U = CalcU(rMag,rPMag,rrPMag,level);
-          tot += U;
-        }
-      }
-    }
+    // Loop over A particles with other A particles
+    for (auto& p: particlesA)
+      for (auto& q: otherParticlesA)
+        particlePairs.push_back(std::make_pair(p,q));
+    // Loop over A particles with A particles
+    for (int p=0; p<nA-1; ++p)
+      for (int q=p+1; q<nA; ++q)
+        particlePairs.push_back(std::make_pair(particlesA[p],particlesA[q]));
   // Heterologous
   } else {
-    // Loop over beads
-    for (int iB=b0; iB<b1; iB+=skip) {
-      int jB = iB+skip;
-      // Loop over A particles with other B particles
-      for (auto& p: particlesA) {
-        for (auto& q: otherParticlesB) {
-          double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,p,q,rMag,rPMag,rrPMag);
-          double U = CalcU(rMag,rPMag,rrPMag,level);
-          tot += U;
-        }
-      }
-      // Loop other A particles with B particles
-      for (auto& q: otherParticlesA) {
-        for (auto& p: particlesB) {
-          double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,q,p,rMag,rPMag,rrPMag);
-          double U = CalcU(rMag,rPMag,rrPMag,level);
-          tot += U;
-        }
-      }
-      // Loop over A particles with B particles
-      for (auto& p: particlesA) {
-        for (auto& q: particlesB) {
-          double rMag, rPMag, rrPMag;
-          path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,p,q,rMag,rPMag,rrPMag);
-          double U = CalcU(rMag,rPMag,rrPMag,level);
-          tot += U;
-        }
-      }
+    // Loop over A particles with other B particles
+    for (auto& p: particlesA)
+      for (auto& q: otherParticlesB)
+        particlePairs.push_back(std::make_pair(p,q));
+    // Loop other A particles with B particles
+    for (auto& p: otherParticlesA)
+      for (auto& q: particlesB)
+        particlePairs.push_back(std::make_pair(p,q));
+    // Loop over A particles with B particles
+    for (auto& p: particlesA)
+      for (auto& q: particlesB)
+        particlePairs.push_back(std::make_pair(p,q));
+  }
+
+}
+
+double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+{
+  // Return zero if not relevant
+  if (level > maxLevel || isConstant || iSpeciesA < 0 || iSpeciesB < 0)
+    return 0.;
+
+  // Generate particle pairs
+  vector<int> particlesA, particlesB;
+  vector< pair<int,int> > particlePairs;
+  GenerateParticlePairs(particles, particlesA, particlesB, particlePairs);
+  if (particlePairs.size() == 0)
+    return 0.;
+
+  // Sum up contributing terms
+  int skip = 1<<level;
+  double tot = 0.;
+  for (int iB=b0; iB<b1; iB+=skip) {
+    int jB = iB+skip;
+    int kB = iB-skip;
+    if (b0 == 0)
+      kB = path.nBead-1;
+    for (auto& particlePair: particlePairs) {
+      double rMag, rPMag, rrPMag;
+      path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,particlePair.first,particlePair.second,rMag,rPMag,rrPMag);
+      tot += CalcU(rMag,rPMag,rrPMag,level);
     }
   }
 
   // Add in long range part
-  if (useLongRange) { // fixme: currently this assumes level = 0
+  if (useLongRange) { // FIXME: currently this assumes level = 0
     if (path.speciesList[iSpeciesA]->needUpdateRhoK && path.GetMode()) {
       path.UpdateRhoKP(b0, b1, iSpeciesA, particlesA, level);
       path.speciesList[iSpeciesA]->needUpdateRhoK = false;
@@ -253,6 +239,146 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
       path.speciesList[iSpeciesB]->needUpdateRhoK = false;
     }
     tot += CalcULong(b0, b1, level);
+  }
+
+  return tot;
+}
+
+vec<double> PairAction::GetActionGradient(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+{
+  // Return zero if not relevant
+  vec<double> zero_vec;
+  zero_vec.zeros(path.nD);
+  if (level > maxLevel || isConstant || iSpeciesA < 0 || iSpeciesB < 0)
+    return zero_vec;
+
+  // Generate particle pairs
+  vector<int> particlesA, particlesB;
+  vector< pair<int,int> > particlePairs;
+  GenerateParticlePairs(particles, particlesA, particlesB, particlePairs);
+  if (particlePairs.size() == 0)
+    return zero_vec;
+
+  // Sum up contributing terms
+  int skip = 1<<level;
+  vec<double> tot(zero_vec);
+  for (int iB=b0; iB<b1; iB+=skip) {
+    int jB = iB+skip;
+    int kB = iB-skip;
+    if (b0 == 0) // FIXME: This doesn't depend on the level
+      kB = path.nBead-1;
+    for (auto& particlePair: particlePairs)
+      tot += CalcGradientU(iB,jB,particlePair.first,particlePair.second,level) + CalcGradientU(iB,kB,particlePair.first,particlePair.second,level);
+  }
+
+  // FIXME: Ignoring long range part for now
+  //// Add in long range part
+  //if (useLongRange) { // fixme: currently this assumes level = 0
+  //  if (path.speciesList[iSpeciesA]->needUpdateRhoK && path.GetMode()) {
+  //    path.UpdateRhoKP(b0, b1, iSpeciesA, particlesA, level);
+  //    path.speciesList[iSpeciesA]->needUpdateRhoK = false;
+  //  }
+  //  if (path.speciesList[iSpeciesB]->needUpdateRhoK && path.GetMode()) {
+  //    path.UpdateRhoKP(b0, b1, iSpeciesB, particlesB, level);
+  //    path.speciesList[iSpeciesB]->needUpdateRhoK = false;
+  //  }
+  //  tot += CalcGradientULong(b0, b1, level);
+  //}
+
+  return 0.5*tot;
+}
+
+double PairAction::GetActionLaplacian(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+{
+  // Return zero if not relevant
+  if (level > maxLevel || isConstant || iSpeciesA < 0 || iSpeciesB < 0)
+    return 0.;
+
+  // Generate particle pairs
+  vector<int> particlesA, particlesB;
+  vector< pair<int,int> > particlePairs;
+  GenerateParticlePairs(particles, particlesA, particlesB, particlePairs);
+  if (particlePairs.size() == 0)
+    return 0.;
+
+  // Sum up contributing terms
+  int skip = 1<<level;
+  double tot = 0.;
+  for (int iB=b0; iB<b1; iB+=skip) {
+    int jB = iB+skip;
+    int kB = iB-skip;
+    if (b0 == 0) // FIXME: This doesn't depend on the level
+      kB = path.nBead-1;
+    for (auto& particlePair: particlePairs)
+      tot += CalcLaplacianU(iB,jB,particlePair.first,particlePair.second,level) + CalcLaplacianU(iB,kB,particlePair.first,particlePair.second,level);
+  }
+
+  // FIXME: Ignoring long range part for now
+  //// Add in long range part
+  //if (useLongRange) { // fixme: currently this assumes level = 0
+  //  if (path.speciesList[iSpeciesA]->needUpdateRhoK && path.GetMode()) {
+  //    path.UpdateRhoKP(b0, b1, iSpeciesA, particlesA, level);
+  //    path.speciesList[iSpeciesA]->needUpdateRhoK = false;
+  //  }
+  //  if (path.speciesList[iSpeciesB]->needUpdateRhoK && path.GetMode()) {
+  //    path.UpdateRhoKP(b0, b1, iSpeciesB, particlesB, level);
+  //    path.speciesList[iSpeciesB]->needUpdateRhoK = false;
+  //  }
+  //  tot += CalcLaplacianULong(b0, b1, level);
+  //}
+
+  return 0.5*tot;
+}
+
+vec<double> PairAction::CalcGradientU(const int &iB, const int &jB, const int &iP, const int &jP, const int &level)
+{
+  // Store original position for particle i
+  std::shared_ptr<Bead> b(path(iSpeciesA,iP,iB));
+  vec<double> r0(b->r);
+
+  // Numerical tolerance
+  double eps = 1.e-6;
+
+  // Calculate numerical gradient
+  double rMag, rPMag, rrPMag;
+  vec<double> tot(path.nD);
+  for (int iD=0; iD<path.nD; ++iD) {
+    b->r(iD) = r0(iD) + eps;
+    path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
+    double f1 = CalcU(rMag,rPMag,rrPMag,level);
+    b->r(iD) = r0(iD) - eps;
+    path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
+    double f2 = CalcU(rMag,rPMag,rrPMag,level);
+    tot(iD) = (f1-f2)/(2.*eps);
+    b->r(iD) = r0(iD);
+  }
+
+  return tot;
+}
+
+double PairAction::CalcLaplacianU(const int &iB, const int &jB, const int &iP, const int &jP, const int &level)
+{
+  // Store original position for particle i
+  std::shared_ptr<Bead> b(path(iSpeciesA,iP,iB));
+  vec<double> r0(b->r);
+
+  // Numerical tolerance
+  double eps = 1.e-6;
+
+  // Calculate numerical gradient
+  double rMag, rPMag, rrPMag;
+  double tot = 0.;
+  for (int iD=0; iD<path.nD; ++iD) {
+    path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
+    double f0 = CalcU(rMag,rPMag,rrPMag,level);
+    b->r(iD) = r0(iD) + eps;
+    path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
+    double f1 = CalcU(rMag,rPMag,rrPMag,level);
+    b->r(iD) = r0(iD) - eps;
+    path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
+    double f2 = CalcU(rMag,rPMag,rrPMag,level);
+    tot += (f1+f2-2.*f0)/(eps*eps);
+    b->r(iD) = r0(iD);
   }
 
   return tot;

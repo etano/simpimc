@@ -47,6 +47,7 @@ public:
   bool GetMode() { return mode; };
 
   // Beads
+  void PrintPath();
   vec<int> beadLoop;
   std::shared_ptr<Bead> operator() (int iS, int iP, int iB) { return speciesList[iS]->bead(iP,beadLoop(iB)); };
   void storeR(std::vector< std::shared_ptr<Bead> > &affBeads);
@@ -58,7 +59,8 @@ public:
   inline void Dr(std::shared_ptr<Bead> b0, vec<double> &r1, vec<double> &dr) { Dr(GetR(b0), r1, dr); };
   inline void Dr(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1, vec<double> &dr) { Dr(GetR(b0), GetR(b1), dr); };
   inline void RBar(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1, vec<double> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
-  void PrintPath();
+  template<class T>
+  inline double MagDr(T &r0, T &r1) { vec<double> dr; Dr(r0,r1,dr); return mag(dr); };
 
   // Periodic Boundary Condition
   bool PBC;

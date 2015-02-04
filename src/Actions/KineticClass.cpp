@@ -62,7 +62,7 @@ double Kinetic::GetAction(const int b0, const int b1, const vector< pair<int,int
   double i4LambdaLevelTau = i4LambdaTau/skip;
   double tot = 0.;
   vec<double> dr(path.nD);
-  std::shared_ptr<Bead> beadA, beadB, beadC, beadF;
+  std::shared_ptr<Bead> beadA, beadB, beadF;
   for (auto& p: particles) {
     int iS = p.first;
     int iP = p.second;
@@ -83,8 +83,62 @@ double Kinetic::GetAction(const int b0, const int b1, const vector< pair<int,int
           gaussProd *= gaussSum;
         }
         tot -= log(gaussProd);
-  
+
         beadA = beadB;
+      }
+    }
+  }
+
+  return tot;
+}
+
+vec<double> Kinetic::GetActionGradient(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+{
+  int skip = 1<<level;
+  double i4LambdaLevelTau = i4LambdaTau/skip;
+  vec<double> tot;
+  tot.zeros(path.nD);
+  vec<double> dr(path.nD);
+  std::shared_ptr<Bead> beadA, beadB, beadC, beadF;
+  for (auto& p: particles) {
+    int iS = p.first;
+    int iP = p.second;
+    if (iS == iSpecies) {
+      double gaussProd, gaussSum, dist;
+      beadA = path(iSpecies,iP,b0);
+      beadF = path.GetNextBead(beadA,b1-b0);
+      while(beadA != beadF) {
+        beadB = path.GetPrevBead(beadA,skip);
+        path.Dr(beadB,beadA,dr);
+        tot -= i4LambdaLevelTau*dr;
+        beadC = path.GetNextBead(beadA,skip);
+        path.Dr(beadA,beadC,dr);
+        tot += i4LambdaLevelTau*dr;
+        beadA = beadC;
+      }
+    }
+  }
+
+  return tot;
+}
+
+double Kinetic::GetActionLaplacian(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+{
+  int skip = 1<<level;
+  double i4LambdaLevelTau = i4LambdaTau/skip;
+  double tot = 0.;
+  vec<double> dr(path.nD);
+  std::shared_ptr<Bead> beadA, beadF;
+  for (auto& p: particles) {
+    int iS = p.first;
+    int iP = p.second;
+    if (iS == iSpecies) {
+      double gaussProd, gaussSum, dist;
+      beadA = path(iSpecies,iP,b0);
+      beadF = path.GetNextBead(beadA,b1-b0);
+      while(beadA != beadF) {
+        tot += path.nD*2.*i4LambdaLevelTau;
+        beadA = path.GetNextBead(beadA,skip);
       }
     }
   }

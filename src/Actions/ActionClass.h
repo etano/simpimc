@@ -32,8 +32,10 @@ public:
 
   // Functions
   virtual void Init(Input &in) {};
-  virtual double DActionDBeta() {};
-  virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> >& particles, const int level) {};
+  virtual double DActionDBeta() { return 0.; };
+  virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> >& particles, const int level) { return 0.; };
+  virtual vec<double> GetActionGradient(const int b0, const int b1, const vector< pair<int,int> >& particles, const int level) { vec<double> zero_vec; zero_vec.zeros(path.nD); return zero_vec; };
+  virtual double GetActionLaplacian(const int b0, const int b1, const vector< pair<int,int> >& particles, const int level) { return 0.; };
   virtual double Potential() { return 0.; };
   virtual double ImportanceWeight() { return 0; };
   virtual void Write() {};
