@@ -24,7 +24,7 @@
 #include "Moves/ShiftRefSliceClass.h"
 #include "Moves/VaryOptimizedNodalClass.h"
 #include "Observables/ObservableClass.h"
-#include "Observables/ContactProbabilityClass.h"
+#include "Observables/ContactDensityClass.h"
 #include "Observables/EnergyClass.h"
 #include "Observables/ImportanceWeightClass.h"
 #include "Observables/PairCorrelationClass.h"

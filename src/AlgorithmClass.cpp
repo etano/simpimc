@@ -54,8 +54,8 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
   vector<Input> observableInputs = in.getChild("Observables").getChildList("Observable");
   for (auto& observableInput: observableInputs) {
     string type = observableInput.getAttribute<string>("type");
-    if (type == "ContactProbability")
-      events.push_back(std::make_shared<ContactProbability>(path,actions,observableInput,out));
+    if (type == "ContactDensity")
+      events.push_back(std::make_shared<ContactDensity>(path,actions,observableInput,out));
     else if (type == "Energy")
       events.push_back(std::make_shared<Energy>(path,actions,observableInput,out));
     else if (type == "ImportanceWeight")

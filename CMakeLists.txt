@@ -154,7 +154,7 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Moves/ShiftRefSliceClass.cpp
   src/Moves/VaryOptimizedNodalClass.cpp
   src/Observables/ObservableClass.cpp
-  src/Observables/ContactProbabilityClass.cpp
+  src/Observables/ContactDensityClass.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/ImportanceWeightClass.cpp
   src/Observables/PairCorrelationClass.cpp
