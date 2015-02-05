@@ -265,10 +265,11 @@ vec<double> PairAction::GetActionGradient(const int b0, const int b1, const vect
   for (int iB=b0; iB<b1; iB+=skip) {
     int jB = iB+skip;
     int kB = iB-skip;
-    if (b0 == 0) // FIXME: This doesn't depend on the level
+    if (iB == 0) // FIXME: This doesn't depend on the level
       kB = path.nBead-1;
     for (auto& particlePair: particlePairs)
-      tot += CalcGradientU(iB,jB,particlePair.first,particlePair.second,level) + CalcGradientU(iB,kB,particlePair.first,particlePair.second,level);
+      tot += CalcGradientU(iB,jB,particlePair.first,particlePair.second,level)
+             + CalcGradientU(iB,kB,particlePair.first,particlePair.second,level);
   }
 
   // FIXME: Ignoring long range part for now
@@ -285,7 +286,7 @@ vec<double> PairAction::GetActionGradient(const int b0, const int b1, const vect
   //  tot += CalcGradientULong(b0, b1, level);
   //}
 
-  return 0.5*tot;
+  return tot;
 }
 
 double PairAction::GetActionLaplacian(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
@@ -307,10 +308,11 @@ double PairAction::GetActionLaplacian(const int b0, const int b1, const vector< 
   for (int iB=b0; iB<b1; iB+=skip) {
     int jB = iB+skip;
     int kB = iB-skip;
-    if (b0 == 0) // FIXME: This doesn't depend on the level
+    if (iB == 0) // FIXME: This doesn't depend on the level
       kB = path.nBead-1;
     for (auto& particlePair: particlePairs)
-      tot += CalcLaplacianU(iB,jB,particlePair.first,particlePair.second,level) + CalcLaplacianU(iB,kB,particlePair.first,particlePair.second,level);
+      tot += CalcLaplacianU(iB,jB,particlePair.first,particlePair.second,level)
+             + CalcLaplacianU(iB,kB,particlePair.first,particlePair.second,level);
   }
 
   // FIXME: Ignoring long range part for now
@@ -327,7 +329,7 @@ double PairAction::GetActionLaplacian(const int b0, const int b1, const vector< 
   //  tot += CalcLaplacianULong(b0, b1, level);
   //}
 
-  return 0.5*tot;
+  return tot;
 }
 
 vec<double> PairAction::CalcGradientU(const int &iB, const int &jB, const int &iP, const int &jP, const int &level)
@@ -337,7 +339,7 @@ vec<double> PairAction::CalcGradientU(const int &iB, const int &jB, const int &i
   vec<double> r0(b->r);
 
   // Numerical tolerance
-  double eps = 1.e-6;
+  double eps = 1.e-7;
 
   // Calculate numerical gradient
   double rMag, rPMag, rrPMag;
@@ -363,7 +365,7 @@ double PairAction::CalcLaplacianU(const int &iB, const int &jB, const int &iP, c
   vec<double> r0(b->r);
 
   // Numerical tolerance
-  double eps = 1.e-6;
+  double eps = 1.e-7;
 
   // Calculate numerical gradient
   double rMag, rPMag, rrPMag;

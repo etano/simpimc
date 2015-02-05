@@ -110,16 +110,16 @@ vec<double> Kinetic::GetActionGradient(const int b0, const int b1, const vector<
       while(beadA != beadF) {
         beadB = path.GetPrevBead(beadA,skip);
         path.Dr(beadB,beadA,dr);
-        tot -= i4LambdaLevelTau*dr;
+        tot -= dr;
         beadC = path.GetNextBead(beadA,skip);
         path.Dr(beadA,beadC,dr);
-        tot += i4LambdaLevelTau*dr;
+        tot += dr;
         beadA = beadC;
       }
     }
   }
 
-  return tot;
+  return 2.*i4LambdaLevelTau*tot;
 }
 
 double Kinetic::GetActionLaplacian(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
@@ -137,7 +137,7 @@ double Kinetic::GetActionLaplacian(const int b0, const int b1, const vector< pai
       beadA = path(iSpecies,iP,b0);
       beadF = path.GetNextBead(beadA,b1-b0);
       while(beadA != beadF) {
-        tot += path.nD*2.*i4LambdaLevelTau;
+        tot += path.nD*4.*i4LambdaLevelTau;
         beadA = path.GetNextBead(beadA,skip);
       }
     }
