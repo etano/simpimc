@@ -14,6 +14,73 @@ void Kinetic::Init(Input &in)
   // Write things to file
   out.Write("Actions/"+name+"/nImages", nImages);
   out.Write("Actions/"+name+"/species", species);
+
+  // Setup spline
+  SetupSpline();
+}
+
+// Create a spline for each possible sliceDiff
+void Kinetic::SetupSpline()
+{
+  // Setup grid
+  Ugrid r_grid;
+  r_grid.start = -path.L/2.;
+  r_grid.end = path.L/2.;
+  r_grid.num = 5000;
+  double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
+
+  // Resize spline field
+  int nSpline = path.nBead/2 + (path.nBead%2) + 1;
+  rho_free_r_splines.set_size(nSpline);
+
+  // Create splines
+  for (int iSpline=0; iSpline<nSpline; ++iSpline) {
+    vec<double> rho_free_r(r_grid.num), num_sum_r(r_grid.num);
+    double t_i4LambdaTau = i4LambdaTau/(iSpline+1);
+
+    // Make rho_0
+    double rho0 = 0.;
+    for (int image=-nImages; image<=nImages; image++)
+      rho0 += path.fexp(-path.L*path.L*t_i4LambdaTau);
+    double logRho0 = -log(rho0);
+
+    // Make rho_free
+    for (int i=0; i<r_grid.num; ++i) {
+      double r = r_grid.start + i*dr;
+      rho_free_r(i) = 0.;
+      if (iSpline == 0)
+        num_sum_r(i) = 0.;
+      for (int image=-nImages; image<=nImages; image++) {
+        double t_r = r + image*path.L;
+        if (image != 0)
+          rho_free_r(i) += path.fexp(-(t_r*t_r - r*r)*t_i4LambdaTau);
+        if (iSpline == 0)
+          num_sum_r(i) += -(t_r*t_r*t_i4LambdaTau/path.tau)*path.fexp(-(t_r*t_r)*t_i4LambdaTau);
+      }
+      rho_free_r(i) = log1p(min(100.,rho_free_r(i)));
+    }
+    BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
+    UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
+    rho_free_r_splines(iSpline) = rho_free_r_spline;
+    if (iSpline == 0)
+      num_sum_r_spline = create_UBspline_1d_d(r_grid, xBC, num_sum_r.memptr());
+  }
+}
+
+double Kinetic::GetGaussSum(const double &r, const int sliceDiff)
+{
+  double gaussSum;
+  eval_UBspline_1d_d(rho_free_r_splines(sliceDiff-1),r,&gaussSum);
+  gaussSum = exp(0.9999*gaussSum);
+  gaussSum *= exp(-(r*r*i4LambdaTau/sliceDiff));
+  return gaussSum;
+}
+
+double Kinetic::GetNumSum(const double &r)
+{
+  double numSum;
+  eval_UBspline_1d_d(num_sum_r_spline,r,&numSum);
+  return numSum;
 }
 
 double Kinetic::DActionDBeta()
@@ -24,17 +91,12 @@ double Kinetic::DActionDBeta()
     for (int iB=0; iB<path.nBead; iB++) {
       vec<double> numSum, gaussSum, dr(path.nD);
       path.Dr(path(iSpecies,iP,iB),path.GetNextBead(path(iSpecies,iP,iB),1),dr);
-      double gaussProd = 1.;
       numSum.zeros(path.nD);
       gaussSum.zeros(path.nD);
+      double gaussProd = 1.;
       for (int iD=0; iD<path.nD; iD++) {
-        for (int image=-nImages; image<=nImages; image++) {
-          double dist = dr(iD) + image*path.L;
-          double dist2i4LambdaTau = dist*dist*i4LambdaTau;
-          double expPart = path.fexp(-dist2i4LambdaTau);
-          gaussSum(iD) += expPart;
-          numSum(iD) += -(dist2i4LambdaTau/path.tau)*expPart;
-        }
+        numSum(iD) = GetNumSum(dr(iD));
+        gaussSum(iD) = GetGaussSum(dr(iD),1);
         gaussProd *= gaussSum(iD);
       }
       double scalarNumSum = 0.;
@@ -51,8 +113,7 @@ double Kinetic::DActionDBeta()
       tot += scalarNumSum/gaussProd;
     }
   }
-  
-  
+
   return tot;
 }
 
@@ -67,21 +128,14 @@ double Kinetic::GetAction(const int b0, const int b1, const vector< pair<int,int
     int iS = p.first;
     int iP = p.second;
     if (iS == iSpecies) {
-      double gaussProd, gaussSum, dist;
       beadA = path(iSpecies,iP,b0);
       beadF = path.GetNextBead(beadA,b1-b0);
       while(beadA != beadF) {
         beadB = path.GetNextBead(beadA,skip);
         path.Dr(beadA,beadB,dr);
-        gaussProd = 1.;
-        for (int iD=0; iD<path.nD; iD++) {
-          gaussSum = 0.;
-          for (int image=-nImages; image<=nImages; image++) {
-            dist = dr(iD) + image*path.L;
-            gaussSum += exp(-dist*dist*i4LambdaLevelTau);
-          }
-          gaussProd *= gaussSum;
-        }
+        double gaussProd = 1;
+        for (int iD=0; iD<path.nD; iD++)
+          gaussProd *= GetGaussSum(dr(iD),skip);
         tot -= log(gaussProd);
 
         beadA = beadB;

@@ -2,6 +2,8 @@
 #define KineticClass_H
 
 #include "ActionClass.h"
+#include <einspline/multi_bspline.h>
+#include <einspline/bspline.h>
 
 class Kinetic : public Action
 {
@@ -10,6 +12,16 @@ private:
   string species;
   int iSpecies, nPart;
   double i4LambdaTau;
+
+  // Splines
+  field<UBspline_1d_d*> rho_free_r_splines;
+  UBspline_1d_d* num_sum_r_spline;
+  void SetupSpline();
+
+  // Sums over images
+  double GetGaussSum(const double &r, const int sliceDiff);
+  double GetNumSum(const double &r);
+
 protected:
 
 public:
