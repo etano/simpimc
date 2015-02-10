@@ -87,7 +87,6 @@ void Algorithm::Init(Input &in, IOClass &out, RNG &rng)
     mainLoop.Init(loop,events);
 }
 
-
 void Algorithm::Run()
 {
   mainLoop.DoEvent();
