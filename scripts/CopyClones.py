@@ -15,7 +15,7 @@ for file0 in files:
     run0 = file0.split('.')[-3]
     clone = file0.split('.')[-2]
     file1 = prefix+'.'+str(run1)+'.'+clone+'.h5'
-    print file1
+    print file0, '-->', file1
     if move:
         shutil.move(file0,file1)
     else:
