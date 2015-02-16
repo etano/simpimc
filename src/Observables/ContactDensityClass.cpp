@@ -79,13 +79,13 @@ void ContactDensity::Accumulate()
 
       // Compute functions
       double g = 0.; // FIXME: Currently fixing g to 0
-      //double f = 1.; // FIXME: Currently fixing f to 1
-      //vec<double> fGradient;
-      //fGradient.zeros(path.nD);
-      //double fLaplacian = 0.;
-      double f = 1. + 2*ZA*(mag_ri_RA);
-      vec<double> fGradient = 2*ZA*((ri_RA/mag_ri_RA));
-      double fLaplacian = 2*ZA*(path.nD-1)*((1./mag_ri_RA));
+      double f = 1.; // FIXME: Currently fixing f to 1
+      vec<double> fGradient;
+      fGradient.zeros(path.nD);
+      double fLaplacian = 0.;
+      //double f = 1. + 2*ZA*(mag_ri_RA);
+      //vec<double> fGradient = 2*ZA*((ri_RA/mag_ri_RA));
+      //double fLaplacian = 2*ZA*(path.nD-1)*((1./mag_ri_RA));
 
       // Sum over actions for ri
       std::vector<pair<int,int> > only_ri;
