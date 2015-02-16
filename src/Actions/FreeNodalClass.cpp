@@ -45,7 +45,7 @@ void FreeNodal::SetupSpline()
   Ugrid r_grid;
   r_grid.start = -path.L/2.;
   r_grid.end = path.L/2.;
-  r_grid.num = 5000;
+  r_grid.num = 10000;
   double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
@@ -73,7 +73,7 @@ void FreeNodal::SetupSpline()
           rho_free_r(i) += path.fexp(-(t_r*t_r - r*r)*t_i4LambdaTau);
         }
       }
-      rho_free_r(i) = log1p(min(100.,rho_free_r(i)));
+      rho_free_r(i) = log1p(min(10.,rho_free_r(i)));
     }
     BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
     UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
