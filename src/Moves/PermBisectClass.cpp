@@ -1,5 +1,7 @@
 #include "PermBisectClass.h"
 
+// FIXME: This doesn't work for fermions yet
+
 void PermBisect::Init(Input &in)
 {
   nLevel = in.getAttribute<int>("nLevel");

@@ -57,7 +57,7 @@ void PairCorrelation::Accumulate()
           path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB),dr);
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
-            gr.y(i) = gr.y(i) + 1.*path.importance_weight;
+            gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
         }
       }
     }
@@ -69,7 +69,7 @@ void PairCorrelation::Accumulate()
           path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB),dr);
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
-            gr.y(i) = gr.y(i) + 1.*path.importance_weight;
+            gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
         }
       }
     }
