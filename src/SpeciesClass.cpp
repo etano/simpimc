@@ -93,10 +93,9 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
         for (int iB=0; iB<nBead; ++iB)
           bead(iP,iB)->r(iD) = tmpRand;
       }
-    }
-    for (int iP=0; iP<nPart; ++iP)
       for (int iB=0; iB<nBead; ++iB)
         bead(iP,iB)->storeR();
+    }
 
   // BCC Lattice
   } else if (initType == "BCC") {
