@@ -26,7 +26,7 @@ void Kinetic::SetupSpline()
   Ugrid r_grid;
   r_grid.start = -path.L/2.;
   r_grid.end = path.L/2.;
-  r_grid.num = 5000;
+  r_grid.num = 10000;
   double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
@@ -52,12 +52,14 @@ void Kinetic::SetupSpline()
         num_sum_r(i) = 0.;
       for (int image=-nImages; image<=nImages; image++) {
         double t_r = r + image*path.L;
-        if (image != 0)
+        if (image != 0) {
           rho_free_r(i) += path.fexp(-(t_r*t_r - r*r)*t_i4LambdaTau);
-        if (iSpline == 0)
-          num_sum_r(i) += -(t_r*t_r*t_i4LambdaTau/path.tau)*path.fexp(-(t_r*t_r)*t_i4LambdaTau);
+          if (iSpline == 0)
+            num_sum_r(i) += -(t_r*t_r*t_i4LambdaTau/path.tau)*path.fexp(-(t_r*t_r)*t_i4LambdaTau);
+        }
       }
-      rho_free_r(i) = log1p(min(100.,rho_free_r(i)));
+      rho_free_r(i) = log1p(min(10.,rho_free_r(i)));
+      num_sum_r(i) = log1p(min(10.,num_sum_r(i)));
     }
     BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
     UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
@@ -80,6 +82,8 @@ double Kinetic::GetNumSum(const double &r)
 {
   double numSum;
   eval_UBspline_1d_d(num_sum_r_spline,r,&numSum);
+  numSum = exp(0.9999*numSum);
+  numSum *= -(r*r*i4LambdaTau/path.tau)*exp(-(r*r*i4LambdaTau));
   return numSum;
 }
 
