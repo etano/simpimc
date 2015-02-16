@@ -47,7 +47,7 @@ class Observable:
 class Scalar(Observable):
     def GetDataStats(self, files):
         data = []
-        for f in files:
+        for file in files:
             f = h5.File(file,'r')
             data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][startCut:])))
             f.flush()
