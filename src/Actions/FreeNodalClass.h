@@ -9,7 +9,7 @@ class FreeNodal : public Nodal
 {
 private:
   // Splines
-  field<UBspline_1d_d*> rho_free_r_splines;
+  field<UBspline_1d_d*> rho_free_r2_splines;
   void SetupSpline();
 
 protected:
