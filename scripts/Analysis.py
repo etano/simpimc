@@ -69,6 +69,8 @@ class Scalar(Observable):
         mean = data[0]/sign_data[0]
         if data[0] != 0:
             err = mean*np.sqrt(pow(data[1]/data[0],2) + pow(sign_data[1]/sign_data[0],2))
+        else:
+            err = 0.
         kappa = data[2]
         g = open(self.basename+'/'+self.name+'.adj.dat','w')
         g.write('%.10e %.10e %.10e\n'%(mean,err,kappa))

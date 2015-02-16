@@ -21,7 +21,7 @@ protected:
   virtual double Geti4LambdaTau(int sliceDiff);
 
   // Splines
-  field<UBspline_1d_d*> rho_node_r_splines;
+  field<UBspline_1d_d*> rho_node_r2_splines;
   virtual void SetupSpline();
 
 public:
