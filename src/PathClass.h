@@ -117,6 +117,7 @@ public:
   int GetPermSector(int iS);
   int GetPermSector(int iS, vector<int>& cycles);
   void SetupPermSectors(int n, int sectorsMax);
+  bool permSectorsSetup;
 
 
   // Path initialization

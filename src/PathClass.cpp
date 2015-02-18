@@ -65,6 +65,7 @@ void Path::Init(Input &in, IOClass &out, RNG &rng)
   // Initiate some global things
   sign = 1;
   importance_weight = 1;
+  permSectorsSetup = 0;
   refBead = 0;
   CalcSign();
 }
@@ -456,44 +457,48 @@ int Path::GetPermSector(int iS, vector<int>& cycles)
 // Setup permutation sectors
 void Path::SetupPermSectors(int n, int sectorsMax)
 {
-  cout << "Setting up permutation sectors..." << endl;
-  vector<int> a;
-  a.resize(n);
-  for (int i=0; i<n; i++) {
-    a[i] = 0;
-  }
-  int k = 1;
-  int y = n-1;
-  vector< vector<int> > tmpPossPerms;
-  while (k != 0 && (sectorsMax > possPerms.size() || !sectorsMax)) {
-    int x = a[k-1] + 1;
-    k -= 1;
-    while (2*x <= y) {
-      a[k] = x;
-      y -= x;
-      k += 1;
+  if (!permSectorsSetup) {
+    cout << "Setting up permutation sectors..." << endl;
+    vector<int> a;
+    a.resize(n);
+    for (int i=0; i<n; i++) {
+      a[i] = 0;
     }
-    int l = k+1;
-    while (x <= y && (sectorsMax > possPerms.size() || !sectorsMax)) {
-      a[k] = x;
-      a[l] = y;
-      vector<int> b;
-      for (vector<int>::size_type j=0; j!=k+2; j++)
-        b.push_back(a[j]);
-      tmpPossPerms.push_back(b);
-      x += 1;
-      y -= 1;
+    int k = 1;
+    int y = n-1;
+    vector< vector<int> > tmpPossPerms;
+    while (k != 0 && (sectorsMax > possPerms.size() || !sectorsMax)) {
+      int x = a[k-1] + 1;
+      k -= 1;
+      while (2*x <= y) {
+        a[k] = x;
+        y -= x;
+        k += 1;
+      }
+      int l = k+1;
+      while (x <= y && (sectorsMax > possPerms.size() || !sectorsMax)) {
+        a[k] = x;
+        a[l] = y;
+        vector<int> b;
+        for (vector<int>::size_type j=0; j!=k+2; j++)
+          b.push_back(a[j]);
+        tmpPossPerms.push_back(b);
+        x += 1;
+        y -= 1;
+      }
+      a[k] = x+y;
+      y = x+y-1;
+      vector<int> c;
+      for (vector<int>::size_type j=0; j!=k+1; j++)
+        c.push_back(a[j]);
+      tmpPossPerms.push_back(c);
     }
-    a[k] = x+y;
-    y = x+y-1;
-    vector<int> c;
-    for (vector<int>::size_type j=0; j!=k+1; j++)
-      c.push_back(a[j]);
-    tmpPossPerms.push_back(c);
-  }
+  
+    int nSectors = tmpPossPerms.size();
+    for (vector<int>::size_type j=0; j != nSectors; j++)
+      possPerms[tmpPossPerms[j]] = j;
 
-  int nSectors = tmpPossPerms.size();
-  for (vector<int>::size_type j=0; j != nSectors; j++)
-    possPerms[tmpPossPerms[j]] = j;
+    permSectorsSetup = 1;
+  }
 
 }
