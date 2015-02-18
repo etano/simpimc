@@ -26,7 +26,12 @@ void Kinetic::SetupSpline()
   // Setup grid
   Ugrid r2_grid;
   r2_grid.start = 1.e-8;
-  r2_grid.end = path.L/2.;
+  if (path.PBC)
+    r2_grid.end = path.L/2.;
+  else {
+    r2_grid.end = 100.;
+    nImages = 0;
+  }
   r2_grid.num = 10000;
   double dr = (r2_grid.end - r2_grid.start)/(r2_grid.num - 1);
 
@@ -48,10 +53,9 @@ void Kinetic::SetupSpline()
       double r2i4LambdaTau = r2*t_i4LambdaTau;
       double L2 = path.L*path.L;
       for (int image=-nImages; image<=nImages; image++) {
-        double t_r2 = r2 + 2*sqrt(r2)*image*path.L + image*image*L2;
-        double t_r2i4LambdaTau = t_r2*t_i4LambdaTau;
         if (image != 0) {
-          double expPart = path.fexp(r2i4LambdaTau-t_r2i4LambdaTau);
+          double t_r2 = r2 + 2*sqrt(r2)*image*path.L + image*image*L2;
+          double expPart = path.fexp(r2i4LambdaTau - t_r2*t_i4LambdaTau);
           rho_free_r2(i) += expPart;
           if (iSpline == 0)
             num_sum_r2(i) += (t_r2/r2)*expPart;
