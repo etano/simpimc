@@ -49,7 +49,7 @@ class Scalar(Observable):
         data = []
         for file in files:
             f = h5.File(file,'r')
-            data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][startCut:])))
+            data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][self.startCut:])))
             f.flush()
             f.close()
         stats = Stats.UnweightedAvg(np.array(data))
@@ -84,7 +84,7 @@ class Histogram(Observable):
         for j in range(len(files)):
             f = h5.File(files[j],'r')
             xs = np.array(f[self.prefix+self.name+"/x"])
-            ys = np.transpose(f[self.prefix+self.name+"/y"][startCut:])
+            ys = np.transpose(f[self.prefix+self.name+"/y"][self.startCut:])
             f.flush()
             f.close()
             yStats.append([])
@@ -128,7 +128,7 @@ class Pair(Observable):
         for file in files:
             f = h5.File(file,'r')
             xs = np.array(f[self.prefix+self.name+"/x"])
-            pairs = np.array(f[self.prefix+self.name+"/y"][startCut:])
+            pairs = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
             f.flush()
             f.close()
             for pair in pairs:
@@ -153,6 +153,42 @@ class Pair(Observable):
                 g.write('%.10e \n'%(ys[x]))
             except:
                 g.write('0. \n')
+        g.close()
+
+# Avergaed pair variables
+class AvgPair(Observable):
+    def GetDataStats(self, files):
+        xs,ys = [],{}
+        for file in files:
+            f = h5.File(file,'r')
+            xs = np.array(f[self.prefix+self.name+"/x"])
+            avg_pairs = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
+            f.flush()
+            f.close()
+            for avg_pair in avg_pairs:
+                [eM,varM,M] = avg_pair[1:]
+                try:
+                    [eN,varN,N] = ys[avg_pair[0]]
+                    NM = N + M
+                    eNM = (N*eN + M*eM)/NM
+                    varNM = ((N*varN + N*eN*eN + M*varM + M*eM*eM)/NM) - eNM*eNM
+                    ys[avg_pair[0]] += pair[1]
+                except:
+                    ys[avg_pair[0]] = [eM,varM,M]
+        for x in ys:
+            ys[x][1] = np.sqrt(ys[x][1])/ys[x][2]
+        return (xs, ys)
+
+    def WriteToFile(self, (xs, ys)):
+        if not os.path.exists(self.basename):
+            os.makedirs(self.basename)
+        g = open(self.basename+'/'+self.name+'.dat','w')
+        for x in xs:
+            g.write(str(x)+' ')
+            try:
+                g.write('%.10e %.10e %i \n'%(ys[x][0], ys[x][1], ys[x][2]))
+            except:
+                g.write('0. 0. 0 \n')
         g.close()
 
 # Recursively add observables
@@ -181,43 +217,58 @@ def AddObservable(f, section, obs, startCut):
         obs.append(Scalar(prefix, section_name, section_type, startCut))
     elif data_type == "histogram":
         obs.append(Histogram(prefix, section_name, section_type, startCut))
-    #if data_type == "pairs":
-    #    obs.append(Pair(prefix, section_name, section_type, startCut))
+    elif data_type == "pairs":
+        obs.append(Pair(prefix, section_name, section_type, startCut))
+    elif data_type == "avg_pairs":
+        obs.append(AvgPair(prefix, section_name, section_type, startCut))
 
-# Get start cut
-try:
-    startCut = int(sys.argv[1])
-    firstArg = 2
-except:
-    startCut = 0
-    firstArg = 1
+def usage():
+    print "Usage: %s [start cut] file0.h5 file1.h5 ..." % os.path.basename(sys.argv[0])
+    sys.exit(2)
 
-# Get h5 files
-files = []
-for file in sys.argv[firstArg:]:
-    files.append(file)
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    if "-h" in argv or "--help" in argv:
+        usage()
 
-# Get observables
-obs = []
-f0 = h5.File(files[0],'r')
-ob_names = GetSubsections(f0,'/')
-for ob_name in ob_names:
-    AddObservable(f0, ob_name, obs, startCut)
-f0.flush()
-f0.close()
+    # Get start cut
+    try:
+        startCut = int(sys.argv[1])
+        firstArg = 2
+    except:
+        startCut = 0
+        firstArg = 1
 
-# Compute statistics
-adjustBySign = 0
-sign_data = np.array((1,3))
-for ob in obs:
-    ob.Process(files)
-    if ob.type == 'Sign':
-        adjustBySign = 1
-        sign_data = np.loadtxt(ob.basename+'/'+ob.name+'.dat')
+    # Get h5 files
+    files = []
+    for file in sys.argv[firstArg:]:
+        files.append(file)
 
-# Adjust by sign
-if adjustBySign:
+    # Get observables
+    obs = []
+    f0 = h5.File(files[0],'r')
+    ob_names = GetSubsections(f0,'/')
+    for ob_name in ob_names:
+        AddObservable(f0, ob_name, obs, startCut)
+    f0.flush()
+    f0.close()
+
+    # Compute statistics
+    adjustBySign = 0
+    sign_data = np.array((1,3))
     for ob in obs:
-        if ('Observables' in ob.basename) and (not ('Time' in ob.basename)) and (not ('Permutation' in ob.basename)) and (ob.type != 'Sign'):
-            print 'Adjusting', ob.name, 'by sign weight'
-            ob.AdjustBySign(sign_data)
+        ob.Process(files)
+        if ob.type == 'Sign':
+            adjustBySign = 1
+            sign_data = np.loadtxt(ob.basename+'/'+ob.name+'.dat')
+
+    # Adjust by sign
+    if adjustBySign:
+        for ob in obs:
+            if ('Observables' in ob.basename) and (not ('Time' in ob.basename)) and (not ('Permutation' in ob.basename)) and (ob.type != 'Sign'):
+                print 'Adjusting', ob.name, 'by sign weight'
+                ob.AdjustBySign(sign_data)
+
+if __name__ == "__main__":
+  sys.exit(main())
