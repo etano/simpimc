@@ -7,11 +7,11 @@
     <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
   </Particles>
   <Actions>
-    <Action name="Kinetic" type="Kinetic" nImages="0" />
-    <Action name="HarmonicTrap" type="HarmonicTrap" nOrder="4" nImages="0" species="e" omega="1." maxLevel="0" />
+    <Action name="Kinetic" type="Kinetic" nImages="0" species="e" />
+    <Action name="HarmonicTrap" type="HarmonicTrap" species="e" nOrder="4" nImages="0" species="e" omega="1." maxLevel="0" />
   </Actions>
   <Moves>
-    <Move name="BisectE" type="Bisect" particles="e" maxLevel="2" />
+    <Move name="BisectE" type="Bisect" species="e" nLevel="2" />
   </Moves>
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />
