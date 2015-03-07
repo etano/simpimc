@@ -51,11 +51,11 @@ double Nodal::GetAction(const int b0, const int b1, const vector< pair<int,int> 
   for (int iP=0; iP<nPart; ++iP) {
     refBeads.push_back(path(iSpecies,iP,path.refBead));
     if (absSliceDiff0 >= 0) {
-      otherBeads.push_back(path.GetNextBead(refBeads[iP],absSliceDiff0)); // fixme: This may be the only correct form
-      //otherBeads.push_back(path(iSpecies,iP,startB));
+      //otherBeads.push_back(path.GetNextBead(refBeads[iP],absSliceDiff0)); // fixme: This may be the only correct form
+      otherBeads.push_back(path(iSpecies,iP,startB));
     } else {
-      otherBeads.push_back(path.GetPrevBead(refBeads[iP],absSliceDiff0));
-      //otherBeads.push_back(path(iSpecies,iP,startB));
+      //otherBeads.push_back(path.GetPrevBead(refBeads[iP],absSliceDiff0));
+      otherBeads.push_back(path(iSpecies,iP,startB));
     }
   }
 

@@ -52,45 +52,46 @@ void OptimizedNodal::Init(Input &in)
 void OptimizedNodal::SetupSpline()
 {
   // Setup grid
-  Ugrid r2_grid;
-  r2_grid.start = 1.e-8;
-  if (path.PBC)
-    r2_grid.end = path.L/2.;
-  else {
-    r2_grid.end = 100.;
+  Ugrid r_grid;
+  if (path.PBC) {
+    r_grid.start = -path.L/2.;
+    r_grid.end = path.L/2.;
+  } else {
+    r_grid.start = 100.;
+    r_grid.end = 100.;
     nImages = 0;
   }
-  r2_grid.num = 10000;
-  double dr = (r2_grid.end - r2_grid.start)/(r2_grid.num - 1);
+  r_grid.num = 10000;
+  double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
   int nSpline = path.nBead/2 + (path.nBead%2) + 1;
-  rho_node_r2_splines.set_size(paramSets.size(), nSpline);
+  rho_node_r_splines.set_size(paramSets.size(), nSpline);
 
   // Create splines
   iParamSet = 0;
   for (auto& paramSet : paramSets) {
     for (int iSpline=0; iSpline<nSpline; ++iSpline) {
-      vec<double> rho_node_r2(r2_grid.num);
+      vec<double> rho_node_r(r_grid.num);
       double t_i4LambdaTau = Geti4LambdaTau(iSpline+1); // TODO: This is hard-coded for free-particle-like nodal structures.
 
       // Make rho_free
-      for (int i=0; i<r2_grid.num; ++i) {
-        double r2 = r2_grid.start + i*dr;
-        rho_node_r2(i) = 0.;
+      for (int i=0; i<r_grid.num; ++i) {
+        double r = r_grid.start + i*dr;
+        rho_node_r(i) = 0.;
+        double r2 = r*r;
         double r2i4LambdaTau = r2*t_i4LambdaTau;
-        double L2 = path.L*path.L;
         for (int image=-nImages; image<=nImages; image++) {
           if (image != 0) {
-            double t_r2 = r2 + 2*sqrt(r2)*image*path.L + image*image*L2;
-            rho_node_r2(i) += path.fexp(r2i4LambdaTau - t_r2*t_i4LambdaTau);
+            double t_r = r + image*path.L;
+            rho_node_r(i) += path.fexp(r2i4LambdaTau - t_r*t_r*t_i4LambdaTau);
           }
         }
-        rho_node_r2(i) = log1p(min(10.,rho_node_r2(i)));
+        rho_node_r(i) = log1p(min(10.,rho_node_r(i)));
       }
       BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
-      UBspline_1d_d* rho_node_r2_spline = create_UBspline_1d_d(r2_grid, xBC, rho_node_r2.memptr());
-      rho_node_r2_splines(iParamSet,iSpline) = rho_node_r2_spline;
+      UBspline_1d_d* rho_node_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_node_r.memptr());
+      rho_node_r_splines(iParamSet,iSpline) = rho_node_r_spline;
     }
 
     iParamSet++;
@@ -106,10 +107,9 @@ double OptimizedNodal::GetGij(vec<double>& r, int sliceDiff)
   double t_i4LambdaTau = Geti4LambdaTau(sliceDiff);
   for (int iD=0; iD<path.nD; iD++) {
     double gaussSum;
-    double r2 = r(iD)*r(iD);
-    eval_UBspline_1d_d(rho_node_r2_splines(iParamSet,sliceDiff-1),r2,&gaussSum);
+    eval_UBspline_1d_d(rho_node_r_splines(iParamSet,sliceDiff-1),r(iD),&gaussSum);
     gaussSum = exp(0.9999*gaussSum);
-    gaussSum *= exp(-(r2*t_i4LambdaTau));
+    gaussSum *= exp(-(r(iD)*r(iD)*t_i4LambdaTau));
     gaussProd *= gaussSum;
   }
   return gaussProd;

@@ -14,8 +14,8 @@ private:
   double i4LambdaTau;
 
   // Splines
-  field<UBspline_1d_d*> rho_free_r2_splines;
-  UBspline_1d_d* num_sum_r2_spline;
+  field<UBspline_1d_d*> rho_free_r_splines;
+  UBspline_1d_d* num_sum_r_spline;
   void SetupSpline();
 
   // Sums over images

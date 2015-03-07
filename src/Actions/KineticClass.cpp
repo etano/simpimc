@@ -24,71 +24,70 @@ void Kinetic::Init(Input &in)
 void Kinetic::SetupSpline()
 {
   // Setup grid
-  Ugrid r2_grid;
-  r2_grid.start = 1.e-8;
-  if (path.PBC)
-    r2_grid.end = path.L/2.;
-  else {
-    r2_grid.end = 100.;
+  Ugrid r_grid;
+  if (path.PBC) {
+    r_grid.start = -path.L/2.;
+    r_grid.end = path.L/2.;
+  } else {
+    r_grid.start = -100.;
+    r_grid.end = 100.;
     nImages = 0;
   }
-  r2_grid.num = 10000;
-  double dr = (r2_grid.end - r2_grid.start)/(r2_grid.num - 1);
+  r_grid.num = 10000;
+  double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
   int nSpline = path.nBead/2 + (path.nBead%2) + 1;
-  rho_free_r2_splines.set_size(nSpline);
+  rho_free_r_splines.set_size(nSpline);
 
   // Create splines
   for (int iSpline=0; iSpline<nSpline; ++iSpline) {
-    vec<double> rho_free_r2(r2_grid.num), num_sum_r2(r2_grid.num);
+    vec<double> rho_free_r(r_grid.num), num_sum_r(r_grid.num);
     double t_i4LambdaTau = i4LambdaTau/(iSpline+1);
 
     // Make rho_free
-    for (int i=0; i<r2_grid.num; ++i) {
-      double r2 = r2_grid.start + i*dr;
-      rho_free_r2(i) = 0.;
+    for (int i=0; i<r_grid.num; ++i) {
+      double r = r_grid.start + i*dr;
+      rho_free_r(i) = 0.;
       if (iSpline == 0)
-        num_sum_r2(i) = 0.;
+        num_sum_r(i) = 0.;
+      double r2 = r*r;
       double r2i4LambdaTau = r2*t_i4LambdaTau;
-      double L2 = path.L*path.L;
       for (int image=-nImages; image<=nImages; image++) {
         if (image != 0) {
-          double t_r2 = r2 + 2*sqrt(r2)*image*path.L + image*image*L2;
-          double expPart = path.fexp(r2i4LambdaTau - t_r2*t_i4LambdaTau);
-          rho_free_r2(i) += expPart;
-          if (iSpline == 0)
-            num_sum_r2(i) += (t_r2/r2)*expPart;
+          double t_r = r + image*path.L;
+          double expPart = path.fexp(r2i4LambdaTau - t_r*t_r*t_i4LambdaTau);
+          rho_free_r(i) += expPart;
+          if (iSpline == 0 && r2 != 0.)
+            num_sum_r(i) += (t_r*t_r/r2)*expPart;
         }
       }
-      rho_free_r2(i) = log1p(min(10.,rho_free_r2(i)));
-      num_sum_r2(i) = log1p(min(10.,num_sum_r2(i)));
+      rho_free_r(i) = log1p(min(10.,rho_free_r(i)));
+      num_sum_r(i) = log1p(min(10.,num_sum_r(i)));
     }
     BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
-    UBspline_1d_d* rho_free_r2_spline = create_UBspline_1d_d(r2_grid, xBC, rho_free_r2.memptr());
-    rho_free_r2_splines(iSpline) = rho_free_r2_spline;
+    UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
+    rho_free_r_splines(iSpline) = rho_free_r_spline;
     if (iSpline == 0)
-      num_sum_r2_spline = create_UBspline_1d_d(r2_grid, xBC, num_sum_r2.memptr());
+      num_sum_r_spline = create_UBspline_1d_d(r_grid, xBC, num_sum_r.memptr());
   }
 }
 
 double Kinetic::GetGaussSum(const double &r, const int sliceDiff)
 {
   double gaussSum;
-  double r2 = r*r;
-  eval_UBspline_1d_d(rho_free_r2_splines(sliceDiff-1),r2,&gaussSum);
+  eval_UBspline_1d_d(rho_free_r_splines(sliceDiff-1),r,&gaussSum);
   gaussSum = exp(0.9999*gaussSum);
-  gaussSum *= exp(-(r2*i4LambdaTau/sliceDiff));
+  gaussSum *= exp(-(r*r*i4LambdaTau/sliceDiff));
   return gaussSum;
 }
 
 double Kinetic::GetNumSum(const double &r)
 {
   double numSum;
-  double r2 = r*r;
-  eval_UBspline_1d_d(num_sum_r2_spline,r2,&numSum);
+  eval_UBspline_1d_d(num_sum_r_spline,r,&numSum);
   numSum = exp(0.9999*numSum);
-  numSum *= -(r2*i4LambdaTau/path.tau)*exp(-(r2*i4LambdaTau));
+  numSum *= -(r*r*i4LambdaTau/path.tau)*exp(-(r*r*i4LambdaTau));
   return numSum;
 }
 
