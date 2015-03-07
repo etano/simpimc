@@ -1,0 +1,36 @@
+<Input>
+  <RNG seed="12345" />
+  <IO outputPrefix="H" />
+  <Parallel procsPerGroup="1" />
+  <System nD="3" nBead="320" beta="40.0" L="1000.0" PBC="0" />
+  <Particles>
+    <Species name="e" nPart="1" lambda="0.5" fermi="0" initType="File" fileName="e.xyz" />
+    <Species name="p" nPart="1" lambda="0.0" fermi="0" initType="File" fileName="p.xyz" />
+  </Particles>
+  <Actions>
+    <Action name="Kinetic" type="Kinetic" nImages="0" species="e" />
+    <Action name="Coulomb" type="IlkkaPairAction" file="e-p.h5" nOrder="-1" nImages="0" speciesA="e" speciesB="p" maxLevel="0" useLongRange="0" />
+  </Actions>
+  <Moves>
+    <Move name="BisectE" type="Bisect" species="e" nLevel="5" />
+  </Moves>
+  <Observables>
+    <Observable name="Energy" type="Energy" skip="1" measureV="1" />
+    <Observable name="PC_ep" type="PairCorrelation" speciesA="e" speciesB="p" rMin="0." rMax="5." nR="100" skip="1" />
+    <Observable name="PC_ep_0" type="ContactDensity" speciesA="p" speciesB="e" ZA="1" skip="1" />
+    <Observable name="Time" type="Time" />
+  </Observables>
+  <Algorithm>
+    <Loop nStep="100">
+      <Loop nStep="1000">
+        <Loop nStep="10">
+          <Move name="BisectE" />
+        </Loop>
+        <Observable name="Energy" />
+        <Observable name="PC_ep" />
+        <Observable name="PC_ep_0" />
+      </Loop>
+      <Write />
+    </Loop>
+  </Algorithm>
+</Input>
