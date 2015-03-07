@@ -1,7 +1,5 @@
 #include "PermBisectClass.h"
 
-// FIXME: This doesn't work for fermions yet
-
 void PermBisect::Init(Input &in)
 {
   nLevel = in.getAttribute<int>("nLevel");
@@ -85,8 +83,8 @@ void PermBisect::BuildCycles()
       Cycle& c = all_cycles(permIndex);
       c.type = iPermType;
       c.index = permIndex;
-      c.part.set_size(tmpCycles.size());
-      for (int i=0; i<tmpCycles.size(); ++i)
+      c.part.set_size(tmpCycles[iCycle].size());
+      for (int i=0; i<tmpCycles[iCycle].size(); ++i)
         c.part(i) = tmpCycles[iCycle][i];
       c.perm = possible_cycles(iPermType).perm;
       c.iPerm = possible_cycles(iPermType).iPerm;
@@ -151,7 +149,6 @@ int PermBisect::Attempt()
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   bool rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
-
   // Set up permutation
   cycles.clear();
   double permTot0 = constructPermTable(); // Permutation weight table
@@ -271,7 +268,7 @@ int PermBisect::Attempt()
     double permTot1 = constructPermTable();
   
     // Decide whether or not to accept whole bisection
-    if ((oldCycleWeight*permTot0/permTot1) < rng.unifRand())
+    if ((permTot0/permTot1) < rng.unifRand())
       return 0;
   }
 
