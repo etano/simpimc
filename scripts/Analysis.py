@@ -166,17 +166,18 @@ class AvgPair(Observable):
             f.flush()
             f.close()
             for avg_pair in avg_pairs:
+                sector = avg_pair[0]
                 [eM,varM,M] = avg_pair[1:]
                 try:
-                    [eN,varN,N] = ys[avg_pair[0]]
+                    [eN,varN,N] = ys[sector]
                     NM = N + M
                     eNM = (N*eN + M*eM)/NM
                     varNM = ((N*varN + N*eN*eN + M*varM + M*eM*eM)/NM) - eNM*eNM
-                    ys[avg_pair[0]] += pair[1]
+                    ys[sector] = [eNM,varNM,NM]
                 except:
-                    ys[avg_pair[0]] = [eM,varM,M]
+                    ys[sector] = [eM,varM,M]
         for x in ys:
-            ys[x][1] = np.sqrt(ys[x][1])/ys[x][2]
+            ys[x][1] = np.sqrt(ys[x][1]/ys[x][2])
         return (xs, ys)
 
     def WriteToFile(self, (xs, ys)):
