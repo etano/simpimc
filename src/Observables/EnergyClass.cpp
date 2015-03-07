@@ -70,7 +70,7 @@ void Energy::Accumulate()
     vector<int> cycle;
     path.SetCycleCount(iSpecies, cycle);
     int sector = path.GetPermSector(iSpecies, cycle);
-    std::pair<int,double> sectorE(sector,path.sign*totE);
+    std::pair<int,double> sectorE(sector,path.sign*totE/path.nBead);
     sectorEs.push_back(sectorE);
   }
 
