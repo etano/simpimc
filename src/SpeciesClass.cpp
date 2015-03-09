@@ -23,21 +23,17 @@ void Species::Init(Input &in, IOClass &out)
 
   // Initiate beads
   bead.set_size(nPart,nBead);
-  unsigned int unique_id = 0;
-  for (unsigned int iP=0; iP<nPart; iP++) {
-    for (unsigned int iB=0; iB<nBead; iB++) {
-      bead(iP,iB) = std::make_shared<Bead>(nD,iS,iP,iB,unique_id);
-      unique_id++;
-    }
-  }
+  for (unsigned int iP=0; iP<nPart; iP++)
+    for (unsigned int iB=0; iB<nBead; iB++)
+      bead(iP,iB) = std::make_shared<Bead>(nD,iS,iP,iB);
 
   // Initiate bead connections
-  for (unsigned int iP = 0; iP < nPart; iP++) {
+  for (unsigned int iP=0; iP<nPart; iP++) {
     bead(iP,0) -> next = bead(iP,1);
     bead(iP,0) -> nextC = bead(iP,1);
     bead(iP,0) -> prev = bead(iP,nBead-1);
     bead(iP,0) -> prevC = bead(iP,nBead-1);
-    for (unsigned int iB = 1; iB < nBead-1; iB++) {
+    for (unsigned int iB=1; iB<nBead-1; iB++) {
       bead(iP,iB) -> next = bead(iP,iB+1);
       bead(iP,iB) -> nextC = bead(iP,iB+1);
       bead(iP,iB) -> prev = bead(iP,iB-1);

@@ -7,11 +7,12 @@ struct Bead
 {
 public:
   Bead();
-  Bead(unsigned int tmpND, int tmpS, unsigned int tmpP, unsigned int tmpB, unsigned int tmpId)
-    : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), id(tmpId), r(tmpND), rC(tmpND)
+  Bead(unsigned int tmpND, int tmpS, unsigned int tmpP, unsigned int tmpB)
+    : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), r(tmpND), rC(tmpND), isIra(0), isMasha(0)
   {}
 
-  unsigned int p, b, s, id, nD;
+  unsigned int p, b, s, nD;
+  bool isIra, isMasha; // head and tail (respectively)
   double nDist, nDistC;
   vec<double> r, rC;
   vec< complex<double> > rhoK, rhoKC;
