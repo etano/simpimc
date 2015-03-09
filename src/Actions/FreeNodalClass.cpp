@@ -66,9 +66,8 @@ void FreeNodal::SetupSpline()
     // Make rho_free
     for (int i=0; i<r_grid.num; ++i) {
       double r = r_grid.start + i*dr;
+      double r2i4LambdaTau = r*r*t_i4LambdaTau;
       rho_free_r(i) = 0.;
-      double r2 = r*r;
-      double r2i4LambdaTau = r2*t_i4LambdaTau;
       for (int image=-nImages; image<=nImages; image++) {
         if (image != 0) {
           double t_r = r + image*path.L;
