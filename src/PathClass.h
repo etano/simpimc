@@ -55,12 +55,12 @@ public:
   inline vec<double>& GetR(std::shared_ptr<Bead> b) { return mode ? b->r : b->rC; };
   inline std::shared_ptr<Bead> GetNextBead(std::shared_ptr<Bead> b, int n) { return mode ? b->nextB(n) : b->nextBC(n); };
   inline std::shared_ptr<Bead> GetPrevBead(std::shared_ptr<Bead> b, int n) { return mode ? b->prevB(n) : b->prevBC(n); };
-  inline void Dr(vec<double> &r0, vec<double> &r1, vec<double> &dr) { dr = r0 - r1; PutInBox(dr); };
-  inline void Dr(std::shared_ptr<Bead> b0, vec<double> &r1, vec<double> &dr) { Dr(GetR(b0), r1, dr); };
-  inline void Dr(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1, vec<double> &dr) { Dr(GetR(b0), GetR(b1), dr); };
-  inline void RBar(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1, vec<double> &rBar) { Dr(b0, b1, rBar); rBar = GetR(b1) + 0.5*rBar; };
+  inline vec<double> Dr(vec<double> &r0, vec<double> &r1) { vec<double> dr = r0-r1; PutInBox(dr); return dr; };
+  inline vec<double> Dr(std::shared_ptr<Bead> b0, vec<double> &r1) { return Dr(GetR(b0), r1); };
+  inline vec<double> Dr(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1) { return Dr(GetR(b0), GetR(b1)); };
+  inline vec<double> RBar(std::shared_ptr<Bead> b0, std::shared_ptr<Bead> b1) { return GetR(b1) + 0.5*Dr(b0, b1); };
   template<class T>
-  inline double MagDr(T &r0, T &r1) { vec<double> dr; Dr(r0,r1,dr); return mag(dr); };
+  inline double MagDr(T &r0, T &r1) { return mag(Dr(r0,r1)); };
 
   // Periodic Boundary Condition
   bool PBC;

@@ -97,10 +97,8 @@ double Kinetic::DActionDBeta()
   #pragma omp parallel for collapse(2) reduction(+:tot)
   for (int iP=0; iP<nPart; iP++) {
     for (int iB=0; iB<path.nBead; iB++) {
-      vec<double> numSum, gaussSum, dr(path.nD);
-      path.Dr(path(iSpecies,iP,iB),path.GetNextBead(path(iSpecies,iP,iB),1),dr);
-      numSum.zeros(path.nD);
-      gaussSum.zeros(path.nD);
+      vec<double> numSum(path.nD), gaussSum(path.nD);
+      vec<double> dr(path.Dr(path(iSpecies,iP,iB),path.GetNextBead(path(iSpecies,iP,iB),1)));
       double gaussProd = 1.;
       for (int iD=0; iD<path.nD; iD++) {
         numSum(iD) = GetNumSum(dr(iD));
@@ -130,22 +128,19 @@ double Kinetic::GetAction(const int b0, const int b1, const vector< pair<int,int
   int skip = 1<<level;
   double i4LambdaLevelTau = i4LambdaTau/skip;
   double tot = 0.;
-  vec<double> dr(path.nD);
-  std::shared_ptr<Bead> beadA, beadB, beadF;
   for (auto& p: particles) {
     int iS = p.first;
     int iP = p.second;
     if (iS == iSpecies) {
-      beadA = path(iSpecies,iP,b0);
-      beadF = path.GetNextBead(beadA,b1-b0);
+      std::shared_ptr<Bead> beadA(path(iSpecies,iP,b0));
+      std::shared_ptr<Bead> beadF(path.GetNextBead(beadA,b1-b0));
       while(beadA != beadF) {
-        beadB = path.GetNextBead(beadA,skip);
-        path.Dr(beadA,beadB,dr);
+        std::shared_ptr<Bead> beadB(path.GetNextBead(beadA,skip));
+        vec<double> dr(path.Dr(beadA,beadB));
         double gaussProd = 1;
         for (int iD=0; iD<path.nD; iD++)
           gaussProd *= GetGaussSum(dr(iD),skip);
         tot -= log(gaussProd);
-
         beadA = beadB;
       }
     }
@@ -160,7 +155,6 @@ vec<double> Kinetic::GetActionGradient(const int b0, const int b1, const vector<
   double i4LambdaLevelTau = i4LambdaTau/skip;
   vec<double> tot;
   tot.zeros(path.nD);
-  vec<double> dr(path.nD);
   std::shared_ptr<Bead> beadA, beadB, beadC, beadF;
   for (auto& p: particles) {
     int iS = p.first;
@@ -171,10 +165,10 @@ vec<double> Kinetic::GetActionGradient(const int b0, const int b1, const vector<
       beadF = path.GetNextBead(beadA,b1-b0);
       while(beadA != beadF) {
         beadB = path.GetPrevBead(beadA,skip);
-        path.Dr(beadB,beadA,dr);
+        vec<double> dr(path.Dr(beadB,beadA));
         tot -= dr;
         beadC = path.GetNextBead(beadA,skip);
-        path.Dr(beadA,beadC,dr);
+        dr = path.Dr(beadA,beadC);
         tot += dr;
         beadA = beadC;
       }

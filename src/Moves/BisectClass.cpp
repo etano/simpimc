@@ -111,7 +111,6 @@ int Bisect::Attempt()
   std::shared_ptr<Bead> beadA, beadB, beadC;
   double prevActionChange = 0.;
   double prefactorOfSampleProb = 0.;
-  vec<double> rBarOld(path.nD), deltaOld(path.nD), rBarNew(path.nD), deltaNew(path.nD);
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
     int skip = 1<<iLevel;
     double levelTau = path.tau*skip;
@@ -128,12 +127,13 @@ int Bisect::Attempt()
 
       // Old sampling
       path.SetMode(0);
-      path.RBar(beadC, beadA, rBarOld);
-      path.Dr(beadB, rBarOld, deltaOld);
+      vec<double> rBarOld(path.RBar(beadC, beadA));
+      vec<double> deltaOld(path.Dr(beadB, rBarOld));
 
       // New sampling
       path.SetMode(1);
-      path.RBar(beadC, beadA, rBarNew);
+      vec<double> rBarNew(path.RBar(beadC, beadA));
+      vec<double> deltaNew(path.nD);
       rng.normRand(deltaNew, 0., sigma);
       path.PutInBox(deltaNew);
       beadB->r = rBarNew + deltaNew;

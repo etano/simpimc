@@ -52,15 +52,14 @@ double PairAction::Potential()
     return VConstant;
   else {
     double tot = 0.;
-    vec<double> dr(path.nD);
     if (iSpeciesA == iSpeciesB) {
       for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
         for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
           for (int iB=0; iB<path.nBead; iB+=1) {
             int jB = iB + 1;
-            path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB),dr);
+            vec<double> dr(path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB)));
             double rMag = mag(dr);
-            path.Dr(path(iSpeciesA,iP,jB),path(iSpeciesA,jP,jB),dr);
+            dr = path.Dr(path(iSpeciesA,iP,jB),path(iSpeciesA,jP,jB));
             double rPMag = mag(dr);
             tot += CalcV(rMag,rPMag,0);
           }
@@ -71,9 +70,9 @@ double PairAction::Potential()
         for (int jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
           for (int iB=0; iB<path.nBead; iB+=1) {
             int jB = iB + 1;
-            path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB),dr);
+            vec<double> dr(path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB)));
             double rMag = mag(dr);
-            path.Dr(path(iSpeciesA,iP,jB),path(iSpeciesB,jP,jB),dr);
+            dr = path.Dr(path(iSpeciesA,iP,jB),path(iSpeciesB,jP,jB));
             double rPMag = mag(dr);
             tot += CalcV(rMag,rPMag,0);
           }
@@ -216,6 +215,7 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
   // Sum up contributing terms
   int skip = 1<<level;
   double tot = 0.;
+  #pragma omp parallel for reduction(+:tot)
   for (int iB=b0; iB<b1; iB+=skip) {
     int jB = iB+skip;
     int kB = iB-skip;

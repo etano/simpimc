@@ -15,10 +15,10 @@ protected:
   int iParamSet, iModel;
 
   // Rho matrix
-  virtual double GetGij(vec<double> &r, int sliceDiff);
+  virtual double GetGij(const vec<double> &r, const int sliceDiff);
 
   // 1/(4\lambda\tau)
-  virtual double Geti4LambdaTau(int sliceDiff);
+  virtual double Geti4LambdaTau(const int sliceDiff);
 
   // Splines
   field<UBspline_1d_d*> rho_node_r_splines;

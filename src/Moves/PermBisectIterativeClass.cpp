@@ -181,14 +181,15 @@ int PermBisectIterative::Attempt()
         path.SetMode(0);
         beadB(i) = path.GetNextBead(beadA(i),skip);
         beadC(i) = path.GetNextBead(beadB(i),skip);
-        path.RBar(beadC(i), beadA(i), rBarOld);
-        path.Dr(beadB(i), rBarOld, deltaOld);
+        vec<double> rBarOld(path.RBar(beadC(i), beadA(i)));
+        vec<double> deltaOld(path.Dr(beadB(i), rBarOld));
 
         // New sampling
         path.SetMode(1);
         beadB(i) = path.GetNextBead(beadA(i),skip);
         beadC(i) = path.GetNextBead(beadB(i),skip);
-        path.RBar(beadC(i), beadA(i), rBarNew);
+        vec<double> rBarNew(path.RBar(beadC(i), beadA(i)));
+        vec<double> deltaNew(path.nD);
         rng.normRand(deltaNew, 0., sigma);
         path.PutInBox(deltaNew);
         beadB(i)->r = rBarNew + deltaNew;
@@ -257,12 +258,11 @@ void PermBisectIterative::updatePermTable()
   }
 
   // Construct t table
-  vec<double> dr_ij(path.nD), dr_ii(path.nD);
-  double exponent;
+  #pragma omp parallel for collapse(2)
   for (unsigned int i=0; i<nPart; i++) {
     for (unsigned int j=0; j<nPart; j++) {
-      path.Dr(b0(i), b1(j), dr_ij);
-      exponent = (-dot(dr_ij,dr_ij))*i4LambdaTauNBisectBeads;
+      vec<double> dr_ij(path.Dr(b0(i), b1(j)));
+      double exponent = (-dot(dr_ij,dr_ij))*i4LambdaTauNBisectBeads;
       if (exponent > logEpsilon)
         t(i,j) = path.fexp(exponent);
       else

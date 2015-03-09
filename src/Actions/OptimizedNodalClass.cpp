@@ -69,8 +69,8 @@ void OptimizedNodal::SetupSpline()
   rho_node_r_splines.set_size(paramSets.size(), nSpline);
 
   // Create splines
-  iParamSet = 0;
-  for (auto& paramSet : paramSets) {
+  for (int iParamSet=0; iParamSet<paramSets.size(); ++iParamSet) {
+    #pragma omp parallel for
     for (int iSpline=0; iSpline<nSpline; ++iSpline) {
       vec<double> rho_node_r(r_grid.num);
       double t_i4LambdaTau = Geti4LambdaTau(iSpline+1); // TODO: This is hard-coded for free-particle-like nodal structures.
@@ -83,7 +83,7 @@ void OptimizedNodal::SetupSpline()
         for (int image=-nImages; image<=nImages; image++) {
           if (image != 0) {
             double t_r = r + image*path.L;
-            rho_node_r(i) += path.fexp(r2i4LambdaTau - t_r*t_r*t_i4LambdaTau);
+            rho_node_r(i) += exp(r2i4LambdaTau - t_r*t_r*t_i4LambdaTau);
           }
         }
         rho_node_r(i) = log1p(min(10.,rho_node_r(i)));
@@ -92,15 +92,14 @@ void OptimizedNodal::SetupSpline()
       UBspline_1d_d* rho_node_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_node_r.memptr());
       rho_node_r_splines(iParamSet,iSpline) = rho_node_r_spline;
     }
-
-    iParamSet++;
+    cout << "...param set " << iParamSet << " complete." << endl;
   }
 
   // Reset iParamSet
   SetParamSet(0);
 }
 
-double OptimizedNodal::GetGij(vec<double>& r, int sliceDiff)
+double OptimizedNodal::GetGij(const vec<double>& r, const int sliceDiff)
 {
   double gaussProd = 1.;
   double t_i4LambdaTau = Geti4LambdaTau(sliceDiff);
@@ -114,7 +113,7 @@ double OptimizedNodal::GetGij(vec<double>& r, int sliceDiff)
   return gaussProd;
 }
 
-double OptimizedNodal::Geti4LambdaTau(int sliceDiff)
+double OptimizedNodal::Geti4LambdaTau(const int sliceDiff)
 {
   double t_i4LambdaTau(i4LambdaTau);
   if (iModel == 0)

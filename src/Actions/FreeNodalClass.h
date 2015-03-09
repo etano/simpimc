@@ -14,7 +14,7 @@ private:
 
 protected:
   // Rho matrix
-  virtual double GetGij(vec<double> &r, int sliceDiff);
+  virtual double GetGij(const vec<double> &r, const int sliceDiff);
 
 public:
   // Constructor

@@ -16,7 +16,7 @@ protected:
 
   // Rho matrix
   field<double> rho_F, rho_F_c;
-  virtual double GetGij(vec<double> &r, int sliceDiff) = 0;
+  virtual double GetGij(const vec<double> &r, const int sliceDiff) = 0;
 
   // RNG
   RNG &rng;

@@ -73,8 +73,7 @@ void ContactDensity::Accumulate()
       vec<double> ri = path(particles[1].first,particles[1].second,iB)->r;
 
       // Get differences
-      vec<double> ri_RA(path.nD);
-      path.Dr(ri, RA, ri_RA);
+      vec<double> ri_RA(path.Dr(ri, RA));
       double mag_ri_RA = mag(ri_RA);
 
       // Compute functions

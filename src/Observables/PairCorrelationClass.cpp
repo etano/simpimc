@@ -48,13 +48,12 @@ void PairCorrelation::Reset()
 void PairCorrelation::Accumulate()
 {
   path.SetMode(1);
-  vec<double> dr(path.nD);
   // Homogeneous
   if (iSpeciesA == iSpeciesB) {
     for (int iB=0; iB<path.nBead; ++iB) {
       for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
         for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
-          path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB),dr);
+          vec<double> dr(path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB)));
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
             gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
@@ -66,7 +65,7 @@ void PairCorrelation::Accumulate()
     for (int iB=0; iB<path.nBead; ++iB) {
       for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
         for (int jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
-          path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB),dr);
+          vec<double> dr(path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB)));
           int i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
             gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;

@@ -60,11 +60,11 @@ double Nodal::GetAction(const int b0, const int b1, const vector< pair<int,int> 
   }
 
   // Compute action
-  vec<double> dr(path.nD);
   mat<double> g(nPart,nPart);
   double tot = 0.;
+  #pragma omp parallel for reduction(+:tot)
   for (int iB=startB; iB<=endB; iB+=skip) {
-    if (iB != path.refBead) {
+    if (iB != path.refBead && tot < 1.e100) {
       // Form rho_F
       int sliceDiff = path.beadLoop(iB) - path.refBead;
       int absSliceDiff = abs(sliceDiff);
@@ -73,18 +73,15 @@ double Nodal::GetAction(const int b0, const int b1, const vector< pair<int,int> 
 
       for (int iP=0; iP<nPart; ++iP) {
         for (int jP=0; jP<nPart; ++jP) {
-          path.Dr(refBeads[iP], otherBeads[jP], dr);
+          vec<double> dr(path.Dr(refBeads[iP], otherBeads[jP]));
           g(iP,jP) = GetGij(dr, minSliceDiff);
         }
       }
       rho_F(iB) = det(g);
 
       // Check sign
-      if (rho_F(iB) < 0.) {
-        return 1.e100;
-      } else {
-        tot += 0.;
-      }
+      if (rho_F(iB) < 0.)
+        tot += 1.e100;
     }
 
     // Move down the line

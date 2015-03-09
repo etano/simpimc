@@ -83,7 +83,7 @@ void FreeNodal::SetupSpline()
 }
 
 // Evaluate \rho_{ij}
-double FreeNodal::GetGij(vec<double>& r, int sliceDiff)
+double FreeNodal::GetGij(const vec<double>& r, const int sliceDiff)
 {
   double gaussProd = 1.;
   for (int iD=0; iD<path.nD; iD++) {

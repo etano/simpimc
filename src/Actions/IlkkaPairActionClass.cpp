@@ -294,6 +294,7 @@ double IlkkaPairAction::CalcULong(const int b0, const int b1, const int level)
   // Sum over k vectors
   int skip = 1<<level;
   double tot = 0.;
+  #pragma omp parallel for collapse(2) reduction(+:tot)
   for (int iK=0; iK<path.ks.size(); iK++) {
     for (int iB=b0; iB<b1; iB+=skip) {
       double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
