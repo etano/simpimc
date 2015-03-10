@@ -7,11 +7,9 @@ class Trap : public Action
 {
 private:
   int nImages;
-  int nOrder;
+  uint iSpecies, maxLevel;
   double omega;
   string species;
-  int iSpecies;
-  int maxLevel;
 protected:
 
 public:
@@ -25,7 +23,7 @@ public:
   // Functions
   virtual void Init(Input &in);
   virtual double DActionDBeta();
-  virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level);
+  virtual double GetAction(const uint b0, const uint b1, const vector< pair<uint,uint> > &particles, const uint level);
   virtual void Write();
 };
 

@@ -39,13 +39,13 @@ public:
 
   // Moves
   virtual void Init(Input &in) {};
-  virtual int Attempt() {};
+  virtual bool Attempt() {};
   virtual void Accept() {};
   virtual void Reject() {};
 
   // Acceptance
   bool firstTime;
-  unsigned int nAttempt, nAccept;
+  uint nAttempt, nAccept;
   virtual void Reset();
 
   // Write

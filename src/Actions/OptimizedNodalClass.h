@@ -12,13 +12,13 @@ private:
 protected:
   // Variational parameter sets
   vector< vector<double> > paramSets;
-  int iParamSet, iModel;
+  uint iParamSet, iModel;
 
   // Rho matrix
-  virtual double GetGij(const vec<double> &r, const int sliceDiff);
+  virtual double GetGij(const vec<double> &r, const uint sliceDiff);
 
   // 1/(4\lambda\tau)
-  virtual double Geti4LambdaTau(const int sliceDiff);
+  virtual double Geti4LambdaTau(const uint sliceDiff);
 
   // Splines
   field<UBspline_1d_d*> rho_node_r_splines;
@@ -35,9 +35,9 @@ public:
   // Functions
   virtual void Init(Input &in);
   virtual void Write();
-  int GetParamSet() { return iParamSet; };
-  int GetNumParamSets() { return paramSets.size(); };
-  void SetParamSet(int t_iParamSet) { iParamSet = t_iParamSet; };
+  uint GetParamSet() { return iParamSet; };
+  uint GetNumParamSets() { return paramSets.size(); };
+  void SetParamSet(uint t_iParamSet) { iParamSet = t_iParamSet; };
   void SetRandomParamSet() { SetParamSet(rng.unifRand(paramSets.size())-1); };
 
 };

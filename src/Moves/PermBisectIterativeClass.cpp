@@ -3,8 +3,8 @@
 void PermBisectIterative::Init(Input &in)
 {
   // Read in things
-  nLevel = in.getAttribute<int>("nLevel");
-  int maxPossibleLevel = floor(log2(path.nBead));
+  nLevel = in.getAttribute<uint>("nLevel");
+  uint maxPossibleLevel = floor(log2(path.nBead));
   if (nLevel > maxPossibleLevel)
     cout << "Warning: nLevel > maxPossibleLevel!" << endl;
   if (path.PBC)
@@ -16,7 +16,7 @@ void PermBisectIterative::Init(Input &in)
   logEpsilon = log(epsilon);
 
   // Adaptive bisection level
-  adaptive = in.getAttribute<int>("adaptive",0);
+  adaptive = in.getAttribute<bool>("adaptive",0);
   if (adaptive)
     targetRatio = in.getAttribute<double>("targetRatio");
 
@@ -54,7 +54,7 @@ void PermBisectIterative::Accept()
     path.sign *= -1;
 
   // Accept move, so store things
-  for (unsigned int iP=0; iP<nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
+  for (uint iP=0; iP<nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
     path(iSpecies,iP,bead1) -> storePrev();
     path(iSpecies,iP,bead1-1) -> storeNext();
   }
@@ -62,7 +62,7 @@ void PermBisectIterative::Accept()
     assignParticleLabels();
   path.storeR(affBeads);
   path.storeRhoKP(affBeads);
-  for (int iB=bead0; iB<bead1; ++iB)
+  for (uint iB=bead0; iB<bead1; ++iB)
     path.storeRhoK(iB,iSpecies);
 
   // Call reject for each action
@@ -77,13 +77,13 @@ void PermBisectIterative::Reject()
     permAttempt(nPermPart-1) += 1;
 
     // Restore things
-    for (unsigned int iP=0; iP<nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
+    for (uint iP=0; iP<nPart; iP++) { // todo: can make this more efficient by only restoring touched particles
       path(iSpecies,iP,bead1) -> restorePrev();
       path(iSpecies,iP,bead1-1) -> restoreNext();
     }
     path.restoreR(affBeads);
     path.restoreRhoKP(affBeads);
-    for (int iB=bead0; iB<bead1; ++iB)
+    for (uint iB=bead0; iB<bead1; ++iB)
       path.restoreRhoK(iB,iSpecies);
   }
 
@@ -112,7 +112,7 @@ void PermBisectIterative::Reset()
 }
 
 // Perform the permuting bisection
-int PermBisectIterative::Attempt()
+bool PermBisectIterative::Attempt()
 {
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   bead1 = bead0 + nBisectBeads; // Set last bead in bisection
@@ -131,16 +131,16 @@ int PermBisectIterative::Attempt()
   nPermPart = c.part.size();
 
   // Set up pointers
-  vector< pair<int,int> > particles;
+  vector< pair<uint,uint> > particles;
   field< std::shared_ptr<Bead> > beadI(nPermPart), beadFm1(nPermPart), beadF(nPermPart);
-  for (unsigned int i=0; i<nPermPart; i++) {
+  for (uint i=0; i<nPermPart; i++) {
     beadI(i) = path(iSpecies,c.part(i),bead0);
     beadFm1(i) = beadI(i)->nextB(nBisectBeads-1);
     beadF(i) = beadFm1(i)->next;
     particles.push_back(std::make_pair(iSpecies,c.part(i)));
   }
   if (rollOver) {
-    for (int i=0; i<nPermPart; ++i)
+    for (uint i=0; i<nPermPart; ++i)
       particles.push_back(std::make_pair(iSpecies,beadF(i)->p));
     sort(particles.begin(), particles.end());
     particles.erase(unique(particles.begin(), particles.end()), particles.end());
@@ -152,7 +152,7 @@ int PermBisectIterative::Attempt()
   // Note affected beads
   field< std::shared_ptr<Bead> > beadA(nPermPart);
   affBeads.clear();
-  for (unsigned int i=0; i<nPermPart; i++) {
+  for (uint i=0; i<nPermPart; i++) {
     for(beadA(i) = beadI(i)->next; beadA(i) != beadF(i); beadA(i) = beadA(i)->next)
       affBeads.push_back(beadA(i));
   }
@@ -166,7 +166,7 @@ int PermBisectIterative::Attempt()
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
 
     // Level specific quantities
-    int skip = 1<<iLevel;
+    uint skip = 1<<iLevel;
     double levelTau = path.tau*skip;
     double sigma2 = lambda*levelTau;
     double sigma = sqrt(sigma2);
@@ -174,7 +174,7 @@ int PermBisectIterative::Attempt()
     // Calculate sampling probability
     double oldLogSampleProb = 0.;
     double newLogSampleProb = 0.;
-    for (unsigned int i=0; i<nPermPart; i++) {
+    for (uint i=0; i<nPermPart; i++) {
       beadA(i) = beadI(i);
       while(beadA(i) != beadF(i)) {
         // Old sampling
@@ -197,7 +197,7 @@ int PermBisectIterative::Attempt()
         // Get sampling probs
         gaussProdOld = 1.;
         gaussProdNew = 1.;
-        for (int iD=0; iD<path.nD; iD++) {
+        for (uint iD=0; iD<path.nD; iD++) {
           gaussSumOld = 0.;
           gaussSumNew = 0.;
           for (int image=-nImages; image<=nImages; image++) {
@@ -252,15 +252,15 @@ void PermBisectIterative::updatePermTable()
 {
   // Set initial and final beads
   field< std::shared_ptr<Bead> > b0(nPart), b1(nPart);
-  for (unsigned int iP=0; iP<nPart; iP++) {
+  for (uint iP=0; iP<nPart; iP++) {
     b0(iP) = path(iSpecies,iP,bead0);
     b1(iP) = b0(iP) -> nextB(nBisectBeads);
   }
 
   // Construct t table
   #pragma omp parallel for collapse(2)
-  for (unsigned int i=0; i<nPart; i++) {
-    for (unsigned int j=0; j<nPart; j++) {
+  for (uint i=0; i<nPart; i++) {
+    for (uint j=0; j<nPart; j++) {
       vec<double> dr_ij(path.Dr(b0(i), b1(j)));
       double exponent = (-dot(dr_ij,dr_ij))*i4LambdaTauNBisectBeads;
       if (exponent > logEpsilon)
@@ -272,22 +272,22 @@ void PermBisectIterative::updatePermTable()
 
 }
 
-int PermBisectIterative::selectCycleIterative(Cycle& c)
+bool PermBisectIterative::selectCycleIterative(Cycle& c)
 {
   // Update t
   updatePermTable();
   mat<double> t_c = t;
 
   // Choose particles
-  int p0 = rng.unifRand(nPart) - 1;  // Pick first particle at random
-  int p = p0;
-  vector<int> ps;
+  uint p0 = rng.unifRand(nPart) - 1;  // Pick first particle at random
+  uint p = p0;
+  vector<uint> ps;
   do {
     // Add particle to ps
     ps.push_back(p);
 
     // Make sure returning to previous particles is not an option
-    for (int i=0; i<ps.size(); ++i)
+    for (uint i=0; i<ps.size(); ++i)
       t_c(p,ps[i]) = 0.;
 
     // Allow cycle to close
@@ -301,7 +301,7 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
     // Calculate row total
     double Q_p = 0.;
     double Q_p_c = 0.;
-    for (int i=0; i<nPart; ++i) {
+    for (uint i=0; i<nPart; ++i) {
       Q_p += t(p,i);
       Q_p_c += t_c(p,i);
     }
@@ -313,7 +313,7 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
     // Select next particle with bisective search
     double x = rng.unifRand();
     double t_Q = 0.;
-    for (int i=0; i<nPart; ++i) { // fixme: not doing bisection
+    for (uint i=0; i<nPart; ++i) { // fixme: not doing bisection
       t_Q += t_c(p,i)/Q_p_c;
       if (t_Q > x) {
         p = i;
@@ -325,24 +325,24 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
 
   // Set weight
   c.weight = 1.;
-  int nPerm = ps.size();
-  for (int i=0; i<nPerm-1; ++i)
+  uint nPerm = ps.size();
+  for (uint i=0; i<nPerm-1; ++i)
     c.weight *= t(ps[i],ps[i+1])/t(ps[i],ps[i]);
   c.weight *= t(ps[nPerm-1],ps[0])/t(ps[nPerm-1],ps[nPerm-1]);
 
   // Set particles
   c.part.set_size(nPerm);
-  for (int i=0; i<nPerm; ++i)
+  for (uint i=0; i<nPerm; ++i)
     c.part(i) = ps[i];
 
   // Set perms
   c.perm.set_size(nPerm);
-  for (int i=0; i<nPerm-1; ++i)
+  for (uint i=0; i<nPerm-1; ++i)
     c.perm(i) = i+1;
   c.perm(nPerm-1) = 0;
   c.iPerm.set_size(nPerm);
   c.iPerm(0) = nPerm-1;
-  for (int i=1; i<nPerm; ++i)
+  for (uint i=1; i<nPerm; ++i)
     c.iPerm(i) = i-1;
 
 
@@ -350,15 +350,15 @@ int PermBisectIterative::selectCycleIterative(Cycle& c)
 }
 
 // Permute paths between b0 and b1 given cycle
-void PermBisectIterative::permuteBeads(field< std::shared_ptr<Bead> > &b0, field< std::shared_ptr<Bead> > &b1, Cycle& c)
+void PermBisectIterative::permuteBeads(field<std::shared_ptr<Bead> >& b0, field<std::shared_ptr<Bead> >& b1, const Cycle& c)
 {
   // Execute the permutation
-  int nPerm = c.part.size();
-  for (unsigned int i=0; i<nPerm; i++)
+  uint nPerm = c.part.size();
+  for (uint i=0; i<nPerm; i++)
     b0(i)->next = b1(c.perm(i));
-  for (unsigned int i=0; i<nPerm; i++)
+  for (uint i=0; i<nPerm; i++)
     b1(i)->prev = b0(c.iPerm(i));
-  for (unsigned int i=0; i<nPerm; i++)
+  for (uint i=0; i<nPerm; i++)
     b1(i) = b0(i)->next;
 
   return;
@@ -367,17 +367,17 @@ void PermBisectIterative::permuteBeads(field< std::shared_ptr<Bead> > &b0, field
 // Reassign particle labels
 void PermBisectIterative::assignParticleLabels()
 {
-  for (unsigned int iP=0; iP<nPart; iP++) {
+  for (uint iP=0; iP<nPart; iP++) {
     std::shared_ptr<Bead> b(path(iSpecies,iP,bead1-1));
-    for (unsigned int iB=path.beadLoop(bead1-1); iB<path.nBead; iB++) {
+    for (uint iB=path.beadLoop(bead1-1); iB<path.nBead; iB++) {
       path.speciesList[iSpecies]->bead(iP,iB) = b;
       path(iSpecies,iP,iB)->p = iP;
       b = b->next;
     }
   }
 
-  //for (unsigned int iP=0; iP<nPart; iP++) {
-  //  for (unsigned int iB=0; iB<path.nBead; iB++) {
+  //for (uint iP=0; iP<nPart; iP++) {
+  //  for (uint iB=0; iB<path.nBead; iB++) {
   //    cout << iP << " " << iB << "   " << path(iSpecies,iP,iB)->prev->p << " " << path(iSpecies,iP,iB)->p << " " << path(iSpecies,iP,iB)->next->p << "   " << path(iSpecies,iP,iB)->prev->b << " " << path(iSpecies,iP,iB)->b << " " << path(iSpecies,iP,iB)->next->b << endl;
   //  }
   //}

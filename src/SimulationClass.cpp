@@ -6,14 +6,14 @@ void Simulation::SetupSimulation(string inFile)
   in.load(inFile);
 
   // Build MPI Model
-  procsPerGroup = in.getChild("Parallel").getAttribute<int>("procsPerGroup",1);
-  int N = WorldComm.NumProcs();
+  procsPerGroup = in.getChild("Parallel").getAttribute<uint>("procsPerGroup",1);
+  uint N = WorldComm.NumProcs();
   assert ((N % procsPerGroup) == 0);
-  int nGroups = N/procsPerGroup;
-  int myGroup = WorldComm.MyProc()/procsPerGroup;
+  uint nGroups = N/procsPerGroup;
+  uint myGroup = WorldComm.MyProc()/procsPerGroup;
   WorldComm.Split(myGroup, IntraComm);
   vec<int> ranks(nGroups);
-  for (int group=0; group<nGroups; group++)
+  for (uint group=0; group<nGroups; group++)
     ranks(group) = group*procsPerGroup;
   WorldComm.Subset(ranks, InterComm);
   int nThreads = 1;

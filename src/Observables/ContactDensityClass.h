@@ -9,12 +9,12 @@ class ContactDensity : public Observable
 private:
   std::vector< std::shared_ptr<Action> > actionList, &fullActionList;
   string speciesA, speciesB;
-  int iSpeciesA, iSpeciesB;
-  int ZA;
+  uint iSpeciesA, iSpeciesB;
+  uint ZA;
   double total;
 protected:
 public:
-  ContactDensity(Path &tmpPath, std::vector< std::shared_ptr<Action> > &tmpActionList, Input &in, IOClass &out)
+  ContactDensity(Path &tmpPath, std::vector<std::shared_ptr<Action> >& tmpActionList, Input &in, IOClass &out)
     : fullActionList(tmpActionList), Observable(tmpPath, in, out)
   {
     Init(in);

@@ -7,15 +7,15 @@ struct Bead
 {
 public:
   Bead();
-  Bead(unsigned int tmpND, int tmpS, unsigned int tmpP, unsigned int tmpB)
-    : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), r(tmpND), rC(tmpND), isIra(0), isMasha(0)
+  Bead(uint tmpND, uint tmpS, uint tmpP, uint tmpB)
+    : nD(tmpND), s(tmpS), p(tmpP), b(tmpB), r(tmpND), rC(tmpND), isIra(false), isMasha(false)
   {}
 
-  unsigned int p, b, s, nD;
+  uint p, b, s, nD;
   bool isIra, isMasha; // head and tail (respectively)
   double nDist, nDistC;
   vec<double> r, rC;
-  vec< complex<double> > rhoK, rhoKC;
+  vec<complex<double> > rhoK, rhoKC;
   std::shared_ptr<Bead> next, nextC, prev, prevC;
 
   inline void storeR() { rC = r; };
@@ -28,7 +28,7 @@ public:
   inline void restoreNext() { next = nextC; };
   inline void storeNodeDistance() { nDistC = nDist; };
   inline void restoreNodeDistance() { nDist = nDistC; };
-  inline void move( vec<double>& dr ) { r += dr; };
+  inline void move(const vec<double>& dr) { r += dr; };
 
   inline void store()
   {
@@ -58,31 +58,31 @@ public:
     prev = prevC;
   }
 
-  std::shared_ptr<Bead> nextB(unsigned int const n)
+  std::shared_ptr<Bead> nextB(const uint n)
   {
     std::shared_ptr<Bead> bead(next);
-    for (unsigned int i=1; i<n; i++) bead = bead -> next;
+    for (uint i=1; i<n; i++) bead = bead -> next;
     return bead;
   }
 
-  std::shared_ptr<Bead> nextBC(unsigned int const n)
+  std::shared_ptr<Bead> nextBC(const uint n)
   {
     std::shared_ptr<Bead> bead(nextC);
-    for (unsigned int i=1; i<n; i++) bead = bead -> nextC;
+    for (uint i=1; i<n; i++) bead = bead -> nextC;
     return bead;
   }
 
-  std::shared_ptr<Bead> prevB(unsigned int const n)
+  std::shared_ptr<Bead> prevB(const uint n)
   {
     std::shared_ptr<Bead> bead(prev);
-    for (unsigned int i=1; i<n; i++) bead = bead -> prev;
+    for (uint i=1; i<n; i++) bead = bead -> prev;
     return bead;
   }
 
-  std::shared_ptr<Bead> prevBC(unsigned int const n)
+  std::shared_ptr<Bead> prevBC(const uint n)
   {
     std::shared_ptr<Bead> bead(prevC);
-    for (unsigned int i=1; i<n; i++) bead = bead -> prevC;
+    for (uint i=1; i<n; i++) bead = bead -> prevC;
     return bead;
   }
 

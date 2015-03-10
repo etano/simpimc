@@ -8,9 +8,10 @@
 class Kinetic : public Action
 {
 private:
-  int nImages, maxLevel;
+  int nImages;
+  uint maxLevel;
   string species;
-  int iSpecies, nPart;
+  uint iSpecies, nPart;
   double i4LambdaTau;
 
   // Splines
@@ -19,8 +20,8 @@ private:
   void SetupSpline();
 
   // Sums over images
-  double GetGaussSum(const double &r, const int sliceDiff);
-  double GetNumSum(const double &r);
+  double GetGaussSum(const double r, const double r2i4LambdaTau, const uint sliceDiff);
+  double GetNumSum(const double r, const double r2i4LambdaTau);
 
 protected:
 
@@ -35,9 +36,9 @@ public:
   // Functions
   virtual void Init(Input &in);
   virtual double DActionDBeta();
-  virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level);
-  virtual vec<double> GetActionGradient(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level);
-  virtual double GetActionLaplacian(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level);
+  virtual double GetAction(const uint b0, const uint b1, const vector<pair<uint,uint> >& particles, const uint level);
+  virtual vec<double> GetActionGradient(const uint b0, const uint b1, const vector<pair<uint,uint> >& particles, const uint level);
+  virtual double GetActionLaplacian(const uint b0, const uint b1, const vector<pair<uint,uint> >& particles, const uint level);
   virtual void Write();
 };
 

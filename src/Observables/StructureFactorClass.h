@@ -7,7 +7,7 @@ class StructureFactor : public Observable
 {
 private:
   string speciesA, speciesB;
-  int iSpeciesA, iSpeciesB;
+  uint iSpeciesA, iSpeciesB;
   vec<double> sk;
   double kCut;
 protected:

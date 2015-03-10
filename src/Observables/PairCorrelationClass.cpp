@@ -11,13 +11,13 @@ void PairCorrelation::Init(Input &in)
   // Read in grid info
   double rMin = in.getAttribute<double>("rMin",0.);
   double rMax = in.getAttribute<double>("rMax",path.L/2.);
-  int nR = in.getAttribute<double>("nR",1000);
+  uint nR = in.getAttribute<double>("nR",1000);
   gr.x.CreateGrid(rMin,rMax,nR);
   gr.y.zeros(nR);
 
   // Compute rs
   vec<double> rs(gr.x.nR-1);
-  for (int i=0; i<gr.x.nR-1; i++) {
+  for (uint i=0; i<gr.x.nR-1; i++) {
     double r1 = gr.x(i);
     double r2 = gr.x(i+1);
     if (path.nD == 3)
@@ -50,11 +50,11 @@ void PairCorrelation::Accumulate()
   path.SetMode(1);
   // Homogeneous
   if (iSpeciesA == iSpeciesB) {
-    for (int iB=0; iB<path.nBead; ++iB) {
-      for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
-        for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
+    for (uint iB=0; iB<path.nBead; ++iB) {
+      for (uint iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
+        for (uint jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
           vec<double> dr(path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB)));
-          int i = gr.x.ReverseMap(mag(dr));
+          uint i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
             gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
         }
@@ -62,11 +62,11 @@ void PairCorrelation::Accumulate()
     }
   // Homologous
   } else {
-    for (int iB=0; iB<path.nBead; ++iB) {
-      for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
-        for (int jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
+    for (uint iB=0; iB<path.nBead; ++iB) {
+      for (uint iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
+        for (uint jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
           vec<double> dr(path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB)));
-          int i = gr.x.ReverseMap(mag(dr));
+          uint i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.nR)
             gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
         }
@@ -81,15 +81,15 @@ void PairCorrelation::Write()
 {
   if (nMeasure > 0) {
     // Normalize histograms
-    int NA = path.speciesList[iSpeciesA]->nPart;
-    int NB = path.speciesList[iSpeciesB]->nPart;
+    uint NA = path.speciesList[iSpeciesA]->nPart;
+    uint NB = path.speciesList[iSpeciesB]->nPart;
     double vol = path.vol;
     double norm;
     if (iSpeciesA == iSpeciesB)
       norm = 0.5*nMeasure*NA*(NA-1.)*path.nBead/vol;
     else
       norm = nMeasure*NA*NB*path.nBead/vol;
-    for (int i=0; i<gr.x.nR; i++) {
+    for (uint i=0; i<gr.x.nR; i++) {
       double r1 = gr.x(i);
       double r2 = (i<(gr.x.nR-1)) ? gr.x(i+1):(2.*gr.x(i)-gr.x(i-1));
       double r = 0.5*(r1+r2);

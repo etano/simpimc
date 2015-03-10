@@ -7,20 +7,19 @@ class ShiftRefSlice : public Move
 {
 private:
   string species;
-  int iSpecies;
-  int refBead0, refBead1;
+  uint iSpecies, refBead0, refBead1;
 protected:
 
 public:
   // Constructor
-  ShiftRefSlice(Path &tmpPath, RNG &tmpRNG, std::vector< std::shared_ptr<Action> > &actionList, Input &in, IOClass &out)
+  ShiftRefSlice(Path &tmpPath, RNG &tmpRNG, std::vector<std::shared_ptr<Action> > &actionList, Input &in, IOClass &out)
     : Move(tmpPath, tmpRNG, actionList, in, out)
   {
     Init(in);
   }
 
   virtual void Init(Input &in);
-  virtual int Attempt();
+  virtual bool Attempt();
   virtual void Accept();
   virtual void Reject();
 

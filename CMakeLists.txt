@@ -12,7 +12,7 @@ SET(PRECISION double) #double float
 SET(USE_MPI TRUE)
 SET(USE_OPENMP TRUE)
 SET(BUILD_STATIC FALSE)
-SET(COMPILER_MAKE "INTEL") # INTEL, GNU, or CLANG
+SET(COMPILER_MAKE "GNU") # INTEL, GNU, or CLANG
 SET(SCAFFOLD_MATRIX_LIBRARY "ARMADILLO") # ARMADILLO or EIGEN
 SET(OPTIMIZE TRUE)
 SET(DEBUG TRUE)
@@ -132,7 +132,6 @@ SET (SRCS ${SRCS} src/main.cpp
   src/SimulationClass.cpp
   src/SpeciesClass.cpp
   src/WriteClass.cpp
-  src/Actions/ActionClass.cpp
   src/Actions/KineticClass.cpp
   src/Actions/PairActionClass.cpp
   src/Actions/NodalClass.cpp
@@ -150,7 +149,6 @@ SET (SRCS ${SRCS} src/main.cpp
   src/Moves/PermBisectIterativeClass.cpp
   src/Moves/ShiftRefSliceClass.cpp
   src/Moves/VaryOptimizedNodalClass.cpp
-  src/Observables/ObservableClass.cpp
   src/Observables/ContactDensityClass.cpp
   src/Observables/EnergyClass.cpp
   src/Observables/ImportanceWeightClass.cpp

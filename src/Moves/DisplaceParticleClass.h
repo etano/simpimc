@@ -7,7 +7,7 @@ class DisplaceParticle : public Move
 {
 private:
   string species;
-  int iSpecies;
+  uint iSpecies;
   vector< std::shared_ptr<Bead> > affBeads;
   double stepSize;
 protected:
@@ -21,7 +21,7 @@ public:
   }
 
   virtual void Init(Input &in);
-  virtual int Attempt();
+  virtual bool Attempt();
   virtual void Accept();
   virtual void Reject();
 

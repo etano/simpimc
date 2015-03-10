@@ -2,12 +2,12 @@
 
 void Energy::Init(Input &in)
 {
-  measureV = in.getAttribute<int>("measureV",0);
+  measureV = in.getAttribute<uint>("measureV",0);
 
   // Initialize permutation sector things if tracking them
-  measurePerSector = in.getAttribute<int>("measurePerSector",0);
+  measurePerSector = in.getAttribute<uint>("measurePerSector",0);
   if (measurePerSector) {
-    int sectorMax = in.getAttribute<int>("sectorMax",0);
+    uint sectorMax = in.getAttribute<uint>("sectorMax",0);
     string species = in.getAttribute<string>("species");
 
     // Set up permutation sectors
@@ -16,19 +16,19 @@ void Energy::Init(Input &in)
     firstSector = true;
 
     // Write out possible sectors
-    mat<int> tmpPerms;
+    mat<uint> tmpPerms;
     tmpPerms.zeros(path.speciesList[iSpecies]->nPart,path.possPerms.size());
-    map<vector<int>,int>::iterator tmpIt;
+    map<vector<uint>,uint>::iterator tmpIt;
     for(tmpIt = path.possPerms.begin(); tmpIt != path.possPerms.end(); tmpIt++) {
-      vector<int> tmpPerm = (*tmpIt).first;
-      for (int j=0; j<tmpPerm.size(); ++j)
+      vector<uint> tmpPerm = (*tmpIt).first;
+      for (uint j=0; j<tmpPerm.size(); ++j)
         tmpPerms(tmpPerm[j]-1,(*tmpIt).second)++;
     }
     out.CreateGroup(prefix+"sectors");
     string data_type = "avg_pairs";
     out.Write(prefix+"sectors/data_type",data_type);
-    vec<int> tmpPermIndices(path.possPerms.size());
-    for (int i=0; i<path.possPerms.size(); ++i)
+    vec<uint> tmpPermIndices(path.possPerms.size());
+    for (uint i=0; i<path.possPerms.size(); ++i)
       tmpPermIndices(i) = i;
     out.Write(prefix+"sectors/x", tmpPermIndices);
     out.Write(prefix+"sectors/possPerms", tmpPerms);
@@ -55,7 +55,7 @@ void Energy::Accumulate()
   // Measure energy
   path.SetMode(1);
   double totE = 0.;
-  for (int i=0; i<actionList.size(); ++i) {
+  for (uint i=0; i<actionList.size(); ++i) {
     if (!actionList[i]->isImportanceWeight) {
       double actionE = path.sign*path.importance_weight*actionList[i]->DActionDBeta();
       Es(i) += actionE;
@@ -67,10 +67,10 @@ void Energy::Accumulate()
 
   // Store sector with total energy
   if (measurePerSector) {
-    vector<int> cycle;
+    vector<uint> cycle;
     path.SetCycleCount(iSpecies, cycle);
-    int sector = path.GetPermSector(iSpecies, cycle);
-    std::pair<int,double> sectorE(sector,path.sign*totE/path.nBead);
+    uint sector = path.GetPermSector(iSpecies, cycle);
+    std::pair<uint,double> sectorE(sector,path.sign*totE/path.nBead);
     sectorEs.push_back(sectorE);
   }
 
@@ -90,14 +90,14 @@ void Energy::Write()
       out.CreateExtendableDataSet("/"+prefix+"Total/", "x", E);
       string data_type = "scalar";
       out.Write(prefix+"Total/data_type",data_type);
-      for (int i=0; i<actionList.size(); ++i) {
+      for (uint i=0; i<actionList.size(); ++i) {
         out.CreateGroup(prefix+actionList[i]->name);
         out.CreateExtendableDataSet("/"+prefix+actionList[i]->name+"/", "x", Es(i));
         out.Write(prefix+actionList[i]->name+"/data_type", data_type);
       }
     } else {
       out.AppendDataSet("/"+prefix+"Total/", "x", E);
-      for (int i=0; i<actionList.size(); ++i)
+      for (uint i=0; i<actionList.size(); ++i)
         out.AppendDataSet("/"+prefix+actionList[i]->name+"/", "x", Es(i));
     }
 
@@ -110,14 +110,14 @@ void Energy::Write()
         out.CreateExtendableDataSet("/"+prefix+"VTotal/", "x", V);
         string data_type = "scalar";
         out.Write(prefix+"VTotal/data_type",data_type);
-        for (int i=0; i<actionList.size(); ++i) {
+        for (uint i=0; i<actionList.size(); ++i) {
           out.CreateGroup(prefix+"V"+actionList[i]->name);
           out.CreateExtendableDataSet("/"+prefix+"V"+actionList[i]->name+"/", "x", Vs(i));
           out.Write(prefix+"V"+actionList[i]->name+"/data_type", data_type);
         }
       } else {
         out.AppendDataSet("/"+prefix+"VTotal/", "x", V);
-        for (int i=0; i<actionList.size(); ++i)
+        for (uint i=0; i<actionList.size(); ++i)
           out.AppendDataSet("/"+prefix+"V"+actionList[i]->name+"/", "x", Vs(i));
       }
     }
@@ -125,14 +125,14 @@ void Energy::Write()
     // Write sector Es
     if (measurePerSector) {
       // Map out the sectors vector
-      std::map<int,std::vector<double> > sectorMap;
-      for (int i=0; i<nMeasure; i++) {
-        std::pair<int,double> sectorE = sectorEs.back();
-        int sector = sectorE.first;
+      std::map<uint,std::vector<double> > sectorMap;
+      for (uint i=0; i<nMeasure; i++) {
+        std::pair<uint,double> sectorE = sectorEs.back();
+        uint sector = sectorE.first;
         double energy = sectorE.second;
         if (sectorMap.find(sector) == sectorMap.end()) {
           std::vector<double> sectorInfo = {energy,0.,1};
-          sectorMap.insert(std::pair<int,std::vector<double> >(sector, sectorInfo));
+          sectorMap.insert(std::pair<uint,std::vector<double> >(sector, sectorInfo));
         } else {
           double E0 = sectorMap[sector][0];
           double var0 = sectorMap[sector][1];
@@ -148,7 +148,7 @@ void Energy::Write()
       }
 
       // Put the map into an array and write
-      map<int,int>::iterator it;
+      map<uint,uint>::iterator it;
       for(auto& sectorInfo: sectorMap) {
         vec<double> sectorInfoVec(4);
         sectorInfoVec(0) = sectorInfo.first;

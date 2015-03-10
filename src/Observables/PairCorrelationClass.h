@@ -7,7 +7,7 @@ class PairCorrelation : public Observable
 {
 private:
   string speciesA, speciesB;
-  int iSpeciesA, iSpeciesB;
+  uint iSpeciesA, iSpeciesB;
   Histogram gr;
 protected:
 public:

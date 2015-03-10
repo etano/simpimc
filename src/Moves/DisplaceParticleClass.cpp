@@ -18,7 +18,7 @@ void DisplaceParticle::Accept()
   // Move Accepted, so copy new coordinates
   path.storeR(affBeads);
   path.storeRhoKP(affBeads);
-  for (int iB=0; iB<path.nBead; ++iB)
+  for (uint iB=0; iB<path.nBead; ++iB)
     path.storeRhoK(iB,iSpecies);
 
   // Call accept for each action
@@ -32,7 +32,7 @@ void DisplaceParticle::Reject()
   // Move rejected, so return old coordinates
   path.restoreR(affBeads);
   path.restoreRhoKP(affBeads);
-  for (int iB=0; iB<path.nBead; ++iB)
+  for (uint iB=0; iB<path.nBead; ++iB)
     path.restoreRhoK(iB,iSpecies);
 
   // Call reject for each action
@@ -41,12 +41,12 @@ void DisplaceParticle::Reject()
 }
 
 // Displace particle Move
-int DisplaceParticle::Attempt()
+bool DisplaceParticle::Attempt()
 {
   // Set which particles are affected by the move
-  unsigned int iP = rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
-  vector< pair<int,int> > particles;
-  pair<int,int> particle(iSpecies,iP);
+  uint iP = rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
+  vector< pair<uint,uint> > particles;
+  pair<uint,uint> particle(iSpecies,iP);
   particles.push_back(particle);
 
   // New sampling
@@ -57,7 +57,7 @@ int DisplaceParticle::Attempt()
   // Set which beads are affected by the move
   // and move them
   affBeads.clear();
-  for(unsigned int iB=0; iB<path.nBead; ++iB) {
+  for(uint iB=0; iB<path.nBead; ++iB) {
     affBeads.push_back(path(iSpecies,iP,iB));
     path(iSpecies,iP,iB)->move(dr);
   }

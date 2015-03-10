@@ -22,17 +22,16 @@ public:
   void InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& InterComm, int L);
 
   // Beads
-  field< std::shared_ptr<Bead> > bead;
+  field<std::shared_ptr<Bead> > bead;
   string initType;
 
   // Given Global Constants
-  unsigned int nPart, nD, nBead, iS;
+  uint nPart, nD, nBead, iS;
   string name;
   double lambda;
 
   // Fermions
-  bool fermi;
-  bool fixedNode;
+  bool fermi, fixedNode;
 
   // Rho_k
   bool needUpdateRhoK;

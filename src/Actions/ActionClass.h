@@ -33,9 +33,9 @@ public:
   // Functions
   virtual void Init(Input &in) {};
   virtual double DActionDBeta() { return 0.; };
-  virtual double GetAction(const int b0, const int b1, const vector< pair<int,int> >& particles, const int level) { return 0.; };
-  virtual vec<double> GetActionGradient(const int b0, const int b1, const vector< pair<int,int> >& particles, const int level) { vec<double> zero_vec; zero_vec.zeros(path.nD); return zero_vec; };
-  virtual double GetActionLaplacian(const int b0, const int b1, const vector< pair<int,int> >& particles, const int level) { return 0.; };
+  virtual double GetAction(const uint b0, const uint b1, const vector<pair<uint,uint> >& particles, const uint level) { return 0.; };
+  virtual vec<double> GetActionGradient(const uint b0, const uint b1, const vector<pair<uint,uint> >& particles, const uint level) { vec<double> zero_vec; zero_vec.zeros(path.nD); return zero_vec; };
+  virtual double GetActionLaplacian(const uint b0, const uint b1, const vector<pair<uint,uint> >& particles, const uint level) { return 0.; };
   virtual double Potential() { return 0.; };
   virtual double ImportanceWeight() { return 0; };
   virtual void Write() {};
@@ -44,9 +44,9 @@ public:
   void DoEvent() {};
 
   // FIXME: This only pertains to optimized nodes, but had to put it here for the associated move.
-  virtual int GetParamSet() {};
-  virtual int GetNumParamSets() {};
-  virtual void SetParamSet(int t_iParamSet) {};
+  virtual uint GetParamSet() {};
+  virtual uint GetNumParamSets() {};
+  virtual void SetParamSet(uint t_iParamSet) {};
   virtual void SetRandomParamSet() {};
 
 };

@@ -10,7 +10,7 @@ void BarePairAction::ReadFile(string fileName)
   in.load(fileName);
 
     // Read in v
-  int nr_v;
+  uint nr_v;
   in.Read("v/diag/nr", nr_v);
   vec<double> r_v(nr_v);
   vec<double> v_r(nr_v);
@@ -26,7 +26,7 @@ void BarePairAction::ReadFile(string fileName)
   // v long range
   if (useLongRange) {
     // Read in r
-    int nr_vLong;
+    uint nr_vLong;
     in.Read("v/diag/nrLong", nr_vLong);
     vec<double> r_vLong(nr_vLong);
     vec<double> vLong_r(nr_vLong);
@@ -41,7 +41,7 @@ void BarePairAction::ReadFile(string fileName)
     vLong_r_spline = create_NUBspline_1d_d(r_vLong_grid, xBC, vLong_r.memptr());
 
     // Read in k
-    int nk_v;
+    uint nk_v;
     in.Read("v/diag/nk", nk_v);
     vec<double> k_v(nk_v);
     vec<double> tmpVLong_k(nk_v);
@@ -51,8 +51,8 @@ void BarePairAction::ReadFile(string fileName)
 
     // Build k vectors
     vLong_k.zeros(path.magKs.size());
-    for (int iK=0; iK<path.magKs.size(); ++iK) {
-      for (int iK_v=0; iK_v<k_v.size(); ++iK_v) {
+    for (uint iK=0; iK<path.magKs.size(); ++iK) {
+      for (uint iK_v=0; iK_v<k_v.size(); ++iK_v) {
         if (fequal(path.magKs[iK],k_v(iK_v),1.e-8))
           vLong_k(iK) = tmpVLong_k(iK_v);
       }
@@ -60,8 +60,8 @@ void BarePairAction::ReadFile(string fileName)
   }
 
   // Calculate constants
-  int N1 = path.speciesList[iSpeciesA]->nPart;
-  int N2 = path.speciesList[iSpeciesB]->nPart;
+  uint N1 = path.speciesList[iSpeciesA]->nPart;
+  uint N2 = path.speciesList[iSpeciesB]->nPart;
   if (iSpeciesA == iSpeciesB) { // homologous
     vLong_k0 *= 0.5*N1*N1*path.nBead;
     vLong_r0 *= -0.5*N1*path.nBead;
@@ -73,7 +73,7 @@ void BarePairAction::ReadFile(string fileName)
 }
 
 /// Calculate the V(r,r') value when given r and r' and the level 
-double BarePairAction::CalcV(double &r, double &rP, const int level)
+double BarePairAction::CalcV(double r, double rP, const uint level)
 {
   // Limits
   SetLimits(r_v_min, r_v_max, r, rP);
@@ -97,15 +97,15 @@ double BarePairAction::CalcV(double &r, double &rP, const int level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-double BarePairAction::CalcU(double &r, double &rP, double &s, const int level)
+double BarePairAction::CalcU(double r, double rP, double s, const uint level)
 {
-  int skip = 1>>level;
+  uint skip = 1>>level;
   double levelTau = skip*path.tau;
   return levelTau*CalcV(r,rP,level);
 }
 
 /// Calculate the dU(r,r') value when given r and r' and the level 
-double BarePairAction::CalcdUdBeta(double &r, double &rP, double &s, const int level)
+double BarePairAction::CalcdUdBeta(double r, double rP, double s, const uint level)
 {
   return CalcV(r,rP,level);
 }
@@ -118,9 +118,9 @@ double BarePairAction::CalcVLong()
 
   // Sum over k vectors
   double tot = 0.;
-  for (int iK=0; iK<path.ks.size(); iK++) {
+  for (uint iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
-      for (int iB=0; iB<path.nBead; iB++) {
+      for (uint iB=0; iB<path.nBead; iB++) {
         double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += rhok2*vLong_k(iK);
       }
@@ -134,17 +134,17 @@ double BarePairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-double BarePairAction::CalcULong(const int b0, const int b1, const int level)
+double BarePairAction::CalcULong(const uint b0, const uint b1, const uint level)
 {
   // Get rho k
   field< vec< complex<double> > >& rhoK(path.GetRhoK());
 
   // Sum over k vectors
-  int skip = 1<<level;
+  uint skip = 1<<level;
   double tot = 0.;
-  for (int iK=0; iK<path.ks.size(); iK++) {
+  for (uint iK=0; iK<path.ks.size(); iK++) {
     if (path.magKs[iK] < kCut) {
-      for (int iB=b0; iB<b1; iB+=skip) {
+      for (uint iB=b0; iB<b1; iB+=skip) {
         double rhok2 = cmag2(rhoK(path.beadLoop(iB),iSpeciesA)(iK),rhoK(path.beadLoop(iB),iSpeciesB)(iK));
         tot += vLong_k(iK)*rhok2;
       }

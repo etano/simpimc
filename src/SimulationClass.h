@@ -19,7 +19,7 @@ public:
   CommunicatorClass WorldComm; // This is the global MPIWORLD communicator.
   CommunicatorClass InterComm; // This is for communication between the rank 0 procs of each walker group.
   CommunicatorClass IntraComm; // This is for commmunication between procs within a walker group.
-  int procsPerGroup;
+  uint procsPerGroup;
 
   void SetupSimulation(string inFile);
   void Run();

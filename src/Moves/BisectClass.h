@@ -9,9 +9,10 @@ private:
   string species;
   bool rollOver, adaptive;
   double targetRatio;
-  int iSpecies, nImages;
-  unsigned int nLevel, nBisectBeads;
-  unsigned int bead0, bead1;
+  int nImages;
+  uint iSpecies;
+  uint nLevel, nBisectBeads;
+  uint bead0, bead1;
   double i4LambdaTauNBisectBeads, lambda;
   int refAccept, refAttempt;
 
@@ -27,7 +28,7 @@ public:
   }
 
   virtual void Init(Input &in);
-  virtual int Attempt();
+  virtual bool Attempt();
   virtual void Accept();
   virtual void Reject();
   virtual void Reset();

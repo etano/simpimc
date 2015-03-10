@@ -7,9 +7,9 @@ class Permutation : public Observable
 {
 private:
   vec<double> cycles;
-  vector<int> sectors;
+  vector<uint> sectors;
   string species;
-  int iSpecies;
+  uint iSpecies;
   bool firstSector;
 protected:
 public:

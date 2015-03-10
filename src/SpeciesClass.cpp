@@ -4,10 +4,10 @@ void Species::Init(Input &in, IOClass &out)
 {
   // Read inputs
   name = in.getAttribute<string>("name");
-  nPart = in.getAttribute<int>("nPart");
+  nPart = in.getAttribute<uint>("nPart");
   lambda = in.getAttribute<double>("lambda");
-  fermi = in.getAttribute<int>("fermi", 0);
-  fixedNode = in.getAttribute<int>("fixedNode", 0);
+  fermi = in.getAttribute<bool>("fermi", false);
+  fixedNode = in.getAttribute<bool>("fixedNode", false);
   initType = in.getAttribute<string>("initType","Random");
 
   // Write to file
@@ -23,17 +23,17 @@ void Species::Init(Input &in, IOClass &out)
 
   // Initiate beads
   bead.set_size(nPart,nBead);
-  for (unsigned int iP=0; iP<nPart; iP++)
-    for (unsigned int iB=0; iB<nBead; iB++)
+  for (uint iP=0; iP<nPart; iP++)
+    for (uint iB=0; iB<nBead; iB++)
       bead(iP,iB) = std::make_shared<Bead>(nD,iS,iP,iB);
 
   // Initiate bead connections
-  for (unsigned int iP=0; iP<nPart; iP++) {
+  for (uint iP=0; iP<nPart; iP++) {
     bead(iP,0) -> next = bead(iP,1);
     bead(iP,0) -> nextC = bead(iP,1);
     bead(iP,0) -> prev = bead(iP,nBead-1);
     bead(iP,0) -> prevC = bead(iP,nBead-1);
-    for (unsigned int iB=1; iB<nBead-1; iB++) {
+    for (uint iB=1; iB<nBead-1; iB++) {
       bead(iP,iB) -> next = bead(iP,iB+1);
       bead(iP,iB) -> nextC = bead(iP,iB+1);
       bead(iP,iB) -> prev = bead(iP,iB-1);
@@ -51,24 +51,24 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
   // Read configuration from xyz file
   if (initType == "File") {
     string fileName = in.getAttribute<string>("fileName");
-    int allBeads = in.getAttribute<bool>("allBeads",false);
+    bool allBeads = in.getAttribute<bool>("allBeads",false);
     out.Write("System/Particles/"+name+"/fileName",fileName);
     out.Write("System/Particles/"+name+"/allBeads",allBeads);
     fstream initFile;
     initFile.open(fileName.c_str(), std::ios_base::in);
     if (!initFile.fail()) {
-      for (int iP=0; iP<nPart; ++iP) {
+      for (uint iP=0; iP<nPart; ++iP) {
         if (allBeads) {
-          for (int iB=0; iB<nBead; ++iB) {
-            for (int iD=0; iD<nD; ++iD)
+          for (uint iB=0; iB<nBead; ++iB) {
+            for (uint iD=0; iD<nD; ++iD)
               initFile >> bead(iP,iB)->r(iD);
             bead(iP,iB)->storeR();
           }
         } else {
           vec<double> r(nD);
-          for (int iD=0; iD<nD; ++iD)
+          for (uint iD=0; iD<nD; ++iD)
             initFile >> r(iD);
-          for (int iB=0; iB<nBead; ++iB) {
+          for (uint iB=0; iB<nBead; ++iB) {
             bead(iP,iB)->r = r;
             bead(iP,iB)->storeR();
           }
@@ -83,13 +83,13 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
   // Random configuration
   } else if (initType == "Random") {
     double cofactor = in.getAttribute<double>("cofactor",1.);
-    for (int iP=0; iP<nPart; ++iP) {
-      for (int iD=0; iD<nD; ++iD) {
+    for (uint iP=0; iP<nPart; ++iP) {
+      for (uint iD=0; iD<nD; ++iD) {
         double tmpRand = rng.unifRand(-cofactor*L/2.,cofactor*L/2.);
-        for (int iB=0; iB<nBead; ++iB)
+        for (uint iB=0; iB<nBead; ++iB)
           bead(iP,iB)->r(iD) = tmpRand;
       }
-      for (int iB=0; iB<nBead; ++iB)
+      for (uint iB=0; iB<nBead; ++iB)
         bead(iP,iB)->storeR();
     }
 
@@ -97,7 +97,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
   } else if (initType == "BCC") {
     int nPartPerND = (int) ceil (pow(0.5*nPart, 1.0/nD));
     double delta = L/nPartPerND;
-    for (unsigned int iP=0; iP<nPart; iP++) {
+    for (uint iP=0; iP<nPart; iP++) {
       int p = iP/2;
       vec<int> tmp(nD);
       tmp(0) = p/(nPartPerND*nPartPerND);
@@ -122,7 +122,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     double cofactor = in.getAttribute<double>("cofactor",1.);
     int nPartPerND = (int) ceil (pow(0.5*nPart, 1.0/nD));
     double delta = cofactor*L/(1.*nPartPerND);
-    for (unsigned int iP=0; iP<nPart; iP++) {
+    for (uint iP=0; iP<nPart; iP++) {
       vec<int> tmp(nD);
       tmp(0) = iP/(nPartPerND*nPartPerND);
       if (nD > 1)
@@ -141,7 +141,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
   // Restart from previous run (fixme: This is broken now)
   } else if (initType == "Restart") {
     string prefix = in.getAttribute<string>("prefix");
-    int parallel = in.getAttribute<bool>("parallel",0);
+    bool parallel = in.getAttribute<bool>("parallel",false);
     stringstream tmpSS;
     if (parallel)
       tmpSS << prefix << "." << InterComm.MyProc() << ".h5";
@@ -154,17 +154,16 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     out.Write("System/Particles/"+name+"/fileName",fileName);
 
     // Get number of dumps
-    int nDump;
+    uint nDump;
     restartFile.Read("Observables/PathDump/"+name+"/nDump",nDump);
 
     // Get positions
     cube<double> pathPositions(nD,nPart*nBead,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/positions",pathPositions);
-    for (int iP=0; iP<nPart; ++iP) {
-      for (int iB=0; iB<nBead; ++iB) {
-        for (int iD=0; iD<nD; ++iD) {
+    for (uint iP=0; iP<nPart; ++iP) {
+      for (uint iB=0; iB<nBead; ++iB) {
+        for (uint iD=0; iD<nD; ++iD)
           bead(iP,iB)->r(iD) = pathPositions(iD,iP*nBead + iB,nDump-1);
-        }
         bead(iP,iB)->storeR();
       }
     }
@@ -172,7 +171,7 @@ void Species::InitPaths(Input &in, IOClass &out, RNG &rng, CommunicatorClass& In
     // Get permutation
     cube<double> pathPermutation(2,nPart,nDump);
     restartFile.Read("Observables/PathDump/"+name+"/permutation",pathPermutation);
-    for (int iP=0; iP<nPart; ++iP) {
+    for (uint iP=0; iP<nPart; ++iP) {
       bead(iP,0)->prev = bead(pathPermutation(0,iP,nDump-1),nBead-1);
       bead(iP,0)->storePrev();
       bead(iP,nBead-1)->next = bead(pathPermutation(1,iP,nDump-1),0);

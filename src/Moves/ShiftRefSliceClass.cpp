@@ -38,13 +38,13 @@ void ShiftRefSlice::Reject()
 }
 
 // ShiftRefSliceion Move
-int ShiftRefSlice::Attempt()
+bool ShiftRefSlice::Attempt()
 {
   refBead0 = path.refBead;
   refBead1 = rng.unifRand(path.nBead) - 1;  // Pick new ref bead at random
 
   // Insert dummy particle
-  vector< pair<int,int> > particles;
+  vector< pair<uint,uint> > particles;
   particles.push_back(std::make_pair(iSpecies,0));
 
   // Calculate action change

@@ -2,8 +2,8 @@
 
 void Bisect::Init(Input &in)
 {
-  nLevel = in.getAttribute<int>("nLevel");
-  int maxPossibleLevel = floor(log2(path.nBead));
+  nLevel = in.getAttribute<uint>("nLevel");
+  uint maxPossibleLevel = floor(log2(path.nBead));
   if (nLevel > maxPossibleLevel)
     cout << "Warning: nLevel > maxPossibleLevel!" << endl;
   if (path.PBC)
@@ -19,7 +19,7 @@ void Bisect::Init(Input &in)
   GenerateActionList(speciesList);
 
   // Adaptive bisection level
-  adaptive = in.getAttribute<int>("adaptive",0);
+  adaptive = in.getAttribute<bool>("adaptive",false);
   if (adaptive)
     targetRatio = in.getAttribute<double>("targetRatio");
 
@@ -56,7 +56,7 @@ void Bisect::Accept()
   // Move Accepted, so copy new coordinates
   path.storeR(affBeads);
   path.storeRhoKP(affBeads);
-  for (int iB=bead0+1; iB<bead1; ++iB)
+  for (uint iB=bead0+1; iB<bead1; ++iB)
     path.storeRhoK(iB,iSpecies);
 
   // Call accept for each action
@@ -70,7 +70,7 @@ void Bisect::Reject()
   // Move rejected, so return old coordinates
   path.restoreR(affBeads);
   path.restoreRhoKP(affBeads);
-  for (int iB=bead0+1; iB<bead1; ++iB)
+  for (uint iB=bead0+1; iB<bead1; ++iB)
     path.restoreRhoK(iB,iSpecies);
 
   // Call reject for each action
@@ -79,9 +79,9 @@ void Bisect::Reject()
 }
 
 // Bisection Move
-int Bisect::Attempt()
+bool Bisect::Attempt()
 {
-  unsigned int iP = rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
+  uint iP = rng.unifRand(path.speciesList[iSpecies]->nPart) - 1;  // Pick particle at random
   bead0 = rng.unifRand(path.nBead) - 1;  // Pick first bead at random
   bead1 = bead0 + nBisectBeads; // Set last bead in bisection
   rollOver = bead1 > (path.nBead-1);  // See if bisection overflows to next particle
@@ -96,13 +96,13 @@ int Bisect::Attempt()
   std::shared_ptr<Bead> beadF(beadI);
   affBeads.clear();
   affBeads.push_back(beadI);
-  for (int i=0; i<nBisectBeads; ++i) {
+  for (uint i=0; i<nBisectBeads; ++i) {
     beadF = beadF->next;
     affBeads.push_back(beadF);
   }
 
   // Set which particles are affected by the move
-  vector< pair<int,int> > particles;
+  vector< pair<uint,uint> > particles;
   particles.push_back(std::make_pair(iSpecies,iP));
   if (beadF->p != iP)  // fixme: may be overkill
     particles.push_back(std::make_pair(iSpecies,beadF->p));
@@ -112,7 +112,7 @@ int Bisect::Attempt()
   double prevActionChange = 0.;
   double prefactorOfSampleProb = 0.;
   for (int iLevel = nLevel-1; iLevel >= 0; iLevel -= 1) {
-    int skip = 1<<iLevel;
+    uint skip = 1<<iLevel;
     double levelTau = path.tau*skip;
     double sigma2 = lambda*levelTau;
     double sigma = sqrt(sigma2);
@@ -141,7 +141,7 @@ int Bisect::Attempt()
       // Get sampling probs
       double gaussProdOld = 1.;
       double gaussProdNew = 1.;
-      for (int iD=0; iD<path.nD; iD++) {
+      for (uint iD=0; iD<path.nD; iD++) {
         double gaussSumOld = 0.;
         double gaussSumNew = 0.;
         for (int image=-nImages; image<=nImages; image++) {

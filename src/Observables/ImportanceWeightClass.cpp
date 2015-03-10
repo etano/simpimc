@@ -16,7 +16,7 @@ void ImportanceWeight::Accumulate()
 {
   path.SetMode(1);
   path.importance_weight = path.sign;
-  for (int i=0; i<actionList.size(); ++i) {
+  for (uint i=0; i<actionList.size(); ++i) {
     double tmpIW = 1.;
     if (actionList[i]->isImportanceWeight)
       tmpIW = actionList[i]->ImportanceWeight();
@@ -39,7 +39,7 @@ void ImportanceWeight::Write()
       out.CreateExtendableDataSet("/"+prefix+"Total/", "x", IW);
       string data_type = "scalar";
       out.Write(prefix+"Total/data_type",data_type);
-      for (int i=0; i<actionList.size(); ++i) {
+      for (uint i=0; i<actionList.size(); ++i) {
         out.CreateGroup(prefix+actionList[i]->name);
         out.CreateExtendableDataSet("/"+prefix+actionList[i]->name+"/", "x", IWs(i));
         out.Write(prefix+actionList[i]->name+"/data_type", data_type);
@@ -47,7 +47,7 @@ void ImportanceWeight::Write()
       firstTime = 0;
     } else {
       out.AppendDataSet("/"+prefix+"Total/", "x", IW);
-      for (int i=0; i<actionList.size(); ++i)
+      for (uint i=0; i<actionList.size(); ++i)
         out.AppendDataSet("/"+prefix+actionList[i]->name+"/", "x", IWs(i));
     }
 

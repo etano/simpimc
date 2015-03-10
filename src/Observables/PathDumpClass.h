@@ -7,7 +7,7 @@
 class PathDump : public Observable
 {
 private:
-  int nWriteCalls, nDump;
+  uint nWriteCalls, nDump;
 protected:
 public:
   PathDump(Path &tmpPath, Input &in, IOClass &out)

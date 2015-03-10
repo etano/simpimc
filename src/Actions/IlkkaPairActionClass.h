@@ -16,7 +16,6 @@ public:
   }
 
   // Parameters
-  int nOrder;
   double kCutoff;
 
   // Splines
@@ -36,11 +35,11 @@ public:
   virtual void ReadFile(string fileName);
 
   // Pair actions
-  virtual double CalcV(double &r, double &rP, const int level);
+  virtual double CalcV(double r, double rP, const uint level);
   virtual double CalcVLong();
-  virtual double CalcU(double &r, double &rP, double &s, const int level);
-  virtual double CalcULong(const int b0, const int b1, const int level);
-  virtual double CalcdUdBeta(double &r, double &rP, double &s, const int level);
+  virtual double CalcU(double r, double rP, double s, const uint level);
+  virtual double CalcULong(const uint b0, const uint b1, const uint level);
+  virtual double CalcdUdBeta(double r, double rP, double s, const uint level);
   virtual double CalcdUdBetaLong();
 
 };

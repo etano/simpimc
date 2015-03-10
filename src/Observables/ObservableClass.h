@@ -11,15 +11,15 @@ private:
 protected:
   Path& path;
   IOClass &out;
-  int skip;
+  uint skip;
 
   struct LinearGrid
   {
     vec<double> rs;
     double rMin, rMax, dr, iDr;
-    int nR;
+    uint nR;
 
-    void CreateGrid(double t_rMin, double t_rMax, int t_nR)
+    void CreateGrid(double t_rMin, double t_rMax, uint t_nR)
     {
       rMin = t_rMin;
       rMax = t_rMax;
@@ -27,12 +27,12 @@ protected:
       dr = (rMax-rMin)/(nR-1.);
       iDr = 1./dr;
       rs.set_size(nR);
-      for (int i=0; i<nR; ++i)
+      for (uint i=0; i<nR; ++i)
         rs(i) = rMin + i*dr;
     };
-    inline double operator() (int i) { return rs(i); };
-    int ReverseMap(double r) {
-      int i = (int) nearbyint((r-rMin)*iDr-0.5);
+    inline double operator() (uint i) { return rs(i); };
+    uint ReverseMap(const double r) {
+      uint i = (uint) nearbyint((r-rMin)*iDr-0.5);
       if (i < 0)
         return 0;
       else
@@ -55,7 +55,7 @@ public:
   {
     name = in.getAttribute<string>("name");
     type = in.getAttribute<string>("type");
-    skip = in.getAttribute<int>("skip",1);
+    skip = in.getAttribute<uint>("skip",1);
     prefix = "Observables/"+name+"/";
     out.CreateGroup(prefix);
     out.Write(prefix+"/type",type);
@@ -65,7 +65,7 @@ public:
 
   string type;
   bool firstTime;
-  int nMeasure;
+  uint nMeasure;
 
   // Functions
   inline void DoEvent() {

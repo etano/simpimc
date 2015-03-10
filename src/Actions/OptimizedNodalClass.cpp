@@ -7,13 +7,13 @@ void OptimizedNodal::Init(Input &in)
   species = in.getAttribute<string>("species");
   speciesList.push_back(species);
   cout << "Setting up nodal action for " << species << "..." << endl;
-  maxLevel = in.getAttribute<int>("maxLevel",0);
+  maxLevel = in.getAttribute<uint>("maxLevel",0);
   path.GetSpeciesInfo(species,iSpecies);
   nPart = path.speciesList[iSpecies]->nPart;
   i4LambdaTau = 1./(4.*path.speciesList[iSpecies]->lambda*path.tau);
 
   // Read in variational parameters
-  iModel = in.getAttribute<int>("model");
+  iModel = in.getAttribute<uint>("model");
   vector<Input> paramSetInputs = in.getChildList("ParamSet");
   for (auto& paramSetInput : paramSetInputs) {
     vector<Input> paramInputs = paramSetInput.getChildList("Param");
@@ -36,10 +36,10 @@ void OptimizedNodal::Init(Input &in)
   rho_F_c.set_size(path.nBead);
 
   // Test initial configuration
-  std::vector< std::pair<int,int> > particles;
-  for (int iP=0; iP<nPart; ++iP)
+  std::vector< std::pair<uint,uint> > particles;
+  for (uint iP=0; iP<nPart; ++iP)
     particles.push_back(std::make_pair(iSpecies,iP));
-  int initGood = 1;
+  bool initGood = 1;
   path.SetMode(1);
   if (GetAction(0, path.nBead, particles, 0) == 1.e100) {
     cout << "Warning: initializing with broken nodes!" << endl;
@@ -65,18 +65,18 @@ void OptimizedNodal::SetupSpline()
   double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
-  int nSpline = path.nBead/2 + (path.nBead%2) + 1;
+  uint nSpline = path.nBead/2 + (path.nBead%2) + 1;
   rho_node_r_splines.set_size(paramSets.size(), nSpline);
 
   // Create splines
-  for (int iParamSet=0; iParamSet<paramSets.size(); ++iParamSet) {
+  for (uint iParamSet=0; iParamSet<paramSets.size(); ++iParamSet) {
     #pragma omp parallel for
-    for (int iSpline=0; iSpline<nSpline; ++iSpline) {
+    for (uint iSpline=0; iSpline<nSpline; ++iSpline) {
       vec<double> rho_node_r(r_grid.num);
       double t_i4LambdaTau = Geti4LambdaTau(iSpline+1); // TODO: This is hard-coded for free-particle-like nodal structures.
 
       // Make rho_free
-      for (int i=0; i<r_grid.num; ++i) {
+      for (uint i=0; i<r_grid.num; ++i) {
         double r = r_grid.start + i*dr;
         double r2i4LambdaTau = r*r*t_i4LambdaTau;
         rho_node_r(i) = 0.;
@@ -99,11 +99,11 @@ void OptimizedNodal::SetupSpline()
   SetParamSet(0);
 }
 
-double OptimizedNodal::GetGij(const vec<double>& r, const int sliceDiff)
+double OptimizedNodal::GetGij(const vec<double>& r, const uint sliceDiff)
 {
   double gaussProd = 1.;
   double t_i4LambdaTau = Geti4LambdaTau(sliceDiff);
-  for (int iD=0; iD<path.nD; iD++) {
+  for (uint iD=0; iD<path.nD; iD++) {
     double gaussSum;
     eval_UBspline_1d_d(rho_node_r_splines(iParamSet,sliceDiff-1),r(iD),&gaussSum);
     gaussSum = exp(0.9999*gaussSum);
@@ -113,7 +113,7 @@ double OptimizedNodal::GetGij(const vec<double>& r, const int sliceDiff)
   return gaussProd;
 }
 
-double OptimizedNodal::Geti4LambdaTau(const int sliceDiff)
+double OptimizedNodal::Geti4LambdaTau(const uint sliceDiff)
 {
   double t_i4LambdaTau(i4LambdaTau);
   if (iModel == 0)

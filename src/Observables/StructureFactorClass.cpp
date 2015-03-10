@@ -18,7 +18,7 @@ void StructureFactor::Init(Input &in)
   out.Write(prefix+"/speciesB", speciesB);
   out.Write(prefix+"/kCut", kCut);
   out.CreateExtendableDataSet("/"+prefix+"/", "x", path.magKs[0]);
-  for (int iK=1; iK<path.magKs.size(); ++iK)
+  for (uint iK=1; iK<path.magKs.size(); ++iK)
     out.AppendDataSet("/"+prefix+"/", "x", path.magKs[iK]);
 
   Reset();
@@ -33,9 +33,9 @@ void StructureFactor::Reset()
 void StructureFactor::Accumulate()
 {
   path.SetMode(1);
-  for (int iK=0; iK<path.kIndices.size(); iK++) {
+  for (uint iK=0; iK<path.kIndices.size(); iK++) {
     if (path.magKs[iK] < kCut) {
-      for (int iB=0; iB<path.nBead; ++iB) {
+      for (uint iB=0; iB<path.nBead; ++iB) {
         sk(iK) += path.sign*path.importance_weight*cmag2(path.rhoK(iB,iSpeciesA)(iK),path.rhoK(iB,iSpeciesB)(iK));
       }
     }
@@ -51,8 +51,8 @@ void StructureFactor::Write()
 {
   if (nMeasure > 0) {
     // Normalize histograms
-    int NA = path.speciesList[iSpeciesA]->nPart;
-    int NB = path.speciesList[iSpeciesB]->nPart;
+    uint NA = path.speciesList[iSpeciesA]->nPart;
+    uint NB = path.speciesList[iSpeciesB]->nPart;
     double norm = nMeasure*path.nBead*NA*NB;
     sk = sk/norm;
 

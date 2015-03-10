@@ -36,10 +36,10 @@ void VaryOptimizedNodal::Reject()
 }
 
 // VaryOptimizedNodalion Move
-int VaryOptimizedNodal::Attempt()
+bool VaryOptimizedNodal::Attempt()
 {
   // Insert dummy particle
-  vector< pair<int,int> > particles;
+  vector< pair<uint,uint> > particles;
   particles.push_back(std::make_pair(iSpecies,0));
 
   // Calculate action change

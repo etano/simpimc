@@ -9,9 +9,9 @@ class Energy : public Observable
 private:
   std::vector< std::shared_ptr<Action> > &actionList;
   vec<double> Es, Vs;
-  std::vector<std::pair<int,double> > sectorEs;
+  std::vector<std::pair<uint,double> > sectorEs;
   bool measureV, measurePerSector, firstSector;
-  int iSpecies;
+  uint iSpecies;
 protected:
 public:
   Energy(Path &tmpPath, std::vector< std::shared_ptr<Action> > &tmpActionList, Input &in, IOClass &out)

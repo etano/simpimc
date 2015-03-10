@@ -4,14 +4,14 @@ void PairAction::Init(Input &in)
 {
   // Read in things
   nImages = in.getAttribute<int>("nImages");
-  nOrder = in.getAttribute<int>("nOrder",-1);
+  nOrder = in.getAttribute<uint>("nOrder",0);
   speciesA = in.getAttribute<string>("speciesA");
   speciesList.push_back(speciesA);
   speciesB = in.getAttribute<string>("speciesB");
   speciesList.push_back(speciesB);
   cout << "Setting up pair action between " << speciesA << " and " << speciesB << "..." << endl;
-  maxLevel = in.getAttribute<int>("maxLevel",0);
-  useLongRange = in.getAttribute<int>("useLongRange",0);
+  maxLevel = in.getAttribute<uint>("maxLevel",0);
+  useLongRange = in.getAttribute<bool>("useLongRange",0);
   if (useLongRange) {
     kCut = in.getAttribute<double>("kCut",path.kC);
     path.SetupKs(kCut);
@@ -53,10 +53,10 @@ double PairAction::Potential()
   else {
     double tot = 0.;
     if (iSpeciesA == iSpeciesB) {
-      for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
-        for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
-          for (int iB=0; iB<path.nBead; iB+=1) {
-            int jB = iB + 1;
+      for (uint iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
+        for (uint jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
+          for (uint iB=0; iB<path.nBead; iB+=1) {
+            uint jB = iB + 1;
             vec<double> dr(path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesA,jP,iB)));
             double rMag = mag(dr);
             dr = path.Dr(path(iSpeciesA,iP,jB),path(iSpeciesA,jP,jB));
@@ -66,10 +66,10 @@ double PairAction::Potential()
         }
       }
     } else {
-      for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
-        for (int jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
-          for (int iB=0; iB<path.nBead; iB+=1) {
-            int jB = iB + 1;
+      for (uint iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
+        for (uint jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
+          for (uint iB=0; iB<path.nBead; iB+=1) {
+            uint jB = iB + 1;
             vec<double> dr(path.Dr(path(iSpeciesA,iP,iB),path(iSpeciesB,jP,iB)));
             double rMag = mag(dr);
             dr = path.Dr(path(iSpeciesA,iP,jB),path(iSpeciesB,jP,jB));
@@ -101,10 +101,10 @@ double PairAction::DActionDBeta()
     if (iSpeciesA == iSpeciesB) {
       #pragma omp parallel
       {
-        for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
+        for (uint iP=0; iP<path.speciesList[iSpeciesA]->nPart-1; ++iP) {
           #pragma omp for collapse(2) reduction(+:tot)
-          for (int jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
-            for (int iB=0; iB<path.nBead; ++iB) {
+          for (uint jP=iP+1; jP<path.speciesList[iSpeciesA]->nPart; ++jP) {
+            for (uint iB=0; iB<path.nBead; ++iB) {
               double rMag, rPMag, rrPMag;
               path.DrDrPDrrP(iB,iB+1,iSpeciesA,iSpeciesA,iP,jP,rMag,rPMag,rrPMag);
               double dUdB = CalcdUdBeta(rMag,rPMag,rrPMag,0);
@@ -115,9 +115,9 @@ double PairAction::DActionDBeta()
       }
     } else {
       #pragma omp parallel for collapse(3) reduction(+:tot)
-      for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
-        for (int jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
-          for (int iB=0; iB<path.nBead; ++iB) {
+      for (uint iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
+        for (uint jP=0; jP<path.speciesList[iSpeciesB]->nPart; ++jP) {
+          for (uint iB=0; iB<path.nBead; ++iB) {
             double rMag, rPMag, rrPMag;
             path.DrDrPDrrP(iB,iB+1,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
             double dUdB = CalcdUdBeta(rMag,rPMag,rrPMag,0);
@@ -139,13 +139,13 @@ double PairAction::DActionDBeta()
   }
 }
 
-void PairAction::GenerateParticlePairs(const vector<pair<int,int> > &particles, vector<int> &particlesA, vector<int> &particlesB, vector< pair<int,int> > &particlePairs)
+void PairAction::GenerateParticlePairs(const vector<pair<uint,uint> > &particles, vector<uint> &particlesA, vector<uint> &particlesB, vector< pair<uint,uint> > &particlePairs)
 {
   // Make sure particles are of species A or B and organize them accordingly
-  int nA(0), nB(0);
+  uint nA(0), nB(0);
   for (auto& p: particles) {
-    int iS = p.first;
-    int iP = p.second;
+    uint iS = p.first;
+    uint iP = p.second;
     if (iS == iSpeciesA) {
       particlesA.push_back(iP);
       nA++;
@@ -159,14 +159,14 @@ void PairAction::GenerateParticlePairs(const vector<pair<int,int> > &particles, 
       return;
 
   // Make vectors of other particles of species A
-  vector<int> otherParticlesA;
-  for (int iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
+  vector<uint> otherParticlesA;
+  for (uint iP=0; iP<path.speciesList[iSpeciesA]->nPart; ++iP) {
     if (find(particlesA.begin(), particlesA.end(), iP)==particlesA.end())
       otherParticlesA.push_back(iP);
   }
   // Make vectors of other particles of species B
-  vector<int> otherParticlesB;
-  for (int iP=0; iP<path.speciesList[iSpeciesB]->nPart; ++iP) {
+  vector<uint> otherParticlesB;
+  for (uint iP=0; iP<path.speciesList[iSpeciesB]->nPart; ++iP) {
     if (find(particlesB.begin(), particlesB.end(), iP)==particlesB.end())
       otherParticlesB.push_back(iP);
   }
@@ -178,8 +178,8 @@ void PairAction::GenerateParticlePairs(const vector<pair<int,int> > &particles, 
       for (auto& q: otherParticlesA)
         particlePairs.push_back(std::make_pair(p,q));
     // Loop over A particles with A particles
-    for (int p=0; p<nA-1; ++p)
-      for (int q=p+1; q<nA; ++q)
+    for (uint p=0; p<nA-1; ++p)
+      for (uint q=p+1; q<nA; ++q)
         particlePairs.push_back(std::make_pair(particlesA[p],particlesA[q]));
   // Heterologous
   } else {
@@ -199,26 +199,26 @@ void PairAction::GenerateParticlePairs(const vector<pair<int,int> > &particles, 
 
 }
 
-double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+double PairAction::GetAction(const uint b0, const uint b1, const vector<pair<uint,uint> > &particles, const uint level)
 {
   // Return zero if not relevant
   if (level > maxLevel || isConstant || iSpeciesA < 0 || iSpeciesB < 0)
     return 0.;
 
   // Generate particle pairs
-  vector<int> particlesA, particlesB;
-  vector< pair<int,int> > particlePairs;
+  vector<uint> particlesA, particlesB;
+  vector< pair<uint,uint> > particlePairs;
   GenerateParticlePairs(particles, particlesA, particlesB, particlePairs);
   if (particlePairs.size() == 0)
     return 0.;
 
   // Sum up contributing terms
-  int skip = 1<<level;
+  uint skip = 1<<level;
   double tot = 0.;
   #pragma omp parallel for reduction(+:tot)
-  for (int iB=b0; iB<b1; iB+=skip) {
-    int jB = iB+skip;
-    int kB = iB-skip;
+  for (uint iB=b0; iB<b1; iB+=skip) {
+    uint jB = iB+skip;
+    uint kB = iB-skip;
     if (b0 == 0)
       kB = path.nBead-1;
     for (auto& particlePair: particlePairs) {
@@ -244,7 +244,7 @@ double PairAction::GetAction(const int b0, const int b1, const vector< pair<int,
   return tot;
 }
 
-vec<double> PairAction::GetActionGradient(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+vec<double> PairAction::GetActionGradient(const uint b0, const uint b1, const vector<pair<uint,uint> > &particles, const uint level)
 {
   // Return zero if not relevant
   vec<double> zero_vec;
@@ -253,18 +253,18 @@ vec<double> PairAction::GetActionGradient(const int b0, const int b1, const vect
     return zero_vec;
 
   // Generate particle pairs
-  vector<int> particlesA, particlesB;
-  vector< pair<int,int> > particlePairs;
+  vector<uint> particlesA, particlesB;
+  vector< pair<uint,uint> > particlePairs;
   GenerateParticlePairs(particles, particlesA, particlesB, particlePairs);
   if (particlePairs.size() == 0)
     return zero_vec;
 
   // Sum up contributing terms
-  int skip = 1<<level;
+  uint skip = 1<<level;
   vec<double> tot(zero_vec);
-  for (int iB=b0; iB<b1; iB+=skip) {
-    int jB = iB+skip;
-    int kB = iB-skip;
+  for (uint iB=b0; iB<b1; iB+=skip) {
+    uint jB = iB+skip;
+    uint kB = iB-skip;
     if (iB == 0) // FIXME: This doesn't depend on the level
       kB = path.nBead-1;
     for (auto& particlePair: particlePairs)
@@ -289,25 +289,25 @@ vec<double> PairAction::GetActionGradient(const int b0, const int b1, const vect
   return tot;
 }
 
-double PairAction::GetActionLaplacian(const int b0, const int b1, const vector< pair<int,int> > &particles, const int level)
+double PairAction::GetActionLaplacian(const uint b0, const uint b1, const vector<pair<uint,uint> > &particles, const uint level)
 {
   // Return zero if not relevant
   if (level > maxLevel || isConstant || iSpeciesA < 0 || iSpeciesB < 0)
     return 0.;
 
   // Generate particle pairs
-  vector<int> particlesA, particlesB;
-  vector< pair<int,int> > particlePairs;
+  vector<uint> particlesA, particlesB;
+  vector< pair<uint,uint> > particlePairs;
   GenerateParticlePairs(particles, particlesA, particlesB, particlePairs);
   if (particlePairs.size() == 0)
     return 0.;
 
   // Sum up contributing terms
-  int skip = 1<<level;
+  uint skip = 1<<level;
   double tot = 0.;
-  for (int iB=b0; iB<b1; iB+=skip) {
-    int jB = iB+skip;
-    int kB = iB-skip;
+  for (uint iB=b0; iB<b1; iB+=skip) {
+    uint jB = iB+skip;
+    uint kB = iB-skip;
     if (iB == 0) // FIXME: This doesn't depend on the level
       kB = path.nBead-1;
     for (auto& particlePair: particlePairs)
@@ -332,7 +332,7 @@ double PairAction::GetActionLaplacian(const int b0, const int b1, const vector< 
   return tot;
 }
 
-vec<double> PairAction::CalcGradientU(const int &iB, const int &jB, const int &iP, const int &jP, const int &level)
+vec<double> PairAction::CalcGradientU(const uint iB, const uint jB, const uint iP, const uint jP, const uint level)
 {
   // Store original position for particle i
   std::shared_ptr<Bead> b(path(iSpeciesA,iP,iB));
@@ -344,7 +344,7 @@ vec<double> PairAction::CalcGradientU(const int &iB, const int &jB, const int &i
   // Calculate numerical gradient
   double rMag, rPMag, rrPMag;
   vec<double> tot(path.nD);
-  for (int iD=0; iD<path.nD; ++iD) {
+  for (uint iD=0; iD<path.nD; ++iD) {
     b->r(iD) = r0(iD) + eps;
     path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
     double f1 = CalcU(rMag,rPMag,rrPMag,level);
@@ -358,7 +358,7 @@ vec<double> PairAction::CalcGradientU(const int &iB, const int &jB, const int &i
   return tot;
 }
 
-double PairAction::CalcLaplacianU(const int &iB, const int &jB, const int &iP, const int &jP, const int &level)
+double PairAction::CalcLaplacianU(const uint iB, const uint jB, const uint iP, const uint jP, const uint level)
 {
   // Store original position for particle i
   std::shared_ptr<Bead> b(path(iSpeciesA,iP,iB));
@@ -370,7 +370,7 @@ double PairAction::CalcLaplacianU(const int &iB, const int &jB, const int &iP, c
   // Calculate numerical gradient
   double rMag, rPMag, rrPMag;
   double tot = 0.;
-  for (int iD=0; iD<path.nD; ++iD) {
+  for (uint iD=0; iD<path.nD; ++iD) {
     path.DrDrPDrrP(iB,jB,iSpeciesA,iSpeciesB,iP,jP,rMag,rPMag,rrPMag);
     double f0 = CalcU(rMag,rPMag,rrPMag,level);
     b->r(iD) = r0(iD) + eps;
