@@ -53,4 +53,4 @@ public:
 
 };
 
-#endif
+#endif // SIMPIMC_MOVES_MOVE_CLASS_H_

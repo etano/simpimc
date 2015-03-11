@@ -3,10 +3,10 @@
 void PairCorrelation::Init(Input &in)
 {
   // Read in species info
-  species_A = in.GetAttribute<std::string>("species_A");
-  species_B = in.GetAttribute<std::string>("species_B");
-  path.GetSpeciesInfo(species_A, species_A_i);
-  path.GetSpeciesInfo(species_B, species_B_i);
+  species_a = in.GetAttribute<std::string>("species_a");
+  species_b = in.GetAttribute<std::string>("species_b");
+  path.GetSpeciesInfo(species_a, species_a_i);
+  path.GetSpeciesInfo(species_b, species_b_i);
 
   // Read in grid info
   double r_min = in.GetAttribute<double>("r_min",0.);
@@ -29,8 +29,8 @@ void PairCorrelation::Init(Input &in)
   }
 
   // Write things to file
-  out.Write(prefix+"/species_A", species_A);
-  out.Write(prefix+"/species_B", species_B);
+  out.Write(prefix+"/species_a", species_a);
+  out.Write(prefix+"/species_b", species_b);
   out.Write(prefix+"/r_min", r_min);
   out.Write(prefix+"/r_max", r_max);
   out.Write(prefix+"/n_r", n_r);
@@ -49,11 +49,11 @@ void PairCorrelation::Accumulate()
 {
   path.SetMode(1);
   // Homogeneous
-  if (species_A_i == species_B_i) {
+  if (species_a_i == species_b_i) {
     for (uint b_i=0; b_i<path.n_bead; ++b_i) {
-      for (uint p_i=0; p_i<path.species_list[species_A_i]->n_part-1; ++p_i) {
-        for (uint jP=p_i+1; jP<path.species_list[species_A_i]->n_part; ++jP) {
-          vec<double> dr(path.Dr(path(species_A_i,p_i,b_i),path(species_A_i,jP,b_i)));
+      for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
+        for (uint jP=p_i+1; jP<path.species_list[species_a_i]->n_part; ++jP) {
+          vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_a_i,jP,b_i)));
           uint i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.n_r)
             gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
@@ -63,9 +63,9 @@ void PairCorrelation::Accumulate()
   // Homologous
   } else {
     for (uint b_i=0; b_i<path.n_bead; ++b_i) {
-      for (uint p_i=0; p_i<path.species_list[species_A_i]->n_part; ++p_i) {
-        for (uint jP=0; jP<path.species_list[species_B_i]->n_part; ++jP) {
-          vec<double> dr(path.Dr(path(species_A_i,p_i,b_i),path(species_B_i,jP,b_i)));
+      for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
+        for (uint jP=0; jP<path.species_list[species_b_i]->n_part; ++jP) {
+          vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_b_i,jP,b_i)));
           uint i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.n_r)
             gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
@@ -81,11 +81,11 @@ void PairCorrelation::Write()
 {
   if (n_measure > 0) {
     // Normalize histograms
-    uint N_A = path.species_list[species_A_i]->n_part;
-    uint N_B = path.species_list[species_B_i]->n_part;
+    uint N_A = path.species_list[species_a_i]->n_part;
+    uint N_B = path.species_list[species_b_i]->n_part;
     double vol = path.vol;
     double norm;
-    if (species_A_i == species_B_i)
+    if (species_a_i == species_b_i)
       norm = 0.5*n_measure*N_A*(N_A-1.)*path.n_bead/vol;
     else
       norm = n_measure*N_A*N_B*path.n_bead/vol;

@@ -6,8 +6,8 @@
 class PairCorrelation : public Observable
 {
 private:
-  std::string species_A, species_B;
-  uint species_A_i, species_B_i;
+  std::string species_a, species_b;
+  uint species_a_i, species_b_i;
   Histogram gr;
 protected:
 public:

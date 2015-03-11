@@ -1,5 +1,5 @@
 #ifndef SIMPIMC_MOVES_PERM_BISECT_CLASS_H_
-#define SIMPIMC_MOVES_PERM_BISECT_CLASS_H_
+#define simpimc_moves_perm_bisect_class_h_
 
 #include "move_class.h"
 
@@ -52,4 +52,4 @@ public:
 };
 
 
-#endif
+#endif // SIMPIMC_MOVES_MOVE_CLASS_H_
