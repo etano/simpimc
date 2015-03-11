@@ -74,7 +74,7 @@ IF(USE_OPENMP)
 ENDIF(USE_OPENMP)
 
 SET(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
-SET(CMAKE_CXX_SOURCE_FILE_EXTENSIONS ,"cpp")
+SET(CMAKE_CXX_SOURCE_FILE_EXTENSIONS ,"cc")
 
 IF(BUILD_STATIC)
   # Enable static linking
@@ -125,40 +125,40 @@ SET(LIBS ${LIBS} ${EINSPLINE_LIBS})
 # Sources and target
 #-------------------------------------------------------------------
 # simpimc
-SET (SRCS ${SRCS} src/main.cpp
-  src/AlgorithmClass.cpp
-  src/LoopClass.cpp
-  src/PathClass.cpp
-  src/SimulationClass.cpp
-  src/SpeciesClass.cpp
-  src/WriteClass.cpp
-  src/Actions/KineticClass.cpp
-  src/Actions/PairActionClass.cpp
-  src/Actions/NodalClass.cpp
-  src/Actions/FreeNodalClass.cpp
-  src/Actions/OptimizedNodalClass.cpp
-  src/Actions/BarePairActionClass.cpp
-  src/Actions/DavidPairActionClass.cpp
-  src/Actions/IlkkaPairActionClass.cpp
-  src/Actions/ImportancePairActionClass.cpp
-  src/Actions/TrapClass.cpp
-  src/Moves/MoveClass.cpp
-  src/Moves/BisectClass.cpp
-  src/Moves/DisplaceParticleClass.cpp
-  src/Moves/PermBisectClass.cpp
-  src/Moves/PermBisectIterativeClass.cpp
-  src/Moves/ShiftRefSliceClass.cpp
-  src/Moves/VaryOptimizedNodalClass.cpp
-  src/Observables/ContactDensityClass.cpp
-  src/Observables/EnergyClass.cpp
-  src/Observables/ImportanceWeightClass.cpp
-  src/Observables/PairCorrelationClass.cpp
-  src/Observables/PathDumpClass.cpp
-  src/Observables/PermutationClass.cpp
-  src/Observables/RecordOptimizedNodalClass.cpp
-  src/Observables/SignClass.cpp
-  src/Observables/StructureFactorClass.cpp
-  src/Observables/TimeClass.cpp)
+SET (SRCS ${SRCS} src/main.cc
+  src/algorithm_class.cc
+  src/loop_class.cc
+  src/path_class.cc
+  src/simulation_class.cc
+  src/species_class.cc
+  src/write_class.cc
+  src/actions/kinetic_class.cc
+  src/actions/pair_action_class.cc
+  src/actions/nodal_class.cc
+  src/actions/free_nodal_class.cc
+  src/actions/optimized_nodal_class.cc
+  src/actions/bare_pair_action_class.cc
+  src/actions/david_pair_action_class.cc
+  src/actions/ilkka_pair_action_class.cc
+  src/actions/importance_pair_action_class.cc
+  src/actions/trap_class.cc
+  src/moves/move_class.cc
+  src/moves/bisect_class.cc
+  src/moves/displace_particle_class.cc
+  src/moves/perm_bisect_class.cc
+  src/moves/perm_bisect_iterative_class.cc
+  src/moves/shift_ref_slice_class.cc
+  src/moves/vary_optimized_nodal_class.cc
+  src/observables/contact_density_class.cc
+  src/observables/energy_class.cc
+  src/observables/importance_weight_class.cc
+  src/observables/pair_correlation_class.cc
+  src/observables/path_dump_class.cc
+  src/observables/permutation_class.cc
+  src/observables/record_optimized_nodal_class.cc
+  src/observables/sign_class.cc
+  src/observables/structure_factor_class.cc
+  src/observables/time_class.cc)
 ADD_EXECUTABLE(simpimc ${SRCS})
 TARGET_LINK_LIBRARIES(simpimc ${LIBS})
 INSTALL(TARGETS simpimc DESTINATION $ENV{HOME}/bin)

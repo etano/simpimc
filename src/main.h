@@ -1,6 +1,6 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef SIMPIMC_MAIN_H_
+#define SIMPIMC_MAIN_H_
 
-#include "SimulationClass.h"
+#include "simulation_class.h"
 
-#endif
+#endif // SIMPIMC_MAIN_H_

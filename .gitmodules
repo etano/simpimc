@@ -1,5 +1,5 @@
-[submodule "src/Utils"]
-	path = src/Utils
+[submodule "src/utils"]
+	path = src/utils
 	url = git://github.com/etano/scaffold.git
 [submodule "scripts/pagen"]
 	path = scripts/pagen
