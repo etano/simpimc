@@ -2,7 +2,6 @@
 #define SIMPIMC_OBSERVABLES_TIME_CLASS_H_
 
 #include "observable_class.h"
-#include "../event_class.h"
 
 class Time : public Observable
 {

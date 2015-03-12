@@ -2,7 +2,6 @@
 #define SIMPIMC_OBSERVABLES_ENERGY_CLASS_H_
 
 #include "observable_class.h"
-#include "../actions/action_class.h"
 
 class Energy : public Observable
 {

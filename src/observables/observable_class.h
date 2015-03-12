@@ -2,7 +2,7 @@
 #define SIMPIMC_OBSERVABLES_OBSERVABLE_CLASS_H_
 
 #include "../event_class.h"
-#include "../path_class.h"
+#include "../actions/action_class.h"
 
 class Observable : public Event
 {
