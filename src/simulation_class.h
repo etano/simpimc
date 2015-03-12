@@ -1,8 +1,6 @@
 #ifndef SIMPIMC_SIMULATION_CLASS_H_
 #define SIMPIMC_SIMULATION_CLASS_H_
 
-#include "config.h"
-#include "path_class.h"
 #include "algorithm_class.h"
 
 class Simulation

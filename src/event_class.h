@@ -2,7 +2,6 @@
 #define SIMPIMC_EVENT_CLASS_H_
 
 #include "config.h"
-#include <sys/time.h>
 
 class Event
 {

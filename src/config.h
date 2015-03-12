@@ -7,6 +7,7 @@
 #include <fstream>
 #include <assert.h>
 #include <memory>
+#include <sys/time.h>
 #include "utils/scaffold.h"
 
 using namespace scaffold::matrix;

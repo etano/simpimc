@@ -2,7 +2,6 @@
 #define SIMPIMC_MOVES_MOVE_CLASS_H_
 
 #include "../event_class.h"
-#include "../path_class.h"
 #include "../actions/action_class.h"
 
 class Move : public Event

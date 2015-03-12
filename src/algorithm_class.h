@@ -1,12 +1,9 @@
 #ifndef SIMPIMC_ALGORITHM_CLASS_H_
 #define SIMPIMC_ALGORITHM_CLASS_H_
 
-#include "config.h"
 #include "path_class.h"
 #include "loop_class.h"
-#include "event_class.h"
 #include "write_class.h"
-#include "actions/action_class.h"
 #include "actions/kinetic_class.h"
 #include "actions/free_nodal_class.h"
 #include "actions/optimized_nodal_class.h"
@@ -15,14 +12,12 @@
 #include "actions/ilkka_pair_action_class.h"
 #include "actions/importance_pair_action_class.h"
 #include "actions/trap_class.h"
-#include "moves/move_class.h"
 #include "moves/bisect_class.h"
 #include "moves/displace_particle_class.h"
 #include "moves/perm_bisect_class.h"
 #include "moves/perm_bisect_iterative_class.h"
 #include "moves/shift_ref_slice_class.h"
 #include "moves/vary_optimized_nodal_class.h"
-#include "observables/observable_class.h"
 #include "observables/contact_density_class.h"
 #include "observables/energy_class.h"
 #include "observables/importance_weight_class.h"
