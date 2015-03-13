@@ -44,7 +44,7 @@ bool ShiftRefSlice::Attempt()
   ref_bead_1 = rng.UnifRand(path.n_bead) - 1;  // Pick new ref bead at random
 
   // Insert dummy particle
-  std::vector<std::pair<uint,uint>> particles;
+  std::vector<std::pair<uint32_t,uint32_t>> particles;
   particles.push_back(std::make_pair(species_i,0));
 
   // Calculate action change

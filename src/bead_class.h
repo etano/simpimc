@@ -7,11 +7,11 @@ struct Bead
 {
 public:
   Bead();
-  Bead(uint n_d, uint t_s, uint t_p, uint t_b)
+  Bead(uint32_t n_d, uint32_t t_s, uint32_t t_p, uint32_t t_b)
     : s(t_s), p(t_p), b(t_b), r(n_d), r_c(n_d), is_ira(false), is_masha(false)
   {}
 
-  uint p, b, s;
+  uint32_t p, b, s;
   bool is_ira, is_masha; // head and tail (respectively)
   double n_dist, n_dist_c;
   vec<double> r, r_c;
@@ -58,31 +58,31 @@ public:
     prev = prev_c;
   }
 
-  std::shared_ptr<Bead> NextB(const uint n)
+  std::shared_ptr<Bead> NextB(const uint32_t n)
   {
     std::shared_ptr<Bead> bead(next);
-    for (uint i=1; i<n; i++) bead = bead->next;
+    for (uint32_t i=1; i<n; i++) bead = bead->next;
     return bead;
   }
 
-  std::shared_ptr<Bead> NextBC(const uint n)
+  std::shared_ptr<Bead> NextBC(const uint32_t n)
   {
     std::shared_ptr<Bead> bead(next_c);
-    for (uint i=1; i<n; i++) bead = bead->next_c;
+    for (uint32_t i=1; i<n; i++) bead = bead->next_c;
     return bead;
   }
 
-  std::shared_ptr<Bead> PrevB(const uint n)
+  std::shared_ptr<Bead> PrevB(const uint32_t n)
   {
     std::shared_ptr<Bead> bead(prev);
-    for (uint i=1; i<n; i++) bead = bead->prev;
+    for (uint32_t i=1; i<n; i++) bead = bead->prev;
     return bead;
   }
 
-  std::shared_ptr<Bead> PrevBC(const uint n)
+  std::shared_ptr<Bead> PrevBC(const uint32_t n)
   {
     std::shared_ptr<Bead> bead(prev_c);
-    for (uint i=1; i<n; i++) bead = bead->prev_c;
+    for (uint32_t i=1; i<n; i++) bead = bead->prev_c;
     return bead;
   }
 

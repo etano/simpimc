@@ -8,7 +8,7 @@ void FreeNodal::Init(Input &in)
   species = in.GetAttribute<std::string>("species");
   species_list.push_back(species);
   std::cout << "Setting up nodal action for " << species << "..." << std::endl;
-  max_level = in.GetAttribute<uint>("max_level",0);
+  max_level = in.GetAttribute<uint32_t>("max_level",0);
   path.GetSpeciesInfo(species,species_i);
   n_part = path.species_list[species_i]->n_part;
   i_4_lambda_tau = 1./(4.*path.species_list[species_i]->lambda*path.tau);
@@ -26,8 +26,8 @@ void FreeNodal::Init(Input &in)
   rho_f_c.set_size(path.n_bead);
 
   // Test initial configuration
-  std::vector< std::pair<uint,uint>> particles;
-  for (uint p_i=0; p_i<n_part; ++p_i)
+  std::vector< std::pair<uint32_t,uint32_t>> particles;
+  for (uint32_t p_i=0; p_i<n_part; ++p_i)
     particles.push_back(std::make_pair(species_i,p_i));
   bool init_good = 1;
   path.SetMode(1);
@@ -55,16 +55,16 @@ void FreeNodal::SetupSpline()
   double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
   // Resize spline field
-  uint nSpline = path.n_bead/2 + (path.n_bead%2) + 1;
+  uint32_t nSpline = path.n_bead/2 + (path.n_bead%2) + 1;
   rho_free_r_splines.set_size(nSpline);
 
   // Create splines
-  for (uint spline_i=0; spline_i<nSpline; ++spline_i) {
+  for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
     vec<double> rho_free_r(r_grid.num);
     double t_i_4_lambda_tau = i_4_lambda_tau/(spline_i+1);
 
     // Make rho_free
-    for (uint i=0; i<r_grid.num; ++i) {
+    for (uint32_t i=0; i<r_grid.num; ++i) {
       double r = r_grid.start + i*dr;
       double r2_i_4_lambda_tau = r*r*t_i_4_lambda_tau;
       rho_free_r(i) = 0.;
@@ -83,10 +83,10 @@ void FreeNodal::SetupSpline()
 }
 
 // Evaluate \rho_{ij}
-double FreeNodal::GetGij(const vec<double>& r, const uint slice_diff)
+double FreeNodal::GetGij(const vec<double>& r, const uint32_t slice_diff)
 {
   double gauss_prod = 1.;
-  for (uint d_i=0; d_i<path.n_d; d_i++) {
+  for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
     double gauss_sum;
     eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r(d_i),&gauss_sum);
     gauss_sum = exp(0.9999*gauss_sum);

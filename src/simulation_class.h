@@ -17,7 +17,7 @@ public:
   Communicator world_comm; // This is the global MPIWORLD communicator.
   Communicator inter_comm; // This is for communication between the rank 0 procs of each walker group.
   Communicator intra_comm; // This is for commmunication between procs within a walker group.
-  uint procs_per_group;
+  uint32_t procs_per_group;
 
   void SetupSimulation(std::string in_file);
   void Run();

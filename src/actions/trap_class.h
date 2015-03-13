@@ -7,7 +7,7 @@ class Trap : public Action
 {
 private:
   int n_images;
-  uint species_i, max_level;
+  uint32_t species_i, max_level;
   double omega;
   std::string species;
 protected:
@@ -23,7 +23,7 @@ public:
   // Functions
   virtual void Init(Input &in);
   virtual double DActionDBeta();
-  virtual double GetAction(const uint b0, const uint b1, const std::vector<std::pair<uint,uint>> &particles, const uint level);
+  virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
   virtual void Write();
 };
 

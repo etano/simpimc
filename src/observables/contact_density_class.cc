@@ -13,7 +13,7 @@ void ContactDensity::Init(Input &in)
   out.Write(prefix+"/species_b", species_b);
 
   // Read in z_a
-  z_a = in.GetAttribute<uint>("z_a");
+  z_a = in.GetAttribute<uint32_t>("z_a");
 
   // Generate action list
   std::vector<std::string> species_list;
@@ -43,20 +43,20 @@ void ContactDensity::Accumulate()
   path.SetMode(1);
 
   // Form particle pairs
-  std::vector<std::vector<std::pair<uint,uint>>> particle_pairs;
+  std::vector<std::vector<std::pair<uint32_t,uint32_t>>> particle_pairs;
   if (species_a_i == species_b_i) { // Homogeneous
-    for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
-      for (uint p_j=p_i+1; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
-        std::vector<std::pair<uint,uint>> particles;
+    for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
+      for (uint32_t p_j=p_i+1; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
+        std::vector<std::pair<uint32_t,uint32_t>> particles;
         particles.push_back(std::make_pair(species_a_i,p_i));
         particles.push_back(std::make_pair(species_b_i,p_j));
         particle_pairs.push_back(particles);
       }
     }
   } else { // Homologous
-    for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
-      for (uint p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
-        std::vector<std::pair<uint,uint>> particles;
+    for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
+      for (uint32_t p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
+        std::vector<std::pair<uint32_t,uint32_t>> particles;
         particles.push_back(std::make_pair(species_a_i,p_i));
         particles.push_back(std::make_pair(species_b_i,p_j));
         particle_pairs.push_back(particles);
@@ -67,7 +67,7 @@ void ContactDensity::Accumulate()
   // Add up contact probability
   // FIXME: Currently only looking at origin
   for (auto& particles: particle_pairs) {
-    for (uint b_i=0; b_i<path.n_bead; ++b_i) {
+    for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
       // Set r's
       vec<double> RA = path(particles[0].first,particles[0].second,b_i)->r;
       vec<double> ri = path(particles[1].first,particles[1].second,b_i)->r;
@@ -87,7 +87,7 @@ void ContactDensity::Accumulate()
       //double laplacian_f = 2*z_a*(path.n_d-1)*((1./mag_ri_RA));
 
       // Sum over actions for ri
-      std::vector<std::pair<uint,uint>> only_ri;
+      std::vector<std::pair<uint32_t,uint32_t>> only_ri;
       only_ri.push_back(particles[1]);
       vec<double> gradient_action;
       gradient_action.zeros(path.n_d);
@@ -109,8 +109,8 @@ void ContactDensity::Write()
 {
   if (n_measure > 0) {
     // Normalize
-    uint N_a = path.species_list[species_a_i]->n_part;
-    uint N_b = path.species_list[species_b_i]->n_part;
+    uint32_t N_a = path.species_list[species_a_i]->n_part;
+    uint32_t N_b = path.species_list[species_b_i]->n_part;
     double norm;
     if (species_a_i == species_b_i)
       norm = 0.5*n_measure*N_a*(N_a-1.)*path.n_bead/path.vol;

@@ -6,14 +6,14 @@ void Simulation::SetupSimulation(std::string in_file)
   in.Load(in_file);
 
   // Build MPI Model
-  procs_per_group = in.GetChild("Parallel").GetAttribute<uint>("procs_per_group",1);
-  uint N = world_comm.NumProcs();
+  procs_per_group = in.GetChild("Parallel").GetAttribute<uint32_t>("procs_per_group",1);
+  uint32_t N = world_comm.NumProcs();
   assert ((N % procs_per_group) == 0);
-  uint n_groups = N/procs_per_group;
-  uint my_group = world_comm.MyProc()/procs_per_group;
+  uint32_t n_groups = N/procs_per_group;
+  uint32_t my_group = world_comm.MyProc()/procs_per_group;
   world_comm.Split(my_group, intra_comm);
   vec<int> ranks(n_groups);
-  for (uint group=0; group<n_groups; group++)
+  for (uint32_t group=0; group<n_groups; group++)
     ranks(group) = group*procs_per_group;
   world_comm.Subset(ranks, inter_comm);
   int n_threads = 1;

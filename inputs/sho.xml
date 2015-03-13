@@ -1,26 +1,25 @@
 <Input>
-  <RNG seed="12345" />
-  <IO outputPrefix="SHO" />
-  <Parallel procsPerGroup="1" />
-  <System nD="1" nBead="32" beta="10.0" L="100.0" PBC="0" />
+  <IO output_prefix="SHO" />
+  <Parallel procs_per_group="1" />
+  <System n_d="1" n_bead="32" beta="10.0" L="100.0" pbc="0" />
   <Particles>
-    <Species name="e" type="e" nPart="1" lambda="0.5" fermi="0" />
+    <Species name="e" type="e" n_part="1" lambda="0.5" fermi="0" />
   </Particles>
   <Actions>
-    <Action name="Kinetic" type="Kinetic" nImages="0" species="e" />
-    <Action name="HarmonicTrap" type="HarmonicTrap" species="e" nOrder="4" nImages="0" species="e" omega="1." maxLevel="0" />
+    <Action name="Kinetic" type="Kinetic" n_images="0" species="e" />
+    <Action name="HarmonicTrap" type="HarmonicTrap" species="e" n_order="4" n_images="0" species="e" omega="1." max_level="0" />
   </Actions>
   <Moves>
-    <Move name="BisectE" type="Bisect" species="e" nLevel="2" />
+    <Move name="BisectE" type="Bisect" species="e" n_level="2" />
   </Moves>
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
-    <Loop nStep="10">
-      <Loop nStep="1000">
-        <Loop nStep="1000">
+    <Loop n_step="10">
+      <Loop n_step="1000">
+        <Loop n_step="1000">
           <Move name="BisectE" />
         </Loop>
         <Observable name="Energy" />

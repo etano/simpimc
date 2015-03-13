@@ -2,8 +2,8 @@
 
 void Bisect::Init(Input &in)
 {
-  n_level = in.GetAttribute<uint>("n_level");
-  uint max_possible_level = floor(log2(path.n_bead));
+  n_level = in.GetAttribute<uint32_t>("n_level");
+  uint32_t max_possible_level = floor(log2(path.n_bead));
   if (n_level > max_possible_level)
     std::cout << "Warning: n_level > max_possible_level!" << std::endl;
   if (path.pbc)
@@ -56,7 +56,7 @@ void Bisect::Accept()
   // Move Accepted, so copy new coordinates
   path.StoreR(affected_beads);
   path.StoreRhoKP(affected_beads);
-  for (uint b_i=bead0+1; b_i<bead1; ++b_i)
+  for (uint32_t b_i=bead0+1; b_i<bead1; ++b_i)
     path.StoreRhoK(b_i,species_i);
 
   // Call accept for each action
@@ -70,7 +70,7 @@ void Bisect::Reject()
   // Move rejected, so return old coordinates
   path.RestoreR(affected_beads);
   path.RestoreRhoKP(affected_beads);
-  for (uint b_i=bead0+1; b_i<bead1; ++b_i)
+  for (uint32_t b_i=bead0+1; b_i<bead1; ++b_i)
     path.RestoreRhoK(b_i,species_i);
 
   // Call reject for each action
@@ -96,13 +96,13 @@ bool Bisect::Attempt()
   std::shared_ptr<Bead> beadF(beadI);
   affected_beads.clear();
   affected_beads.push_back(beadI);
-  for (uint i=0; i<n_bisect_beads; ++i) {
+  for (uint32_t i=0; i<n_bisect_beads; ++i) {
     beadF = beadF->next;
     affected_beads.push_back(beadF);
   }
 
   // Set which particles are affected by the move
-  std::vector<std::pair<uint,uint>> particles;
+  std::vector<std::pair<uint32_t,uint32_t>> particles;
   particles.push_back(std::make_pair(species_i,p_i));
   if (beadF->p != p_i)  // fixme: may be overkill
     particles.push_back(std::make_pair(species_i,beadF->p));
@@ -112,7 +112,7 @@ bool Bisect::Attempt()
   double prev_action_change = 0.;
   double prefactor_sample_prob = 0.;
   for (int level_i = n_level-1; level_i >= 0; level_i -= 1) {
-    uint skip = 1<<level_i;
+    uint32_t skip = 1<<level_i;
     double level_tau = path.tau*skip;
     double sigma2 = lambda*level_tau;
     double sigma = sqrt(sigma2);
@@ -141,7 +141,7 @@ bool Bisect::Attempt()
       // Get sampling probs
       double gauss_prod_old = 1.;
       double gauss_prod_new = 1.;
-      for (uint d_i=0; d_i<path.n_d; d_i++) {
+      for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
         double gauss_sum_old = 0.;
         double gauss_sum_new = 0.;
         for (int image=-n_images; image<=n_images; image++) {

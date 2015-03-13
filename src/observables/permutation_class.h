@@ -7,9 +7,9 @@ class Permutation : public Observable
 {
 private:
   vec<double> cycles;
-  std::vector<uint> sectors;
+  std::vector<uint32_t> sectors;
   std::string species;
-  uint species_i;
+  uint32_t species_i;
   bool first_sector;
 protected:
 public:

@@ -10,7 +10,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   in.Load(file_name);
 
   // Read in u
-  uint n_x_u, n_y_u;
+  uint32_t n_x_u, n_y_u;
   in.Read("u/off_diag/n_x", n_x_u);
   in.Read("u/off_diag/n_y", n_y_u);
   vec<double> x_u(n_x_u);
@@ -28,7 +28,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   // u long range
   if (use_long_range) {
     // Read in r
-    uint n_r_u;
+    uint32_t n_r_u;
     in.Read("u/diag/n_r_long", n_r_u);
     vec<double> r_u(n_r_u);
     vec<double> u_long_r(n_r_u);
@@ -43,7 +43,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
     u_long_r_spline = create_NUBspline_1d_d(r_u_grid, xBC, u_long_r.memptr());
 
     // Read in k
-    uint n_k_u;
+    uint32_t n_k_u;
     in.Read("u/diag/n_k", n_k_u);
     vec<double> k_u(n_k_u);
     vec<double> tmp_u_long_k(n_k_u);
@@ -53,8 +53,8 @@ void IlkkaPairAction::ReadFile(std::string file_name)
 
     // Build k std::vectors
     u_long_k.zeros(path.mag_ks.size());
-    for (uint k_i=0; k_i<path.mag_ks.size(); ++k_i) {
-      for (uint k_i_u=0; k_i_u<k_u.size(); ++k_i_u) {
+    for (uint32_t k_i=0; k_i<path.mag_ks.size(); ++k_i) {
+      for (uint32_t k_i_u=0; k_i_u<k_u.size(); ++k_i_u) {
         if (fequal(path.mag_ks[k_i],k_u(k_i_u),1.e-8))
           u_long_k(k_i) = tmp_u_long_k(k_i_u);
       }
@@ -62,7 +62,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   }
 
   // Read in du
-  uint n_x_du, n_y_du;
+  uint32_t n_x_du, n_y_du;
   in.Read("du/off_diag/n_x", n_x_du);
   in.Read("du/off_diag/n_y", n_y_du);
   vec<double> x_du(n_x_du);
@@ -80,7 +80,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   // du long range
   if (use_long_range) {
     // Read in r
-    uint n_r_du;
+    uint32_t n_r_du;
     in.Read("du/diag/n_r_long", n_r_du);
     vec<double> r_du(n_r_du);
     vec<double> du_long_r(n_r_du);
@@ -95,7 +95,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
     du_long_r_spline = create_NUBspline_1d_d(r_du_grid, xBC, du_long_r.memptr());
 
     // Read in k
-    uint n_k_du;
+    uint32_t n_k_du;
     in.Read("du/diag/n_k", n_k_du);
     vec<double> k_du(n_k_du);
     vec<double> tmp_du_long_k(n_k_du);
@@ -105,8 +105,8 @@ void IlkkaPairAction::ReadFile(std::string file_name)
 
     // Build k std::vectors
     du_long_k.zeros(path.mag_ks.size());
-    for (uint k_i=0; k_i<path.mag_ks.size(); ++k_i) {
-      for (uint k_i_du=0; k_i_du<k_du.size(); ++k_i_du) {
+    for (uint32_t k_i=0; k_i<path.mag_ks.size(); ++k_i) {
+      for (uint32_t k_i_du=0; k_i_du<k_du.size(); ++k_i_du) {
         if (fequal(path.mag_ks[k_i],k_du(k_i_du),1.e-8))
           du_long_k(k_i) = tmp_du_long_k(k_i_du);
       }
@@ -115,7 +115,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   }
 
   // Read in v
-  uint n_r_v;
+  uint32_t n_r_v;
   in.Read("v/diag/n_r", n_r_v);
   vec<double> r_v(n_r_v);
   vec<double> v_r(n_r_v);
@@ -131,7 +131,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   // v long range
   if (use_long_range) {
     // Read in r
-    uint n_r_v_long;
+    uint32_t n_r_v_long;
     in.Read("v/diag/n_r_long", n_r_v_long);
     vec<double> r_v_long(n_r_v_long);
     vec<double> v_long_r(n_r_v_long);
@@ -146,7 +146,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
     v_long_r_spline = create_NUBspline_1d_d(r_v_long_grid, xBC, v_long_r.memptr());
 
     // Read in k
-    uint n_k_v;
+    uint32_t n_k_v;
     in.Read("v/diag/n_k", n_k_v);
     vec<double> k_v(n_k_v);
     vec<double> tmp_v_long_k(n_k_v);
@@ -156,8 +156,8 @@ void IlkkaPairAction::ReadFile(std::string file_name)
 
     // Build k std::vectors
     v_long_k.zeros(path.mag_ks.size());
-    for (uint k_i=0; k_i<path.mag_ks.size(); ++k_i) {
-      for (uint k_i_v=0; k_i_v<k_v.size(); ++k_i_v) {
+    for (uint32_t k_i=0; k_i<path.mag_ks.size(); ++k_i) {
+      for (uint32_t k_i_v=0; k_i_v<k_v.size(); ++k_i_v) {
         if (fequal(path.mag_ks[k_i],k_v(k_i_v),1.e-8))
           v_long_k(k_i) = tmp_v_long_k(k_i_v);
       }
@@ -165,8 +165,8 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   }
 
   // Calculate constants
-  uint N1 = path.species_list[species_a_i]->n_part;
-  uint N2 = path.species_list[species_b_i]->n_part;
+  uint32_t N1 = path.species_list[species_a_i]->n_part;
+  uint32_t N2 = path.species_list[species_b_i]->n_part;
   if (species_a_i == species_b_i) { // homologous
     du_long_k_0 *= 0.5*N1*N1*path.n_bead;
     du_long_r_0 *= -0.5*N1*path.n_bead;
@@ -182,7 +182,7 @@ void IlkkaPairAction::ReadFile(std::string file_name)
 }
 
 /// Calculate the V(r,r') value when given r and r' and the level 
-double IlkkaPairAction::CalcV(double r, double r_p, const uint level)
+double IlkkaPairAction::CalcV(double r, double r_p, const uint32_t level)
 {
   // Limits
   SetLimits(r_v_min, r_v_max, r, r_p);
@@ -206,7 +206,7 @@ double IlkkaPairAction::CalcV(double r, double r_p, const uint level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-double IlkkaPairAction::CalcU(double r, double r_p, double s, const uint level)
+double IlkkaPairAction::CalcU(double r, double r_p, double s, const uint32_t level)
 {
   // Constants
   double q = 0.5*(r + r_p);
@@ -234,7 +234,7 @@ double IlkkaPairAction::CalcU(double r, double r_p, double s, const uint level)
 }
 
 /// Calculate the dU(r,r') value when given r and r' and the level 
-double IlkkaPairAction::CalcdUdBeta(double r, double r_p, double s, const uint level)
+double IlkkaPairAction::CalcdUdBeta(double r, double r_p, double s, const uint32_t level)
 {
   // Constants
   double q = 0.5*(r + r_p);
@@ -270,8 +270,8 @@ double IlkkaPairAction::CalcVLong()
   // Sum over k std::vectors
   double tot = 0.;
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint k_i=0; k_i<path.ks.size(); k_i++) {
-    for (uint b_i=0; b_i<path.n_bead; b_i++) {
+  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+    for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
       double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
       tot += rhok2*v_long_k(k_i);
     }
@@ -284,17 +284,17 @@ double IlkkaPairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-double IlkkaPairAction::CalcULong(const uint b0, const uint b1, const uint level)
+double IlkkaPairAction::CalcULong(const uint32_t b0, const uint32_t b1, const uint32_t level)
 {
   // Get rho k
   field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
 
   // Sum over k std::vectors
-  uint skip = 1<<level;
+  uint32_t skip = 1<<level;
   double tot = 0.;
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint k_i=0; k_i<path.ks.size(); k_i++) {
-    for (uint b_i=b0; b_i<b1; b_i+=skip) {
+  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+    for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
       double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
       tot += u_long_k(k_i)*rhok2;
     }
@@ -315,8 +315,8 @@ double IlkkaPairAction::CalcdUdBetaLong()
   // Sum over k std::vectors
   double tot = 0.;
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint k_i=0; k_i<path.ks.size(); k_i++) {
-    for (uint b_i=0; b_i<path.n_bead; b_i++) {
+  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+    for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
       double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
       tot += du_long_k(k_i)*rhok2;
     }

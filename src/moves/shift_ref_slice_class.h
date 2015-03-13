@@ -7,7 +7,7 @@ class ShiftRefSlice : public Move
 {
 private:
   std::string species;
-  uint species_i, ref_bead_0, ref_bead_1;
+  uint32_t species_i, ref_bead_0, ref_bead_1;
 protected:
 
 public:

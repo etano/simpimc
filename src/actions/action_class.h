@@ -32,9 +32,9 @@ public:
   // Functions
   virtual void Init(Input &in) {};
   virtual double DActionDBeta() { return 0.; };
-  virtual double GetAction(const uint b0, const uint b1, const std::vector<std::pair<uint,uint>> &particles, const uint level) { return 0.; };
-  virtual vec<double> GetActionGradient(const uint b0, const uint b1, const std::vector<std::pair<uint,uint>> &particles, const uint level) { vec<double> zero_vec; zero_vec.zeros(path.n_d); return zero_vec; };
-  virtual double GetActionLaplacian(const uint b0, const uint b1, const std::vector<std::pair<uint,uint>> &particles, const uint level) { return 0.; };
+  virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };
+  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { vec<double> zero_vec; zero_vec.zeros(path.n_d); return zero_vec; };
+  virtual double GetActionLaplacian(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };
   virtual double Potential() { return 0.; };
   virtual double ImportanceWeight() { return 0; };
   virtual void Write() {};
@@ -42,9 +42,9 @@ public:
   virtual void Reject() {};
 
   // FIXME: This only pertains to optimized nodes, but had to put it here for the associated move.
-  virtual uint GetParamSet() {};
-  virtual uint GetNumParamSets() {};
-  virtual void SetParamSet(uint t_param_set_i) {};
+  virtual uint32_t GetParamSet() {};
+  virtual uint32_t GetNumParamSets() {};
+  virtual void SetParamSet(uint32_t t_param_set_i) {};
   virtual void SetRandomParamSet() {};
 
 };

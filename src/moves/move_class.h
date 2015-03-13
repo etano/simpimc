@@ -44,7 +44,7 @@ public:
 
   // Acceptance
   bool first_time;
-  uint n_attempt, n_accept;
+  uint32_t n_attempt, n_accept;
   virtual void Reset();
 
   // Write

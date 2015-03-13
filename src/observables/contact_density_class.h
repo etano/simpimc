@@ -8,8 +8,8 @@ class ContactDensity : public Observable
 private:
   std::vector<std::shared_ptr<Action>> action_list, &full_action_list;
   std::string species_a, species_b;
-  uint species_a_i, species_b_i;
-  uint z_a;
+  uint32_t species_a_i, species_b_i;
+  uint32_t z_a;
   double total;
 protected:
 public:

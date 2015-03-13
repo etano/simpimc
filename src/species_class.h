@@ -25,7 +25,7 @@ public:
   std::string init_type;
 
   // Given global constants
-  uint n_part, n_d, n_bead, s_i;
+  uint32_t n_part, n_d, n_bead, s_i;
   std::string name;
   double lambda;
 

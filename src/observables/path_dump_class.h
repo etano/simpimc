@@ -6,7 +6,7 @@
 class PathDump : public Observable
 {
 private:
-  uint n_write_calls, n_dump;
+  uint32_t n_write_calls, n_dump;
 protected:
 public:
   PathDump(Path &path, Input &in, IO &out)

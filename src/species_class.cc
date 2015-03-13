@@ -4,7 +4,7 @@ void Species::Init(Input &in, IO &out)
 {
   // Read inputs
   name = in.GetAttribute<std::string>("name");
-  n_part = in.GetAttribute<uint>("n_part");
+  n_part = in.GetAttribute<uint32_t>("n_part");
   lambda = in.GetAttribute<double>("lambda");
   fermi = in.GetAttribute<bool>("fermi", false);
   fixed_node = in.GetAttribute<bool>("fixed_node", false);
@@ -23,17 +23,17 @@ void Species::Init(Input &in, IO &out)
 
   // Initiate beads
   bead.set_size(n_part,n_bead);
-  for (uint p_i=0; p_i<n_part; p_i++)
-    for (uint b_i=0; b_i<n_bead; b_i++)
+  for (uint32_t p_i=0; p_i<n_part; p_i++)
+    for (uint32_t b_i=0; b_i<n_bead; b_i++)
       bead(p_i,b_i) = std::make_shared<Bead>(n_d,s_i,p_i,b_i);
 
   // Initiate bead connections
-  for (uint p_i=0; p_i<n_part; p_i++) {
+  for (uint32_t p_i=0; p_i<n_part; p_i++) {
     bead(p_i,0) -> next = bead(p_i,1);
     bead(p_i,0) -> next_c = bead(p_i,1);
     bead(p_i,0) -> prev = bead(p_i,n_bead-1);
     bead(p_i,0) -> prev_c = bead(p_i,n_bead-1);
-    for (uint b_i=1; b_i<n_bead-1; b_i++) {
+    for (uint32_t b_i=1; b_i<n_bead-1; b_i++) {
       bead(p_i,b_i) -> next = bead(p_i,b_i+1);
       bead(p_i,b_i) -> next_c = bead(p_i,b_i+1);
       bead(p_i,b_i) -> prev = bead(p_i,b_i-1);
@@ -57,18 +57,18 @@ void Species::InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, 
     std::fstream init_file;
     init_file.open(file_name.c_str(), std::ios_base::in);
     if (!init_file.fail()) {
-      for (uint p_i=0; p_i<n_part; ++p_i) {
+      for (uint32_t p_i=0; p_i<n_part; ++p_i) {
         if (all_beads) {
-          for (uint b_i=0; b_i<n_bead; ++b_i) {
-            for (uint d_i=0; d_i<n_d; ++d_i)
+          for (uint32_t b_i=0; b_i<n_bead; ++b_i) {
+            for (uint32_t d_i=0; d_i<n_d; ++d_i)
               init_file >> bead(p_i,b_i)->r(d_i);
             bead(p_i,b_i)->StoreR();
           }
         } else {
           vec<double> r(n_d);
-          for (uint d_i=0; d_i<n_d; ++d_i)
+          for (uint32_t d_i=0; d_i<n_d; ++d_i)
             init_file >> r(d_i);
-          for (uint b_i=0; b_i<n_bead; ++b_i) {
+          for (uint32_t b_i=0; b_i<n_bead; ++b_i) {
             bead(p_i,b_i)->r = r;
             bead(p_i,b_i)->StoreR();
           }
@@ -83,13 +83,13 @@ void Species::InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, 
   // Random configuration
   } else if (init_type == "Random") {
     double cofactor = in.GetAttribute<double>("cofactor",1.);
-    for (uint p_i=0; p_i<n_part; ++p_i) {
-      for (uint d_i=0; d_i<n_d; ++d_i) {
+    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+      for (uint32_t d_i=0; d_i<n_d; ++d_i) {
         double tmp_rand = rng.UnifRand(-cofactor*L/2.,cofactor*L/2.);
-        for (uint b_i=0; b_i<n_bead; ++b_i)
+        for (uint32_t b_i=0; b_i<n_bead; ++b_i)
           bead(p_i,b_i)->r(d_i) = tmp_rand;
       }
-      for (uint b_i=0; b_i<n_bead; ++b_i)
+      for (uint32_t b_i=0; b_i<n_bead; ++b_i)
         bead(p_i,b_i)->StoreR();
     }
 
@@ -97,7 +97,7 @@ void Species::InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, 
   } else if (init_type == "BCC") {
     int n_part_per_n_d = (int) ceil (pow(0.5*n_part, 1.0/n_d));
     double delta = L/n_part_per_n_d;
-    for (uint p_i=0; p_i<n_part; p_i++) {
+    for (uint32_t p_i=0; p_i<n_part; p_i++) {
       int p = p_i/2;
       vec<int> tmp(n_d);
       tmp(0) = p/(n_part_per_n_d*n_part_per_n_d);
@@ -122,7 +122,7 @@ void Species::InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, 
     double cofactor = in.GetAttribute<double>("cofactor",1.);
     int n_part_per_n_d = (int) ceil (pow(0.5*n_part, 1.0/n_d));
     double delta = cofactor*L/(1.*n_part_per_n_d);
-    for (uint p_i=0; p_i<n_part; p_i++) {
+    for (uint32_t p_i=0; p_i<n_part; p_i++) {
       vec<int> tmp(n_d);
       tmp(0) = p_i/(n_part_per_n_d*n_part_per_n_d);
       if (n_d > 1)
@@ -154,15 +154,15 @@ void Species::InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, 
     out.Write("System/Particles/"+name+"/file_name",file_name);
 
     // Get number of dumps
-    uint n_dump;
+    uint32_t n_dump;
     restart_file.Read("Observables/PathDump/"+name+"/n_dump",n_dump);
 
     // Get positions
     cube<double> path_positions(n_d,n_part*n_bead,n_dump);
     restart_file.Read("Observables/PathDump/"+name+"/positions",path_positions);
-    for (uint p_i=0; p_i<n_part; ++p_i) {
-      for (uint b_i=0; b_i<n_bead; ++b_i) {
-        for (uint d_i=0; d_i<n_d; ++d_i)
+    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+      for (uint32_t b_i=0; b_i<n_bead; ++b_i) {
+        for (uint32_t d_i=0; d_i<n_d; ++d_i)
           bead(p_i,b_i)->r(d_i) = path_positions(d_i,p_i*n_bead + b_i,n_dump-1);
         bead(p_i,b_i)->StoreR();
       }
@@ -171,7 +171,7 @@ void Species::InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, 
     // Get permutation
     cube<double> path_permutation(2,n_part,n_dump);
     restart_file.Read("Observables/PathDump/"+name+"/permutation",path_permutation);
-    for (uint p_i=0; p_i<n_part; ++p_i) {
+    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
       bead(p_i,0)->prev = bead(path_permutation(0,p_i,n_dump-1),n_bead-1);
       bead(p_i,0)->StorePrev();
       bead(p_i,n_bead-1)->next = bead(path_permutation(1,p_i,n_dump-1),0);

@@ -11,15 +11,15 @@ private:
 protected:
   Path &path;
   IO &out;
-  uint skip;
+  uint32_t skip;
 
   struct LinearGrid
   {
     vec<double> rs;
     double r_min, r_max, dr, d_ir;
-    uint n_r;
+    uint32_t n_r;
 
-    void CreateGrid(double t_r_min, double t_r_max, uint t_n_r)
+    void CreateGrid(double t_r_min, double t_r_max, uint32_t t_n_r)
     {
       r_min = t_r_min;
       r_max = t_r_max;
@@ -27,12 +27,12 @@ protected:
       dr = (r_max-r_min)/(n_r-1.);
       d_ir = 1./dr;
       rs.set_size(n_r);
-      for (uint i=0; i<n_r; ++i)
+      for (uint32_t i=0; i<n_r; ++i)
         rs(i) = r_min + i*dr;
     };
-    inline double operator() (uint i) { return rs(i); };
-    uint ReverseMap(const double r) {
-      uint i = (uint) nearbyint((r-r_min)*d_ir-0.5);
+    inline double operator() (uint32_t i) { return rs(i); };
+    uint32_t ReverseMap(const double r) {
+      uint32_t i = (uint32_t) nearbyint((r-r_min)*d_ir-0.5);
       if (i < 0)
         return 0;
       else
@@ -55,7 +55,7 @@ public:
   {
     name = in.GetAttribute<std::string>("name");
     type = in.GetAttribute<std::string>("type");
-    skip = in.GetAttribute<uint>("skip",1);
+    skip = in.GetAttribute<uint32_t>("skip",1);
     prefix = "Observables/"+name+"/";
     out.CreateGroup(prefix);
     out.Write(prefix+"/type",type);
@@ -65,7 +65,7 @@ public:
 
   std::string type;
   bool first_time;
-  uint n_measure;
+  uint32_t n_measure;
 
   // Functions
   inline void DoEvent() {

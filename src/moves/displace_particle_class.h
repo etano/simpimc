@@ -7,7 +7,7 @@ class DisplaceParticle : public Move
 {
 private:
   std::string species;
-  uint species_i;
+  uint32_t species_i;
   std::vector<std::shared_ptr<Bead>> affected_beads;
   double step_size;
 protected:

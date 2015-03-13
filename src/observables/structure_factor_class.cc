@@ -18,7 +18,7 @@ void StructureFactor::Init(Input &in)
   out.Write(prefix+"/species_b", species_b);
   out.Write(prefix+"/k_cut", k_cut);
   out.CreateExtendableDataSet("/"+prefix+"/", "x", path.mag_ks[0]);
-  for (uint k_i=1; k_i<path.mag_ks.size(); ++k_i)
+  for (uint32_t k_i=1; k_i<path.mag_ks.size(); ++k_i)
     out.AppendDataSet("/"+prefix+"/", "x", path.mag_ks[k_i]);
 
   Reset();
@@ -33,9 +33,9 @@ void StructureFactor::Reset()
 void StructureFactor::Accumulate()
 {
   path.SetMode(1);
-  for (uint k_i=0; k_i<path.k_indices.size(); k_i++) {
+  for (uint32_t k_i=0; k_i<path.k_indices.size(); k_i++) {
     if (path.mag_ks[k_i] < k_cut) {
-      for (uint b_i=0; b_i<path.n_bead; ++b_i) {
+      for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
         sk(k_i) += path.sign*path.importance_weight*CMag2(path.rho_k(b_i,species_a_i)(k_i),path.rho_k(b_i,species_b_i)(k_i));
       }
     }
@@ -51,8 +51,8 @@ void StructureFactor::Write()
 {
   if (n_measure > 0) {
     // Normalize histograms
-    uint N_a = path.species_list[species_a_i]->n_part;
-    uint N_b = path.species_list[species_b_i]->n_part;
+    uint32_t N_a = path.species_list[species_a_i]->n_part;
+    uint32_t N_b = path.species_list[species_b_i]->n_part;
     double norm = n_measure*path.n_bead*N_a*N_b;
     sk = sk/norm;
 

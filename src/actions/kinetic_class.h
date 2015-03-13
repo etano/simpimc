@@ -9,9 +9,9 @@ class Kinetic : public Action
 {
 private:
   int n_images;
-  uint max_level;
+  uint32_t max_level;
   std::string species;
-  uint species_i, n_part;
+  uint32_t species_i, n_part;
   double i_4_lambda_tau;
 
   // Splines
@@ -20,13 +20,8 @@ private:
   void SetupSpline();
 
   // Sums over images
-  double GetGaussSum(const double r, const double r2_i_4_lambda_tau, const uint slice_diff);
-  inline double GetGaussSumFast(const double r, const double r2_i_4_lambda_tau, const uint slice_diff)
-  {
-    double gauss_sum;
-    eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
-    return gauss_sum-(r2_i_4_lambda_tau/slice_diff);
-  };
+  double GetGaussSum(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff);
+  double GetGaussSumFast(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff);
   double GetNumSum(const double r, const double r2_i_4_lambda_tau);
 
 protected:
@@ -42,9 +37,9 @@ public:
   // Functions
   virtual void Init(Input &in);
   virtual double DActionDBeta();
-  virtual double GetAction(const uint b0, const uint b1, const std::vector<std::pair<uint,uint>> &particles, const uint level);
-  virtual vec<double> GetActionGradient(const uint b0, const uint b1, const std::vector<std::pair<uint,uint>> &particles, const uint level);
-  virtual double GetActionLaplacian(const uint b0, const uint b1, const std::vector<std::pair<uint,uint>> &particles, const uint level);
+  virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
+  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
+  virtual double GetActionLaplacian(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
   virtual void Write();
 };
 

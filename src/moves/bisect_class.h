@@ -10,9 +10,9 @@ private:
   bool roll_over, adaptive;
   double target_ratio;
   int n_images;
-  uint species_i;
-  uint n_level, n_bisect_beads;
-  uint bead0, bead1;
+  uint32_t species_i;
+  uint32_t n_level, n_bisect_beads;
+  uint32_t bead0, bead1;
   double i4_lambda_tau_n_bisect_beads, lambda;
   int ref_accept, ref_attempt;
 

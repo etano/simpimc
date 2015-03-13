@@ -16,7 +16,7 @@ void DavidPairAction::ReadFile(std::string file_name)
 
   // Read in and create grid
   double r_start, r_end;
-  uint n_grid;
+  uint32_t n_grid;
   std::string grid_type;
   vec<double> grid_points;
   in.Read(ukj_str + "/Grid/Start", r_start);
@@ -37,7 +37,7 @@ void DavidPairAction::ReadFile(std::string file_name)
   taus.set_size(n_tau);
   in.Read(ukj_str + "/Taus", taus);
   bool tauFound = 0;
-  for (uint tau_i=0; tau_i<n_tau; tau_i++)
+  for (uint32_t tau_i=0; tau_i<n_tau; tau_i++)
     if (abs(taus(tau_i)-path.tau) < 1.0e-6)
       tauFound = 1;
   if (!tauFound) {
@@ -52,7 +52,7 @@ void DavidPairAction::ReadFile(std::string file_name)
 
   // Determine number of values for k,j sum
   n_val = 1;
-  for (uint i = 1; i <= n_order; ++i)
+  for (uint32_t i = 1; i <= n_order; ++i)
     n_val += 1+i;
 
   // Read in ukj
@@ -64,22 +64,22 @@ void DavidPairAction::ReadFile(std::string file_name)
 
   // Spline ukj
   cube<double> tmp_ukj2(n_val+1,n_grid,n_tau);
-  for(uint tau_i=0; tau_i<n_tau; tau_i++) {
-    for (uint grid_i=0; grid_i<n_grid-1; ++grid_i) {
+  for(uint32_t tau_i=0; tau_i<n_tau; tau_i++) {
+    for (uint32_t grid_i=0; grid_i<n_grid-1; ++grid_i) {
       tmp_ukj2(0,grid_i,tau_i) = V(grid_i);
-      for (uint val_i=1; val_i<n_val+1; ++val_i)
+      for (uint32_t val_i=1; val_i<n_val+1; ++val_i)
         tmp_ukj2(val_i,grid_i,tau_i) = tmp_ukj(val_i-1,grid_i,tau_i);
     }
-    //for (uint val_i=1; val_i<n_val+1; ++val_i)
+    //for (uint32_t val_i=1; val_i<n_val+1; ++val_i)
     //  tmp_ukj2(val_i,n_grid-1,tau_i) = 0.;
   }
 
   ukj.set_size(n_tau);
-  for(uint tau_i=0; tau_i<n_tau; tau_i++) {
+  for(uint32_t tau_i=0; tau_i<n_tau; tau_i++) {
     ukj(tau_i) = create_multi_NUBspline_1d_d(grid, xBC, n_val+1);
-    for (uint val_i=0; val_i<n_val+1; ++val_i) {
+    for (uint32_t val_i=0; val_i<n_val+1; ++val_i) {
       vec<double> tmp_v(n_grid);
-      for (uint grid_i=0; grid_i<n_grid; ++grid_i)
+      for (uint32_t grid_i=0; grid_i<n_grid; ++grid_i)
         tmp_v(grid_i) = tmp_ukj2(val_i,grid_i,tau_i);
       set_multi_NUBspline_1d_d(ukj(tau_i), val_i, tmp_v.memptr());
     }
@@ -91,21 +91,21 @@ void DavidPairAction::ReadFile(std::string file_name)
 
   // Spline dukj_dbeta
   cube<double> tmpdukj_dbeta2(n_val+1,n_grid,n_tau);
-  for(uint tau_i=0; tau_i<n_tau; tau_i++) {
-    for (uint grid_i=0; grid_i<n_grid-1; ++grid_i) {
+  for(uint32_t tau_i=0; tau_i<n_tau; tau_i++) {
+    for (uint32_t grid_i=0; grid_i<n_grid-1; ++grid_i) {
       tmpdukj_dbeta2(0,grid_i,tau_i) = V(grid_i);
-      for (uint val_i=1; val_i<n_val+1; ++val_i)
+      for (uint32_t val_i=1; val_i<n_val+1; ++val_i)
         tmpdukj_dbeta2(val_i,grid_i,tau_i) = tmpdukj_dbeta(val_i-1,grid_i,tau_i);
     }
-    //for (uint val_i=1; val_i<n_val+1; ++val_i)
+    //for (uint32_t val_i=1; val_i<n_val+1; ++val_i)
     //  tmpdukj_dbeta2(val_i,n_grid-1,tau_i) = 0.;
   }
   dukj_dbeta.set_size(n_tau);
-  for(uint tau_i=0; tau_i<n_tau; tau_i++) {
+  for(uint32_t tau_i=0; tau_i<n_tau; tau_i++) {
     dukj_dbeta(tau_i) = create_multi_NUBspline_1d_d(grid, xBC, n_val+1);
-    for (uint val_i=0; val_i<n_val+1; ++val_i) {
+    for (uint32_t val_i=0; val_i<n_val+1; ++val_i) {
       vec<double> tmp_v(n_grid);
-      for (uint grid_i=0; grid_i<n_grid; ++grid_i)
+      for (uint32_t grid_i=0; grid_i<n_grid; ++grid_i)
         tmp_v(grid_i) = tmpdukj_dbeta2(val_i,grid_i,tau_i);
       set_multi_NUBspline_1d_d(dukj_dbeta(tau_i), val_i, tmp_v.memptr());
     }
@@ -114,7 +114,7 @@ void DavidPairAction::ReadFile(std::string file_name)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-double DavidPairAction::CalcV(double r, double r_p, const uint level)
+double DavidPairAction::CalcV(double r, double r_p, const uint32_t level)
 {
   // Limits
   double r_min, r_max;
@@ -131,7 +131,7 @@ double DavidPairAction::CalcV(double r, double r_p, const uint level)
 }
 
 /// Calculate the U(r,r') value when given r and r' and the level 
-double DavidPairAction::CalcU(double r, double r_p, double s, const uint level)
+double DavidPairAction::CalcU(double r, double r_p, double s, const uint32_t level)
 {
   // Constants
   double q = 0.5*(r + r_p);
@@ -156,10 +156,10 @@ double DavidPairAction::CalcU(double r, double r_p, double s, const uint level)
     double s2 = s*s;
     double s2inverse = 1./s2;
     double Sto2k = s2;
-    for (uint k=1; k<=n_order; k++) {
+    for (uint32_t k=1; k<=n_order; k++) {
       double Zto2j = 1;
       double currS = Sto2k;
-      for (uint j=0; j<=k; j++) {
+      for (uint32_t j=0; j<=k; j++) {
         // indexing into the 2darray
         double Ucof = UqVals(k*(k+1)/2 + (j+1));
         u += (Ucof)*Zto2j*currS;
@@ -175,7 +175,7 @@ double DavidPairAction::CalcU(double r, double r_p, double s, const uint level)
 }
 
 /// Calculate the U(r,r'), dU(r,r'), and V(r,r') value when given r and r' and the level 
-double DavidPairAction::CalcdUdBeta(double r, double r_p, double s, const uint level)
+double DavidPairAction::CalcdUdBeta(double r, double r_p, double s, const uint32_t level)
 {
   // Constants
   double q = 0.5*(r + r_p);
@@ -208,10 +208,10 @@ double DavidPairAction::CalcdUdBeta(double r, double r_p, double s, const uint l
     double s2 = s*s;
     double s2inverse = 1./s2;
     double Sto2k = s2;
-    for (uint k=1; k<=n_order; k++) {
+    for (uint32_t k=1; k<=n_order; k++) {
       double Zto2j = 1;
       double currS = Sto2k;
-      for (uint j=0; j<=k; j++){
+      for (uint32_t j=0; j<=k; j++){
         // indexing into the 2darray
         double Ucof = UqVals(k*(k+1)/2+j+1);
         double dUcof = dUqVals(k*(k+1)/2+j+1);

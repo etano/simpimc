@@ -13,8 +13,8 @@ void RecordOptimizedNodal::Init(Input &in)
 
   // Set up param_set_count
   param_set_count.set_size(action->GetNumParamSets());
-  vec<uint> param_set_indices(param_set_count.size());
-  for (uint i=0; i<param_set_count.size(); ++i)
+  vec<uint32_t> param_set_indices(param_set_count.size());
+  for (uint32_t i=0; i<param_set_count.size(); ++i)
     param_set_indices(i) = i;
   out.Write(prefix+"x",param_set_indices);
 

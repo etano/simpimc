@@ -11,7 +11,7 @@ void Time::Init(Input &in)
 
 void Time::Reset()
 {
-  for (uint i=0; i<event_list.size(); ++i)
+  for (uint32_t i=0; i<event_list.size(); ++i)
     event_list[i]->time_spent = 0;
 
   struct timeval time;
@@ -34,7 +34,7 @@ void Time::Write()
   if (total_time != 0)
     norm /= total_time;
   std::vector<double> event_times(event_list.size());
-  for (uint i=0; i<event_times.size(); ++i)
+  for (uint32_t i=0; i<event_times.size(); ++i)
     event_times[i] = event_list[i]->time_spent;
 
   if (first_time) {
@@ -43,14 +43,14 @@ void Time::Write()
     out.CreateGroup(prefix+"Block");
     out.Write(prefix+"Block/data_type",data_type);
     out.CreateExtendableDataSet(prefix+"Block/", "x", total_time);
-    for (uint i=0; i<event_times.size(); ++i) {
+    for (uint32_t i=0; i<event_times.size(); ++i) {
       out.CreateGroup(prefix+event_list[i]->name);
       out.Write(prefix+event_list[i]->name+"/data_type",data_type);
       out.CreateExtendableDataSet("/"+prefix+event_list[i]->name+"/", "x", event_times[i]);
     }
   } else {
     out.AppendDataSet(prefix+"Block/", "x", total_time);
-    for (uint i=0; i<event_times.size(); ++i)
+    for (uint32_t i=0; i<event_times.size(); ++i)
       out.AppendDataSet("/"+prefix+event_list[i]->name+"/", "x", event_times[i]);
   }
 

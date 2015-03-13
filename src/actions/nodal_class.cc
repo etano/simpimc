@@ -5,7 +5,7 @@ double Nodal::DActionDBeta()
   return 0.;
 }
 
-double Nodal::GetAction(const uint b0, const uint b1, const std::vector<std::pair<uint,uint>> &particles, const uint level)
+double Nodal::GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
 {
   // Currently old node should be fine
   if (path.mode == 0)
@@ -25,7 +25,7 @@ double Nodal::GetAction(const uint b0, const uint b1, const std::vector<std::pai
     return 0.;
 
   // Constants
-  uint skip = 1<<level;
+  uint32_t skip = 1<<level;
   double level_tau = skip*path.tau;
 
   // See if ref slice included
@@ -48,7 +48,7 @@ double Nodal::GetAction(const uint b0, const uint b1, const std::vector<std::pai
   std::vector<std::shared_ptr<Bead>> ref_beads, other_beads;
   int slice_diff0 = path.bead_loop(start_b) - path.ref_bead;
   int abs_slice_diff_0 = abs(slice_diff0);
-  for (uint p_i=0; p_i<n_part; ++p_i) {
+  for (uint32_t p_i=0; p_i<n_part; ++p_i) {
     ref_beads.push_back(path(species_i,p_i,path.ref_bead));
     if (abs_slice_diff_0 >= 0) {
       //other_beads.push_back(path.GetNextBead(ref_beads[p_i],abs_slice_diff_0)); // fixme: This may be the only correct form
@@ -63,16 +63,16 @@ double Nodal::GetAction(const uint b0, const uint b1, const std::vector<std::pai
   mat<double> g(n_part,n_part);
   double tot = 0.;
   #pragma omp parallel for reduction(+:tot)
-  for (uint b_i=start_b; b_i<=end_b; b_i+=skip) {
+  for (uint32_t b_i=start_b; b_i<=end_b; b_i+=skip) {
     if (b_i != path.ref_bead && tot < 1.e100) {
       // Form rho_f
       int slice_diff = path.bead_loop(b_i) - path.ref_bead;
-      uint abs_slice_diff = abs(slice_diff);
-      uint inv_slice_diff = path.n_bead - abs_slice_diff;
-      uint min_slice_diff = std::min(abs_slice_diff, inv_slice_diff);
+      uint32_t abs_slice_diff = abs(slice_diff);
+      uint32_t inv_slice_diff = path.n_bead - abs_slice_diff;
+      uint32_t min_slice_diff = std::min(abs_slice_diff, inv_slice_diff);
 
-      for (uint p_i=0; p_i<n_part; ++p_i) {
-        for (uint p_j=0; p_j<n_part; ++p_j) {
+      for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+        for (uint32_t p_j=0; p_j<n_part; ++p_j) {
           vec<double> dr(path.Dr(ref_beads[p_i], other_beads[p_j]));
           g(p_i,p_j) = GetGij(dr, min_slice_diff);
         }
@@ -85,7 +85,7 @@ double Nodal::GetAction(const uint b0, const uint b1, const std::vector<std::pai
     }
 
     // Move down the line
-    for (uint p_i=0; p_i<n_part; ++p_i)
+    for (uint32_t p_i=0; p_i<n_part; ++p_i)
       other_beads[p_i] = path.GetNextBead(other_beads[p_i],skip);
   }
 
@@ -94,7 +94,7 @@ double Nodal::GetAction(const uint b0, const uint b1, const std::vector<std::pai
 
 void Nodal::Accept()
 {
-  //uint nCheck = n_part;
-  //for (uint b_i=start_b; b_i<=end_b; ++b_i)
+  //uint32_t nCheck = n_part;
+  //for (uint32_t b_i=start_b; b_i<=end_b; ++b_i)
   //  rho_f_c(b_i) = rho_f(b_i);
 }

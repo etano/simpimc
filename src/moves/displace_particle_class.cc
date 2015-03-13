@@ -18,7 +18,7 @@ void DisplaceParticle::Accept()
   // Move Accepted, so copy new coordinates
   path.StoreR(affected_beads);
   path.StoreRhoKP(affected_beads);
-  for (uint b_i=0; b_i<path.n_bead; ++b_i)
+  for (uint32_t b_i=0; b_i<path.n_bead; ++b_i)
     path.StoreRhoK(b_i,species_i);
 
   // Call accept for each action
@@ -32,7 +32,7 @@ void DisplaceParticle::Reject()
   // Move rejected, so return old coordinates
   path.RestoreR(affected_beads);
   path.RestoreRhoKP(affected_beads);
-  for (uint b_i=0; b_i<path.n_bead; ++b_i)
+  for (uint32_t b_i=0; b_i<path.n_bead; ++b_i)
     path.RestoreRhoK(b_i,species_i);
 
   // Call reject for each action
@@ -44,9 +44,9 @@ void DisplaceParticle::Reject()
 bool DisplaceParticle::Attempt()
 {
   // Set which particles are affected by the move
-  uint p_i = rng.UnifRand(path.species_list[species_i]->n_part) - 1;  // Pick particle at random
-  std::vector<std::pair<uint,uint>> particles;
-  std::pair<uint,uint> particle(species_i,p_i);
+  uint32_t p_i = rng.UnifRand(path.species_list[species_i]->n_part) - 1;  // Pick particle at random
+  std::vector<std::pair<uint32_t,uint32_t>> particles;
+  std::pair<uint32_t,uint32_t> particle(species_i,p_i);
   particles.push_back(particle);
 
   // New sampling
@@ -57,7 +57,7 @@ bool DisplaceParticle::Attempt()
   // Set which beads are affected by the move
   // and move them
   affected_beads.clear();
-  for(uint b_i=0; b_i<path.n_bead; ++b_i) {
+  for(uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
     affected_beads.push_back(path(species_i,p_i,b_i));
     path(species_i,p_i,b_i)->Move(dr);
   }

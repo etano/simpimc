@@ -24,11 +24,11 @@ public:
   virtual void ReadFile(std::string file_name);
 
   // Pair actions
-  virtual double CalcV(double r, double r_p, const uint level);
+  virtual double CalcV(double r, double r_p, const uint32_t level);
   virtual double CalcVLong() { return 0.; };
-  virtual double CalcU(double r, double r_p, double s, const uint level);
-  virtual double CalcULong(const uint b0, const uint b1, const uint level) { return 0.; };
-  virtual double CalcdUdBeta(double r, double r_p, double s, const uint level);
+  virtual double CalcU(double r, double r_p, double s, const uint32_t level);
+  virtual double CalcULong(const uint32_t b0, const uint32_t b1, const uint32_t level) { return 0.; };
+  virtual double CalcdUdBeta(double r, double r_p, double s, const uint32_t level);
   virtual double CalcdUdBetaLong() { return 0.; };
 
 };

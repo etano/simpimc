@@ -8,28 +8,28 @@ class PermBisect : public Move
 private:
   std::string species;
   int n_images;
-  uint species_i;
-  uint n_level, n_bisect_beads, n_part, n_perm_part, n_perm_type;
-  uint bead0, bead1;
+  uint32_t species_i;
+  uint32_t n_level, n_bisect_beads, n_part, n_perm_part, n_perm_type;
+  uint32_t bead0, bead1;
   double lambda, i4_lambda_tau_n_bisect_beads, epsilon, log_epsilon;
 
   struct Cycle
   {
     double weight, contribution;
-    uint index, type;
-    vec<uint> perm, i_perm, part;
+    uint32_t index, type;
+    vec<uint32_t> perm, i_perm, part;
   };
   std::vector<Cycle*> cycles;
   field<Cycle> all_cycles;
   mat<double> t;
 
-  uint perm_type;
-  vec<uint> perm_attempt, perm_accept;
+  uint32_t perm_type;
+  vec<uint32_t> perm_attempt, perm_accept;
 
   double ConstructPermTable();
   void UpdatePermTable();
   void BuildCycles();
-  uint SelectCycle(const double permTot);
+  uint32_t SelectCycle(const double permTot);
   void PermuteBeads(field<std::shared_ptr<Bead>> &b0, field<std::shared_ptr<Bead>> &b1, const Cycle* const c);
   void AssignParticleLabels();
   void Write();
