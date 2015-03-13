@@ -66,11 +66,13 @@ void ContactDensity::Accumulate()
 
   // Add up contact probability
   // FIXME: Currently only looking at origin
-  for (auto& particles: particle_pairs) {
+  double tot = 0.;
+  #pragma omp parallel for collapse(2) reduction(+:tot)
+  for (uint32_t pp_i=0; pp_i<particle_pairs.size(); ++pp_i) {
     for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
       // Set r's
-      vec<double> RA = path(particles[0].first,particles[0].second,b_i)->r;
-      vec<double> ri = path(particles[1].first,particles[1].second,b_i)->r;
+      vec<double> RA = path(particle_pairs[pp_i][0].first,particle_pairs[pp_i][0].second,b_i)->r;
+      vec<double> ri = path(particle_pairs[pp_i][1].first,particle_pairs[pp_i][1].second,b_i)->r;
 
       // Get differences
       vec<double> ri_RA(path.Dr(ri, RA));
@@ -88,7 +90,7 @@ void ContactDensity::Accumulate()
 
       // Sum over actions for ri
       std::vector<std::pair<uint32_t,uint32_t>> only_ri;
-      only_ri.push_back(particles[1]);
+      only_ri.push_back(particle_pairs[pp_i][1]);
       vec<double> gradient_action;
       gradient_action.zeros(path.n_d);
       double laplacian_action = 0.;
@@ -98,10 +100,11 @@ void ContactDensity::Accumulate()
       }
 
       // Sum total
-      total += ((g - (1./mag_ri_RA))/(4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
+      tot += ((g - (1./mag_ri_RA))/(4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
     }
   }
 
+  total += tot;
   n_measure += 1;
 }
 
