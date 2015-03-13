@@ -16,7 +16,7 @@ void Trap::Init(Input &in)
 double Trap::DActionDBeta()
 {
   double tot = 0.;
-
+  #pragma omp parallel for collapse(2) reduction(+:tot)
   for (uint32_t p_i=0; p_i<path.n_part; p_i+=1) {
     for (uint32_t b_i=0; b_i<path.n_bead; b_i+=1) {
       tot += dot(path(species_i,p_i,b_i)->r, path(species_i,p_i,b_i)->r);
