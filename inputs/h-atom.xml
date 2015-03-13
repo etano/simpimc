@@ -16,7 +16,7 @@
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" measure_v="1" />
     <Observable name="PC_ep" type="PairCorrelation" species_a="e" species_b="p" r_min="0." r_max="5." n_r="100" skip="1" />
-    <!--Observable name="PC_ep_0" type="ContactDensity" species_a="p" species_b="e" z_a="1" skip="1" /-->
+    <Observable name="PC_ep_0" type="ContactDensity" species_a="p" species_b="e" z_a="1" skip="1" />
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
@@ -27,7 +27,7 @@
         </Loop>
         <Observable name="Energy" />
         <Observable name="PC_ep" />
-        <!--Observable name="PC_ep_0" /-->
+        <Observable name="PC_ep_0" />
       </Loop>
       <Write />
     </Loop>
