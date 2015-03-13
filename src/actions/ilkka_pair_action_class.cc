@@ -11,14 +11,14 @@ void IlkkaPairAction::ReadFile(std::string file_name)
 
   // Read in u
   uint n_x_u, n_y_u;
-  in.Read("u/offDiag/n_x", n_x_u);
-  in.Read("u/offDiag/n_y", n_y_u);
+  in.Read("u/off_diag/n_x", n_x_u);
+  in.Read("u/off_diag/n_y", n_y_u);
   vec<double> x_u(n_x_u);
   vec<double> y_u(n_y_u);
   mat<double> u_xy(n_x_u,n_y_u);
-  in.Read("u/offDiag/x", x_u);
-  in.Read("u/offDiag/y", y_u);
-  in.Read("u/offDiag/u_xy", u_xy);
+  in.Read("u/off_diag/x", x_u);
+  in.Read("u/off_diag/y", y_u);
+  in.Read("u/off_diag/u_xy", u_xy);
 
   // Spline u
   NUgrid* x_u_grid = create_general_grid(x_u.memptr(), x_u.size());
@@ -28,10 +28,10 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   // u long range
   if (use_long_range) {
     // Read in r
-    uint nr_u;
-    in.Read("u/diag/nr_long", nr_u);
-    vec<double> r_u(nr_u);
-    vec<double> u_long_r(nr_u);
+    uint n_r_u;
+    in.Read("u/diag/n_r_long", n_r_u);
+    vec<double> r_u(n_r_u);
+    vec<double> u_long_r(n_r_u);
     in.Read("u/diag/r_long", r_u);
     in.Read("u/diag/u_long_r", u_long_r);
     in.Read("u/diag/u_long_r_0",u_long_r_0);
@@ -63,14 +63,14 @@ void IlkkaPairAction::ReadFile(std::string file_name)
 
   // Read in du
   uint n_x_du, n_y_du;
-  in.Read("du/offDiag/n_x", n_x_du);
-  in.Read("du/offDiag/n_y", n_y_du);
+  in.Read("du/off_diag/n_x", n_x_du);
+  in.Read("du/off_diag/n_y", n_y_du);
   vec<double> x_du(n_x_du);
   vec<double> y_du(n_y_du);
   mat<double> du_xy(n_x_du,n_y_du);
-  in.Read("du/offDiag/x", x_du);
-  in.Read("du/offDiag/y", y_du);
-  in.Read("du/offDiag/du_xy", du_xy);
+  in.Read("du/off_diag/x", x_du);
+  in.Read("du/off_diag/y", y_du);
+  in.Read("du/off_diag/du_xy", du_xy);
 
   // Spline du
   NUgrid* x_du_grid = create_general_grid(x_du.memptr(), x_du.size());
@@ -80,10 +80,10 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   // du long range
   if (use_long_range) {
     // Read in r
-    uint nr_du;
-    in.Read("du/diag/nr_long", nr_du);
-    vec<double> r_du(nr_du);
-    vec<double> du_long_r(nr_du);
+    uint n_r_du;
+    in.Read("du/diag/n_r_long", n_r_du);
+    vec<double> r_du(n_r_du);
+    vec<double> du_long_r(n_r_du);
     in.Read("du/diag/r_long", r_du);
     in.Read("du/diag/du_long_r", du_long_r);
     in.Read("du/diag/du_long_r_0",du_long_r_0);
@@ -115,10 +115,10 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   }
 
   // Read in v
-  uint nr_v;
-  in.Read("v/diag/nr", nr_v);
-  vec<double> r_v(nr_v);
-  vec<double> v_r(nr_v);
+  uint n_r_v;
+  in.Read("v/diag/n_r", n_r_v);
+  vec<double> r_v(n_r_v);
+  vec<double> v_r(n_r_v);
   in.Read("v/diag/r", r_v);
   in.Read("v/diag/v_r", v_r);
 
@@ -131,10 +131,10 @@ void IlkkaPairAction::ReadFile(std::string file_name)
   // v long range
   if (use_long_range) {
     // Read in r
-    uint nr_v_long;
-    in.Read("v/diag/nr_long", nr_v_long);
-    vec<double> r_v_long(nr_v_long);
-    vec<double> v_long_r(nr_v_long);
+    uint n_r_v_long;
+    in.Read("v/diag/n_r_long", n_r_v_long);
+    vec<double> r_v_long(n_r_v_long);
+    vec<double> v_long_r(n_r_v_long);
     in.Read("v/diag/r_long",r_v_long);
     in.Read("v/diag/v_long_r",v_long_r);
     in.Read("v/diag/v_long_r_0",v_long_r_0);

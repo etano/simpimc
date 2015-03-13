@@ -81,7 +81,7 @@ void Bisect::Reject()
 // Bisection Move
 bool Bisect::Attempt()
 {
-  uint p_i = rng.UnifRand(path.species_list[species_i]->n_part) - 1;  // Pick particle at random
+  int p_i = rng.UnifRand(path.species_list[species_i]->n_part) - 1;  // Pick particle at random
   bead0 = rng.UnifRand(path.n_bead) - 1;  // Pick first bead at random
   bead1 = bead0 + n_bisect_beads; // Set last bead in bisection
   roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
@@ -141,12 +141,12 @@ bool Bisect::Attempt()
       // Get sampling probs
       double gauss_prod_old = 1.;
       double gauss_prod_new = 1.;
-      for (uint iD=0; iD<path.n_d; iD++) {
+      for (uint d_i=0; d_i<path.n_d; d_i++) {
         double gauss_sum_old = 0.;
         double gauss_sum_new = 0.;
         for (int image=-n_images; image<=n_images; image++) {
-          double dist_old = delta_old(iD) + (double)image*path.L;
-          double dist_new = delta_new(iD) + (double)image*path.L;
+          double dist_old = delta_old(d_i) + (double)image*path.L;
+          double dist_new = delta_new(d_i) + (double)image*path.L;
           gauss_sum_old += path.FastExp(-0.5*dist_old*dist_old/sigma2);
           gauss_sum_new += path.FastExp(-0.5*dist_new*dist_new/sigma2);
         }

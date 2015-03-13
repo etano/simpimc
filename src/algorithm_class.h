@@ -1,7 +1,6 @@
 #ifndef SIMPIMC_ALGORITHM_CLASS_H_
 #define SIMPIMC_ALGORITHM_CLASS_H_
 
-#include "path_class.h"
 #include "loop_class.h"
 #include "write_class.h"
 #include "actions/kinetic_class.h"
@@ -33,18 +32,19 @@ class Algorithm
 {
 public:
   // Constructor
-  Algorithm(Communicator &world_comm, Communicator &t_inter_comm, Communicator &intra_comm)
-   : path(world_comm,t_inter_comm,intra_comm), inter_comm(t_inter_comm)
-  {}
+  Algorithm(Communicator &world_comm, Communicator &inter_comm, Communicator &intra_comm, Input &in, IO &out, RNG &rng)
+   : path(world_comm,inter_comm,intra_comm)
+  {
+    Init(in, out, rng, inter_comm);
+  }
 
-  void Init(Input &in, IO &out, RNG &rng);
-  void Run();
+  void Init(Input &in, IO &out, RNG &rng, Communicator &inter_comm);
+  void Run() { main_loop.DoEvent(); };
 
-  // Communicator
-  Communicator &inter_comm;
-
-  // Algorithm Events
+  // Events
   std::vector<std::shared_ptr<Event>> events;
+
+  // Main loop
   Loop main_loop;
 
   // Actions

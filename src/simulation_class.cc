@@ -67,8 +67,7 @@ void Simulation::Run()
   out.Write("RNG/seed",seed);
 
   // Algorithm
-  Algorithm alg(world_comm, inter_comm, intra_comm);
-  alg.Init(in, out, rng);
+  Algorithm alg(world_comm, inter_comm, intra_comm, in, out, rng);
   alg.Run();
 
 }

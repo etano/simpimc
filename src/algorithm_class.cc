@@ -1,6 +1,6 @@
 #include "algorithm_class.h"
 
-void Algorithm::Init(Input &in, IO &out, RNG &rng)
+void Algorithm::Init(Input &in, IO &out, RNG &rng, Communicator &inter_comm)
 {
   // Initialize Path
   path.Init(in, out, rng);
@@ -85,9 +85,4 @@ void Algorithm::Init(Input &in, IO &out, RNG &rng)
   std::vector<Input> loop_list = in.GetChild("Algorithm").GetChildList("Loop");
   for (auto& loop: loop_list)
     main_loop.Init(loop,events);
-}
-
-void Algorithm::Run()
-{
-  main_loop.DoEvent();
 }

@@ -56,10 +56,10 @@ double PairAction::Potential()
       for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
         for (uint p_j=p_i+1; p_j<path.species_list[species_a_i]->n_part; ++p_j) {
           for (uint b_i=0; b_i<path.n_bead; b_i+=1) {
-            uint jB = b_i + 1;
+            uint b_j = b_i + 1;
             vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_a_i,p_j,b_i)));
             double rMag = mag(dr);
-            dr = path.Dr(path(species_a_i,p_i,jB),path(species_a_i,p_j,jB));
+            dr = path.Dr(path(species_a_i,p_i,b_j),path(species_a_i,p_j,b_j));
             double r_p_mag = mag(dr);
             tot += CalcV(rMag,r_p_mag,0);
           }
@@ -69,10 +69,10 @@ double PairAction::Potential()
       for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
         for (uint p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
           for (uint b_i=0; b_i<path.n_bead; b_i+=1) {
-            uint jB = b_i + 1;
+            uint b_j = b_i + 1;
             vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_b_i,p_j,b_i)));
             double rMag = mag(dr);
-            dr = path.Dr(path(species_a_i,p_i,jB),path(species_b_i,p_j,jB));
+            dr = path.Dr(path(species_a_i,p_i,b_j),path(species_b_i,p_j,b_j));
             double r_p_mag = mag(dr);
             tot += CalcV(rMag,r_p_mag,0);
           }
@@ -102,7 +102,7 @@ double PairAction::DActionDBeta()
       #pragma omp parallel
       {
         for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
-          #pragma omp for collapse(2) reduction(+:tot)
+          #pragma omp for collapse(2) reduction(+:tot) schedule(dynamic)
           for (uint p_j=p_i+1; p_j<path.species_list[species_a_i]->n_part; ++p_j) {
             for (uint b_i=0; b_i<path.n_bead; ++b_i) {
               double rMag, r_p_mag, r_r_p_mag;
@@ -114,7 +114,7 @@ double PairAction::DActionDBeta()
         }
       }
     } else {
-      #pragma omp parallel for collapse(3) reduction(+:tot)
+      #pragma omp parallel for collapse(3) reduction(+:tot) schedule(dynamic)
       for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
         for (uint p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
           for (uint b_i=0; b_i<path.n_bead; ++b_i) {
@@ -215,15 +215,12 @@ double PairAction::GetAction(const uint b0, const uint b1, const std::vector<std
   // Sum up contributing terms
   uint skip = 1<<level;
   double tot = 0.;
-  #pragma omp parallel for reduction(+:tot)
   for (uint b_i=b0; b_i<b1; b_i+=skip) {
-    uint jB = b_i+skip;
-    uint kB = b_i-skip;
-    if (b0 == 0)
-      kB = path.n_bead-1;
+    uint b_j = b_i+skip;
+    uint b_k = b_i-skip+path.n_bead;
     for (auto& particle_pair: particle_pairs) {
       double rMag, r_p_mag, r_r_p_mag;
-      path.DrDrpDrrp(b_i,jB,species_a_i,species_b_i,particle_pair.first,particle_pair.second,rMag,r_p_mag,r_r_p_mag);
+      path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,particle_pair.first,particle_pair.second,rMag,r_p_mag,r_r_p_mag);
       tot += CalcU(rMag,r_p_mag,r_r_p_mag,level);
     }
   }
@@ -263,13 +260,12 @@ vec<double> PairAction::GetActionGradient(const uint b0, const uint b1, const st
   uint skip = 1<<level;
   vec<double> tot(zero_vec);
   for (uint b_i=b0; b_i<b1; b_i+=skip) {
-    uint jB = b_i+skip;
-    uint kB = b_i-skip;
-    if (b_i == 0) // FIXME: This doesn't depend on the level
-      kB = path.n_bead-1;
-    for (auto& particle_pair: particle_pairs)
-      tot += CalcGradientU(b_i,jB,particle_pair.first,particle_pair.second,level)
-             + CalcGradientU(b_i,kB,particle_pair.first,particle_pair.second,level);
+    uint b_j = b_i+skip;
+    uint b_k = b_i-skip+path.n_bead;
+    for (auto& particle_pair: particle_pairs) {
+      tot += CalcGradientU(b_i,b_j,particle_pair.first,particle_pair.second,level);
+      tot += CalcGradientU(b_i,b_k,particle_pair.first,particle_pair.second,level);
+    }
   }
 
   // FIXME: Ignoring long range part for now
@@ -306,13 +302,12 @@ double PairAction::GetActionLaplacian(const uint b0, const uint b1, const std::v
   uint skip = 1<<level;
   double tot = 0.;
   for (uint b_i=b0; b_i<b1; b_i+=skip) {
-    uint jB = b_i+skip;
-    uint kB = b_i-skip;
-    if (b_i == 0) // FIXME: This doesn't depend on the level
-      kB = path.n_bead-1;
-    for (auto& particle_pair: particle_pairs)
-      tot += CalcLaplacianU(b_i,jB,particle_pair.first,particle_pair.second,level)
-             + CalcLaplacianU(b_i,kB,particle_pair.first,particle_pair.second,level);
+    uint b_j = b_i+skip;
+    uint b_k = b_i-skip+path.n_bead;
+    for (auto& particle_pair: particle_pairs) {
+      tot += CalcLaplacianU(b_i,b_j,particle_pair.first,particle_pair.second,level)
+          + CalcLaplacianU(b_i,b_k,particle_pair.first,particle_pair.second,level);
+    }
   }
 
   // FIXME: Ignoring long range part for now
@@ -332,7 +327,7 @@ double PairAction::GetActionLaplacian(const uint b0, const uint b1, const std::v
   return tot;
 }
 
-vec<double> PairAction::CalcGradientU(const uint b_i, const uint jB, const uint p_i, const uint p_j, const uint level)
+vec<double> PairAction::CalcGradientU(const uint b_i, const uint b_j, const uint p_i, const uint p_j, const uint level)
 {
   // Store original position for particle i
   std::shared_ptr<Bead> b(path(species_a_i,p_i,b_i));
@@ -344,21 +339,21 @@ vec<double> PairAction::CalcGradientU(const uint b_i, const uint jB, const uint 
   // Calculate numerical gradient
   double rMag, r_p_mag, r_r_p_mag;
   vec<double> tot(path.n_d);
-  for (uint iD=0; iD<path.n_d; ++iD) {
-    b->r(iD) = r0(iD) + eps;
-    path.DrDrpDrrp(b_i,jB,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
+  for (uint d_i=0; d_i<path.n_d; ++d_i) {
+    b->r(d_i) = r0(d_i) + eps;
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
     double f1 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
-    b->r(iD) = r0(iD) - eps;
-    path.DrDrpDrrp(b_i,jB,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
+    b->r(d_i) = r0(d_i) - eps;
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
     double f2 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
-    tot(iD) = (f1-f2)/(2.*eps);
-    b->r(iD) = r0(iD);
+    tot(d_i) = (f1-f2)/(2.*eps);
+    b->r(d_i) = r0(d_i);
   }
 
   return tot;
 }
 
-double PairAction::CalcLaplacianU(const uint b_i, const uint jB, const uint p_i, const uint p_j, const uint level)
+double PairAction::CalcLaplacianU(const uint b_i, const uint b_j, const uint p_i, const uint p_j, const uint level)
 {
   // Store original position for particle i
   std::shared_ptr<Bead> b(path(species_a_i,p_i,b_i));
@@ -370,17 +365,17 @@ double PairAction::CalcLaplacianU(const uint b_i, const uint jB, const uint p_i,
   // Calculate numerical gradient
   double rMag, r_p_mag, r_r_p_mag;
   double tot = 0.;
-  for (uint iD=0; iD<path.n_d; ++iD) {
-    path.DrDrpDrrp(b_i,jB,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
+  for (uint d_i=0; d_i<path.n_d; ++d_i) {
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
     double f0 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
-    b->r(iD) = r0(iD) + eps;
-    path.DrDrpDrrp(b_i,jB,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
+    b->r(d_i) = r0(d_i) + eps;
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
     double f1 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
-    b->r(iD) = r0(iD) - eps;
-    path.DrDrpDrrp(b_i,jB,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
+    b->r(d_i) = r0(d_i) - eps;
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
     double f2 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
     tot += (f1+f2-2.*f0)/(eps*eps);
-    b->r(iD) = r0(iD);
+    b->r(d_i) = r0(d_i);
   }
 
   return tot;

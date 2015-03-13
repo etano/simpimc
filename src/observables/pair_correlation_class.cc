@@ -52,8 +52,8 @@ void PairCorrelation::Accumulate()
   if (species_a_i == species_b_i) {
     for (uint b_i=0; b_i<path.n_bead; ++b_i) {
       for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
-        for (uint jP=p_i+1; jP<path.species_list[species_a_i]->n_part; ++jP) {
-          vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_a_i,jP,b_i)));
+        for (uint p_j=p_i+1; p_j<path.species_list[species_a_i]->n_part; ++p_j) {
+          vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_a_i,p_j,b_i)));
           uint i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.n_r)
             gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
@@ -64,8 +64,8 @@ void PairCorrelation::Accumulate()
   } else {
     for (uint b_i=0; b_i<path.n_bead; ++b_i) {
       for (uint p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
-        for (uint jP=0; jP<path.species_list[species_b_i]->n_part; ++jP) {
-          vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_b_i,jP,b_i)));
+        for (uint p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
+          vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_b_i,p_j,b_i)));
           uint i = gr.x.ReverseMap(mag(dr));
           if (i < gr.x.n_r)
             gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
@@ -81,14 +81,14 @@ void PairCorrelation::Write()
 {
   if (n_measure > 0) {
     // Normalize histograms
-    uint N_A = path.species_list[species_a_i]->n_part;
-    uint N_B = path.species_list[species_b_i]->n_part;
+    uint N_a = path.species_list[species_a_i]->n_part;
+    uint N_b = path.species_list[species_b_i]->n_part;
     double vol = path.vol;
     double norm;
     if (species_a_i == species_b_i)
-      norm = 0.5*n_measure*N_A*(N_A-1.)*path.n_bead/vol;
+      norm = 0.5*n_measure*N_a*(N_a-1.)*path.n_bead/vol;
     else
-      norm = n_measure*N_A*N_B*path.n_bead/vol;
+      norm = n_measure*N_a*N_b*path.n_bead/vol;
     for (uint i=0; i<gr.x.n_r; i++) {
       double r1 = gr.x(i);
       double r2 = (i<(gr.x.n_r-1)) ? gr.x(i+1):(2.*gr.x(i)-gr.x(i-1));

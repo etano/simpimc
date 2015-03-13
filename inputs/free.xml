@@ -22,8 +22,8 @@
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
-    <Loop n_step="10">
-      <Loop n_step="100">
+    <Loop n_step="1000">
+      <Loop n_step="200">
         <Move name="BisectU" />
         <Move name="BisectD" />
         <Observable name="Energy" />

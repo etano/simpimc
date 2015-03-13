@@ -218,12 +218,12 @@ bool PermBisect::Attempt()
         // Get sampling probs
         gauss_prod_old = 1.;
         gauss_prod_new = 1.;
-        for (uint iD=0; iD<path.n_d; iD++) {
+        for (uint d_i=0; d_i<path.n_d; d_i++) {
           gauss_sum_old = 0.;
           gauss_sum_new = 0.;
           for (int image=-n_images; image<=n_images; image++) {
-            dist_old = delta_old(iD) + (double)image*path.L;
-            dist_new = delta_new(iD) + (double)image*path.L;
+            dist_old = delta_old(d_i) + (double)image*path.L;
+            dist_new = delta_new(d_i) + (double)image*path.L;
             gauss_sum_old += path.FastExp(-0.5*dist_old*dist_old/sigma2);
             gauss_sum_new += path.FastExp(-0.5*dist_new*dist_new/sigma2);
           }

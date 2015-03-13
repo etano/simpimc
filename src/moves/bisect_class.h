@@ -21,7 +21,7 @@ protected:
 
 public:
   // Constructor
-  Bisect(Path path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
+  Bisect(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
     : Move(path, rng, action_list, in, out)
   {
     Init(in);

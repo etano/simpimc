@@ -20,8 +20,14 @@ private:
   void SetupSpline();
 
   // Sums over images
-  double GetGaussSum(const double r, const double r2i_4_lambda_tau, const uint slice_diff);
-  double GetNumSum(const double r, const double r2i_4_lambda_tau);
+  double GetGaussSum(const double r, const double r2_i_4_lambda_tau, const uint slice_diff);
+  inline double GetGaussSumFast(const double r, const double r2_i_4_lambda_tau, const uint slice_diff)
+  {
+    double gauss_sum;
+    eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
+    return gauss_sum-(r2_i_4_lambda_tau/slice_diff);
+  };
+  double GetNumSum(const double r, const double r2_i_4_lambda_tau);
 
 protected:
 

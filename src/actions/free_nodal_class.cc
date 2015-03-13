@@ -86,11 +86,11 @@ void FreeNodal::SetupSpline()
 double FreeNodal::GetGij(const vec<double>& r, const uint slice_diff)
 {
   double gauss_prod = 1.;
-  for (uint iD=0; iD<path.n_d; iD++) {
+  for (uint d_i=0; d_i<path.n_d; d_i++) {
     double gauss_sum;
-    eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r(iD),&gauss_sum);
+    eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r(d_i),&gauss_sum);
     gauss_sum = exp(0.9999*gauss_sum);
-    gauss_sum *= exp(-(r(iD)*r(iD)*i_4_lambda_tau/slice_diff));
+    gauss_sum *= exp(-(r(d_i)*r(d_i)*i_4_lambda_tau/slice_diff));
     gauss_prod *= gauss_sum;
   }
   return gauss_prod;

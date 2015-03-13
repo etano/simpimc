@@ -197,12 +197,12 @@ bool PermBisectIterative::Attempt()
         // Get sampling probs
         gaussProdOld = 1.;
         gaussProdNew = 1.;
-        for (uint iD=0; iD<path.n_d; iD++) {
+        for (uint d_i=0; d_i<path.n_d; d_i++) {
           gaussSumOld = 0.;
           gaussSumNew = 0.;
           for (int image=-n_images; image<=n_images; image++) {
-            distOld = deltaOld(iD) + (double)image*path.L;
-            distNew = deltaNew(iD) + (double)image*path.L;
+            distOld = deltaOld(d_i) + (double)image*path.L;
+            distNew = deltaNew(d_i) + (double)image*path.L;
             gaussSumOld += path.FastExp(-0.5*distOld*distOld/sigma2);
             gaussSumNew += path.FastExp(-0.5*distNew*distNew/sigma2);
           }
@@ -260,13 +260,14 @@ void PermBisectIterative::UpdatePermTable()
   // Construct t table
   #pragma omp parallel for collapse(2)
   for (uint i=0; i<n_part; i++) {
-    for (uint j=0; j<n_part; j++) {
+    for (uint j=i; j<n_part; j++) {
       vec<double> dr_ij(path.Dr(b0(i), b1(j)));
       double exponent = (-dot(dr_ij,dr_ij))*i4_lambda_tau_n_bisect_beads;
       if (exponent > log_epsilon)
         t(i,j) = path.FastExp(exponent);
       else
         t(i,j) = 0.;
+      t(j,i) = t(i,j);
     }
   }
 

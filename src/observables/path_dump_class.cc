@@ -28,8 +28,8 @@ void PathDump::Write()
       cube<double> path_positions(path.n_d,path.n_bead,n_part);
       for (uint p_i=0; p_i<n_part; ++p_i)
         for (uint b_i=0; b_i<path.n_bead; ++b_i)
-          for (uint iD=0; iD<path.n_d; ++iD)
-            path_positions(iD,b_i,p_i) = path(s_i,p_i,b_i)->r(iD);
+          for (uint d_i=0; d_i<path.n_d; ++d_i)
+            path_positions(d_i,b_i,p_i) = path(s_i,p_i,b_i)->r(d_i);
 
       // Get permutation
       mat<double> path_permutation(2,n_part);

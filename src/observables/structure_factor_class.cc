@@ -51,9 +51,9 @@ void StructureFactor::Write()
 {
   if (n_measure > 0) {
     // Normalize histograms
-    uint N_A = path.species_list[species_a_i]->n_part;
-    uint N_B = path.species_list[species_b_i]->n_part;
-    double norm = n_measure*path.n_bead*N_A*N_B;
+    uint N_a = path.species_list[species_a_i]->n_part;
+    uint N_b = path.species_list[species_b_i]->n_part;
+    double norm = n_measure*path.n_bead*N_a*N_b;
     sk = sk/norm;
 
     // Write to file

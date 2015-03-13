@@ -74,23 +74,23 @@ void Kinetic::SetupSpline()
 }
 
 double Kinetic::GetGaussSum(const double r, const double r2_i_4_lambda_tau, const uint slice_diff)
-{
-  double gauss_sum;
-  eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
-  return exp(-(r2_i_4_lambda_tau/slice_diff))*exp(0.9999*gauss_sum);
-}
+  {
+    double gauss_sum;
+    eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
+    return exp(-(r2_i_4_lambda_tau/slice_diff))*exp(0.9999*gauss_sum);
+  }
 
 double Kinetic::GetNumSum(const double r, const double r2_i_4_lambda_tau)
-{
-  double num_sum;
-  eval_UBspline_1d_d(num_sum_r_spline,r,&num_sum);
-  return -(r2_i_4_lambda_tau/path.tau)*exp(-r2_i_4_lambda_tau)*exp(0.9999*num_sum);
-}
+  {
+    double num_sum;
+    eval_UBspline_1d_d(num_sum_r_spline,r,&num_sum);
+    return -(r2_i_4_lambda_tau/path.tau)*exp(-r2_i_4_lambda_tau)*exp(0.9999*num_sum);
+  }
 
 double Kinetic::DActionDBeta()
 {
   double tot = n_part*path.n_bead*path.n_d/(2.*path.tau); // Constant term
-  #pragma omp parallel for collapse(2) reduction(+:tot)
+  #pragma omp parallel for collapse(2) reduction(+:tot) schedule(dynamic)
   for (uint p_i=0; p_i<n_part; p_i++) {
     for (uint b_i=0; b_i<path.n_bead; b_i++) {
       vec<double> num_sum(path.n_d), gauss_sum(path.n_d);
@@ -105,11 +105,11 @@ double Kinetic::DActionDBeta()
       double scalar_num_sum = 0.;
       for (uint d_i=0; d_i<path.n_d; d_i++) {
         double num_prod = 1.;
-        for (uint jD=0; jD<path.n_d; jD++) {
-          if (d_i != jD)
-            num_prod *= gauss_sum(jD);
+        for (uint d_j=0; d_j<path.n_d; d_j++) {
+          if (d_i != d_j)
+            num_prod *= gauss_sum(d_j);
           else
-            num_prod *= num_sum(jD);
+            num_prod *= num_sum(d_j);
         }
         scalar_num_sum += num_prod;
       }
@@ -134,12 +134,12 @@ double Kinetic::GetAction(const uint b0, const uint b1, const std::vector<std::p
       while(beadA != beadF) {
         std::shared_ptr<Bead> beadB(path.GetNextBead(beadA,skip));
         vec<double> dr(path.Dr(beadA,beadB));
-        double gauss_prod = 1;
+        double gauss_prod_exp = 0;
         for (uint d_i=0; d_i<path.n_d; d_i++) {
           double r2_i_4_lambda_tau = dr(d_i)*dr(d_i)*i_4_lambda_tau;
-          gauss_prod *= GetGaussSum(dr(d_i),r2_i_4_lambda_tau,skip);
+          gauss_prod_exp += GetGaussSumFast(dr(d_i),r2_i_4_lambda_tau,skip);
         }
-        tot -= log(gauss_prod);
+        tot -= gauss_prod_exp;
         beadA = beadB;
       }
     }
