@@ -32,7 +32,7 @@ void FreeNodal::Init(Input &in)
     particles.push_back(std::make_pair(species_i,p_i));
   bool init_good = 1;
   path.SetMode(1);
-  if (GetAction(0, path.n_bead, particles, 0) == 1.e100) {
+  if (GetAction(0, path.n_bead, particles, 0) >= 1.e100) {
     std::cout << "Warning: initializing with broken nodes!" << std::endl;
     init_good = 0;
   }
@@ -48,7 +48,7 @@ void FreeNodal::SetupSpline()
     r_grid.start = -path.L/2.;
     r_grid.end = path.L/2.;
   } else {
-    r_grid.start = 100.;
+    r_grid.start = -100.;
     r_grid.end = 100.;
     n_images = 0;
   }
@@ -60,6 +60,7 @@ void FreeNodal::SetupSpline()
   rho_free_r_splines.set_size(nSpline);
 
   // Create splines
+  #pragma omp parallel for
   for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
     vec<double> rho_free_r(r_grid.num);
     double t_i_4_lambda_tau = i_4_lambda_tau/(spline_i+1);

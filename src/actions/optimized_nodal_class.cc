@@ -42,7 +42,7 @@ void OptimizedNodal::Init(Input &in)
     particles.push_back(std::make_pair(species_i,p_i));
   bool initGood = 1;
   path.SetMode(1);
-  if (GetAction(0, path.n_bead, particles, 0) == 1.e100) {
+  if (GetAction(0, path.n_bead, particles, 0) >= 1.e100) {
     std::cout << "Warning: initializing with broken nodes!" << std::endl;
     initGood = 0;
   }

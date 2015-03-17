@@ -41,6 +41,7 @@ void Kinetic::SetupSpline()
   rho_free_r_splines.set_size(nSpline);
 
   // Create splines
+  #pragma omp parallel for
   for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
     vec<double> rho_free_r(r_grid.num), num_sum_r(r_grid.num);
     double t_i_4_lambda_tau = i_4_lambda_tau/(spline_i+1);
