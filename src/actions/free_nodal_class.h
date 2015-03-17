@@ -15,6 +15,7 @@ private:
 protected:
   // Rho matrix
   virtual double GetGij(const vec<double> &r, const uint32_t slice_diff);
+  virtual double GetGijDGijDr(const vec<double> &r, const uint32_t slice_diff, vec<double> &dgij_dr);
 
 public:
   // Constructor

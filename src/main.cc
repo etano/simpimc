@@ -9,7 +9,7 @@ int main(int argc, char** argv)
   if( argc == 2 )
     in_file = argv[1];
   else {
-    std::cout << "Usage: simpimc InputFile.xml\n";
+    std::cout << "Usage: simpimc input_file.xml\n";
     return 1;
   }
 

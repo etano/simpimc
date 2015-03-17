@@ -14,10 +14,17 @@ protected:
   uint32_t species_i, n_part;
   double i_4_lambda_tau;
   uint32_t start_b, end_b;
+  bool use_nodal_distance;
 
   // Rho matrix
   field<double> rho_f, rho_f_c;
   virtual double GetGij(const vec<double> &r, const uint32_t slice_diff) = 0;
+  virtual double GetGijDGijDr(const vec<double> &r, const uint32_t slice_diff, vec<double> &dgij_dr) = 0;
+  double GetRhoF(const int start_b, const int b_i, const int skip, const std::vector<std::shared_ptr<Bead>> &ref_beads, field<std::shared_ptr<Bead>> &other_beads);
+
+  // Actions
+  double SimpleAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t skip, const bool check_all);
+  double DistanceAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t skip, const bool check_all);
 
   // RNG
   RNG &rng;

@@ -5,6 +5,7 @@ void FreeNodal::Init(Input &in)
 {
   // Read in things
   n_images = in.GetAttribute<int>("n_images");
+  use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
   species = in.GetAttribute<std::string>("species");
   species_list.push_back(species);
   std::cout << "Setting up nodal action for " << species << "..." << std::endl;
@@ -82,16 +83,30 @@ void FreeNodal::SetupSpline()
   }
 }
 
-// Evaluate \rho_{ij}
+// Evaluate \rho_{ij} and d\rho_{ij}/dr_{ij}
 double FreeNodal::GetGij(const vec<double>& r, const uint32_t slice_diff)
 {
-  double gauss_prod = 1.;
+  double gij = 1.;
+  double i_4_lambda_level_tau = i_4_lambda_tau/slice_diff;
   for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
-    double gauss_sum;
-    eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r(d_i),&gauss_sum);
-    gauss_sum = exp(0.9999*gauss_sum);
-    gauss_sum *= exp(-(r(d_i)*r(d_i)*i_4_lambda_tau/slice_diff));
-    gauss_prod *= gauss_sum;
+    double gij_image_action;
+    eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r(d_i),&gij_image_action);
+    gij *= exp(0.9999*gij_image_action)*exp(-(r(d_i)*r(d_i)*i_4_lambda_level_tau));
   }
-  return gauss_prod;
+  return gij;
+}
+
+// Evaluate \rho_{ij} and d\rho_{ij}/dr_{ij}
+double FreeNodal::GetGijDGijDr(const vec<double>& r, const uint32_t slice_diff, vec<double>& dgij_dr)
+{
+  double gij = 1.;
+  double i_4_lambda_level_tau = i_4_lambda_tau/slice_diff;
+  for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
+    double gij_image_action, dgij_dr_image_action;
+    eval_UBspline_1d_d_vg(rho_free_r_splines(slice_diff-1),r(d_i),&gij_image_action,&dgij_dr_image_action);
+    double gij_d_i = exp(0.9999*gij_image_action)*exp(-(r(d_i)*r(d_i)*i_4_lambda_level_tau));
+    gij *= gij_d_i;
+    dgij_dr(d_i) = (dgij_dr_image_action - r(d_i)*i_4_lambda_level_tau)*gij_d_i;
+  }
+  return gij;
 }

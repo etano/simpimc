@@ -16,6 +16,7 @@ protected:
 
   // Rho matrix
   virtual double GetGij(const vec<double> &r, const uint32_t slice_diff);
+  virtual double GetGijDGijDr(const vec<double> &r, const uint32_t slice_diff, vec<double> &dgij_dr);
 
   // 1/(4\lambda\tau)
   virtual double Geti4LambdaTau(const uint32_t slice_diff);
