@@ -187,29 +187,29 @@ double Nodal::SimpleAction(const std::vector<uint32_t> &b_i_vec, const std::vect
 {
   // Compute action
   double tot = 0.;
-  //if (check_all) {
-  //  std::atomic_bool abort(false);
-  //  #pragma omp parallel for reduction(+:tot) schedule(dynamic) shared(abort) // FIXME: Could be optimized probably
-  //  for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-  //    if (!abort && b_i_vec[b_i] != path.ref_bead) {
-  //      SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
-  //      if (rho_f(b_i) < 0.) {
-  //        tot += 1.e100;
-  //        abort = true;
-  //      }
-  //    }
-  //  }
-  //} else {
+  if (check_all) {
+    std::atomic_bool abort(false);
+    #pragma omp parallel for reduction(+:tot) schedule(dynamic) shared(abort) // FIXME: Could be optimized probably
+    for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
+      if (!abort && b_i_vec[b_i] != path.ref_bead) {
+        SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
+        if (rho_f(b_i_vec[b_i]) < 0.) {
+          tot += 1.e100;
+          abort = true;
+        }
+      }
+    }
+  } else {
     for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
       if (b_i_vec[b_i] != path.ref_bead)  {
         SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
-        if (rho_f(b_i) < 0.) {
+        if (rho_f(b_i_vec[b_i]) < 0.) {
           tot += 1.e100;
           break;
         }
       }
     }
-  //}
+  }
 
   return tot;
 }
