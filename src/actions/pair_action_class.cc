@@ -227,11 +227,11 @@ double PairAction::GetAction(const uint32_t b0, const uint32_t b1, const std::ve
 
   // Add in long range part
   if (use_long_range) { // FIXME: currently this assumes level = 0
-    if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()) {
+    if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
       path.UpdateRhoKP(b0, b1, species_a_i, particles_a, level);
       path.species_list[species_a_i]->need_update_rho_k = false;
     }
-    if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()) {
+    if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
       path.UpdateRhoKP(b0, b1, species_b_i, particles_b, level);
       path.species_list[species_b_i]->need_update_rho_k = false;
     }
@@ -271,11 +271,11 @@ vec<double> PairAction::GetActionGradient(const uint32_t b0, const uint32_t b1, 
   // FIXME: Ignoring long range part for now
   //// Add in long range part
   //if (use_long_range) { // fixme: currently this assumes level = 0
-  //  if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()) {
+  //  if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
   //    path.UpdateRhoKP(b0, b1, species_a_i, particles_a, level);
   //    path.species_list[species_a_i]->need_update_rho_k = false;
   //  }
-  //  if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()) {
+  //  if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
   //    path.UpdateRhoKP(b0, b1, species_b_i, particles_b, level);
   //    path.species_list[species_b_i]->need_update_rho_k = false;
   //  }
@@ -313,11 +313,11 @@ double PairAction::GetActionLaplacian(const uint32_t b0, const uint32_t b1, cons
   // FIXME: Ignoring long range part for now
   //// Add in long range part
   //if (use_long_range) { // fixme: currently this assumes level = 0
-  //  if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()) {
+  //  if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
   //    path.UpdateRhoKP(b0, b1, species_a_i, particles_a, level);
   //    path.species_list[species_a_i]->need_update_rho_k = false;
   //  }
-  //  if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()) {
+  //  if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
   //    path.UpdateRhoKP(b0, b1, species_b_i, particles_b, level);
   //    path.species_list[species_b_i]->need_update_rho_k = false;
   //  }

@@ -199,14 +199,14 @@ bool PermBisect::Attempt()
       beadA(i) = beadI(i);
       while(beadA(i) != beadF(i)) {
         // Old sampling
-        path.SetMode(0);
+        path.SetMode(OLD_MODE);
         beadB(i) = path.GetNextBead(beadA(i),skip);
         beadC(i) = path.GetNextBead(beadB(i),skip);
         vec<double> r_bar_old(path.RBar(beadC(i), beadA(i)));
         vec<double> delta_old(path.Dr(beadB(i), r_bar_old));
 
         // New sampling
-        path.SetMode(1);
+        path.SetMode(NEW_MODE);
         beadB(i) = path.GetNextBead(beadA(i),skip);
         beadC(i) = path.GetNextBead(beadB(i),skip);
         vec<double> r_bar_new(path.RBar(beadC(i), beadA(i)));
@@ -242,11 +242,11 @@ bool PermBisect::Attempt()
     double new_action = 0.;
     for (auto& action: action_list) {
       // Old action
-      path.SetMode(0);
+      path.SetMode(OLD_MODE);
       old_action += action->GetAction(bead0, bead1, particles, level_i);
 
       // New action
-      path.SetMode(1);
+      path.SetMode(NEW_MODE);
       new_action += action->GetAction(bead0, bead1, particles, level_i);
     }
 
@@ -265,7 +265,7 @@ bool PermBisect::Attempt()
   // Have to check this if neighborhood has changed
   if (n_perm_part < n_part) {
     // Construct Permutation Table
-    path.SetMode(1);
+    path.SetMode(NEW_MODE);
     double perm_tot_1 = ConstructPermTable();
   
     // Decide whether or not to accept whole bisection

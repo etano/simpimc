@@ -47,12 +47,12 @@ bool VaryOptimizedNodal::Attempt()
   double new_action = 0.;
   for (auto& action: action_list) {
     // Old action
-    path.SetMode(0);
+    path.SetMode(OLD_MODE);
     param_set_0 = action->GetParamSet();
     old_action += action->GetAction(0, path.n_bead-1, particles, 0);
 
     // New action
-    path.SetMode(1);
+    path.SetMode(NEW_MODE);
     action->SetRandomParamSet();
     param_set_1 = action->GetParamSet();
     new_action += action->GetAction(0, path.n_bead-1, particles, 0);

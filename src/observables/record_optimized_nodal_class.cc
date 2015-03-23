@@ -33,7 +33,7 @@ void RecordOptimizedNodal::Reset()
 
 void RecordOptimizedNodal::Accumulate()
 {
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
   param_set_count(action->GetParamSet()) += 1.;
   n_measure++;
 }

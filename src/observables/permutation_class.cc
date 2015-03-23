@@ -53,7 +53,7 @@ void Permutation::Reset()
 
 void Permutation::Accumulate()
 {
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
   std::vector<uint32_t> cycle;
   path.SetCycleCount(species_i, cycle);
   uint32_t sector = path.GetPermSector(species_i, cycle);

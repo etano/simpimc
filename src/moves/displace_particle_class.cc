@@ -50,7 +50,7 @@ bool DisplaceParticle::Attempt()
   particles.push_back(particle);
 
   // New sampling
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
   vec<double> dr(path.n_d);
   rng.UnifRand(dr, step_size);
 
@@ -67,11 +67,11 @@ bool DisplaceParticle::Attempt()
   double new_action = 0.;
   for (auto& action: action_list) {
     // Old action
-    path.SetMode(0);
+    path.SetMode(OLD_MODE);
     old_action += action->GetAction(0, path.n_bead, particles, 0);
 
     // New action
-    path.SetMode(1);
+    path.SetMode(NEW_MODE);
     new_action += action->GetAction(0, path.n_bead, particles, 0);
   }
 

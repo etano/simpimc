@@ -51,7 +51,7 @@ void Path::Init(Input &in, IO &out, RNG &rng)
   }
 
   // Initiate mode
-  SetMode(1);
+  SetMode(NEW_MODE);
 
   // Initialize paths within each species
   for (uint32_t s_i=0; s_i<n_species; s_i++)
@@ -87,7 +87,7 @@ void Path::RestoreR(std::vector< std::shared_ptr<Bead>> &affected_beads)
 
 void Path::PrintPath()
 {
-  SetMode(0);
+  SetMode(OLD_MODE);
   for (uint32_t s_i=0; s_i<n_species; ++s_i) {
     for (uint32_t p_i=0; p_i<species_list[s_i]->n_part; ++p_i) {
       for (uint32_t b_i=0; b_i<n_bead; ++b_i) {
@@ -205,8 +205,8 @@ void Path::InitRhoK()
   rho_k_c.set_size(n_bead,n_species);
 
   // Set to old mode
-  bool tmpMode = GetMode();
-  SetMode(0);
+  ModeType t_mode = GetMode();
+  SetMode(OLD_MODE);
 
   // Zero out rho_k array
   for (uint32_t b_i=0; b_i<n_bead; b_i++) {
@@ -233,7 +233,7 @@ void Path::InitRhoK()
     }
   }
 
-  SetMode(tmpMode);
+  SetMode(t_mode);
 }
 
 // Update all rho k values
@@ -276,8 +276,8 @@ void Path::UpdateRhoKP(const uint32_t b0, const uint32_t b1, std::vector<std::pa
 // Update rho k values for specific particles and slices
 void Path::UpdateRhoKP(const uint32_t b0, const uint32_t b1, uint32_t s_i, std::vector<uint32_t> const& particles, const uint32_t level)
 {
-  bool tmpMode = GetMode();
-  SetMode(1);
+  ModeType t_mode = GetMode();
+  SetMode(NEW_MODE);
   uint32_t skip = 1<<level;
 
   // Reset to old copy
@@ -295,14 +295,14 @@ void Path::UpdateRhoKP(const uint32_t b0, const uint32_t b1, uint32_t s_i, std::
     }
   }
 
-  SetMode(tmpMode);
+  SetMode(t_mode);
 
 }
 
 // Update rho k values for specific particles and slices
 void Path::UpdateRhoK(const uint32_t b0, const uint32_t b1, std::vector<std::pair<uint32_t,uint32_t>> const& particles, const uint32_t level)
 {
-  bool tmpMode = GetMode();
+  ModeType t_mode = GetMode();
   uint32_t skip = 1<<level;
 
   // Get species numbers
@@ -325,16 +325,16 @@ void Path::UpdateRhoK(const uint32_t b0, const uint32_t b1, std::vector<std::pai
     uint32_t p_i = p.second;
     for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
       // Add in new values
-      SetMode(1);
+      SetMode(NEW_MODE);
       AddRhoKP(rho_k,p_i,b_i,s_i,1);
 
       // Subtract out old values
-      SetMode(0);
+      SetMode(OLD_MODE);
       AddRhoKP(rho_k,p_i,b_i,s_i,-1);
     }
   }
 
-  SetMode(tmpMode);
+  SetMode(t_mode);
 
 }
 

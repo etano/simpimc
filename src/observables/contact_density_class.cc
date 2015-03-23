@@ -40,7 +40,7 @@ void ContactDensity::Reset()
 // Taken from Assaraf, Caffarel, and Scemma. Phys Rev E 75, 035701(R) (2007). http://journals.aps.org/pre/pdf/10.1103/PhysRevE.75.035701.
 void ContactDensity::Accumulate()
 {
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
 
   // Form particle pairs
   std::vector<std::vector<std::pair<uint32_t,uint32_t>>> particle_pairs;

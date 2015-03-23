@@ -53,7 +53,7 @@ void Energy::Reset()
 void Energy::Accumulate()
 {
   // Measure energy
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
   double total_energy = 0.;
   for (uint32_t i=0; i<action_list.size(); ++i) {
     if (!action_list[i]->is_importance_weight) {

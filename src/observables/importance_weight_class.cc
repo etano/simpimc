@@ -14,7 +14,7 @@ void ImportanceWeight::Reset()
 
 void ImportanceWeight::Accumulate()
 {
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
   path.importance_weight = path.sign;
   for (uint32_t i=0; i<action_list.size(); ++i) {
     double tmpIW = 1.;

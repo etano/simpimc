@@ -117,10 +117,10 @@ bool PermBisectIterative::Attempt()
   bead0 = rng.UnifRand(path.n_bead) - 1;  // Pick first bead at random
   bead1 = bead0 + n_bisect_beads; // Set last bead in bisection
   roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
-  bool includeRef = path.species_list[species_i]->fixed_node &&
+  bool include_ref = path.species_list[species_i]->fixed_node &&
                     ((bead0<=path.ref_bead && bead1>=path.ref_bead) ||
                     (roll_over && path.bead_loop[bead1]>=path.ref_bead));
-  if (includeRef)
+  if (include_ref)
     ref_attempt++;
 
   // Set up permutation
@@ -178,14 +178,14 @@ bool PermBisectIterative::Attempt()
       beadA(i) = beadI(i);
       while(beadA(i) != beadF(i)) {
         // Old sampling
-        path.SetMode(0);
+        path.SetMode(OLD_MODE);
         beadB(i) = path.GetNextBead(beadA(i),skip);
         beadC(i) = path.GetNextBead(beadB(i),skip);
         vec<double> rBarOld(path.RBar(beadC(i), beadA(i)));
         vec<double> deltaOld(path.Dr(beadB(i), rBarOld));
 
         // New sampling
-        path.SetMode(1);
+        path.SetMode(NEW_MODE);
         beadB(i) = path.GetNextBead(beadA(i),skip);
         beadC(i) = path.GetNextBead(beadB(i),skip);
         vec<double> rBarNew(path.RBar(beadC(i), beadA(i)));
@@ -212,7 +212,7 @@ bool PermBisectIterative::Attempt()
         oldLogSampleProb += prefactorOfSampleProb + log(gaussProdOld);
         newLogSampleProb += prefactorOfSampleProb + log(gaussProdNew);
 
-        path.SetMode(1);
+        path.SetMode(NEW_MODE);
         beadA(i) = path.GetNextBead(beadA(i),2*skip);
       }
     }
@@ -222,11 +222,11 @@ bool PermBisectIterative::Attempt()
     double new_action = 0.;
     for (auto& action: action_list) {
       // Old action
-      path.SetMode(0);
+      path.SetMode(OLD_MODE);
       old_action += action->GetAction(bead0, bead1, particles, iLevel);
 
       // New action
-      path.SetMode(1);
+      path.SetMode(NEW_MODE);
       new_action += action->GetAction(bead0, bead1, particles, iLevel);
     }
 
@@ -242,7 +242,7 @@ bool PermBisectIterative::Attempt()
     prevActionChange = current_action_change;
   }
 
-  if (includeRef)
+  if (include_ref)
     ref_accept++;
 
   return 1;

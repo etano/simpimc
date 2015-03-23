@@ -48,11 +48,7 @@ double Trap::GetAction(const uint32_t b0, const uint32_t b1, const std::vector<s
     uint32_t s_i = particles[p].first;
     uint32_t p_i = particles[p].second;
     for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
-      vec<double> dr(path.n_d);
-      if(path.mode)
-        dr = path(s_i,p_i,b_i)->r;
-      else
-        dr = path(s_i,p_i,b_i)->r_c;
+      vec<double> dr(path.GetR(path(s_i,p_i,b_i)));
       tot += dot(dr, dr);
     }
   }

@@ -54,12 +54,12 @@ bool ShiftRefSlice::Attempt()
     // Only check nodal action change
     if (action->type == "Nodal") {
       // Old action
-      path.SetMode(0);
+      path.SetMode(OLD_MODE);
       path.ref_bead = ref_bead_0;
       old_action += action->GetAction(0, path.n_bead-1, particles, 0);
 
       // New action
-      path.SetMode(1);
+      path.SetMode(NEW_MODE);
       path.ref_bead = ref_bead_1;
       new_action += action->GetAction(0, path.n_bead-1, particles, 0);
     }

@@ -16,7 +16,7 @@ void Sign::Reset()
 
 void Sign::Accumulate()
 {
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
   sign += path.sign;
   n_measure += 1;
 }

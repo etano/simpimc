@@ -3,10 +3,12 @@
 
 #include "species_class.h"
 
+typedef enum {OLD_MODE, NEW_MODE} ModeType;
+
 class Path
 {
 private:
-
+  ModeType mode;
 protected:
 
 public:
@@ -40,9 +42,8 @@ public:
   inline double FastExp(const double x) { return exp(x); };
 
   // Mode (use copy or true)
-  bool mode;
-  void SetMode(uint32_t m) { mode = m; };
-  bool GetMode() { return mode; };
+  inline void SetMode(ModeType t_mode) { mode = t_mode; };
+  inline ModeType GetMode() { return mode; };
 
   // Beads
   void PrintPath();
@@ -50,9 +51,9 @@ public:
   std::shared_ptr<Bead> operator() (const uint32_t s_i, const uint32_t p_i, const uint32_t b_i) { return species_list[s_i]->bead(p_i,bead_loop(b_i)); };
   void StoreR(std::vector<std::shared_ptr<Bead>> &affected_beads);
   void RestoreR(std::vector<std::shared_ptr<Bead>> &affected_beads);
-  inline vec<double>& GetR(const std::shared_ptr<Bead> b) { return mode ? b->r : b->r_c; };
-  inline std::shared_ptr<Bead> GetNextBead(const std::shared_ptr<Bead> b, const uint32_t n) { return mode ? b->NextB(n) : b->NextBC(n); };
-  inline std::shared_ptr<Bead> GetPrevBead(const std::shared_ptr<Bead> b, const uint32_t n) { return mode ? b->PrevB(n) : b->PrevBC(n); };
+  inline vec<double>& GetR(const std::shared_ptr<Bead> b) { return mode==NEW_MODE ? b->r : b->r_c; };
+  inline std::shared_ptr<Bead> GetNextBead(const std::shared_ptr<Bead> b, const uint32_t n) { return mode==NEW_MODE ? b->NextB(n) : b->NextBC(n); };
+  inline std::shared_ptr<Bead> GetPrevBead(const std::shared_ptr<Bead> b, const uint32_t n) { return mode==NEW_MODE ? b->PrevB(n) : b->PrevBC(n); };
   inline vec<double> Dr(const vec<double> &r0, const vec<double> &r1) { vec<double> dr = r0-r1; PutInBox(dr); return dr; };
   inline vec<double> Dr(const std::shared_ptr<Bead> b0, const vec<double> &r1) { return Dr(GetR(b0), r1); };
   inline vec<double> Dr(const std::shared_ptr<Bead> b0, const std::shared_ptr<Bead> b1) { return Dr(GetR(b0), GetR(b1)); };
@@ -83,8 +84,8 @@ public:
   void CalcC(const vec<double>& r);
   void AddRhoKP(field<vec<std::complex<double>>> &tmp_rho_k, const uint32_t p_i, const uint32_t b_i, const uint32_t s_i, const int pm);
   inline void CalcRhoKP(const std::shared_ptr<Bead> b);
-  inline field<vec<std::complex<double>>>& GetRhoK() { return mode ? (rho_k) : (rho_k_c); };
-  inline vec<std::complex<double>>& GetRhoK(const std::shared_ptr<Bead> b) { return mode ? (b->rho_k) : (b->rho_k_c); };
+  inline field<vec<std::complex<double>>>& GetRhoK() { return mode==NEW_MODE ? (rho_k) : (rho_k_c); };
+  inline vec<std::complex<double>>& GetRhoK(const std::shared_ptr<Bead> b) { return mode==NEW_MODE ? (b->rho_k) : (b->rho_k_c); };
   inline void StoreRhoK(const uint32_t b_i, const uint32_t s_i) { rho_k_c(bead_loop(b_i),s_i) = rho_k(bead_loop(b_i),s_i); };
   inline void RestoreRhoK(const uint32_t b_i, const uint32_t s_i) { rho_k(bead_loop(b_i),s_i) = rho_k_c(bead_loop(b_i),s_i); };
   void StoreRhoKP(std::vector<std::shared_ptr<Bead>> &affected_beads);

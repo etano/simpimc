@@ -10,7 +10,7 @@ class FreeNodal : public Nodal
 private:
   // Splines
   field<UBspline_1d_d*> rho_free_r_splines;
-  void SetupSpline();
+  virtual void SetupSpline();
 
 protected:
   // Rho matrix
@@ -24,9 +24,6 @@ public:
   {
     Init(in);
   }
-
-  // Functions
-  virtual void Init(Input &in);
 
 };
 

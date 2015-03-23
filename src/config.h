@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <memory>
 #include <sys/time.h>
+#include <atomic>
 #include "utils/scaffold.h"
 
 using namespace scaffold::matrix;

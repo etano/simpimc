@@ -32,7 +32,7 @@ void StructureFactor::Reset()
 
 void StructureFactor::Accumulate()
 {
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
   for (uint32_t k_i=0; k_i<path.k_indices.size(); k_i++) {
     if (path.mag_ks[k_i] < k_cut) {
       for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {

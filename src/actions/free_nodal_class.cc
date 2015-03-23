@@ -1,44 +1,5 @@
 #include "free_nodal_class.h"
 
-// Initialize parameters
-void FreeNodal::Init(Input &in)
-{
-  // Read in things
-  n_images = in.GetAttribute<int>("n_images");
-  use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
-  species = in.GetAttribute<std::string>("species");
-  species_list.push_back(species);
-  std::cout << "Setting up nodal action for " << species << "..." << std::endl;
-  max_level = in.GetAttribute<uint32_t>("max_level",0);
-  path.GetSpeciesInfo(species,species_i);
-  n_part = path.species_list[species_i]->n_part;
-  i_4_lambda_tau = 1./(4.*path.species_list[species_i]->lambda*path.tau);
-
-  // Write things to file
-  out.Write("Actions/"+name+"/n_images", n_images);
-  out.Write("Actions/"+name+"/species", species);
-  out.Write("Actions/"+name+"/max_level", max_level);
-
-  // Setup splines
-  SetupSpline();
-
-  // Set up determinants
-  rho_f.set_size(path.n_bead);
-  rho_f_c.set_size(path.n_bead);
-
-  // Test initial configuration
-  std::vector< std::pair<uint32_t,uint32_t>> particles;
-  for (uint32_t p_i=0; p_i<n_part; ++p_i)
-    particles.push_back(std::make_pair(species_i,p_i));
-  bool init_good = 1;
-  path.SetMode(1);
-  if (GetAction(0, path.n_bead, particles, 0) >= 1.e100) {
-    std::cout << "Warning: initializing with broken nodes!" << std::endl;
-    init_good = 0;
-  }
-  out.Write("Actions/"+name+"/init_good", init_good);
-}
-
 // Create a spline for each possible slice_diff
 void FreeNodal::SetupSpline()
 {

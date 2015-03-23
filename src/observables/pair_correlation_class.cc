@@ -47,7 +47,7 @@ void PairCorrelation::Reset()
 
 void PairCorrelation::Accumulate()
 {
-  path.SetMode(1);
+  path.SetMode(NEW_MODE);
   // Homogeneous
   if (species_a_i == species_b_i) {
     for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {

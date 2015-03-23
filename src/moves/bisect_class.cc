@@ -126,12 +126,12 @@ bool Bisect::Attempt()
       beadC = beadB->NextB(skip);
 
       // Old sampling
-      path.SetMode(0);
+      path.SetMode(OLD_MODE);
       vec<double> r_bar_old(path.RBar(beadC, beadA));
       vec<double> delta_old(path.Dr(beadB, r_bar_old));
 
       // New sampling
-      path.SetMode(1);
+      path.SetMode(NEW_MODE);
       vec<double> r_bar_new(path.RBar(beadC, beadA));
       vec<double> delta_new(path.n_d);
       rng.NormRand(delta_new, 0., sigma);
@@ -164,11 +164,11 @@ bool Bisect::Attempt()
     double new_action = 0.;
     for (auto& action: action_list) {
       // Old action
-      path.SetMode(0);
+      path.SetMode(OLD_MODE);
       old_action += action->GetAction(bead0, bead1, particles, level_i);
 
       // New action
-      path.SetMode(1);
+      path.SetMode(NEW_MODE);
       new_action += action->GetAction(bead0, bead1, particles, level_i);
     }
 
