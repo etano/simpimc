@@ -1,11 +1,11 @@
 <Input>
-  <RNG seed="12345" />
+  <RNG />
   <IO output_prefix="free.0" />
   <Parallel procs_per_group="1" />
-  <System n_d="3" n_bead="1000" beta="100.0" L="10.0" pbc="1" />
+  <System n_d="3" n_bead="64" beta="10.0" L="10.0" pbc="1" />
   <Particles>
-    <Species name="eU" n_part="20" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" cofactor="0.5" prefix="free.0" />
-    <Species name="eD" n_part="20" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" cofactor="0.5" prefix="free.0" />
+    <Species name="eU" n_part="5" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" cofactor="0.5" prefix="free.0" />
+    <Species name="eD" n_part="5" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" cofactor="0.5" prefix="free.0" />
   </Particles>
   <Actions>
     <Action name="KineticU" type="Kinetic" n_images="200" species="eU" />
@@ -14,8 +14,8 @@
     <Action name="NodalD" type="FreeNodal" n_images="200" species="eD" />
   </Actions>
   <Moves>
-    <Move name="BisectD" type="PermBisectIterative" species="eD" n_level="8" n_images="1" adaptive="1" target_ratio="0.1" />
-    <Move name="BisectU" type="PermBisectIterative" species="eU" n_level="8" n_images="1" adaptive="1" target_ratio="0.1" />
+    <Move name="BisectD" type="PermBisectIterative" species="eD" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
+    <Move name="BisectU" type="PermBisectIterative" species="eU" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
   </Moves>
   <Observables>
     <Observable name="Energy" type="Energy" skip="1" />
@@ -24,7 +24,7 @@
   </Observables>
   <Algorithm>
     <Loop n_step="1000">
-      <Loop n_step="1000">
+      <Loop n_step="10000">
         <Move name="BisectU" />
         <Move name="BisectD" />
         <Observable name="Energy" />

@@ -78,6 +78,7 @@ public:
   virtual void Init(Input &in);
   virtual double DActionDBeta();
   virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
+  virtual double ImportanceWeight();
   virtual void Write() {};
   virtual void Accept();
   virtual void Reject();

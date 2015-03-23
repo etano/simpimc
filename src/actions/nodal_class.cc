@@ -5,6 +5,7 @@ void Nodal::Init(Input &in)
 {
   // Read in things
   n_images = in.GetAttribute<int>("n_images",0);
+  is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
   use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
   if (use_nodal_distance) {
     dist_type = in.GetAttribute<int>("dist_type",0);
@@ -38,8 +39,7 @@ void Nodal::Init(Input &in)
   for (uint32_t b_i=0; b_i<path.n_bead; ++b_i)
     is_first_time[b_i] = true;
   std::vector< std::pair<uint32_t,uint32_t>> particles;
-  for (uint32_t p_i=0; p_i<n_part; ++p_i)
-    particles.push_back(std::make_pair(species_i,p_i));
+  particles.push_back(std::make_pair(species_i,0));
   bool init_good = 1;
   path.SetMode(NEW_MODE);
   if (GetAction(0, path.n_bead, particles, 0) >= 1.e100) {
@@ -51,7 +51,7 @@ void Nodal::Init(Input &in)
 
 double Nodal::DActionDBeta()
 {
-  // Zero if not using the nodal distance
+  // Zero if not using the nodal distance or using it as an importance weight
   if (!use_nodal_distance)
     return 0.;
 
@@ -187,20 +187,19 @@ double Nodal::SimpleAction(const std::vector<uint32_t> &b_i_vec, const std::vect
 {
   // Compute action
   double tot = 0.;
-  if (check_all) {
-    std::atomic_bool abort(false);
-    #pragma omp parallel for reduction(+:tot) schedule(dynamic) shared(abort) // FIXME: Could be optimized probably
-    for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-      if (!abort) continue;
-      if (b_i_vec[b_i] != path.ref_bead)  {
-        SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
-        if (rho_f(b_i) < 0.) {
-          tot += 1.e100;
-          abort = true;
-        }
-      }
-    }
-  } else {
+  //if (check_all) {
+  //  std::atomic_bool abort(false);
+  //  #pragma omp parallel for reduction(+:tot) schedule(dynamic) shared(abort) // FIXME: Could be optimized probably
+  //  for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
+  //    if (!abort && b_i_vec[b_i] != path.ref_bead) {
+  //      SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
+  //      if (rho_f(b_i) < 0.) {
+  //        tot += 1.e100;
+  //        abort = true;
+  //      }
+  //    }
+  //  }
+  //} else {
     for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
       if (b_i_vec[b_i] != path.ref_bead)  {
         SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
@@ -210,7 +209,7 @@ double Nodal::SimpleAction(const std::vector<uint32_t> &b_i_vec, const std::vect
         }
       }
     }
-  }
+  //}
 
   return tot;
 }
@@ -515,6 +514,18 @@ void Nodal::SetRhoFGradRhoF(const int b_i, const std::vector<std::shared_ptr<Bea
   }
 
   return;
+}
+
+// Compute importance weight
+double Nodal::ImportanceWeight()
+{
+  if (is_importance_weight) {
+    std::vector<std::pair<uint32_t,uint32_t>> particles;
+    particles.push_back(std::make_pair(species_i,0));
+    path.SetMode(NEW_MODE);
+    return GetAction(0, path.n_bead, particles, 0);
+  } else
+    return 1.;
 }
 
 // Accept new determinants and distances
