@@ -2,7 +2,7 @@
   <RNG />
   <IO output_prefix="free.0" />
   <Parallel procs_per_group="1" />
-  <System n_d="3" n_bead="64" beta="10.0" L="10.0" pbc="1" />
+  <System n_d="2" n_bead="64" beta="1.0" L="10.0" pbc="1" />
   <Particles>
     <Species name="eU" n_part="5" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" cofactor="0.5" prefix="free.0" />
     <Species name="eD" n_part="5" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" cofactor="0.5" prefix="free.0" />
@@ -24,7 +24,7 @@
   </Observables>
   <Algorithm>
     <Loop n_step="1000">
-      <Loop n_step="10000">
+      <Loop n_step="1000">
         <Move name="BisectU" />
         <Move name="BisectD" />
         <Observable name="Energy" />

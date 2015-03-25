@@ -2,7 +2,7 @@ import sys, os
 from math import sqrt
 
 # Exact location of PAGEN scripts
-PAGEN_HOME = '../scripts/pagen'
+PAGEN_HOME = '../../scripts/pagen'
 
 # Units
 units = {'energy':'H', 'distance':'A'}
