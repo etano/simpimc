@@ -6,7 +6,7 @@
 class VaryOptimizedNodal : public Move
 {
 private:
-  uint32_t species_i, param_set_0, param_set_1;
+  uint32_t species_i, param_set_old, param_set_new;
 protected:
 
 public:

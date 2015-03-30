@@ -20,7 +20,7 @@ void VaryOptimizedNodal::Accept()
 {
   // Call accept for each action
   for (auto& action: action_list) {
-    action->SetParamSet(param_set_1);
+    action->SetParamSet(param_set_new);
     action->Accept();
   }
 }
@@ -30,7 +30,7 @@ void VaryOptimizedNodal::Reject()
 {
   // Call reject for each action
   for (auto& action: action_list) {
-    action->SetParamSet(param_set_0);
+    action->SetParamSet(param_set_old);
     action->Reject();
   }
 }
@@ -42,20 +42,28 @@ bool VaryOptimizedNodal::Attempt()
   std::vector<std::pair<uint32_t,uint32_t>> particles;
   particles.push_back(std::make_pair(species_i,0));
 
+  // Get old and set new parameter sets
+  for (auto& action: action_list) {
+    param_set_old = action->GetParamSet();
+    action->SetRandomParamSet();
+    param_set_new = action->GetParamSet();
+  }
+
   // Calculate action change
   double old_action = 0.;
   double new_action = 0.;
-  for (auto& action: action_list) {
-    // Old action
-    path.SetMode(OLD_MODE);
-    param_set_0 = action->GetParamSet();
-    old_action += action->GetAction(0, path.n_bead-1, particles, 0);
+  if (param_set_old != param_set_new) {
+    for (auto& action: action_list) {
+      // Old action
+      path.SetMode(OLD_MODE);
+      action->SetParamSet(param_set_old);
+      old_action += action->GetAction(0, path.n_bead-1, particles, 0);
 
-    // New action
-    path.SetMode(NEW_MODE);
-    action->SetRandomParamSet();
-    param_set_1 = action->GetParamSet();
-    new_action += action->GetAction(0, path.n_bead-1, particles, 0);
+      // New action
+      path.SetMode(NEW_MODE);
+      action->SetParamSet(param_set_new);
+      new_action += action->GetAction(0, path.n_bead-1, particles, 0);
+    }
   }
 
   double current_action_change = new_action - old_action;

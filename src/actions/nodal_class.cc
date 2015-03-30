@@ -6,14 +6,7 @@ void Nodal::Init(Input &in)
   // Read in things
   n_images = in.GetAttribute<int>("n_images",0);
   is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
-  use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
-  if (use_nodal_distance) {
-    dist_type = in.GetAttribute<int>("dist_type",0);
-    n_dist_steps = in.GetAttribute<int>("n_dist_steps",1);
-    dist_tolerance = in.GetAttribute<double>("tolerance",1.e-4);
-    dist.set_size(path.n_bead);
-    dist_c.set_size(path.n_bead);
-  }
+
   species = in.GetAttribute<std::string>("species");
   species_list.push_back(species);
   std::cout << "Setting up nodal action for " << species << "..." << std::endl;
@@ -21,6 +14,29 @@ void Nodal::Init(Input &in)
   path.GetSpeciesInfo(species,species_i);
   n_part = path.species_list[species_i]->n_part;
   i_4_lambda_tau = 1./(4.*path.species_list[species_i]->lambda*path.tau);
+
+  // Nodal distance things
+  use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
+  if (use_nodal_distance) {
+    std::string dist_type_name = in.GetAttribute<std::string>("dist_type");
+    std::cout << "Setting up " << dist_type_name << " distance measure for nodal action..." << std::endl;
+    if (dist_type_name == "NewtonRaphson") {
+      dist_type = 0;
+      n_dist_steps = in.GetAttribute<int>("n_dist_steps",1);
+    } else if (dist_type_name == "LineSearch")
+      dist_type = 1;
+    else if (dist_type_name == "Max")
+      dist_type = 2;
+    else if (dist_type_name == "Hybrid")
+      dist_type = 3;
+    else {
+      std::cerr << "ERROR: Unknown dist_type!" << std::endl;
+      exit(1);
+    }
+    dist_tolerance = in.GetAttribute<double>("tolerance",1.e-4);
+    dist.set_size(path.n_bead);
+    dist_c.set_size(path.n_bead);
+  }
 
   // Write things to file
   out.Write("Actions/"+name+"/n_images", n_images);
@@ -301,6 +317,7 @@ double Nodal::DistanceAction(const std::vector<uint32_t> &b_i_vec, const std::ve
 
     }
   }
+  std::cout << dist;
 
   return tot;
 }

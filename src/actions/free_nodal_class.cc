@@ -23,19 +23,19 @@ void FreeNodal::SetupSpline()
   // Create splines
   #pragma omp parallel for
   for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
-    vec<double> rho_free_r(r_grid.num);
     double t_i_4_lambda_tau = i_4_lambda_tau/(spline_i+1);
 
     // Make rho_free
+    vec<double> rho_free_r;
+    rho_free_r.zeros(r_grid.num);
     for (uint32_t i=0; i<r_grid.num; ++i) {
       double r = r_grid.start + i*dr;
       double r2_i_4_lambda_tau = r*r*t_i_4_lambda_tau;
-      rho_free_r(i) = 0.;
-      for (int image=-n_images; image<=n_images; image++) {
-        if (image != 0) {
-          double t_r = r + image*path.L;
-          rho_free_r(i) += path.FastExp(r2_i_4_lambda_tau - t_r*t_r*t_i_4_lambda_tau);
-        }
+      for (uint32_t image=1; image<=n_images; image++) {
+        double t_r = r + image*path.L;
+        rho_free_r(i) += path.FastExp(r2_i_4_lambda_tau - t_r*t_r*t_i_4_lambda_tau);
+        t_r = r - image*path.L;
+        rho_free_r(i) += path.FastExp(r2_i_4_lambda_tau - t_r*t_r*t_i_4_lambda_tau);
       }
       rho_free_r(i) = log1p(std::min(10.,rho_free_r(i)));
     }

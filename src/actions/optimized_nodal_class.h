@@ -19,7 +19,18 @@ protected:
   virtual double GetGijDGijDr(const vec<double> &r, const uint32_t slice_diff, vec<double> &dgij_dr);
 
   // 1/(4\lambda\tau)
-  virtual double Geti4LambdaTau(const uint32_t slice_diff);
+  inline virtual double Geti4LambdaTau(const uint32_t slice_diff)
+  {
+    // Choose model
+    switch(model_i) {
+      case 0:
+        return i_4_lambda_tau*param_sets[param_set_i][0]/slice_diff;
+        break;
+      default:
+        return i_4_lambda_tau/slice_diff;
+        break;
+    }
+  };
 
   // Splines
   field<UBspline_1d_d*> rho_node_r_splines;

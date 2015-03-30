@@ -42,19 +42,19 @@ void OptimizedNodal::SetupSpline()
   for (uint32_t param_set_i=0; param_set_i<param_sets.size(); ++param_set_i) {
     #pragma omp parallel for
     for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
-      vec<double> rho_node_r(r_grid.num);
       double t_i_4_lambda_tau = Geti4LambdaTau(spline_i+1); // TODO: This is hard-coded for free-particle-like nodal structures.
-
       // Make rho_free
+      vec<double> rho_node_r;
+      rho_node_r.zeros(r_grid.num);
       for (uint32_t i=0; i<r_grid.num; ++i) {
         double r = r_grid.start + i*dr;
-        double r2i_4_lambda_tau = r*r*t_i_4_lambda_tau;
-        rho_node_r(i) = 0.;
-        for (int image=-n_images; image<=n_images; image++) {
-          if (image != 0) {
-            double t_r = r + image*path.L;
-            rho_node_r(i) += path.FastExp(r2i_4_lambda_tau - t_r*t_r*t_i_4_lambda_tau);
-          }
+        double r2 = r*r;
+        double r2_i_4_lambda_tau = r2*t_i_4_lambda_tau;
+        for (uint32_t image=1; image<=n_images; image++) {
+          double t_r = r + image*path.L;
+          rho_node_r(i) += path.FastExp(r2_i_4_lambda_tau - t_r*t_r*t_i_4_lambda_tau);
+          t_r = r - image*path.L;
+          rho_node_r(i) += path.FastExp(r2_i_4_lambda_tau - t_r*t_r*t_i_4_lambda_tau);
         }
         rho_node_r(i) = log1p(std::min(10.,rho_node_r(i)));
       }
@@ -95,23 +95,6 @@ double OptimizedNodal::GetGijDGijDr(const vec<double>& r, const uint32_t slice_d
     dgij_dr(d_i) = (dgij_dr_image_action - r(d_i)*i_4_lambda_level_tau)*gij_d_i;
   }
   return gij;
-}
-
-double OptimizedNodal::Geti4LambdaTau(const uint32_t slice_diff)
-{
-  double t_i_4_lambda_tau(i_4_lambda_tau);
-
-  // Choose model
-  switch(model_i) {
-    case 0:
-      t_i_4_lambda_tau *= param_sets[param_set_i][0]/slice_diff;
-      break;
-    default:
-      t_i_4_lambda_tau /= slice_diff;
-      break;
-  }
-
-  return t_i_4_lambda_tau;
 }
 
 void OptimizedNodal::Write() {}

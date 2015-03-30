@@ -43,28 +43,29 @@ void Kinetic::SetupSpline()
   // Create splines
   #pragma omp parallel for
   for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
-    vec<double> rho_free_r(r_grid.num), num_sum_r(r_grid.num);
     double t_i_4_lambda_tau = i_4_lambda_tau/(spline_i+1);
 
     // Make rho_free
+    vec<double> rho_free_r, num_sum_r;
+    rho_free_r.zeros(r_grid.num);
+    if (spline_i == 0)
+      num_sum_r.zeros(r_grid.num);
     for (uint32_t i=0; i<r_grid.num; ++i) {
       double r = r_grid.start + i*dr;
       double r2 = r*r;
       double r2_i_4_lambda_tau = r2*t_i_4_lambda_tau;
-      rho_free_r(i) = 0.;
-      if (spline_i == 0)
-        num_sum_r(i) = 0.;
-      for (uint32_t image=-n_images; image<=n_images; image++) {
-        if (image != 0) {
-          double t_r = r + image*path.L;
-          double exp_part = path.FastExp(r2_i_4_lambda_tau - t_r*t_r*t_i_4_lambda_tau);
-          rho_free_r(i) += exp_part;
+      for (uint32_t image=1; image<=n_images; image++) {
+          double t_r_p(r+image*path.L);
+          double exp_part_p = path.FastExp(r2_i_4_lambda_tau - t_r_p*t_r_p*t_i_4_lambda_tau);
+          double t_r_m(r-image*path.L);
+          double exp_part_m = path.FastExp(r2_i_4_lambda_tau - t_r_m*t_r_m*t_i_4_lambda_tau);
+          rho_free_r(i) += exp_part_p + exp_part_m;
           if (spline_i == 0 && r2 != 0.)
-            num_sum_r(i) += (t_r*t_r/r2)*exp_part;
-        }
+            num_sum_r(i) += (t_r_p*t_r_p*exp_part_p + t_r_m*t_r_m*exp_part_m)/r2;
       }
       rho_free_r(i) = log1p(std::min(10.,rho_free_r(i)));
-      num_sum_r(i) = log1p(std::min(10.,num_sum_r(i)));
+      if (spline_i == 0)
+        num_sum_r(i) = log1p(std::min(10.,num_sum_r(i)));
     }
     BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
     UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
@@ -72,6 +73,7 @@ void Kinetic::SetupSpline()
     if (spline_i == 0)
       num_sum_r_spline = create_UBspline_1d_d(r_grid, xBC, num_sum_r.memptr());
   }
+
 }
 
 double Kinetic::GetGaussSum(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff)
