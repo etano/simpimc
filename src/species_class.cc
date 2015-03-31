@@ -7,7 +7,6 @@ void Species::Init(Input &in, IO &out)
   n_part = in.GetAttribute<uint32_t>("n_part");
   lambda = in.GetAttribute<double>("lambda");
   fermi = in.GetAttribute<bool>("fermi", false);
-  fixed_node = in.GetAttribute<bool>("fixed_node", false);
   init_type = in.GetAttribute<std::string>("init_type","Random");
 
   // Write to file
@@ -15,7 +14,6 @@ void Species::Init(Input &in, IO &out)
   out.Write("System/Particles/"+name+"/n_part",n_part);
   out.Write("System/Particles/"+name+"/lambda",lambda);
   out.Write("System/Particles/"+name+"/fermi",fermi);
-  out.Write("System/Particles/"+name+"/fixed_node",fixed_node);
   out.Write("System/Particles/"+name+"/init_type",init_type);
 
   // Set defaults

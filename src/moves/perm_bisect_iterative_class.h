@@ -12,7 +12,7 @@ private:
   uint32_t n_level, n_bisect_beads, n_part, n_perm_part, n_perm_type;
   uint32_t bead0, bead1;
   double lambda, i4_lambda_tau_n_bisect_beads, epsilon, log_epsilon, target_ratio;
-  bool adaptive, roll_over, fixed_node;
+  bool adaptive, roll_over;
   uint32_t ref_accept, ref_attempt;
 
   struct Cycle

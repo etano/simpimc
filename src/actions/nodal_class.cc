@@ -7,6 +7,7 @@ void Nodal::Init(Input &in)
   n_images = in.GetAttribute<int>("n_images",0);
   is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
 
+  // Set species variables
   species = in.GetAttribute<std::string>("species");
   species_list.push_back(species);
   std::cout << "Setting up nodal action for " << species << "..." << std::endl;
@@ -14,6 +15,7 @@ void Nodal::Init(Input &in)
   path.GetSpeciesInfo(species,species_i);
   n_part = path.species_list[species_i]->n_part;
   i_4_lambda_tau = 1./(4.*path.species_list[species_i]->lambda*path.tau);
+  path.species_list[species_i]->fixed_node = true;
 
   // Nodal distance things
   use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
