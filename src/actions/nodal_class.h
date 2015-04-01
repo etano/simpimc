@@ -63,7 +63,7 @@ protected:
   T FieldVecMag(const field<vec<T>> &field_vec, const uint32_t row)
   {
     T tot = 0.;
-    for (uint32_t i=0; i<field_vec.size(); ++i)
+    for (uint32_t i=0; i<field_vec.n_cols; ++i)
       tot += dot(field_vec(row,i),field_vec(row,i));
     return sqrt(tot);
   }

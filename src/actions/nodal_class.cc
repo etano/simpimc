@@ -36,8 +36,8 @@ void Nodal::Init(Input &in)
       exit(1);
     }
     dist_tolerance = in.GetAttribute<double>("tolerance",1.e-4);
-    dist.set_size(path.n_bead);
-    dist_c.set_size(path.n_bead);
+    dist.zeros(path.n_bead);
+    dist_c.zeros(path.n_bead);
   }
 
   // Write things to file
@@ -49,8 +49,16 @@ void Nodal::Init(Input &in)
   SetupSpline();
 
   // Set up determinants
-  rho_f.set_size(path.n_bead);
-  rho_f_c.set_size(path.n_bead);
+  rho_f.zeros(path.n_bead);
+  rho_f_c.zeros(path.n_bead);
+  grad_rho_f.set_size(path.n_bead,n_part);
+  grad_rho_f_c.set_size(path.n_bead,n_part);
+  for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
+    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+      grad_rho_f(b_i,p_i).zeros(path.n_d);
+      grad_rho_f_c(b_i,p_i).zeros(path.n_d);
+    }
+  }
 
   // Test initial configuration
   is_first_time.resize(path.n_bead);
@@ -64,6 +72,7 @@ void Nodal::Init(Input &in)
     std::cout << "Warning: initializing with broken nodes!" << std::endl;
     init_good = 0;
   }
+  Accept();
   out.Write("Actions/"+name+"/init_good", init_good);
 }
 
@@ -76,19 +85,12 @@ double Nodal::DActionDBeta()
   // Initialize other beads
   std::vector<std::shared_ptr<Bead>> ref_b(n_part);
   std::vector<std::vector<std::shared_ptr<Bead>>> other_b(path.n_bead);
-  int slice_diff_0 = -path.ref_bead;
-  int abs_slice_diff_0 = abs(slice_diff_0);
   for (uint32_t p_i=0; p_i<n_part; ++p_i)
     ref_b[p_i] = path(species_i,p_i,path.ref_bead);
-  if (slice_diff_0 >= 0) {
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      other_b[0].push_back(path.GetNextBead(ref_b[p_i],abs_slice_diff_0)); // FIXME: Perhaps this could be faster
-  } else {
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      other_b[0].push_back(path.GetPrevBead(ref_b[p_i],abs_slice_diff_0));
-  }
+  for (uint32_t p_i=0; p_i<n_part; ++p_i)
+    other_b[0].push_back(path.GetPrevBead(ref_b[p_i],path.ref_bead));
 
-  for (uint32_t b_i=0; b_i<path.n_bead; ++b_i)
+  for (uint32_t b_i=1; b_i<path.n_bead; ++b_i)
     for (uint32_t p_i=0; p_i<n_part; ++p_i)
       other_b[b_i].push_back(path.GetNextBead(other_b[b_i-1][p_i],1));
 
@@ -98,10 +100,6 @@ double Nodal::DActionDBeta()
 
 double Nodal::DDistanceActionDBeta(const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b)
 {
-  // Temporary mode
-  ModeType t_mode(path.GetMode());
-  path.SetMode(OLD_MODE);
-
   // Compute action from nodal distance
   double tot = 0.;
   double i_lambda_tau = 1./(path.species_list[species_i]->lambda*path.tau);
@@ -126,9 +124,6 @@ double Nodal::DDistanceActionDBeta(const std::vector<std::shared_ptr<Bead>> &ref
     if (std::fpclassify(exp_dist2_i_lambda_tau_m1) == FP_NORMAL)
       tot += dist2_i_lambda_tau/(path.tau*exp_dist2_i_lambda_tau_m1);
   }
-
-  // Reset mode
-  path.SetMode(t_mode);
 
   return tot;
 }
@@ -260,8 +255,7 @@ double Nodal::DistanceAction(const std::vector<uint32_t> &b_i_vec, const std::ve
     std::atomic_bool abort(false);
     #pragma omp parallel for reduction(+:tot) schedule(dynamic) shared(abort) // TODO: Could be optimized probably
     for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-      if (!abort) continue;
-      if (b_i_vec[b_i] != path.ref_bead)  {
+      if (!abort && b_i_vec[b_i] != path.ref_bead)  {
         t_dist(b_i) = GetNodalDistance(b_i_vec[b_i],ref_b,other_b[b_i]);
         if (t_dist(b_i) < 0.) {
           tot += 1.e100;
@@ -281,9 +275,13 @@ double Nodal::DistanceAction(const std::vector<uint32_t> &b_i_vec, const std::ve
     }
   }
 
+  if (tot > 1.)
+    return tot;
+  else
+    return 0.;
+
   // Compute action from nodal distance
-  if (tot < 1.e100) {
-    tot = 0.;
+  if (tot == 0.) {
     uint32_t skip = b_i_vec[1] - b_i_vec[0];
     double i_lambda_level_tau = 1./(path.species_list[species_i]->lambda*skip*path.tau);
     for (uint32_t b_i=0; b_i<n_bead_in_move-1; ++b_i) {
@@ -319,7 +317,6 @@ double Nodal::DistanceAction(const std::vector<uint32_t> &b_i_vec, const std::ve
 
     }
   }
-  std::cout << dist;
 
   return tot;
 }
@@ -358,6 +355,8 @@ double Nodal::HybridDistance(const int b_i, const std::vector<std::shared_ptr<Be
   // Do single Newton-Raphson iteration
   double grad_mag(FieldVecMag(grad_rho_f,b_i));
   double dist_b_i = rho_f(b_i)/grad_mag;
+  //std::cout << rho_f(b_i) << " " << grad_mag << " " << dist_b_i << std::endl;
+  return dist_b_i;
   if (dist_b_i > 4.*sqrt(1./i_4_lambda_tau)) {
     double max_dist = MaxDistance(b_i,ref_b,other_b_i);
     return (dist_b_i < max_dist) ? dist_b_i : max_dist;
@@ -514,9 +513,12 @@ void Nodal::SetRhoFGradRhoF(const int b_i, const std::vector<std::shared_ptr<Bea
   // Compute Gij matrix and its gradient
   mat<double> g_ij(n_part,n_part);
   field<vec<double>> dg_ij_dr(n_part,n_part);
-  for (uint32_t p_i=0; p_i<n_part; ++p_i)
-    for (uint32_t p_j=0; p_j<n_part; ++p_j)
+  for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+    for (uint32_t p_j=0; p_j<n_part; ++p_j) {
+      dg_ij_dr(p_i,p_j).zeros(path.n_d);
       g_ij(p_i,p_j) = GetGijDGijDr(path.Dr(ref_b[p_i], other_b_i[p_j]), min_slice_diff, dg_ij_dr(p_i,p_j));
+    }
+  }
 
   // Compute determinant with cofactors using Gauss-Jordan elimination
   rho_f(b_i) = det(g_ij);
@@ -532,7 +534,6 @@ void Nodal::SetRhoFGradRhoF(const int b_i, const std::vector<std::shared_ptr<Bea
       grad_rho_f(b_i,p_i) += dg_ij_dr(p_j,p_i)*cofactors_g_ij(p_j,p_i); // TODO: Could be written in fewer lines
   }
 
-  return;
 }
 
 // Compute importance weight
@@ -554,6 +555,7 @@ void Nodal::Accept()
     for (uint32_t b_i=start_b; b_i<=end_b; ++b_i) {
       uint32_t t_b_i = path.bead_loop(b_i);
       rho_f_c(t_b_i) = rho_f(t_b_i);
+      grad_rho_f_c.row(t_b_i) = grad_rho_f.row(t_b_i);
       dist_c(t_b_i) = dist(t_b_i);
     }
   }
@@ -566,6 +568,7 @@ void Nodal::Reject()
     for (uint32_t b_i=start_b; b_i<=end_b; ++b_i) {
       uint32_t t_b_i = path.bead_loop(b_i);
       rho_f(t_b_i) = rho_f_c(t_b_i);
+      grad_rho_f.row(t_b_i) = grad_rho_f_c.row(t_b_i);
       dist(t_b_i) = dist_c(t_b_i);
     }
   }
