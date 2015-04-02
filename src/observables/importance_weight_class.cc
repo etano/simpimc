@@ -17,11 +17,11 @@ void ImportanceWeight::Accumulate()
   path.SetMode(NEW_MODE);
   path.importance_weight = path.sign;
   for (uint32_t i=0; i<action_list.size(); ++i) {
-    double tmpIW = 1.;
+    double tmp_iw = 1.;
     if (action_list[i]->is_importance_weight)
-      tmpIW = action_list[i]->ImportanceWeight();
-    IWs(i) += tmpIW;
-    path.importance_weight *= tmpIW;
+      tmp_iw = action_list[i]->ImportanceWeight();
+    IWs(i) += tmp_iw;
+    path.importance_weight *= tmp_iw;
   }
   n_measure += 1;
 }

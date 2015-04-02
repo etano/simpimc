@@ -39,7 +39,7 @@ void FreeNodal::SetupSpline()
       }
       rho_free_r(i) = log1p(std::min(10.,rho_free_r(i)));
     }
-    BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
+    BCtype_d xBC = {NATURAL, NATURAL};
     UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
     rho_free_r_splines(spline_i) = rho_free_r_spline;
   }
@@ -68,7 +68,7 @@ double FreeNodal::GetGijDGijDr(const vec<double>& r, const uint32_t slice_diff, 
     eval_UBspline_1d_d_vg(rho_free_r_splines(slice_diff-1),r(d_i),&gij_image_action,&dgij_dr_image_action);
     double gij_d_i = exp(0.9999*gij_image_action)*exp(-(r(d_i)*r(d_i)*i_4_lambda_level_tau));
     gij *= gij_d_i;
-    dgij_dr(d_i) = (dgij_dr_image_action - r(d_i)*i_4_lambda_level_tau)*gij_d_i;
+    dgij_dr(d_i) = (dgij_dr_image_action - 2.*r(d_i)*i_4_lambda_level_tau)*gij_d_i;
   }
   return gij;
 }
