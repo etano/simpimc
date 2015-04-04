@@ -24,13 +24,15 @@ void Nodal::Init(Input &in)
     std::cout << "Setting up " << dist_type_name << " distance measure for nodal action..." << std::endl;
     if (dist_type_name == "NewtonRaphson") {
       dist_type = 0;
-      n_dist_steps = in.GetAttribute<int>("n_dist_steps",1);
+      max_dist_steps = in.GetAttribute<int>("max_dist_steps",1);
     } else if (dist_type_name == "LineSearch")
       dist_type = 1;
     else if (dist_type_name == "Max")
       dist_type = 2;
     else if (dist_type_name == "Hybrid")
       dist_type = 3;
+    else if (dist_type_name == "Hyperplane")
+      dist_type = 4;
     else {
       std::cerr << "ERROR: Unknown dist_type!" << std::endl;
       exit(1);
@@ -67,12 +69,16 @@ void Nodal::Init(Input &in)
   std::vector< std::pair<uint32_t,uint32_t>> particles;
   particles.push_back(std::make_pair(species_i,0));
   bool init_good = 1;
+  ModeType t_mode(path.GetMode());
   path.SetMode(NEW_MODE);
   if (GetAction(0, path.n_bead, particles, 0) >= 1.e100) {
     std::cout << "Warning: initializing with broken nodes!" << std::endl;
     init_good = 0;
   }
+  start_b = 0;
+  end_b = path.n_bead;
   Accept();
+  path.SetMode(t_mode);
   out.Write("Actions/"+name+"/init_good", init_good);
 }
 
@@ -90,33 +96,41 @@ double Nodal::DActionDBeta()
   for (uint32_t p_i=0; p_i<n_part; ++p_i)
     other_b[0].push_back(path.GetPrevBead(ref_b[p_i],path.ref_bead));
 
-  for (uint32_t b_i=1; b_i<path.n_bead; ++b_i)
+  std::vector<uint32_t> b_i_vec;
+  b_i_vec.push_back(other_b[0][0]->b);
+  for (uint32_t b_i=1; b_i<path.n_bead; ++b_i) {
     for (uint32_t p_i=0; p_i<n_part; ++p_i)
       other_b[b_i].push_back(path.GetNextBead(other_b[b_i-1][p_i],1));
+    b_i_vec.push_back(other_b[b_i][0]->b);
+  }
 
   // Decide which type of action to compute
-  return DDistanceActionDBeta(ref_b, other_b);
+  return DDistanceActionDBeta(b_i_vec, ref_b, other_b);
 }
 
-double Nodal::DDistanceActionDBeta(const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b)
+double Nodal::DDistanceActionDBeta(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b) // FIXME: No need for this extra function
 {
   // Compute action from nodal distance
   double tot = 0.;
   double i_lambda_tau = 1./(path.species_list[species_i]->lambda*path.tau);
   for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
     // Set slice variables
-    uint32_t b_j = b_i + 1;
-    bool b_i_is_ref = b_i == path.ref_bead;
-    bool b_j_is_ref = b_j == path.ref_bead;
+    uint32_t b_j = path.bead_loop(b_i + 1);
+    bool b_i_is_ref(b_i == path.ref_bead);
+    bool b_j_is_ref(b_j == path.ref_bead);
 
     // Compute dist2
-    double dist2;
-    if (b_i_is_ref || (dist(b_i)==0.))
-      dist2 = dist(b_j)*dist(b_j);
-    else if (b_j_is_ref || (dist(b_j)==0.))
-      dist2 = dist(b_i)*dist(b_i);
+    double dist_b_i, dist_b_j, dist2;
+    if (!b_i_is_ref)
+      dist_b_i = dist(b_i); //GetNodalDistance(b_i_vec[b_i],ref_b,other_b[b_i]);
+    if (!b_j_is_ref)
+      dist_b_j = dist(b_j); //GetNodalDistance(b_i_vec[b_j],ref_b,other_b[b_j]);
+    if (b_i_is_ref || (dist_b_i==0.))
+      dist2 = dist_b_j*dist_b_j;
+    else if (b_j_is_ref || (dist_b_j==0.))
+      dist2 = dist_b_i*dist_b_i;
     else
-      dist2 = dist(b_i)*dist(b_j);
+      dist2 = dist_b_i*dist_b_j;
 
     // Compute action
     double dist2_i_lambda_tau = dist2*i_lambda_tau;
@@ -125,7 +139,7 @@ double Nodal::DDistanceActionDBeta(const std::vector<std::shared_ptr<Bead>> &ref
       tot += dist2_i_lambda_tau/(path.tau*exp_dist2_i_lambda_tau_m1);
   }
 
-  return tot;
+  return tot/path.n_bead;
 }
 
 double Nodal::GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
@@ -184,7 +198,6 @@ double Nodal::GetAction(const uint32_t b0, const uint32_t b1, const std::vector<
     for (uint32_t p_i=0; p_i<n_part; ++p_i)
       other_b[0].push_back(path.GetPrevBead(ref_b[p_i],abs_slice_diff_0));
   }
-
   for (uint32_t b_i=1; b_i<n_bead_in_move; ++b_i)
     for (uint32_t p_i=0; p_i<n_part; ++p_i)
       other_b[b_i].push_back(path.GetNextBead(other_b[b_i-1][p_i],skip));
@@ -275,11 +288,6 @@ double Nodal::DistanceAction(const std::vector<uint32_t> &b_i_vec, const std::ve
     }
   }
 
-  if (tot > 1.)
-    return tot;
-  else
-    return 0.;
-
   // Compute action from nodal distance
   if (tot == 0.) {
     uint32_t skip = b_i_vec[1] - b_i_vec[0];
@@ -338,6 +346,9 @@ double Nodal::GetNodalDistance(const int b_i, const std::vector<std::shared_ptr<
       case 3:
         return HybridDistance(b_i,ref_b,other_b_i);
         break;
+      case 4:
+        return HyperplaneDistance(b_i,ref_b,other_b_i);
+        break;
     }
   } else
     return dist_c(b_i);
@@ -355,8 +366,6 @@ double Nodal::HybridDistance(const int b_i, const std::vector<std::shared_ptr<Be
   // Do single Newton-Raphson iteration
   double grad_mag(FieldVecMag(grad_rho_f,b_i));
   double dist_b_i = rho_f(b_i)/grad_mag;
-  //std::cout << rho_f(b_i) << " " << grad_mag << " " << dist_b_i << std::endl;
-  return dist_b_i;
   if (dist_b_i > 4.*sqrt(1./i_4_lambda_tau)) {
     double max_dist = MaxDistance(b_i,ref_b,other_b_i);
     return (dist_b_i < max_dist) ? dist_b_i : max_dist;
@@ -364,17 +373,47 @@ double Nodal::HybridDistance(const int b_i, const std::vector<std::shared_ptr<Be
     return LineSearchDistance(b_i,ref_b,other_b_i);
 }
 
-// Return the maximum distance to a node (coincidence point)
-double Nodal::MaxDistance(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
+// Return the slope and intercept of a line from 2 points
+void Nodal::GetLine(vec<double> &p_a, vec<double> &p_b, double &m, double &b)
+{
+  if (p_a(1) > p_b(1))
+    m = (p_a(1)-p_b(1))/(p_a(0)-p_b(0));
+  else
+    m = (p_b(1)-p_a(1))/(p_b(0)-p_a(0));
+  b = p_a(1) - m*p_a(0);
+}
+
+// Return the distance to a hyperplane formed by the other particles
+double Nodal::HyperplaneDistance(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
 {
   double dist_b_i = 1./dist_tolerance;
   for (uint32_t p_i=0; p_i<n_part-1; ++p_i) {
     for (uint32_t p_j=p_i+1; p_j<n_part; ++p_j) {
-      double dr = mag(path.Dr(path(species_i,p_i,b_i),path(species_i,p_j,b_i)));
-      dist_b_i = (dr < dist_b_i) ? dr : dist_b_i;
+      vec<double> r_tau_0 = path.GetR(path(species_i,p_i,b_i));
+      vec<double> r_tau_1 = path.GetR(path(species_i,p_j,b_i));
+      vec<double> r_star_0 = path.GetR(ref_b[p_i]);
+      vec<double> r_star_1 = path.GetR(ref_b[p_j]);
+      vec<double> r_tau_0_p(r_tau_0);
+      r_tau_0_p(1) = r_tau_1(0) - (r_tau_0(1)-r_tau_1(1))*(r_star_0(1)-r_star_1(1))/(r_star_0(0)-r_star_1(0));
+      double a, b(-1.), c;
+      GetLine(r_tau_0_p, r_tau_1, a, c);
+      dist_b_i = fabs(a*r_tau_0(0) + b*r_tau_0(1) + c)/sqrt(a*a + b*b);
+      dist_b_i -= nearbyint(dist_b_i*path.iL)*path.L;
+      dist_b_i = fabs(dist_b_i);
     }
   }
-  return dist_b_i*M_SQRT1_2;
+  return dist_b_i*M_SQRT2;
+}
+
+// Return the maximum distance to a node (coincidence point)
+double Nodal::MaxDistance(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
+{
+  double dist_b_i = 1./dist_tolerance;
+  for (uint32_t p_i=0; p_i<n_part-1; ++p_i)
+    for (uint32_t p_j=p_i+1; p_j<n_part; ++p_j)
+      dist_b_i = std::min(mag(path.Dr(path(species_i,p_i,b_i),path(species_i,p_j,b_i))), dist_b_i);
+  dist_b_i *= M_SQRT1_2;
+  return dist_b_i; // FIXME: Should I include ref distance?
 }
 
 // Perform a 1D line search in the direction of the gradient
@@ -387,8 +426,8 @@ double Nodal::LineSearchDistance(const int b_i, const std::vector<std::shared_pt
 
   // Set up temporary storage fields
   field<vec<double>> other_b_i_0(n_part);
-  for (uint32_t p_i; p_i<n_part; ++p_i)
-    other_b_i_0(p_i) = other_b_i[p_i]->r;
+  for (uint32_t p_i=0; p_i<n_part; ++p_i)
+    other_b_i_0(p_i) = path.GetR(other_b_i[p_i]);
 
   // Set initial gradient unit vector
   field<vec<double>> grad_rho_f_0(grad_rho_f.row(b_i));
@@ -396,7 +435,7 @@ double Nodal::LineSearchDistance(const int b_i, const std::vector<std::shared_pt
   double rho_f_0 = rho_f(b_i);
   double dist_0 = rho_f_0/grad_mag;
   double dist_0_i_grad_mag = dist_0/grad_mag;
-  double abs_dist_0 = abs(dist_0);
+  double abs_dist_0 = fabs(dist_0);
 
   // Find close point on other side of the node (along this distance of the gradient)
   bool done = false;
@@ -404,20 +443,18 @@ double Nodal::LineSearchDistance(const int b_i, const std::vector<std::shared_pt
   while ((rho_f_0*rho_f(b_i) > 0.) && (max_factor*dist_0 < max_dist)) {
     max_factor *= 2.;
     for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      other_b_i[p_i]->r = other_b_i_0(p_i) - max_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
+      path.GetR(other_b_i[p_i]) = other_b_i_0(p_i) - max_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
     SetRhoF(b_i,ref_b,other_b_i);
   }
 
   // Perform a bisection search for the sign change
   double dist_b_i(max_dist);
-  if (rho_f_0*rho_f(b_i) >= 0.)
-    return dist_b_i;
-  else {
+  if (rho_f_0*rho_f(b_i) < 0.) {
     double try_factor(1.);
-    while (((max_factor-min_factor)*abs_dist_0>dist_tolerance) && (min_factor*abs(dist_0)<max_dist)) {
+    while (((max_factor-min_factor)*abs_dist_0>dist_tolerance) && (min_factor*abs_dist_0<max_dist)) {
       try_factor = 0.5*(max_factor+min_factor);
       for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        other_b_i[p_i]->r = other_b_i_0(p_i) - try_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
+        path.GetR(other_b_i[p_i]) = other_b_i_0(p_i) - try_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
       SetRhoF(b_i,ref_b,other_b_i);
       if (rho_f_0*rho_f(b_i) > 0.)
         min_factor = try_factor;
@@ -431,9 +468,9 @@ double Nodal::LineSearchDistance(const int b_i, const std::vector<std::shared_pt
   }
 
   // Reset positions, determinant, and gradient
-  for (uint32_t p_i; p_i<n_part; ++p_i)
-    other_b_i[p_i]->r = other_b_i_0(p_i);
-  grad_rho_f.row(b_i) = grad_rho_f_0;
+  for (uint32_t p_i=0; p_i<n_part; ++p_i)
+    path.GetR(other_b_i[p_i]) = other_b_i_0(p_i);
+  //grad_rho_f.row(b_i) = grad_rho_f_0;
   rho_f(b_i) = rho_f_0;
 
   return dist_b_i;
@@ -449,9 +486,9 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
 
   // Set up temporary storage fields
   field<vec<double>> t_other_b_i(n_part), other_b_i_0(n_part);
-  for (uint32_t p_i; p_i<n_part; ++p_i) {
-    other_b_i_0(p_i) = other_b_i[p_i]->r;
-    t_other_b_i(p_i) = other_b_i[p_i]->r;
+  for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+    other_b_i_0(p_i) = path.GetR(other_b_i[p_i]);
+    t_other_b_i(p_i) = path.GetR(other_b_i[p_i]);
   }
 
   // Set initial gradient unit vector
@@ -463,19 +500,19 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
   // Perform Newton-Raphson steps
   bool done = false;
   int i_dist_step = 0;
-  while (!done && (i_dist_step < n_dist_steps)) {
+  while (!done && (i_dist_step < max_dist_steps)) {
     // Find zero crossing with current gradient
     double t_dist = 2.*rho_f(b_i)/grad_mag;
     do {
       t_dist *= 0.5;
       for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        other_b_i[p_i]->r = t_other_b_i(p_i) - (t_dist/grad_mag)*grad_rho_f(b_i,p_i);
+        path.GetR(other_b_i[p_i]) = t_other_b_i(p_i) - (t_dist/grad_mag)*grad_rho_f(b_i,p_i);
       SetRhoF(b_i,ref_b,other_b_i);
     } while (rho_f(b_i) < 0.);
 
     // Set new temporary path
     for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      t_other_b_i(p_i) = other_b_i[p_i]->r;
+      t_other_b_i(p_i) = path.GetR(other_b_i[p_i]);
 
     // Check if tolerance is satisfied
     if (t_dist < dist_tolerance*dist_0)
@@ -490,13 +527,13 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
   }
 
   // Compute distance
-  for (uint32_t p_i; p_i<n_part; ++p_i)
+  for (uint32_t p_i=0; p_i<n_part; ++p_i)
     t_other_b_i(p_i) -= other_b_i_0(p_i);
   double dist_b_i(FieldVecMag(t_other_b_i));
 
   // Reset positions, determinant, and gradient
-  for (uint32_t p_i; p_i<n_part; ++p_i)
-    other_b_i[p_i]->r = other_b_i_0(p_i);
+  for (uint32_t p_i=0; p_i<n_part; ++p_i)
+    path.GetR(other_b_i[p_i]) = other_b_i_0(p_i);
   grad_rho_f.row(b_i) = grad_rho_f_0;
   rho_f(b_i) = rho_f_0;
 
@@ -531,7 +568,7 @@ void Nodal::SetRhoFGradRhoF(const int b_i, const std::vector<std::shared_ptr<Bea
   for (uint32_t p_i=0; p_i<n_part; ++p_i) {
     grad_rho_f(b_i,p_i).zeros();
     for (uint32_t p_j=0; p_j<n_part; ++p_j)
-      grad_rho_f(b_i,p_i) += dg_ij_dr(p_j,p_i)*cofactors_g_ij(p_j,p_i); // TODO: Could be written in fewer lines
+      grad_rho_f(b_i,p_i) -= dg_ij_dr(p_j,p_i)*cofactors_g_ij(p_j,p_i); // FIXME: Should this be minue? Also, could be written in fewer lines.
   }
 
 }

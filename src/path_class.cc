@@ -91,7 +91,7 @@ void Path::PrintPath()
   for (uint32_t s_i=0; s_i<n_species; ++s_i) {
     for (uint32_t p_i=0; p_i<species_list[s_i]->n_part; ++p_i) {
       for (uint32_t b_i=0; b_i<n_bead; ++b_i) {
-        std::cout << p_i << " " << b_i << " ";
+        std::cout << s_i << " " << p_i << " " << b_i << " ";
         vec<double> r = GetR((*this)(s_i,p_i,b_i));
         for (uint32_t d_i=0; d_i<n_d; ++d_i) {
           std:: cout << r(d_i) << " ";

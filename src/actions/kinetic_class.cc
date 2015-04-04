@@ -67,7 +67,7 @@ void Kinetic::SetupSpline()
       if (spline_i == 0)
         num_sum_r(i) = log1p(std::min(10.,num_sum_r(i)));
     }
-    BCtype_d xBC = {NATURAL, FLAT}; // fixme: Is this correct?
+    BCtype_d xBC = {NATURAL, NATURAL};
     UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
     rho_free_r_splines(spline_i) = rho_free_r_spline;
     if (spline_i == 0)

@@ -92,8 +92,9 @@ double OptimizedNodal::GetGijDGijDr(const vec<double>& r, const uint32_t slice_d
     eval_UBspline_1d_d_vg(rho_node_r_splines(param_set_i,slice_diff-1),r(d_i),&gij_image_action,&dgij_dr_image_action);
     double gij_d_i = exp(0.9999*gij_image_action)*exp(-(r(d_i)*r(d_i)*i_4_lambda_level_tau));
     gij *= gij_d_i;
-    dgij_dr(d_i) = (dgij_dr_image_action - 2.*r(d_i)*i_4_lambda_level_tau)*gij_d_i;
+    dgij_dr(d_i) = dgij_dr_image_action - 2.*r(d_i)*i_4_lambda_level_tau;
   }
+  dgij_dr *= gij;
   return gij;
 }
 

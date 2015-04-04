@@ -60,29 +60,29 @@ public:
 
   std::shared_ptr<Bead> NextB(const uint32_t n)
   {
-    std::shared_ptr<Bead> bead(next);
-    for (uint32_t i=1; i<n; i++) bead = bead->next;
+    std::shared_ptr<Bead> bead(prev->next);
+    for (uint32_t i=0; i<n; i++) bead = bead->next;
     return bead;
   }
 
   std::shared_ptr<Bead> NextBC(const uint32_t n)
   {
-    std::shared_ptr<Bead> bead(next_c);
-    for (uint32_t i=1; i<n; i++) bead = bead->next_c;
+    std::shared_ptr<Bead> bead(prev->next);
+    for (uint32_t i=0; i<n; i++) bead = bead->next_c;
     return bead;
   }
 
   std::shared_ptr<Bead> PrevB(const uint32_t n)
   {
-    std::shared_ptr<Bead> bead(prev);
-    for (uint32_t i=1; i<n; i++) bead = bead->prev;
+    std::shared_ptr<Bead> bead(next->prev);
+    for (uint32_t i=0; i<n; i++) bead = bead->prev;
     return bead;
   }
 
   std::shared_ptr<Bead> PrevBC(const uint32_t n)
   {
-    std::shared_ptr<Bead> bead(prev_c);
-    for (uint32_t i=1; i<n; i++) bead = bead->prev_c;
+    std::shared_ptr<Bead> bead(next->prev);
+    for (uint32_t i=0; i<n; i++) bead = bead->prev_c;
     return bead;
   }
 
