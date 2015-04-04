@@ -249,9 +249,11 @@ void Nodal::SetRhoF(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref
 
   // Compute Gij matrix
   mat<double> g_ij(n_part,n_part);
-  for (uint32_t p_i=0; p_i<n_part; ++p_i)
-    for (uint32_t p_j=0; p_j<n_part; ++p_j)
+  for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+    for (uint32_t p_j=0; p_j<n_part; ++p_j) {
       g_ij(p_i,p_j) = GetGij(path.Dr(ref_b[p_i], other_b_i[p_j]), min_slice_diff);
+    }
+  }
 
   // Compute determinant
   rho_f(b_i) = det(g_ij);
@@ -481,6 +483,8 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
 {
   // Calculate determinant and gradiant
   SetRhoFGradRhoF(b_i,ref_b,other_b_i);
+  if (std::isnan(grad_rho_f(b_i,0)(0)))
+    return LineSearchDistance(b_i,ref_b,other_b_i);
   if (rho_f(b_i) < 0.)
     return -1.;
 
@@ -494,6 +498,8 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
   // Set initial gradient unit vector
   field<vec<double>> grad_rho_f_0(grad_rho_f.row(b_i));
   double grad_mag(FieldVecMag(grad_rho_f_0));
+  if (grad_mag < dist_tolerance)
+    return LineSearchDistance(b_i,ref_b,other_b_i);
   double rho_f_0 = rho_f(b_i);
   double dist_0 = rho_f_0/grad_mag;
 
@@ -505,8 +511,9 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
     double t_dist = 2.*rho_f(b_i)/grad_mag;
     do {
       t_dist *= 0.5;
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
+      for (uint32_t p_i=0; p_i<n_part; ++p_i) {
         path.GetR(other_b_i[p_i]) = t_other_b_i(p_i) - (t_dist/grad_mag)*grad_rho_f(b_i,p_i);
+      }
       SetRhoF(b_i,ref_b,other_b_i);
     } while (rho_f(b_i) < 0.);
 
@@ -520,6 +527,8 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
 
     // Set new determinant and gradient
     SetRhoFGradRhoF(b_i,ref_b,other_b_i);
+    if (std::isnan(grad_rho_f(b_i,0)(0)))
+      return LineSearchDistance(b_i,ref_b,other_b_i);
     grad_mag = FieldVecMag(grad_rho_f,b_i);
 
     // Iterate
@@ -562,9 +571,19 @@ void Nodal::SetRhoFGradRhoF(const int b_i, const std::vector<std::shared_ptr<Bea
   if (rho_f(b_i) < 0.) // Check sign
     return;
 
-  // Compute gradient of determinant
-  mat<double> i_g_ij(inv(g_ij));
+  // Create cofactor matrix
+  mat<double> i_g_ij;
+  try {
+    i_g_ij = inv(g_ij);
+  } catch (const std::runtime_error& error) {
+    rho_f(b_i) = -1.;
+    grad_rho_f(b_i,0) = sqrt(-1.);
+    return;
+  }
+
   mat<double> cofactors_g_ij(rho_f(b_i)*trans(i_g_ij)); // TODO: Should just compute directly from adjugate
+
+  // Compute gradient of determinant
   for (uint32_t p_i=0; p_i<n_part; ++p_i) {
     grad_rho_f(b_i,p_i).zeros();
     for (uint32_t p_j=0; p_j<n_part; ++p_j)
