@@ -1,6 +1,6 @@
 #include "path_class.h"
 
-void Path::Init(Input &in, IO &out, RNG &rng)
+void Path::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
 {
   out.CreateGroup("System");
   n_d = in.GetChild("System").GetAttribute<uint32_t>("n_d");
@@ -40,9 +40,6 @@ void Path::Init(Input &in, IO &out, RNG &rng)
   }
   out.Write("System/n_part",n_part);
 
-  // Maximum Bisection Level
-  max_level = uint32_t(log2(n_bead))-1;
-
   // Initiate bead looping
   bead_loop.set_size(2*n_bead);
   for (uint32_t b_i = 0; b_i < n_bead; b_i++) {
@@ -55,7 +52,7 @@ void Path::Init(Input &in, IO &out, RNG &rng)
 
   // Initialize paths within each species
   for (uint32_t s_i=0; s_i<n_species; s_i++)
-    species_list[s_i]->InitPaths(species_input[s_i],out,rng,inter_comm,L);
+    species_list[s_i]->InitPaths(species_input[s_i],out,rng,proc_i,L);
 
   // Reset k_cut
   k_c = 0.;

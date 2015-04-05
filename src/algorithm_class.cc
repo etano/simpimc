@@ -1,9 +1,9 @@
 #include "algorithm_class.h"
 
-void Algorithm::Init(Input &in, IO &out, RNG &rng, Communicator &inter_comm)
+void Algorithm::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
 {
   // Initialize Path
-  path.Init(in, out, rng);
+  path.Init(in, out, rng, proc_i);
 
   // Initialize Actions
   out.CreateGroup("Actions");
@@ -79,7 +79,7 @@ void Algorithm::Init(Input &in, IO &out, RNG &rng, Communicator &inter_comm)
   }
 
   // Initialize Write
-  events.push_back(std::make_shared<Writes>(out,events,inter_comm));
+  events.push_back(std::make_shared<Writes>(out,events,proc_i));
 
   // Initialize Algorithm
   std::vector<Input> loop_list = in.GetChild("Algorithm").GetChildList("Loop");

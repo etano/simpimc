@@ -9,15 +9,16 @@
 #include <memory>
 #include <sys/time.h>
 #include <atomic>
-#include "utils/scaffold.h"
+
+#include "scaffold/matrix/matrix.h"
+#include "scaffold/algorithm/algorithm.h"
+#include "scaffold/io/io_xml.h"
+#include "scaffold/io/io_hdf5.h"
+#include "scaffold/rng/rng.h"
 
 using namespace scaffold::matrix;
 using namespace scaffold::algorithm;
-using namespace scaffold::parallel;
 using namespace scaffold::io;
 using namespace scaffold::rand;
-
-inline double CMag2 (const std::complex<double> &z1, const std::complex<double> &z2) { return (z1.real()*z2.real() + z1.imag()*z2.imag()); }
-inline double CMag (const std::complex<double> &z1, const std::complex<double> &z2) { return (sqrt(CMag2(z1,z2))); }
 
 #endif // SIMPIMC_CONFIG_H_

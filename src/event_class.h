@@ -3,19 +3,20 @@
 
 #include "config.h"
 
+/// Parent class for all moves, observables, loops, and writes
 class Event
 {
-private:
-
-protected:
-
 public:
-  // Constructor
+  std::string name; ///< Name of the event
+  double time_spent; ///< Amount of time spent performing event
+
+  /// Constructor only initializes time_spent to 0
   Event() { time_spent = 0.; }
 
-  std::string name;
-  double time_spent;
+  /// Execute the event
   virtual void DoEvent() {};
+
+  /// Write out information about the event
   virtual void Write() {};
 };
 

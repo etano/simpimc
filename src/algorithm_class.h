@@ -28,30 +28,27 @@
 #include "observables/structure_factor_class.h"
 #include "observables/time_class.h"
 
+/// Class the actually holds all the events and data objects.
+/// This includes the path object which is the main container of all relevant information to the path.
 class Algorithm
 {
+private:
+  Loop main_loop; ///< Main loop
+  std::vector<std::shared_ptr<Event>> events; /// < Vector of events
+  std::vector<std::shared_ptr<Action>> actions; ///< Vector of actions
+  Path path; ///< Main datastructure
+
+  /// Initializes all events and objects
+  void Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i);
 public:
-  // Constructor
-  Algorithm(Communicator &world_comm, Communicator &inter_comm, Communicator &intra_comm, Input &in, IO &out, RNG &rng)
-   : path(world_comm,inter_comm,intra_comm)
+  /// Constructor calls Init.
+  Algorithm(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
   {
-    Init(in, out, rng, inter_comm);
+    Init(in, out, rng, proc_i);
   }
 
-  void Init(Input &in, IO &out, RNG &rng, Communicator &inter_comm);
+  /// Runs the algorithm by calling the DoEvent of the main_loop
   void Run() { main_loop.DoEvent(); };
-
-  // Events
-  std::vector<std::shared_ptr<Event>> events;
-
-  // Main loop
-  Loop main_loop;
-
-  // Actions
-  std::vector<std::shared_ptr<Action>> actions;
-
-  // Datastructure
-  Path path;
 };
 
 #endif // SIMPIMC_ALGORITHM_CLASS_H_

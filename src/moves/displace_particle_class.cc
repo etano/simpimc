@@ -59,7 +59,7 @@ bool DisplaceParticle::Attempt()
   affected_beads.clear();
   for(uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
     affected_beads.push_back(path(species_i,p_i,b_i));
-    path(species_i,p_i,b_i)->Move(dr);
+    path.GetR(path(species_i,p_i,b_i)) += dr;
   }
 
   // Calculate action change

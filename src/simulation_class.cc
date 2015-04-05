@@ -6,7 +6,7 @@ void Simulation::SetupSimulation(std::string in_file)
   in.Load(in_file);
 
   // Build MPI Model
-  procs_per_group = in.GetChild("Parallel").GetAttribute<uint32_t>("procs_per_group",1);
+  uint32_t procs_per_group = in.GetChild("Parallel").GetAttribute<uint32_t>("procs_per_group",1);
   uint32_t N = world_comm.NumProcs();
   assert ((N % procs_per_group) == 0);
   uint32_t n_groups = N/procs_per_group;
@@ -67,7 +67,7 @@ void Simulation::Run()
   out.Write("RNG/seed",seed);
 
   // Algorithm
-  Algorithm alg(world_comm, inter_comm, intra_comm, in, out, rng);
+  Algorithm alg(in, out, rng, inter_comm.MyProc());
   alg.Run();
 
 }

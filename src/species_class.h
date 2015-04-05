@@ -18,7 +18,7 @@ public:
   };
 
   void Init(Input &in, IO &out);
-  void InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, int L);
+  void InitPaths(Input &in, IO &out, RNG &rng, const uint32_t proc_i, const double L);
 
   // Beads
   field<std::shared_ptr<Bead> > bead;

@@ -107,7 +107,7 @@ SET(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 #-------------------------------------------------------------------
 # Scaffold
 #-------------------------------------------------------------------
-SET(SCAFFOLD_DIR "${CMAKE_SOURCE_DIR}/src/utils")
+SET(SCAFFOLD_DIR "${CMAKE_SOURCE_DIR}/src/scaffold")
 SET(SCAFFOLD_DEPENDS_DIR "${CMAKE_SOURCE_DIR}/depends")
 SET(SCAFFOLD_INSTALL_DIR "${CMAKE_SOURCE_DIR}")
 INCLUDE("${SCAFFOLD_DIR}/CMakeLists.txt")

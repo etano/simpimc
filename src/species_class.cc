@@ -44,7 +44,7 @@ void Species::Init(Input &in, IO &out)
   }
 }
 
-void Species::InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, int L)
+void Species::InitPaths(Input &in, IO &out, RNG &rng, const uint32_t proc_i, const double L)
 {
   // Read configuration from xyz file
   if (init_type == "File") {
@@ -142,7 +142,7 @@ void Species::InitPaths(Input &in, IO &out, RNG &rng, Communicator &inter_comm, 
     bool parallel = in.GetAttribute<bool>("parallel",false);
     std::stringstream tmp_ss;
     if (parallel)
-      tmp_ss << prefix << "." << inter_comm.MyProc() << ".h5";
+      tmp_ss << prefix << "." << proc_i << ".h5";
     else
       tmp_ss << prefix << "." << 0 << ".h5";
     std::string file_name = tmp_ss.str();
