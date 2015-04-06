@@ -10,11 +10,11 @@
 #include <sys/time.h>
 #include <atomic>
 
-#include "scaffold/matrix/matrix.h"
-#include "scaffold/algorithm/algorithm.h"
-#include "scaffold/io/io_xml.h"
-#include "scaffold/io/io_hdf5.h"
-#include "scaffold/rng/rng.h"
+#include <scaffold/matrix/matrix.h>
+#include <scaffold/algorithm/algorithm.h>
+#include <scaffold/io/io_xml.h>
+#include <scaffold/io/io_hdf5.h>
+#include <scaffold/rng/rng.h>
 
 using namespace scaffold::matrix;
 using namespace scaffold::algorithm;

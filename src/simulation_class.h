@@ -2,7 +2,7 @@
 #define SIMPIMC_SIMULATION_CLASS_H_
 
 #include "algorithm_class.h"
-#include "scaffold/communication/communication.h"
+#include <scaffold/communication/communication.h>
 
 using namespace scaffold::parallel;
 
