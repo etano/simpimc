@@ -31,3 +31,5 @@ depends/
 lib/
 share/
 etc/
+doc/Doxyfile
+doc/html
