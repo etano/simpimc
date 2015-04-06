@@ -22,7 +22,7 @@
 #include "observables/pair_correlation_class.h"
 #include "observables/path_dump_class.h"
 #include "observables/permutation_class.h"
-#include "observables/record_optimized_nodal_class.h"
+#include "observables/record_optimized_action_class.h"
 #include "observables/sign_class.h"
 #include "observables/structure_factor_class.h"
 #include "observables/time_class.h"

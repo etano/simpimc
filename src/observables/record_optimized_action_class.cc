@@ -1,6 +1,6 @@
-#include "record_optimized_nodal_class.h"
+#include "record_optimized_action_class.h"
 
-void RecordOptimizedNodal::Init(Input &in)
+void RecordOptimizedAction::Init(Input &in)
 {
   // Read in action name
   std::string action_name = in.GetAttribute<std::string>("action_name");
@@ -25,20 +25,20 @@ void RecordOptimizedNodal::Init(Input &in)
   Reset();
 }
 
-void RecordOptimizedNodal::Reset()
+void RecordOptimizedAction::Reset()
 {
   n_measure = 0;
   param_set_count.zeros();
 }
 
-void RecordOptimizedNodal::Accumulate()
+void RecordOptimizedAction::Accumulate()
 {
   path.SetMode(NEW_MODE);
   param_set_count(action->GetParamSet()) += 1.;
   n_measure++;
 }
 
-void RecordOptimizedNodal::Write()
+void RecordOptimizedAction::Write()
 {
   if (n_measure > 0) {
     double norm = 1.*n_measure;

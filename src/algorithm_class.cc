@@ -64,8 +64,8 @@ void Algorithm::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
       events.push_back(std::make_shared<PathDump>(path,observable_input,out));
     else if (type == "Permutation")
       events.push_back(std::make_shared<Permutation>(path,observable_input,out));
-    else if (type == "RecordOptimizedNodal")
-      events.push_back(std::make_shared<RecordOptimizedNodal>(path,actions,observable_input,out));
+    else if (type == "RecordOptimizedAction")
+      events.push_back(std::make_shared<RecordOptimizedAction>(path,actions,observable_input,out));
     else if (type == "Sign")
       events.push_back(std::make_shared<Sign>(path,observable_input,out));
     else if (type == "StructureFactor")

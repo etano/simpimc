@@ -154,7 +154,7 @@ SET (SRCS ${SRCS} src/main.cc
   src/observables/pair_correlation_class.cc
   src/observables/path_dump_class.cc
   src/observables/permutation_class.cc
-  src/observables/record_optimized_nodal_class.cc
+  src/observables/record_optimized_action_class.cc
   src/observables/sign_class.cc
   src/observables/structure_factor_class.cc
   src/observables/time_class.cc)
