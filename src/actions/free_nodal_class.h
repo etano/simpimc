@@ -2,25 +2,25 @@
 #define SIMPIMC_ACTIONS_FREE_NODAL_CLASS_H_
 
 #include "nodal_class.h"
-#include <einspline/multi_bspline.h>
-#include <einspline/bspline.h>
 
+/// Bare free particle nodal action class
 class FreeNodal : public Nodal
 {
 private:
-  // Splines
-  field<UBspline_1d_d*> rho_free_r_splines;
+  field<UBspline_1d_d*> rho_free_r_splines; ///< Holds the splined action for every time slice
+
+  /// Creates splined action for all time slices
   virtual void SetupSpline();
 
-protected:
-  // Rho matrix
+  /// Returns the value of g_ij
   virtual double GetGij(const vec<double> &r, const uint32_t slice_diff);
-  virtual double GetGijDGijDr(const vec<double> &r, const uint32_t slice_diff, vec<double> &dgij_dr);
 
+  /// Returns the spatial derivative of g_ij
+  virtual double GetGijDGijDr(const vec<double> &r, const uint32_t slice_diff, vec<double> &dgij_dr);
 public:
-  // Constructor
-  FreeNodal(Path &path, RNG &rng, Input &in, IO &out)
-    : Nodal(path,rng,in,out)
+  // Constructor calls Init
+  FreeNodal(Path &path, Input &in, IO &out)
+    : Nodal(path,in,out)
   {
     Init(in);
   }

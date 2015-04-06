@@ -140,7 +140,6 @@ SET (SRCS ${SRCS} src/main.cc
   src/actions/bare_pair_action_class.cc
   src/actions/david_pair_action_class.cc
   src/actions/ilkka_pair_action_class.cc
-  src/actions/importance_pair_action_class.cc
   src/actions/trap_class.cc
   src/moves/move_class.cc
   src/moves/bisect_class.cc
@@ -148,7 +147,7 @@ SET (SRCS ${SRCS} src/main.cc
   src/moves/perm_bisect_class.cc
   src/moves/perm_bisect_iterative_class.cc
   src/moves/shift_ref_slice_class.cc
-  src/moves/vary_optimized_nodal_class.cc
+  src/moves/vary_action_class.cc
   src/observables/contact_density_class.cc
   src/observables/energy_class.cc
   src/observables/importance_weight_class.cc

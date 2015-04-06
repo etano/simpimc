@@ -2,23 +2,22 @@
 #define SIMPIMC_ACTIONS_OPTIMIZED_NODAL_CLASS_H_
 
 #include "nodal_class.h"
-#include <einspline/multi_bspline.h>
-#include <einspline/bspline.h>
 
+/// A nodal action class whose parameters may be varied
 class OptimizedNodal : public Nodal
 {
 private:
 
 protected:
-  // Variational parameter sets
-  std::vector<std::vector<double>> param_sets;
-  uint32_t param_set_i, model_i;
+  field<UBspline_1d_d*> rho_node_r_splines; ///< Holds the splined action for every time slice and parameter set
 
-  // Rho matrix
+  /// Returns the value of g_ij
   virtual double GetGij(const vec<double> &r, const uint32_t slice_diff);
+
+  /// Returns the spatial derivative of g_ij
   virtual double GetGijDGijDr(const vec<double> &r, const uint32_t slice_diff, vec<double> &dgij_dr);
 
-  // 1/(4\lambda\tau)
+  // Returns 1/(4\lambda\tau)
   inline virtual double Geti4LambdaTau(const uint32_t slice_diff)
   {
     // Choose model
@@ -32,26 +31,22 @@ protected:
     }
   };
 
-  // Splines
-  field<UBspline_1d_d*> rho_node_r_splines;
+  /// Creates splined action for all time slices and parameter sets
   virtual void SetupSpline();
 
 public:
-  // Constructor
-  OptimizedNodal(Path &path, RNG &rng, Input &in, IO &out)
-    : Nodal(path,rng,in,out)
+  /// Constructor calls Init function
+  OptimizedNodal(Path &path, Input &in, IO &out)
+    : Nodal(path,in,out)
   {
     Init(in);
   }
 
-  // Functions
+  /// Initialize the action
   virtual void Init(Input &in);
-  virtual void Write();
-  uint32_t GetParamSet() { return param_set_i; };
-  uint32_t GetNumParamSets() { return param_sets.size(); };
-  void SetParamSet(uint32_t t_param_set_i) { param_set_i = t_param_set_i; };
-  void SetRandomParamSet() { SetParamSet(rng.UnifRand(param_sets.size())-1); };
 
+  /// Write information about the action
+  virtual void Write();
 };
 
 #endif // SIMPIMC_ACTIONS_OPTIMIZED_NODAL_CLASS_H_

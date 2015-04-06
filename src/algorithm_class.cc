@@ -14,17 +14,15 @@ void Algorithm::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
     } else if (type == "HarmonicTrap") {
       actions.push_back(std::make_shared<Trap>(path,action_input,out));
     } else if (type == "FreeNodal") {
-      actions.push_back(std::make_shared<FreeNodal>(path,rng,action_input,out));
+      actions.push_back(std::make_shared<FreeNodal>(path,action_input,out));
     } else if (type == "OptimizedNodal") {
-      actions.push_back(std::make_shared<OptimizedNodal>(path,rng,action_input,out));
+      actions.push_back(std::make_shared<OptimizedNodal>(path,action_input,out));
     } else if (type == "BarePairAction") {
       actions.push_back(std::make_shared<BarePairAction>(path,action_input,out));
     } else if (type == "DavidPairAction") {
       actions.push_back(std::make_shared<DavidPairAction>(path,action_input,out));
     } else if (type == "IlkkaPairAction") {
       actions.push_back(std::make_shared<IlkkaPairAction>(path,action_input,out));
-    } else if (type == "ImportancePairAction") {
-      actions.push_back(std::make_shared<ImportancePairAction>(path,action_input,out));
     } else
       std::cerr << "Warning: Unrecognized Action, " << type << std::endl;
   }
@@ -43,8 +41,8 @@ void Algorithm::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
       events.push_back(std::make_shared<PermBisectIterative>(path,rng,actions,move_input,out));
     else if (type == "ShiftRefSlice")
       events.push_back(std::make_shared<ShiftRefSlice>(path,rng,actions,move_input,out));
-    else if (type == "VaryOptimizedNodal")
-      events.push_back(std::make_shared<VaryOptimizedNodal>(path,rng,actions,move_input,out));
+    else if (type == "VaryAction")
+      events.push_back(std::make_shared<VaryAction>(path,rng,actions,move_input,out));
     else
       std::cerr << "Warning: Unrecognized Move, " << type << std::endl;
   }

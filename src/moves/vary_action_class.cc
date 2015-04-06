@@ -1,6 +1,6 @@
-#include "vary_optimized_nodal_class.h"
+#include "vary_action_class.h"
 
-void VaryOptimizedNodal::Init(Input &in)
+void VaryAction::Init(Input &in)
 {
   std::string action_name = in.GetAttribute<std::string>("action_name");
 
@@ -16,7 +16,7 @@ void VaryOptimizedNodal::Init(Input &in)
 }
 
 // Accept current move
-void VaryOptimizedNodal::Accept()
+void VaryAction::Accept()
 {
   // Call accept for each action
   for (auto& action: action_list) {
@@ -26,7 +26,7 @@ void VaryOptimizedNodal::Accept()
 }
 
 // Reject current move
-void VaryOptimizedNodal::Reject()
+void VaryAction::Reject()
 {
   // Call reject for each action
   for (auto& action: action_list) {
@@ -35,8 +35,8 @@ void VaryOptimizedNodal::Reject()
   }
 }
 
-// VaryOptimizedNodalion Move
-bool VaryOptimizedNodal::Attempt()
+// VaryActionion Move
+bool VaryAction::Attempt()
 {
   // Insert dummy particle
   std::vector<std::pair<uint32_t,uint32_t>> particles;
@@ -45,7 +45,7 @@ bool VaryOptimizedNodal::Attempt()
   // Get old and set new parameter sets
   for (auto& action: action_list) {
     param_set_old = action->GetParamSet();
-    action->SetRandomParamSet();
+    action->SetParamSet(rng.UnifRand(action->GetNumParamSets())-1);
     param_set_new = action->GetParamSet();
   }
 

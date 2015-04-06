@@ -83,7 +83,7 @@ double Kinetic::GetGaussSum(const double r, const double r2_i_4_lambda_tau, cons
   return exp(-(r2_i_4_lambda_tau/slice_diff))*exp(0.9999*gauss_sum);
 }
 
-double Kinetic::GetGaussSumFast(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff)
+double Kinetic::GetLogGaussSum(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff)
 {
   double gauss_sum;
   eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
@@ -147,7 +147,7 @@ double Kinetic::GetAction(const uint32_t b0, const uint32_t b1, const std::vecto
         double gauss_prod_exp = 0;
         for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
           double r2_i_4_lambda_tau = dr(d_i)*dr(d_i)*i_4_lambda_tau;
-          gauss_prod_exp += GetGaussSumFast(dr(d_i),r2_i_4_lambda_tau,skip);
+          gauss_prod_exp += GetLogGaussSum(dr(d_i),r2_i_4_lambda_tau,skip);
         }
         tot -= gauss_prod_exp;
         beadA = beadB;
