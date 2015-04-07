@@ -16,6 +16,7 @@ SET(COMPILER_MAKE "GNU") # INTEL, GNU, or CLANG
 SET(SCAFFOLD_MATRIX_LIBRARY "ARMADILLO") # ARMADILLO or EIGEN
 SET(OPTIMIZE TRUE)
 SET(DEBUG TRUE)
+SET(BUILD_DOCUMENTATION TRUE)
 
 #-------------------------------------------------------------------
 # Compilers
@@ -124,6 +125,29 @@ SET(LIBS ${LIBS} ${EINSPLINE_LIBS})
 #-------------------------------------------------------------------
 # Sources and target
 #-------------------------------------------------------------------
+
+# Documentation
+find_package(Doxygen)
+option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+if(BUILD_DOCUMENTATION)
+    if(NOT DOXYGEN_FOUND)
+        message(FATAL_ERROR "Doxygen is needed to build the documentation.")
+    endif()
+
+    set(doxyfile_in ${CMAKE_SOURCE_DIR}/doc/Doxyfile.in)
+    set(doxyfile ${CMAKE_SOURCE_DIR}/doc/Doxyfile)
+
+    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+
+    add_custom_target(doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/doc
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM)
+
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc DESTINATION ${CMAKE_SOURCE_DIR}/share/doc)
+endif()
+
 # simpimc
 SET (SRCS ${SRCS} src/main.cc
   src/algorithm_class.cc
@@ -168,29 +192,6 @@ ExternalProject_Add(
   SOURCE_DIR ${CMAKE_SOURCE_DIR}/scripts
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE 1
-  BUILD_COMMAND make
+  BUILD_OMMAND make
   INSTALL_COMMAND ""
 )
-
-# Documentation
-find_package(Doxygen)
-option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
-
-if(BUILD_DOCUMENTATION)
-    if(NOT DOXYGEN_FOUND)
-        message(FATAL_ERROR "Doxygen is needed to build the documentation.")
-    endif()
-
-    set(doxyfile_in ${CMAKE_SOURCE_DIR}/doc/Doxyfile.in)
-    set(doxyfile ${CMAKE_SOURCE_DIR}/doc/Doxyfile)
-
-    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
-
-    add_custom_target(doc
-        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/doc
-        COMMENT "Generating API documentation with Doxygen"
-        VERBATIM)
-
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/html DESTINATION ${CMAKE_SOURCE_DIR}/share/doc)
-endif()
