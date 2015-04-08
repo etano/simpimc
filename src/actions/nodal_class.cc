@@ -5,13 +5,16 @@ void Nodal::Init(Input &in)
 {
   // Read in things
   n_images = in.GetAttribute<int>("n_images",0);
+  out.Write("Actions/"+name+"/n_images", n_images);
   is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
 
   // Set species variables
   species = in.GetAttribute<std::string>("species");
+  out.Write("Actions/"+name+"/species", species);
   species_list.push_back(species);
   std::cout << "Setting up nodal action for " << species << "..." << std::endl;
   max_level = in.GetAttribute<uint32_t>("max_level",0);
+  out.Write("Actions/"+name+"/max_level", max_level);
   path.GetSpeciesInfo(species,species_i);
   n_part = path.species_list[species_i]->n_part;
   i_4_lambda_tau = 1./(4.*path.species_list[species_i]->lambda*path.tau);
@@ -19,12 +22,13 @@ void Nodal::Init(Input &in)
 
   // Nodal distance things
   use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
+  out.Write("Actions/"+name+"/use_nodal_distance", use_nodal_distance);
   if (use_nodal_distance) {
     std::string dist_type_name = in.GetAttribute<std::string>("dist_type");
     std::cout << "Setting up " << dist_type_name << " distance measure for nodal action..." << std::endl;
     if (dist_type_name == "NewtonRaphson") {
       dist_type = 0;
-      max_dist_steps = in.GetAttribute<int>("max_dist_steps",1);
+      max_dist_steps = in.GetAttribute<int>("max_dist_steps",10);
     } else if (dist_type_name == "LineSearch")
       dist_type = 1;
     else if (dist_type_name == "Max")
@@ -37,15 +41,12 @@ void Nodal::Init(Input &in)
       std::cerr << "ERROR: Unknown dist_type!" << std::endl;
       exit(1);
     }
+    out.Write("Actions/"+name+"/dist_type", dist_type);
     dist_tolerance = in.GetAttribute<double>("tolerance",1.e-4);
+    out.Write("Actions/"+name+"/dist_tolerance", dist_tolerance);
     dist.zeros(path.n_bead);
     dist_c.zeros(path.n_bead);
   }
-
-  // Write things to file
-  out.Write("Actions/"+name+"/n_images", n_images);
-  out.Write("Actions/"+name+"/species", species);
-  out.Write("Actions/"+name+"/max_level", max_level);
 
   // Setup splines
   SetupSpline();
@@ -68,18 +69,21 @@ void Nodal::Init(Input &in)
     is_first_time[b_i] = true;
   std::vector< std::pair<uint32_t,uint32_t>> particles;
   particles.push_back(std::make_pair(species_i,0));
-  bool init_good = 1;
+  bool init_good = true;
   ModeType t_mode(path.GetMode());
   path.SetMode(NEW_MODE);
   if (GetAction(0, path.n_bead, particles, 0) >= 1.e100) {
     std::cout << "Warning: initializing with broken nodes!" << std::endl;
-    init_good = 0;
+    init_good = false;
   }
   start_b = 0;
   end_b = path.n_bead;
   Accept();
   path.SetMode(t_mode);
   out.Write("Actions/"+name+"/init_good", init_good);
+  first_time_write = true;
+  n_newton_raphson = 0;
+  n_line_search = 0;
 }
 
 double Nodal::DActionDBeta()
@@ -469,11 +473,13 @@ double Nodal::LineSearchDistance(const int b_i, const std::vector<std::shared_pt
       dist_b_i = abs_dist_0*try_factor;
   }
 
-  // Reset positions, determinant, and gradient
+  // Reset positions and determinant
   for (uint32_t p_i=0; p_i<n_part; ++p_i)
     path.GetR(other_b_i[p_i]) = other_b_i_0(p_i);
-  //grad_rho_f.row(b_i) = grad_rho_f_0;
   rho_f(b_i) = rho_f_0;
+
+  // Track number of complete line search calls
+  n_line_search++;
 
   return dist_b_i;
 }
@@ -483,10 +489,10 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
 {
   // Calculate determinant and gradiant
   SetRhoFGradRhoF(b_i,ref_b,other_b_i);
-  if (std::isnan(grad_rho_f(b_i,0)(0)))
-    return LineSearchDistance(b_i,ref_b,other_b_i);
   if (rho_f(b_i) < 0.)
     return -1.;
+  if (std::isnan(grad_rho_f(b_i,0)(0)))
+    return LineSearchDistance(b_i,ref_b,other_b_i);
 
   // Set up temporary storage fields
   field<vec<double>> t_other_b_i(n_part), other_b_i_0(n_part);
@@ -527,17 +533,29 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
 
     // Set new determinant and gradient
     SetRhoFGradRhoF(b_i,ref_b,other_b_i);
-    if (std::isnan(grad_rho_f(b_i,0)(0)))
-      return LineSearchDistance(b_i,ref_b,other_b_i);
-    grad_mag = FieldVecMag(grad_rho_f,b_i);
+    if (!std::isnan(grad_rho_f(b_i,0)(0))) {
+      grad_mag = FieldVecMag(grad_rho_f,b_i);
+      if (grad_mag > 0.) {
+        // Iterate and continue
+        i_dist_step++;
+        continue;
+      }
+    }
 
-    // Iterate
-    i_dist_step++;
+    // Reset positions, determinant, and gradient
+    for (uint32_t p_i=0; p_i<n_part; ++p_i)
+      path.GetR(other_b_i[p_i]) = other_b_i_0(p_i);
+    grad_rho_f.row(b_i) = grad_rho_f_0;
+    rho_f(b_i) = rho_f_0;
+    return LineSearchDistance(b_i,ref_b,other_b_i);
+
   }
 
   // Compute distance
-  for (uint32_t p_i=0; p_i<n_part; ++p_i)
+  for (uint32_t p_i=0; p_i<n_part; ++p_i) {
     t_other_b_i(p_i) -= other_b_i_0(p_i);
+    path.PutInBox(t_other_b_i(p_i));
+  }
   double dist_b_i(FieldVecMag(t_other_b_i));
 
   // Reset positions, determinant, and gradient
@@ -545,6 +563,9 @@ double Nodal::NewtonRaphsonDistance(const int b_i, const std::vector<std::shared
     path.GetR(other_b_i[p_i]) = other_b_i_0(p_i);
   grad_rho_f.row(b_i) = grad_rho_f_0;
   rho_f(b_i) = rho_f_0;
+
+  // Track number of complete Newton Raphson calls
+  n_newton_raphson++;
 
   return dist_b_i;
 }
@@ -627,5 +648,25 @@ void Nodal::Reject()
       grad_rho_f.row(t_b_i) = grad_rho_f_c.row(t_b_i);
       dist(t_b_i) = dist_c(t_b_i);
     }
+  }
+}
+
+void Nodal::Write()
+{
+  // Write out and reset counters if performing newton raphson
+  if (use_nodal_distance && dist_type==0) {
+    double fraction_newton_raphson = double(n_newton_raphson)/double(n_line_search+n_newton_raphson);
+    std::string prefix = "Actions/"+name+"/";
+    if (first_time_write) {
+      out.CreateGroup(prefix+"fraction_newton_raphson");
+      out.CreateExtendableDataSet("/"+prefix+"fraction_newton_raphson/", "x", fraction_newton_raphson);
+      std::string data_type = "scalar";
+      out.Write(prefix+"fraction_newton_raphson/data_type",data_type);
+      first_time_write = false;
+    } else {
+      out.AppendDataSet("/"+prefix+"fraction_newton_raphson/", "x", fraction_newton_raphson);
+    }
+    n_newton_raphson = 0;
+    n_line_search = 0;
   }
 }

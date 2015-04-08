@@ -3,7 +3,7 @@
 void Algorithm::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
 {
   // Initialize Path
-  path.Init(in, out, rng, proc_i);
+  path.Init(in, out, rng);
 
   // Initialize Actions
   out.CreateGroup("Actions");
@@ -77,7 +77,7 @@ void Algorithm::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
   }
 
   // Initialize Write
-  events.push_back(std::make_shared<Writes>(out,events,proc_i));
+  events.push_back(std::make_shared<Writes>(out,events,actions,proc_i));
 
   // Initialize Algorithm
   std::vector<Input> loop_list = in.GetChild("Algorithm").GetChildList("Loop");

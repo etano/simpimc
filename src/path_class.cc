@@ -1,6 +1,6 @@
 #include "path_class.h"
 
-void Path::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
+void Path::Init(Input &in, IO &out, RNG &rng)
 {
   out.CreateGroup("System");
   n_d = in.GetChild("System").GetAttribute<uint32_t>("n_d");

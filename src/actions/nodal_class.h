@@ -8,6 +8,10 @@
 /// The nodal action class
 class Nodal : public SingleAction
 {
+private:
+  bool first_time_write; ///< Whether or not this is the first time writing to file
+  uint32_t n_line_search; ///< Number of line searches performed
+  uint32_t n_newton_raphson; ///< Number of complete newton raphson searches performed
 protected:
   bool use_nodal_distance; ///< Whether or not to use a nodal distance
   double dist_tolerance; ///< Tolerance used when computing nodal distance
@@ -107,7 +111,7 @@ public:
   virtual double ImportanceWeight();
 
   /// Writes information about the action
-  virtual void Write() {};
+  virtual void Write();
 
   /// Accepts relevant information about the action
   virtual void Accept();

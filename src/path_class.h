@@ -29,6 +29,7 @@ public:
   uint32_t n_d; ///< Number of spatial dimensions
   uint32_t n_part; ///< Total number of particles
   uint32_t n_species; ///< Total number of species of particles
+  uint32_t proc_i; ///< Process index
   uint32_t ref_bead; ///< Index of the current reference point time slice
 
   field<vec<std::complex<double>>> c_k; ///< Constant defined for each charge density
@@ -44,11 +45,13 @@ public:
   vec<double> k_box; ///< Box defined by Brillouin zone
   vec<int> max_k_index; ///< Maximum k index used for each physical dimension
 
-  /// Constructor does nothing
-  Path() {}
+  /// Constructor only sets process index
+  Path(uint32_t t_proc_i)
+   : proc_i(t_proc_i)
+  {}
 
   /// Initializes the path, including all species objects
-  void Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i);
+  void Init(Input &in, IO &out, RNG &rng);
 
   /// Shortcut to a specific bead given its species, particle number, and time slice
   std::shared_ptr<Bead> operator() (const uint32_t s_i, const uint32_t p_i, const uint32_t b_i) { return species_list[s_i]->bead(p_i,bead_loop(b_i)); };

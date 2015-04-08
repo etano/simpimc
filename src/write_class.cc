@@ -6,9 +6,13 @@ void Writes::DoEvent()
   gettimeofday(&time, NULL); // Start Time
   start = time.tv_sec + (time.tv_usec / 1000000.);
 
-  std::vector<std::shared_ptr<Event>>::iterator iter;
-  for (iter=events.begin(); iter!=events.end(); ++iter)
-    (*iter)->Write();
+  // Write events
+  for (auto &event: events)
+    event->Write();
+
+  // Write actions
+  for (auto &action: actions)
+    action->Write();
 
   gettimeofday(&time, NULL); // Current Time
   double block_time = start - end;

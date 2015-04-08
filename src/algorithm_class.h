@@ -42,6 +42,7 @@ private:
 public:
   /// Constructor calls Init.
   Algorithm(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
+    : path(proc_i)
   {
     Init(in, out, rng, proc_i);
   }
