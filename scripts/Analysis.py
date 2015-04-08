@@ -48,10 +48,16 @@ class Scalar(Observable):
     def GetDataStats(self, files):
         data = []
         for file in files:
-            f = h5.File(file,'r')
-            data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][self.startCut:])))
-            f.flush()
-            f.close()
+            file_not_read = True
+            while (file_not_read):
+                try:
+                    f = h5.File(file,'r')
+                    data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][self.startCut:])))
+                    f.flush()
+                    f.close()
+                    file_not_read = False
+                except IOError as e:
+                    print 'Trouble reading', self.prefix+self.name, 'in', file
         stats = Stats.UnweightedAvg(np.array(data))
         return stats
 
@@ -82,14 +88,20 @@ class Histogram(Observable):
         xs,yStats = [],[]
         count = 0
         for j in range(len(files)):
-            f = h5.File(files[j],'r')
-            xs = np.array(f[self.prefix+self.name+"/x"])
-            ys = np.transpose(f[self.prefix+self.name+"/y"][self.startCut:])
-            f.flush()
-            f.close()
-            yStats.append([])
-            for i in range(len(xs)):
-                yStats[j].append(Stats.stats(np.array(ys[i])))
+            file_not_read = True
+            while (file_not_read):
+                try:
+                    f = h5.File(files[j],'r')
+                    xs = np.array(f[self.prefix+self.name+"/x"])
+                    ys = np.transpose(f[self.prefix+self.name+"/y"][self.startCut:])
+                    f.flush()
+                    f.close()
+                    yStats.append([])
+                    for i in range(len(xs)):
+                        yStats[j].append(Stats.stats(np.array(ys[i])))
+                    file_not_read = False
+                except IOError as e:
+                    print 'Trouble reading', self.prefix+self.name, 'in', file
         stats = []
         for i in range(len(xs)):
             yStatsi = [x[i] for x in yStats]
@@ -126,11 +138,18 @@ class Pair(Observable):
     def GetDataStats(self, files):
         xs,ys = [],{}
         for file in files:
-            f = h5.File(file,'r')
-            xs = np.array(f[self.prefix+self.name+"/x"])
-            pairs = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
-            f.flush()
-            f.close()
+            pairs = []
+            file_not_read = True
+            while (file_not_read):
+                try:
+                    f = h5.File(file,'r')
+                    xs = np.array(f[self.prefix+self.name+"/x"])
+                    pairs = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
+                    f.flush()
+                    f.close()
+                    file_not_read = False
+                except IOError as e:
+                    print 'Trouble reading', self.prefix+self.name, 'in', file
             for pair in pairs:
                 try:
                     ys[pair[0]] += pair[1]
@@ -160,11 +179,18 @@ class AvgPair(Observable):
     def GetDataStats(self, files):
         xs,ys = [],{}
         for file in files:
-            f = h5.File(file,'r')
-            xs = np.array(f[self.prefix+self.name+"/x"])
-            avg_pairs = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
-            f.flush()
-            f.close()
+            avg_pairs = []
+            file_not_read = True
+            while (file_not_read):
+                try:
+                    f = h5.File(file,'r')
+                    xs = np.array(f[self.prefix+self.name+"/x"])
+                    avg_pairs = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
+                    f.flush()
+                    f.close()
+                    file_not_read = False
+                except IOError as e:
+                    print 'Trouble reading', self.prefix+self.name, 'in', file
             for avg_pair in avg_pairs:
                 sector = avg_pair[0]
                 [eM,varM,M] = avg_pair[1:]
