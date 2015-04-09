@@ -3,25 +3,33 @@
 
 #include "observable_class.h"
 
+/// Record the pair correlation function between two species of particles
 class PairCorrelation : public Observable
 {
 private:
-  std::string species_a, species_b;
-  uint32_t species_a_i, species_b_i;
-  Histogram gr;
-protected:
+  uint32_t species_a_i; ///< Index of first species
+  uint32_t species_b_i; ///< Index of second species
+  Histogram gr; ///< Histogram representing g(r)
+  std::string species_a; ///< Name of first species
+  std::string species_b; ///< Name of second species
+
+  /// Initiate the observable
+  virtual void Init(Input &in);
+
+  /// Accumulate the observable
+  virtual void Accumulate();
+
+  /// Reset the observable's counters
+  virtual void Reset();
 public:
+  /// Constructor calls Init and sets output data_type
   PairCorrelation(Path &path, Input &in, IO &out)
-    : Observable(path, in, out)
+    : Observable(path, in, out, "histogram")
   {
     Init(in);
-    std::string data_type = "histogram";
-    out.Write(prefix+"/data_type",data_type);
   }
 
-  virtual void Init(Input &in);
-  virtual void Reset();
-  virtual void Accumulate();
+  /// Write relevant information about an observable to the output
   virtual void Write();
 };
 

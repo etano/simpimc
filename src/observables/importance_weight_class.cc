@@ -2,14 +2,14 @@
 
 void ImportanceWeight::Init(Input &in)
 {
-  IWs.set_size(action_list.size());
+  importance_weights.set_size(action_list.size());
   Reset();
 }
 
 void ImportanceWeight::Reset()
 {
   n_measure = 0;
-  IWs.zeros();
+  importance_weights.zeros();
 }
 
 void ImportanceWeight::Accumulate()
@@ -20,7 +20,7 @@ void ImportanceWeight::Accumulate()
     double tmp_iw = 1.;
     if (action_list[i]->is_importance_weight)
       tmp_iw = action_list[i]->ImportanceWeight();
-    IWs(i) += tmp_iw;
+    importance_weights(i) += tmp_iw;
     path.importance_weight *= tmp_iw;
   }
   n_measure += 1;
@@ -31,9 +31,9 @@ void ImportanceWeight::Write()
   if (n_measure > 0) {
     double norm = n_measure;
 
-    // Write IWs
-    IWs = IWs/norm;
-    double IW = prod(IWs);
+    // Write importance_weights
+    importance_weights = importance_weights/norm;
+    double IW = prod(importance_weights);
     if (first_time) {
       out.CreateGroup(prefix+"Total");
       out.CreateExtendableDataSet("/"+prefix+"Total/", "x", IW);
@@ -41,14 +41,14 @@ void ImportanceWeight::Write()
       out.Write(prefix+"Total/data_type",data_type);
       for (uint32_t i=0; i<action_list.size(); ++i) {
         out.CreateGroup(prefix+action_list[i]->name);
-        out.CreateExtendableDataSet("/"+prefix+action_list[i]->name+"/", "x", IWs(i));
+        out.CreateExtendableDataSet("/"+prefix+action_list[i]->name+"/", "x", importance_weights(i));
         out.Write(prefix+action_list[i]->name+"/data_type", data_type);
       }
       first_time = 0;
     } else {
       out.AppendDataSet("/"+prefix+"Total/", "x", IW);
       for (uint32_t i=0; i<action_list.size(); ++i)
-        out.AppendDataSet("/"+prefix+action_list[i]->name+"/", "x", IWs(i));
+        out.AppendDataSet("/"+prefix+action_list[i]->name+"/", "x", importance_weights(i));
     }
 
     Reset();

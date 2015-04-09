@@ -4,21 +4,30 @@
 #include "../event_class.h"
 #include "../actions/action_class.h"
 
+/// Parent class for all observables
 class Observable : public Event
 {
-private:
-
 protected:
-  Path &path;
-  IO &out;
-  uint32_t skip;
+  bool first_time; ///< Whether or not writing to output for the first time
+  uint32_t n_measure; ///< Number of measurements
+  uint32_t skip; ///< Number of calls to Accumulate to skip
+  IO &out; ///< Reference to the output
+  Path &path; ///< Reference to the path
+  std::string data_type; ///< Datatype of observable
+  std::string prefix; ///< Prefix for all output
+  std::string type; ///< Type of observable
 
+  /// A simple linear grid for histograms
   struct LinearGrid
   {
-    vec<double> rs;
-    double r_min, r_max, dr, d_ir;
-    uint32_t n_r;
+    vec<double> rs; ///< Vector of r values
+    double r_min; ///< Minimum r value
+    double r_max; ///< Maximum r value
+    double dr; ///< Grid spacing
+    double d_ir; ///< Inverse grid spacing
+    uint32_t n_r; ///< Number of grid points
 
+    /// Create the r grid
     void CreateGrid(double t_r_min, double t_r_max, uint32_t t_n_r)
     {
       r_min = t_r_min;
@@ -30,7 +39,11 @@ protected:
       for (uint32_t i=0; i<n_r; ++i)
         rs(i) = r_min + i*dr;
     };
+
+    /// Access an element of the grid
     inline double operator() (uint32_t i) { return rs(i); };
+
+    /// Compute the index corresponding to an r value
     uint32_t ReverseMap(const double r) {
       uint32_t i = (uint32_t) nearbyint((r-r_min)*d_ir-0.5);
       if (i < 0)
@@ -40,18 +53,26 @@ protected:
     };
   };
 
+  /// A simple histogram
   struct Histogram
   {
-    vec<double> y;
-    LinearGrid x;
+    vec<double> y; ///< Vector of y values
+    LinearGrid x; ///< Linear grid of x values
   };
 
-  std::string prefix;
+  /// Initiate the observable
+  virtual void Init(Input &in) {};
+
+  /// Accumulate the observable
+  virtual void Accumulate() {};
+
+  /// Reset the observable's counters
+  virtual void Reset() {};
 
 public:
-  // Constructor
-  Observable(Path &tmp_path, Input &in, IO &tmp_out)
-    : Event(), path(tmp_path), out(tmp_out)
+  /// Constructor sets name, type, skip, prefix
+  Observable(Path &t_path, Input &in, IO &t_out, std::string t_data_type="none")
+    : Event(), path(t_path), out(t_out), data_type(t_data_type)
   {
     name = in.GetAttribute<std::string>("name");
     type = in.GetAttribute<std::string>("type");
@@ -59,15 +80,12 @@ public:
     prefix = "Observables/"+name+"/";
     out.CreateGroup(prefix);
     out.Write(prefix+"/type",type);
+    out.Write(prefix+"/data_type",data_type);
     first_time = 1;
     n_measure = 0;
   }
 
-  std::string type;
-  bool first_time;
-  uint32_t n_measure;
-
-  // Functions
+  /// Perform and time the accumulation of an observable
   inline void DoEvent() {
     struct timeval time;
     gettimeofday(&time, NULL); // Start Time
@@ -77,9 +95,8 @@ public:
     double end = time.tv_sec + (time.tv_usec / 1000000.);
     time_spent += end - start;
   }
-  virtual void Init(Input &in) {};
-  virtual void Accumulate() {};
-  virtual void Reset() {};
+
+  /// Write relevant information about an observable to the output
   virtual void Write() {};
 };
 

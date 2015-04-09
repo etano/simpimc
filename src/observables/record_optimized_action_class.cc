@@ -18,10 +18,6 @@ void RecordOptimizedAction::Init(Input &in)
     param_set_indices(i) = i;
   out.Write(prefix+"x",param_set_indices);
 
-  // Write out data type
-  std::string data_type = "histogram";
-  out.Write(prefix+"data_type",data_type);
-
   Reset();
 }
 

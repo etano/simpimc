@@ -2,9 +2,6 @@
 
 void Sign::Init(Input &in)
 {
-  std::string data_type = "scalar";
-  out.Write(prefix+"data_type",data_type);
-
   Reset();
 }
 
