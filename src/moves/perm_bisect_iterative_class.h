@@ -1,55 +1,26 @@
 #ifndef SIMPIMC_MOVES_PERM_BISECT_ITERATIVE_CLASS_H_
 #define SIMPIMC_MOVES_PERM_BISECT_ITERATIVE_CLASS_H_
 
-#include "move_class.h"
+#include "perm_bisect_class.h"
 
-class PermBisectIterative : public Move
+/// Permuting bisection move that builds the permutation iteratively
+class PermBisectIterative : public PermBisect
 {
 private:
-  std::string species;
-  int n_images;
-  uint32_t species_i;
-  uint32_t n_level, n_bisect_beads, n_part, n_perm_part, n_perm_type;
-  uint32_t bead0, bead1;
-  double lambda, i4_lambda_tau_n_bisect_beads, epsilon, log_epsilon, target_ratio;
-  bool adaptive, roll_over;
-  uint32_t ref_accept, ref_attempt;
-
-  struct Cycle
-  {
-    double weight, contribution;
-    uint32_t index, type;
-    vec<uint32_t> perm, i_perm, part;
-  };
-  std::vector<Cycle*> cycles; // TODO: Make smart pointer
-  field<Cycle> all_cycles;
-  mat<double> t;
-
-  vec<uint32_t> perm_attempt, perm_accept;
-
+  /// Update the permutation table
   void UpdatePermTable();
+
+  /// Select which cycle to use in the permutation
   bool SelectCycleIterative(Cycle &c);
-  void PermuteBeads(field<std::shared_ptr<Bead>> &b0, field<std::shared_ptr<Bead>> &b1, const Cycle &c);
-  void AssignParticleLabels();
-  void Write();
 
-  std::vector<std::shared_ptr<Bead>> affected_beads;
-protected:
-
-public:
-  // Constructor
-  PermBisectIterative(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
-    : Move(path, rng, action_list, in, out)
-  {
-    Init(in);
-  }
-
-  virtual void Init(Input &in);
+  /// Attempt the move
   virtual bool Attempt();
-  virtual void Accept();
-  virtual void Reject();
-  virtual void Reset();
-};
+public:
+  /// Constructor instantiates parent class and calls Init
+  PermBisectIterative(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
+    : PermBisect(path, rng, action_list, in, out)
+  {}
 
+};
 
 #endif // SIMPIMC_MOVES_PERM_BISECT_ITERATIVE_CLASS_H_

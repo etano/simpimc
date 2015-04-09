@@ -1,17 +1,5 @@
 #include "displace_particle_class.h"
 
-void DisplaceParticle::Init(Input &in)
-{
-  species = in.GetAttribute<std::string>("species");
-  path.GetSpeciesInfo(species,species_i);
-  step_size = in.GetAttribute<double>("step_size",path.L/10.);
-
-  // Generate action list
-  std::vector<std::string> species_list;
-  species_list.push_back(species);
-  GenerateActionList(species_list);
-}
-
 // Accept current move
 void DisplaceParticle::Accept()
 {

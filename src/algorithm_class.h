@@ -12,7 +12,7 @@
 #include "actions/trap_class.h"
 #include "moves/bisect_class.h"
 #include "moves/displace_particle_class.h"
-#include "moves/perm_bisect_class.h"
+#include "moves/perm_bisect_table_class.h"
 #include "moves/perm_bisect_iterative_class.h"
 #include "moves/shift_ref_slice_class.h"
 #include "moves/vary_action_class.h"

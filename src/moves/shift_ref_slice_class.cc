@@ -1,16 +1,5 @@
 #include "shift_ref_slice_class.h"
 
-void ShiftRefSlice::Init(Input &in)
-{
-  species = in.GetAttribute<std::string>("species");
-  path.GetSpeciesInfo(species,species_i);
-
-  // Generate action list
-  std::vector<std::string> species_list;
-  species_list.push_back(species);
-  GenerateActionList(species_list);
-}
-
 // Accept current move
 void ShiftRefSlice::Accept()
 {

@@ -10,13 +10,6 @@ void Bisect::Init(Input &in)
     n_images = in.GetAttribute<int>("n_images");
   else
     n_images = 0;
-  species = in.GetAttribute<std::string>("species");
-  path.GetSpeciesInfo(species,species_i);
-
-  // Generate action list
-  std::vector<std::string> species_list;
-  species_list.push_back(species);
-  GenerateActionList(species_list);
 
   // Adaptive bisection level
   adaptive = in.GetAttribute<bool>("adaptive",false);
@@ -25,29 +18,29 @@ void Bisect::Init(Input &in)
 
   // Compute constants
   n_bisect_beads = 1<<n_level; // Number of beads in bisection
-  lambda = path.species_list[species_i]->lambda;
-  i4_lambda_tau_n_bisect_beads = 1./(4.*lambda*path.tau*n_bisect_beads);
+  i_4_lambda_tau_n_bisect_beads = i_4_lambda_tau/n_bisect_beads;
+
+  // Reset counters
+  Reset();
 }
 
 // Reset counters
 void Bisect::Reset()
 {
-  if (adaptive) {
+  if (!first_time && adaptive) {
     double accept_ratio = (double) n_accept / (double) n_attempt;
     if (accept_ratio < target_ratio && n_level > 1)
       n_level--;
     else if (1<<n_level < path.n_bead/2)
       n_level++;
     n_bisect_beads = 1<<n_level; // Number of beads in bisection
-    lambda = path.species_list[species_i]->lambda;
-    i4_lambda_tau_n_bisect_beads = 1./(4.*lambda*path.tau*n_bisect_beads);
+    i_4_lambda_tau_n_bisect_beads = i_4_lambda_tau/n_bisect_beads;
   }
 
   ref_accept = 0;
   ref_attempt = 0;
 
   Move::Reset();
-
 }
 
 // Accept current move
@@ -56,7 +49,7 @@ void Bisect::Accept()
   // Move Accepted, so copy new coordinates
   path.StoreR(affected_beads);
   path.StoreRhoKP(affected_beads);
-  for (uint32_t b_i=bead0+1; b_i<bead1; ++b_i)
+  for (uint32_t b_i=bead0; b_i<bead1; ++b_i)
     path.StoreRhoK(b_i,species_i);
 
   // Call accept for each action
@@ -70,7 +63,7 @@ void Bisect::Reject()
   // Move rejected, so return old coordinates
   path.RestoreR(affected_beads);
   path.RestoreRhoKP(affected_beads);
-  for (uint32_t b_i=bead0+1; b_i<bead1; ++b_i)
+  for (uint32_t b_i=bead0; b_i<bead1; ++b_i)
     path.RestoreRhoK(b_i,species_i);
 
   // Call reject for each action
@@ -81,10 +74,10 @@ void Bisect::Reject()
 // Bisection Move
 bool Bisect::Attempt()
 {
-  int p_i = rng.UnifRand(path.species_list[species_i]->n_part) - 1;  // Pick particle at random
+  int p_i = rng.UnifRand(n_part) - 1;  // Pick particle at random
   bead0 = rng.UnifRand(path.n_bead) - 1;  // Pick first bead at random
   bead1 = bead0 + n_bisect_beads; // Set last bead in bisection
-  roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
+  bool roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
   bool include_ref = path.species_list[species_i]->fixed_node &&
                     ((bead0<=path.ref_bead && bead1>=path.ref_bead) ||
                     (roll_over && path.bead_loop[bead1]>=path.ref_bead));

@@ -1,122 +1,11 @@
 #include "perm_bisect_iterative_class.h"
 
-void PermBisectIterative::Init(Input &in)
-{
-  // Read in things
-  n_level = in.GetAttribute<uint32_t>("n_level");
-  uint32_t max_possible_level = floor(log2(path.n_bead));
-  if (n_level > max_possible_level)
-    std::cout << "Warning: n_level > max_possible_level!" << std::endl;
-  if (path.pbc)
-    n_images = in.GetAttribute<int>("n_images");
-  else
-    n_images = 0;
-  species = in.GetAttribute<std::string>("species");
-  epsilon = in.GetAttribute<double>("epsilon",1.e-100);
-  log_epsilon = log(epsilon);
-
-  // Adaptive bisection level
-  adaptive = in.GetAttribute<bool>("adaptive",0);
-  if (adaptive)
-    target_ratio = in.GetAttribute<double>("target_ratio");
-
-  // Set species things
-  path.GetSpeciesInfo(species,species_i);
-  n_part = path.species_list[species_i]->n_part;
-
-  // Generate action list
-  std::vector<std::string> species_list;
-  species_list.push_back(species);
-  GenerateActionList(species_list);
-
-  // Initialize constant cofactor
-  n_bisect_beads = 1<<n_level; // Number of beads in bisection
-  lambda = path.species_list[species_i]->lambda;
-  i4_lambda_tau_n_bisect_beads = 1./(4.*lambda*path.tau*n_bisect_beads);
-
-  // Initiate permutation table
-  t.zeros(n_part,n_part);
-
-  // Initiate acceptance ratio counters
-  perm_attempt.zeros(n_part);
-  perm_accept.zeros(n_part);
-  ref_accept = 0;
-  ref_attempt = 0;
-}
-
-void PermBisectIterative::Accept()
-{
-  perm_attempt(n_perm_part-1) += 1;
-  perm_accept(n_perm_part-1) += 1;
-
-  // Change sign weight for fermions
-  if (!(n_perm_part%2) && path.species_list[species_i]->fermi)
-    path.sign *= -1;
-
-  // Accept move, so store things
-  for (uint32_t p_i=0; p_i<n_part; p_i++) { // todo: can make this more efficient by only restoring touched particles
-    path(species_i,p_i,bead1)->StorePrev();
-    path(species_i,p_i,bead1-1)->StoreNext();
-  }
-  if (n_perm_part > 1) // only need to reassign particle labels if actual permutation
-    AssignParticleLabels();
-  path.StoreR(affected_beads);
-  path.StoreRhoKP(affected_beads);
-  for (uint32_t b_i=bead0; b_i<bead1; ++b_i)
-    path.StoreRhoK(b_i,species_i);
-
-  // Call reject for each action
-  for (auto& action: action_list)
-    action->Accept();
-}
-
-void PermBisectIterative::Reject()
-{
-  // No need to do some things if bisection isn't attempted
-  if (n_perm_part > 0) {
-    perm_attempt(n_perm_part-1) += 1;
-
-    // Restore things
-    for (uint32_t p_i=0; p_i<n_part; p_i++) { // todo: can make this more efficient by only restoring touched particles
-      path(species_i,p_i,bead1)->RestorePrev();
-      path(species_i,p_i,bead1-1)->RestoreNext();
-    }
-    path.RestoreR(affected_beads);
-    path.RestoreRhoKP(affected_beads);
-    for (uint32_t b_i=bead0; b_i<bead1; ++b_i)
-      path.RestoreRhoK(b_i,species_i);
-  }
-
-  // Call reject for each action
-  for (auto& action: action_list)
-    action->Reject();
-}
-
-void PermBisectIterative::Reset()
-{
-  if (adaptive) {
-    double acceptRatio = (double) n_accept / (double) n_attempt;
-    if (acceptRatio < target_ratio && n_level > 1)
-      n_level--;
-    else if (1<<n_level < path.n_bead/2)
-      n_level++;
-    n_bisect_beads = 1<<n_level; // Number of beads in bisection
-    lambda = path.species_list[species_i]->lambda;
-    i4_lambda_tau_n_bisect_beads = 1./(4.*lambda*path.tau*n_bisect_beads);
-  }
-
-  ref_accept = 0;
-  ref_attempt = 0;
-
-  Move::Reset();
-}
-
 // Perform the permuting bisection
 bool PermBisectIterative::Attempt()
 {
   bead0 = rng.UnifRand(path.n_bead) - 1;  // Pick first bead at random
   bead1 = bead0 + n_bisect_beads; // Set last bead in bisection
-  roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
+  bool roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
   bool include_ref = path.species_list[species_i]->fixed_node &&
                     ((bead0<=path.ref_bead && bead1>=path.ref_bead) ||
                     (roll_over && path.bead_loop[bead1]>=path.ref_bead));
@@ -262,7 +151,7 @@ void PermBisectIterative::UpdatePermTable()
   for (uint32_t i=0; i<n_part; i++) {
     for (uint32_t j=i; j<n_part; j++) {
       vec<double> dr_ij(path.Dr(b0(i), b1(j)));
-      double exponent = (-dot(dr_ij,dr_ij))*i4_lambda_tau_n_bisect_beads;
+      double exponent = (-dot(dr_ij,dr_ij))*i_4_lambda_tau_n_bisect_beads;
       if (exponent > log_epsilon)
         t(i,j) = path.FastExp(exponent);
       else
@@ -348,65 +237,4 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
 
 
   return 1;
-}
-
-// Permute paths between b0 and b1 given cycle
-void PermBisectIterative::PermuteBeads(field<std::shared_ptr<Bead>>& b0, field<std::shared_ptr<Bead>>& b1, const Cycle& c)
-{
-  // Execute the permutation
-  uint32_t nPerm = c.part.size();
-  for (uint32_t i=0; i<nPerm; i++)
-    b0(i)->next = b1(c.perm(i));
-  for (uint32_t i=0; i<nPerm; i++)
-    b1(i)->prev = b0(c.i_perm(i));
-  for (uint32_t i=0; i<nPerm; i++)
-    b1(i) = b0(i)->next;
-
-  return;
-}
-
-// Reassign particle labels
-void PermBisectIterative::AssignParticleLabels()
-{
-  for (uint32_t p_i=0; p_i<n_part; p_i++) {
-    std::shared_ptr<Bead> b(path(species_i,p_i,bead1-1));
-    for (uint32_t b_i=path.bead_loop(bead1-1); b_i<path.n_bead; b_i++) {
-      path.species_list[species_i]->bead(p_i,b_i) = b;
-      path(species_i,p_i,b_i)->p = p_i;
-      b = b->next;
-    }
-  }
-
-  //for (uint32_t p_i=0; p_i<n_part; p_i++) {
-  //  for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-  //    cout << p_i << " " << b_i << "   " << path(species_i,p_i,b_i)->prev->p << " " << path(species_i,p_i,b_i)->p << " " << path(species_i,p_i,b_i)->next->p << "   " << path(species_i,p_i,b_i)->prev->b << " " << path(species_i,p_i,b_i)->b << " " << path(species_i,p_i,b_i)->next->b << endl;
-  //  }
-  //}
-}
-
-void PermBisectIterative::Write()
-{
-  // Write
-  if (first_time) {
-    out.CreateExtendableDataSet("/Moves/"+name+"/", "perm_attempt", perm_attempt);
-    out.CreateExtendableDataSet("/Moves/"+name+"/", "perm_accept", perm_accept);
-    out.CreateExtendableDataSet("/Moves/"+name+"/", "ref_accept", ref_accept);
-    out.CreateExtendableDataSet("/Moves/"+name+"/", "ref_attempt", ref_attempt);
-    if (adaptive)
-      out.CreateExtendableDataSet("/Moves/"+name+"/", "n_level", n_level);
-  } else {
-    out.AppendDataSet("/Moves/"+name+"/", "perm_attempt", perm_attempt);
-    out.AppendDataSet("/Moves/"+name+"/", "perm_accept", perm_accept);
-    out.AppendDataSet("/Moves/"+name+"/", "ref_attempt", ref_attempt);
-    out.AppendDataSet("/Moves/"+name+"/", "ref_accept", ref_accept);
-    if (adaptive)
-      out.AppendDataSet("/Moves/"+name+"/", "n_level", n_level);
-  }
-
-  // Reset
-  perm_attempt.zeros();
-  perm_accept.zeros();
-
-  Move::Write();
-
 }

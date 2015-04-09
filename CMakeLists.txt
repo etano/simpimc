@@ -146,6 +146,7 @@ SET (SRCS ${SRCS} src/main.cc
   src/moves/bisect_class.cc
   src/moves/displace_particle_class.cc
   src/moves/perm_bisect_class.cc
+  src/moves/perm_bisect_table_class.cc
   src/moves/perm_bisect_iterative_class.cc
   src/moves/shift_ref_slice_class.cc
   src/moves/vary_action_class.cc

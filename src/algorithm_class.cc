@@ -35,8 +35,8 @@ void Algorithm::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
       events.push_back(std::make_shared<Bisect>(path,rng,actions,move_input,out));
     else if (type == "DisplaceParticle")
       events.push_back(std::make_shared<DisplaceParticle>(path,rng,actions,move_input,out));
-    else if (type == "PermBisect")
-      events.push_back(std::make_shared<PermBisect>(path,rng,actions,move_input,out));
+    else if (type == "PermBisectTable")
+      events.push_back(std::make_shared<PermBisectTable>(path,rng,actions,move_input,out));
     else if (type == "PermBisectIterative")
       events.push_back(std::make_shared<PermBisectIterative>(path,rng,actions,move_input,out));
     else if (type == "ShiftRefSlice")

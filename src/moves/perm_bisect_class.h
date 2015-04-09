@@ -1,55 +1,63 @@
 #ifndef SIMPIMC_MOVES_PERM_BISECT_CLASS_H_
-#define simpimc_moves_perm_bisect_class_h_
+#define SIMPIMC_MOVES_PERM_BISECT_CLASS_H_
 
-#include "move_class.h"
+#include "bisect_class.h"
 
-class PermBisect : public Move
+/// Permuting bisection move parent class
+class PermBisect : public Bisect
 {
-private:
-  std::string species;
-  int n_images;
-  uint32_t species_i;
-  uint32_t n_level, n_bisect_beads, n_part, n_perm_part, n_perm_type;
-  uint32_t bead0, bead1;
-  double lambda, i4_lambda_tau_n_bisect_beads, epsilon, log_epsilon;
-
+protected:
+  /// Cycle structure for a permutation
   struct Cycle
   {
-    double weight, contribution;
-    uint32_t index, type;
-    vec<uint32_t> perm, i_perm, part;
+    double weight; ///< Sampling weight of the cycle
+    double contribution; ///< Sum of all weights up to and including this cycle
+    uint32_t index; ///< Index of cycle
+    uint32_t type; ///< Type of cycle
+    vec<uint32_t> perm; ///< Vector of permuted indices
+    vec<uint32_t> i_perm; ///< Inverse vector of permuted indices
+    vec<uint32_t> part; ///< Vector of particles involved in the cycle
   };
-  std::vector<Cycle*> cycles;
-  field<Cycle> all_cycles;
-  mat<double> t;
 
-  uint32_t perm_type;
-  vec<uint32_t> perm_attempt, perm_accept;
+  double epsilon; ///< Tolerance when making the permutation table
+  double log_epsilon; ///< Log of tolerance when making the permutation table
+  uint32_t n_perm_part; ///< Number of particles involved in a permutation
+  uint32_t n_perm_type; ///< Number of different types of permutations given n_perm_part
+  uint32_t perm_type; ///< Type of permutation being performed
+  vec<uint32_t> perm_accept; ///< Vector of permutations accepted for each permutation type
+  vec<uint32_t> perm_attempt; ///< Vector of permutations attempted for each permutation type
+  std::vector<Cycle*> cycles; ///< Vector of all possible cycles
+  mat<double> t; ///< Table of possible permutation weights
+  field<Cycle> all_cycles; ///< All possible cycles
 
-  double ConstructPermTable();
-  void UpdatePermTable();
-  void BuildCycles();
-  uint32_t SelectCycle(const double permTot);
-  void PermuteBeads(field<std::shared_ptr<Bead>> &b0, field<std::shared_ptr<Bead>> &b1, const Cycle* const c);
+  /// Permute the beads in the cycle
+  void PermuteBeads(field<std::shared_ptr<Bead>> &b0, field<std::shared_ptr<Bead>> &b1, const Cycle &c);
+
+  /// Assign particle labels to the affected beads
   void AssignParticleLabels();
-  void Write();
 
-  std::vector<std::shared_ptr<Bead>> affected_beads;
-protected:
+  /// Accept the move
+  virtual void Accept();
 
+  /// Initializes the move
+  virtual void Init(Input &in);
+
+  /// Rejects the move
+  virtual void Reject();
+
+  /// Resets the relevant counters
+  virtual void Reset();
 public:
-  // Constructor
+  /// Constructor instantiates parent class and calls Init
   PermBisect(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
-    : Move(path, rng, action_list, in, out)
+    : Bisect(path, rng, action_list, in, out)
   {
     Init(in);
   }
 
-  virtual void Init(Input &in);
-  virtual bool Attempt();
-  virtual void Accept();
-  virtual void Reject();
+  /// Writes relevant information about the move to the output file
+  virtual void Write();
 };
 
 
-#endif // SIMPIMC_MOVES_MOVE_CLASS_H_
+#endif // SIMPIMC_MOVES_PERM_BISECT_CLASS_H_

@@ -1,29 +1,30 @@
 #ifndef SIMPIMC_MOVES_DISPLACE_PARTICLE_CLASS_H_
 #define SIMPIMC_MOVES_DISPLACE_PARTICLE_CLASS_H_
 
-#include "move_class.h"
+#include "single_species_move_class.h"
 
-class DisplaceParticle : public Move
+/// This moves displaces whole particles by a defined step size
+class DisplaceParticle : public SingleSpeciesMove
 {
 private:
-  std::string species;
-  uint32_t species_i;
-  std::vector<std::shared_ptr<Bead>> affected_beads;
-  double step_size;
-protected:
+  double step_size; ///< Distanced displaced during move
+  std::vector<std::shared_ptr<Bead>> affected_beads; ///< Beads affected by the move
 
-public:
-  // Constructor
-  DisplaceParticle(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
-    : Move(path, rng, action_list, in, out)
-  {
-    Init(in);
-  }
-
-  virtual void Init(Input &in);
-  virtual bool Attempt();
+  /// Accept the move
   virtual void Accept();
+
+  /// Attempt the move
+  virtual bool Attempt();
+
+  /// Rejects the move
   virtual void Reject();
+public:
+  /// Constructor instantiates parent and sets the step size
+  DisplaceParticle(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
+    : SingleSpeciesMove(path, rng, action_list, in, out)
+  {
+    step_size = in.GetAttribute<double>("step_size",path.L/10.);
+  }
 
 };
 
