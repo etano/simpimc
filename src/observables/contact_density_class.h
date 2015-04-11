@@ -3,9 +3,7 @@
 
 #include "observable_class.h"
 
-/// Measures the contact density between two species of particles
-///
-/// Taken from Assaraf, Caffarel, and Scemma. Phys Rev E 75, 035701(R) (2007). http://journals.aps.org/pre/pdf/10.1103/PhysRevE.75.035701.
+/// Measures the contact density between two species of particles. Taken from Assaraf, Caffarel, and Scemma. Phys Rev E 75, 035701(R) (2007). http://journals.aps.org/pre/pdf/10.1103/PhysRevE.75.035701.
 class ContactDensity : public Observable
 {
 private:

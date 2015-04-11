@@ -27,8 +27,7 @@
 #include "observables/structure_factor_class.h"
 #include "observables/time_class.h"
 
-/// Class the actually holds all the events and data objects.
-/// This includes the path object which is the main container of all relevant information to the path.
+/// Class the actually holds all the events and data objects. This includes the path object which is the main container of all relevant information to the path.
 class Algorithm
 {
 private:

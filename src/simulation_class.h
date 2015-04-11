@@ -6,9 +6,7 @@
 
 using namespace scaffold::parallel;
 
-/// Class that handles parallelization.
-/// It contains the instantiation of the algorithm
-/// and random number generator
+/// Class that handles parallelization. It contains the instantiation of the algorithm and random number generator
 class Simulation
 {
 private:

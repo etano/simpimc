@@ -3,6 +3,7 @@
 
 #include "bead_class.h"
 
+/// Container class for a single species. Holds all the bead objects of that species.
 class Species
 {
 private:

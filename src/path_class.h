@@ -3,12 +3,10 @@
 
 #include "species_class.h"
 
-/// Controls whether reading/writing new or old objects.
-/// This is important for the Metropolis rejection scheme.
+/// Controls whether reading/writing new or old objects. This is important for the Metropolis rejection scheme.
 typedef enum {OLD_MODE, NEW_MODE} ModeType;
 
-/// Main data holding object. Contains all information about the
-/// path integral. Holds a vector of Species objects.
+/// Main data holding object. Contains all information about the path integral. Holds a vector of Species objects.
 class Path
 {
 private:

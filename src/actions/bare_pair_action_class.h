@@ -3,6 +3,7 @@
 
 #include "pair_action_class.h"
 
+/// Simple diagonal pair action
 class BarePairAction : public PairAction
 {
 private:
