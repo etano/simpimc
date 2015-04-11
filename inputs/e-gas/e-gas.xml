@@ -1,5 +1,5 @@
 <Input>
-  <RNG />
+  <RNG seed="1428586593" />
   <IO output_prefix="e.0" />
   <Parallel procs_per_group="1" />
   <System n_d="3" n_bead="1280" beta="3.4207531694208" L="3.08362967522" PBC="1" k_cut="9.08020837425" />

@@ -30,7 +30,11 @@ Build like:
     mkdir build && cd build
     cmake ..
     make
-    
+
+To build the documentation:
+
+    make doc
+
 ## Running
 
 To run simpimc simply do the following:
