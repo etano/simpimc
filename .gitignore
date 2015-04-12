@@ -33,4 +33,4 @@ share/
 etc/
 doc/doxygen/Doxyfile
 doc/html
-doc/doctrees
+doc/sphinx/_doctrees

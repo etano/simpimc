@@ -176,7 +176,9 @@ ExternalProject_Add(
 
 # Documentation
 find_package(Doxygen)
-option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+find_package(Sphinx)
+option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen and Sphinx)" ${DOXYGEN_FOUND})
 if(BUILD_DOCUMENTATION)
     if(NOT DOXYGEN_FOUND)
         message(FATAL_ERROR "Doxygen is needed to build the documentation.")
@@ -187,9 +189,43 @@ if(BUILD_DOCUMENTATION)
 
     configure_file(${doxyfile_in} ${doxyfile} @ONLY)
 
-    add_custom_target(doc
+    add_custom_target(doxygen_doc
         COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/doc/html/doxygen
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM)
+
+    if(NOT SPHINX_FOUND)
+        message(FATAL_ERROR "Sphinx is needed to build the documentation.")
+    endif()
+
+    if(NOT DEFINED SPHINX_THEME)
+        set(SPHINX_THEME default)
+    endif()
+
+    if(NOT DEFINED SPHINX_THEME_DIR)
+        set(SPHINX_THEME_DIR)
+    endif()
+
+    # configured documentation tools and intermediate build results
+    set(BINARY_BUILD_DIR "${CMAKE_SOURCE_DIR}/doc/sphinx")
+
+    # Sphinx cache with pickled ReST documents
+    set(SPHINX_CACHE_DIR "${CMAKE_SOURCE_DIR}/doc/sphinx/_doctrees")
+
+    # HTML output directory
+    set(SPHINX_HTML_DIR "${CMAKE_SOURCE_DIR}/doc/html")
+
+    add_custom_target(sphinx_doc
+        ${SPHINX_EXECUTABLE}
+            -q -b html
+            -c "${BINARY_BUILD_DIR}"
+            -d "${SPHINX_CACHE_DIR}"
+            "${CMAKE_SOURCE_DIR}/doc/sphinx"
+            "${SPHINX_HTML_DIR}"
+        COMMENT "Building HTML documentation with Sphinx")
+
+    add_custom_target(doc
+      DEPENDS doxygen_doc sphinx_doc)
+
 endif()
