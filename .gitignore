@@ -31,5 +31,5 @@ depends/
 lib/
 share/
 etc/
-doc/Doxyfile
-doc/html
+doc/doxygen/Doxyfile
+doc/gh-pages
