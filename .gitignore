@@ -32,4 +32,5 @@ lib/
 share/
 etc/
 doc/doxygen/Doxyfile
-doc/gh-pages
+doc/html
+doc/doctrees
