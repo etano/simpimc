@@ -11,7 +11,7 @@ protected:
   uint32_t param_set_i; ///< Current parameter set being used for model_i
   uint32_t max_level; ///< Maximum bisection level affected by the action
   uint32_t model_i; ///< Current model being used
-  std::vector<std::vector<double>> param_sets; // Vector of variational 
+  std::vector<std::vector<double>> param_sets; ///< Vector of variational
   IO &out; ///< Reference to ouput file
   Path& path; ///< Reference to pathparameter sets
 public:

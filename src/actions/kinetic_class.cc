@@ -80,21 +80,21 @@ double Kinetic::GetGaussSum(const double r, const double r2_i_4_lambda_tau, cons
 {
   double gauss_sum;
   eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
-  return exp(-(r2_i_4_lambda_tau/slice_diff))*exp(0.9999*gauss_sum);
+  return exp(gauss_sum - r2_i_4_lambda_tau/slice_diff);
 }
 
 double Kinetic::GetLogGaussSum(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff)
 {
   double gauss_sum;
   eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
-  return gauss_sum-(r2_i_4_lambda_tau/slice_diff);
+  return gauss_sum - r2_i_4_lambda_tau/slice_diff;
 };
 
 double Kinetic::GetNumSum(const double r, const double r2_i_4_lambda_tau)
 {
   double num_sum;
   eval_UBspline_1d_d(num_sum_r_spline,r,&num_sum);
-  return -(r2_i_4_lambda_tau/path.tau)*exp(-r2_i_4_lambda_tau)*exp(0.9999*num_sum);
+  return -(r2_i_4_lambda_tau/path.tau)*exp(num_sum - r2_i_4_lambda_tau);
 }
 
 double Kinetic::DActionDBeta()

@@ -22,10 +22,12 @@ protected:
   {
     // Choose model
     switch(model_i) {
-      case 0:
+      case 0: // \alpha/(4\lambda n\tau)
         return i_4_lambda_tau*param_sets[param_set_i][0]/slice_diff;
         break;
-      default:
+      case 1: // \alpha[i]/(4\lambda n\tau)
+        return i_4_lambda_tau*param_sets[param_set_i][slice_diff]/slice_diff;
+      default: // 1/(4\lambda n\tau)
         return i_4_lambda_tau/slice_diff;
         break;
     }
