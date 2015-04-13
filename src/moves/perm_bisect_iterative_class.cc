@@ -224,6 +224,7 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
   c.part.set_size(nPerm);
   for (uint32_t i=0; i<nPerm; ++i)
     c.part(i) = ps[i];
+  c.type = nPerm;
 
   // Set perms
   c.perm.set_size(nPerm);
