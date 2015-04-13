@@ -2,12 +2,13 @@
 #define SIMPIMC_ACTIONS_FREE_NODAL_CLASS_H_
 
 #include "nodal_class.h"
+#include "free_spline_class.h"
 
 /// Bare free particle nodal action class
 class FreeNodal : public Nodal
 {
 private:
-  field<UBspline_1d_d*> rho_free_r_splines; ///< Holds the splined action for every time slice
+  std::vector<FreeSpline> rho_free_r_splines; ///< Holds the splined action for every time slice
 
   /// Creates splined action for all time slices
   virtual void SetupSpline();

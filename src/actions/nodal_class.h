@@ -2,8 +2,6 @@
 #define SIMPIMC_ACTIONS_NODAL_CLASS_H_
 
 #include "single_action_class.h"
-#include <einspline/multi_bspline.h>
-#include <einspline/bspline.h>
 
 /// The nodal action class
 class Nodal : public SingleAction

@@ -2,6 +2,7 @@
 #define SIMPIMC_ACTIONS_OPTIMIZED_NODAL_CLASS_H_
 
 #include "nodal_class.h"
+#include "free_spline_class.h"
 
 /// A nodal action class whose parameters may be varied
 class OptimizedNodal : public Nodal
@@ -9,7 +10,7 @@ class OptimizedNodal : public Nodal
 private:
 
 protected:
-  field<UBspline_1d_d*> rho_node_r_splines; ///< Holds the splined action for every time slice and parameter set
+  std::vector<std::vector<FreeSpline>> rho_free_r_splines; ///< Holds the splined action for every time slice and parameter set
 
   /// Returns the value of g_ij
   virtual double GetGij(const vec<double> &r, const uint32_t slice_diff);
@@ -48,7 +49,7 @@ public:
   virtual void Init(Input &in);
 
   /// Write information about the action
-  virtual void Write();
+  virtual void Write() {};
 };
 
 #endif // SIMPIMC_ACTIONS_OPTIMIZED_NODAL_CLASS_H_
