@@ -108,12 +108,6 @@ double Nodal::DActionDBeta()
     b_i_vec.push_back(other_b[b_i][0]->b);
   }
 
-  // Decide which type of action to compute
-  return DDistanceActionDBeta(b_i_vec, ref_b, other_b);
-}
-
-double Nodal::DDistanceActionDBeta(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b) // FIXME: No need for this extra function
-{
   // Compute action from nodal distance
   double tot = 0.;
   double i_lambda_tau = 1./(path.species_list[species_i]->lambda*path.tau);

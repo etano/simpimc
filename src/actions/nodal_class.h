@@ -66,9 +66,6 @@ protected:
   /// Compute the nodal action by using a nodal distance measure
   double DistanceAction(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b, const int n_bead_in_move, const bool check_all);
 
-  /// Compute the beta derivative of the nodal action by using a nodal distance measure
-  double DDistanceActionDBeta(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b);
-
   /// Creates splined action for all time slices and parameter sets
   virtual void SetupSpline() = 0;
 
