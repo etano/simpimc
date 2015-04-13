@@ -197,7 +197,7 @@ if(BUILD_DOCUMENTATION)
         VERBATIM)
 
     if(NOT SPHINX_FOUND)
-        message(FATAL_ERROR "Sphinx is needed to build the documentation.")
+        message("Sphinx is needed to build the documentation.")
     endif()
 
     if(NOT DEFINED SPHINX_THEME)
