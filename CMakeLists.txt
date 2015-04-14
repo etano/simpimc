@@ -16,6 +16,7 @@ SET(COMPILER_MAKE "GNU") # INTEL, GNU, or CLANG
 SET(SCAFFOLD_MATRIX_LIBRARY "ARMADILLO") # ARMADILLO or EIGEN
 SET(OPTIMIZE TRUE)
 SET(DEBUG TRUE)
+SET(BUILD_DOCUMENTATION TRUE)
 
 #-------------------------------------------------------------------
 # Compilers
@@ -66,7 +67,7 @@ IF(OPTIMIZE)
 ENDIF(OPTIMIZE)
 
 IF(USE_MPI)
-  SET(COMMON_FLAGS "${COMMON_FLAGS} -DUSE_MPI")
+  SET(COMMON_FLAGS "${COMMON_FLAGS} -DUSE_MPI -DMPICH_IGNORE_CXX_SEEK")
 ENDIF(USE_MPI)
 
 IF(USE_OPENMP)
@@ -74,10 +75,7 @@ IF(USE_OPENMP)
 ENDIF(USE_OPENMP)
 
 SET(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
-SET(CMAKE_CXX_SOURCE_FILE_EXTENSIONS ,"cpp")
-
-SET(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS} ${COMMON_FLAGS}")
-SET(CMAKE_C_SOURCE_FILE_EXTENSIONS ,"c")
+SET(CMAKE_CXX_SOURCE_FILE_EXTENSIONS ,"cc")
 
 IF(BUILD_STATIC)
   # Enable static linking
@@ -110,7 +108,7 @@ SET(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 #-------------------------------------------------------------------
 # Scaffold
 #-------------------------------------------------------------------
-SET(SCAFFOLD_DIR "${CMAKE_SOURCE_DIR}/src/Utils")
+SET(SCAFFOLD_DIR "${CMAKE_SOURCE_DIR}/include/scaffold")
 SET(SCAFFOLD_DEPENDS_DIR "${CMAKE_SOURCE_DIR}/depends")
 SET(SCAFFOLD_INSTALL_DIR "${CMAKE_SOURCE_DIR}")
 INCLUDE("${SCAFFOLD_DIR}/CMakeLists.txt")
@@ -128,41 +126,41 @@ SET(LIBS ${LIBS} ${EINSPLINE_LIBS})
 # Sources and target
 #-------------------------------------------------------------------
 # simpimc
-SET (SRCS ${SRCS} src/main.cpp
-  src/AlgorithmClass.cpp
-  src/LoopClass.cpp
-  src/PathClass.cpp
-  src/SimulationClass.cpp
-  src/SpeciesClass.cpp
-  src/WriteClass.cpp
-  src/Actions/ActionClass.cpp
-  src/Actions/KineticClass.cpp
-  src/Actions/PairActionClass.cpp
-  src/Actions/NodalClass.cpp
-  src/Actions/FreeNodalClass.cpp
-  src/Actions/OptimizedNodalClass.cpp
-  src/Actions/BarePairActionClass.cpp
-  src/Actions/DavidPairActionClass.cpp
-  src/Actions/IlkkaPairActionClass.cpp
-  src/Actions/ImportancePairActionClass.cpp
-  src/Actions/TrapClass.cpp
-  src/Moves/MoveClass.cpp
-  src/Moves/BisectClass.cpp
-  src/Moves/DisplaceParticleClass.cpp
-  src/Moves/PermBisectClass.cpp
-  src/Moves/PermBisectIterativeClass.cpp
-  src/Moves/ShiftRefSliceClass.cpp
-  src/Moves/VaryOptimizedNodalClass.cpp
-  src/Observables/ObservableClass.cpp
-  src/Observables/EnergyClass.cpp
-  src/Observables/ImportanceWeightClass.cpp
-  src/Observables/PairCorrelationClass.cpp
-  src/Observables/PathDumpClass.cpp
-  src/Observables/PermutationClass.cpp
-  src/Observables/RecordOptimizedNodalClass.cpp
-  src/Observables/SignClass.cpp
-  src/Observables/StructureFactorClass.cpp
-  src/Observables/TimeClass.cpp)
+SET (SRCS ${SRCS} src/main.cc
+  src/algorithm_class.cc
+  src/loop_class.cc
+  src/path_class.cc
+  src/simulation_class.cc
+  src/species_class.cc
+  src/write_class.cc
+  src/actions/kinetic_class.cc
+  src/actions/pair_action_class.cc
+  src/actions/nodal_class.cc
+  src/actions/free_nodal_class.cc
+  src/actions/free_spline_class.cc
+  src/actions/optimized_nodal_class.cc
+  src/actions/bare_pair_action_class.cc
+  src/actions/david_pair_action_class.cc
+  src/actions/ilkka_pair_action_class.cc
+  src/actions/trap_class.cc
+  src/moves/move_class.cc
+  src/moves/bisect_class.cc
+  src/moves/displace_particle_class.cc
+  src/moves/perm_bisect_class.cc
+  src/moves/perm_bisect_table_class.cc
+  src/moves/perm_bisect_iterative_class.cc
+  src/moves/shift_ref_slice_class.cc
+  src/moves/vary_action_class.cc
+  src/observables/contact_density_class.cc
+  src/observables/energy_class.cc
+  src/observables/importance_weight_class.cc
+  src/observables/pair_correlation_class.cc
+  src/observables/path_dump_class.cc
+  src/observables/permutation_class.cc
+  src/observables/record_optimized_action_class.cc
+  src/observables/sign_class.cc
+  src/observables/structure_factor_class.cc
+  src/observables/time_class.cc)
 ADD_EXECUTABLE(simpimc ${SRCS})
 TARGET_LINK_LIBRARIES(simpimc ${LIBS})
 INSTALL(TARGETS simpimc DESTINATION $ENV{HOME}/bin)
@@ -173,7 +171,62 @@ ExternalProject_Add(
   SOURCE_DIR ${CMAKE_SOURCE_DIR}/scripts
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE 1
-  BUILD_COMMAND make
+  BUILD_OMMAND make
   INSTALL_COMMAND ""
 )
 
+# Documentation
+find_package(Doxygen)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+find_package(Sphinx)
+option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen and Sphinx)" ${DOXYGEN_FOUND})
+if(BUILD_DOCUMENTATION)
+    if(NOT DOXYGEN_FOUND)
+        message(FATAL_ERROR "Doxygen is needed to build the documentation.")
+    endif()
+
+    set(doxyfile_in ${CMAKE_SOURCE_DIR}/doc/doxygen/Doxyfile.in)
+    set(doxyfile ${CMAKE_SOURCE_DIR}/doc/doxygen/Doxyfile)
+
+    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+
+    add_custom_target(doxygen_doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/doc/html/doxygen
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM)
+
+    if(NOT SPHINX_FOUND)
+        message("Sphinx is needed to build the documentation.")
+    endif()
+
+    if(NOT DEFINED SPHINX_THEME)
+        set(SPHINX_THEME default)
+    endif()
+
+    if(NOT DEFINED SPHINX_THEME_DIR)
+        set(SPHINX_THEME_DIR)
+    endif()
+
+    # configured documentation tools and intermediate build results
+    set(BINARY_BUILD_DIR "${CMAKE_SOURCE_DIR}/doc/sphinx")
+
+    # Sphinx cache with pickled ReST documents
+    set(SPHINX_CACHE_DIR "${CMAKE_SOURCE_DIR}/doc/sphinx/_doctrees")
+
+    # HTML output directory
+    set(SPHINX_HTML_DIR "${CMAKE_SOURCE_DIR}/doc/html")
+
+    add_custom_target(sphinx_doc
+        ${SPHINX_EXECUTABLE}
+            -q -b html
+            -c "${BINARY_BUILD_DIR}"
+            -d "${SPHINX_CACHE_DIR}"
+            "${CMAKE_SOURCE_DIR}/doc/sphinx"
+            "${SPHINX_HTML_DIR}"
+        COMMENT "Building HTML documentation with Sphinx")
+
+    add_custom_target(doc
+      DEPENDS doxygen_doc sphinx_doc)
+
+endif()

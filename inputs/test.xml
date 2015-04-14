@@ -1,0 +1,32 @@
+<Input>
+  <IO output_prefix="test.0" />
+  <Parallel procs_per_group="1" />
+  <System n_d="3" n_bead="100" beta="10.0" L="10.0" pbc="1" />
+  <Particles>
+    <Species name="eU" n_part="5" lambda="0.5" fermi="0" fixed_node="0" init_type="Random" cofactor="0.9" prefix="free.0" />
+    <Species name="eD" n_part="5" lambda="0.5" fermi="0" fixed_node="0" init_type="Random" cofactor="0.9" prefix="free.0" />
+  </Particles>
+  <Actions>
+    <Action name="KineticU" type="Kinetic" n_images="1" species="eU" />
+    <Action name="KineticD" type="Kinetic" n_images="1" species="eD" />
+  </Actions>
+  <Moves>
+    <Move name="BisectD" type="PermBisectIterative" species="eD" n_level="5" n_images="1" />
+    <Move name="BisectU" type="PermBisectIterative" species="eU" n_level="5" n_images="1" />
+  </Moves>
+  <Observables>
+    <Observable name="Energy" type="Energy" skip="1" />
+    <Observable name="PathDump" type="PathDump" skip="9" />
+    <Observable name="Time" type="Time" />
+  </Observables>
+  <Algorithm>
+    <Loop n_step="10">
+      <Loop n_step="100">
+        <Move name="BisectU" />
+        <Move name="BisectD" />
+        <Observable name="Energy" />
+      </Loop>
+      <Write />
+    </Loop>
+  </Algorithm>
+</Input>

@@ -1,6 +1,10 @@
 tags
 *~
 *.swp
+*.swl
+*.swm
+*.swn
+*.swo
 .VimballRecord
 *.o
 *.so
@@ -27,3 +31,6 @@ depends/
 lib/
 share/
 etc/
+doc/doxygen/Doxyfile
+doc/html
+doc/sphinx/_doctrees

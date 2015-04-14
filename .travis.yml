@@ -32,5 +32,7 @@ install:
 
 before_script:
   - cd inputs
+  - export OMP_PROC_BIND=TRUE
+  - export OMP_NUM_THREADS=2
 
-script: ../bin/simpimc free.xml
+script: ../bin/simpimc test.xml
