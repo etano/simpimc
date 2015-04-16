@@ -1,5 +1,4 @@
 <Input>
-  <RNG seed="12345" />
   <IO output_prefix="H.0" />
   <Parallel procs_per_group="1" />
   <System n_d="3" n_bead="320" beta="40.0" L="1000.0" PBC="0" />
