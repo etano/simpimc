@@ -3,7 +3,7 @@
 void IlkkaPairAction::ReadFile(std::string file_name)
 {
   // Boundary conditions
-  BCtype_d xBC = {NATURAL, FLAT}; // HACK: Is this correct?
+  BCtype_d xBC = {NATURAL, NATURAL}; // HACK: Is this correct?
 
   // Load file
   IO in;
@@ -261,7 +261,7 @@ double IlkkaPairAction::CalcdUdBeta(double r, double r_p, double s, const uint32
   return du;
 }
 
-/// Calculate the ULong value
+/// Calculate the V_long value
 double IlkkaPairAction::CalcVLong()
 {
   // Get rho k
