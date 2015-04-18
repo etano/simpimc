@@ -298,4 +298,4 @@ def main(argv=None):
                 ob.AdjustBySign(sign_data)
 
 if __name__ == "__main__":
-  sys.exit(main())
+    sys.exit(main())
