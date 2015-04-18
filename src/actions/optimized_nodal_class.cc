@@ -26,8 +26,7 @@ void OptimizedNodal::SetupSpline()
 
   // Create splines
   rho_free_r_splines.resize(param_sets.size());
-  for (uint32_t param_set_i=0; param_set_i<param_sets.size(); ++param_set_i) {
-    #pragma omp parallel for
+  for (param_set_i=0; param_set_i<param_sets.size(); ++param_set_i) {
     for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
       double t_i_4_lambda_tau = Geti4LambdaTau(spline_i+1); // TODO: This is hard-coded for free-particle-like nodal structures.
       FreeSpline rho_free_r_spline(path.L, n_images, path.n_d, t_i_4_lambda_tau);

@@ -1,20 +1,5 @@
 #include "vary_action_class.h"
 
-void VaryAction::Init(Input &in)
-{
-  std::string action_name = in.GetAttribute<std::string>("action_name");
-
-  // Select action from list
-  for (auto& t_action : action_list) {
-    if (t_action->name == action_name)
-      action = t_action;
-  }
-
-  // Set species
-  std::string species = action->species_list[0]; // FIXME: Not very general
-  path.GetSpeciesInfo(species,species_i);
-}
-
 // Accept current move
 void VaryAction::Accept()
 {

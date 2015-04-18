@@ -19,7 +19,7 @@ private:
   virtual bool Attempt();
 
   /// Initializes the move
-  virtual void Init(Input &in);
+  virtual void Init(Input &in) {};
 
   /// Rejects the move
   virtual void Reject();
@@ -28,7 +28,18 @@ public:
   VaryAction(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
     : Move(path, rng, action_list, in, out)
   {
-    Init(in);
+    // Get species
+    std::string species = in.GetAttribute<std::string>("species");
+    path.GetSpeciesInfo(species,species_i);
+
+    // Get relevant varied action
+    std::string action_name = in.GetAttribute<std::string>("action_name");
+
+    // Select action from list
+    for (auto& t_action : action_list) {
+      if (t_action->name == action_name)
+        action = t_action;
+    }
   }
 };
 
