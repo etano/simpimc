@@ -44,13 +44,23 @@ private:
   virtual double CalcU(double r, double r_p, double s, const uint32_t level);
 
   /// Calculate the long ranged part of the action
-  virtual double CalcULong(const uint32_t b0, const uint32_t b1, const uint32_t level);
+  virtual double CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level);
 
   /// Calculate the beta derivative of the action
   virtual double CalcdUdBeta(double r, double r_p, double s, const uint32_t level);
 
   /// Calculate the long ranged part of the beta derivative of the action
   virtual double CalcdUdBetaLong();
+
+  /// Calculate the gradient of the action for the particle pair p_i, p_j in the direction of particle p_i
+  virtual vec<double> CalcGradientU(const uint32_t b_i, const uint32_t b_j, const uint32_t p_i, const uint32_t p_j, const uint32_t level);
+
+  /// Calculate the gradient of the long ranged part of the action for all particles
+  virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level);
+
+  /// Calculate the gradient of the long ranged part of the action in the direction of p_i
+  virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t p_i, const uint32_t level);
+
 public:
   /// Constructor only calls Init
   IlkkaPairAction(Path &path, Input &in, IO &out)

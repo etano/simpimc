@@ -36,6 +36,9 @@ public:
   /// Returns the beta derivative of the action for the whole path
   virtual double DActionDBeta() { return 0.; };
 
+  /// Returns the virial contribution of the action
+  virtual double VirialEnergy(const double virial_window_size) { return DActionDBeta(); }
+
   /// Returns the value of the action between time slices b0 and b1 for a vector of particles
   virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };
 

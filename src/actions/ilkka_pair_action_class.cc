@@ -265,15 +265,14 @@ double IlkkaPairAction::CalcdUdBeta(double r, double r_p, double s, const uint32
 double IlkkaPairAction::CalcVLong()
 {
   // Get rho k
-  field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
+  field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
 
   // Sum over k std::vectors
   double tot = 0.;
   #pragma omp parallel for collapse(2) reduction(+:tot)
   for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
     for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-      double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
-      tot += rhok2*v_long_k(k_i);
+      tot += v_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));
     }
   }
 
@@ -284,19 +283,18 @@ double IlkkaPairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-double IlkkaPairAction::CalcULong(const uint32_t b0, const uint32_t b1, const uint32_t level)
+double IlkkaPairAction::CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
 {
   // Get rho k
-  field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
+  field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
 
   // Sum over k std::vectors
   uint32_t skip = 1<<level;
   double tot = 0.;
   #pragma omp parallel for collapse(2) reduction(+:tot)
   for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
-    for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
-      double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
-      tot += u_long_k(k_i)*rhok2;
+    for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
+      tot += u_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));
     }
   }
 
@@ -310,15 +308,14 @@ double IlkkaPairAction::CalcULong(const uint32_t b0, const uint32_t b1, const ui
 double IlkkaPairAction::CalcdUdBetaLong()
 {
   // Get rho k
-  field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
+  field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
 
   // Sum over k std::vectors
   double tot = 0.;
   #pragma omp parallel for collapse(2) reduction(+:tot)
   for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
     for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-      double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
-      tot += du_long_k(k_i)*rhok2;
+      tot += du_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));
     }
   }
 
@@ -327,3 +324,87 @@ double IlkkaPairAction::CalcdUdBetaLong()
 
   return tot + du_long_k_0 + du_long_r_0;
 }
+
+vec<double> IlkkaPairAction::CalcGradientU(const uint32_t b_i, const uint32_t b_j, const uint32_t p_i, const uint32_t p_j, const uint32_t level)
+{
+  // Constants
+  vec<double> r, r_p, r_r_p;
+  double r_mag, r_p_mag, r_r_p_mag;
+  path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag,r,r_p,r_r_p);
+  double q = 0.5*(r_mag + r_p_mag);
+  double x = q + 0.5*r_r_p_mag;
+  double y = q - 0.5*r_r_p_mag;
+
+  // Calculate U and (dU/dxp,dU/dyp)
+  double u = 0.;
+  vec<double> du_dxp_du_dyp(2);
+  eval_NUBspline_2d_d_vg(u_xy_spline,x,y,&u,du_dxp_du_dyp.memptr());
+
+  // Do chain rule to get (dU/dx_i,dU/dy_i,dU/dz_i)
+  // dU/dx_i = dU/dxp dxp/dx_i + dU/dyp dyp/dx_i
+  // and same for y_i and z_i
+  //
+  // dxp/dx_i = d(q+0.5*s)/dx_i where q = 0.5*(|r| + |r_p|) and s = |r-r_p|
+  //                            with r = r_i-r_j and r_p = r_i'-r_j'
+  // d|r|/dx_i = d(sqrt((x_i-x_j)^2 + (y_i-y_j)^2 + (z_i-z_j)^2))/dx_i
+  // d|r|/dx_i = (x_i-x_j)/|r|
+  // d|r_p|/dx_i = 0
+  // d|r-r_p|/dx_i = d(sqrt((x_i-x_j-x_i'+x_j')^2 + (y_i-y_j-y_i'+y_j')^2 + (z_i-z_j-z_i'+z_j')^2))/dx_i
+  // d|r-r_p|/dx_i = (x_i-x_j-x_i'+x_j')/|r-r_p|
+  // => dxp/dx = 0.5*((x_i-x_j)/|r| + (x_i-x_j-x_i'+x_j')/|r-r_p|)
+  //    dyp/dx = 0.5*((x_i-x_j)/|r| - (x_i-x_j-x_i'+x_j')/|r-r_p|)
+  // => dU/dx = 0.5*[dU/dxp*((x_i-x_j)/|r| + (x_i-x_j-x_i'+x_j')/|r-r_p|) + dU/dyp*((x_i-x_j)/|r| - (x_i-x_j-x_i'+x_j')/|r-r_p|)]
+  // => (dU/dx,dU/dy,dU/dz) = 0.5*[dU/dxp*(r/|r| + (r-r_p)/|r-r_p|) + dU/dyp*(r/|r| - (r-r_p)/|r-r_p|)]
+
+  // Calculate numerical gradient
+  vec<double> r_i_r_mag(r/r_mag), r_r_p_i_r_r_p_mag(r_r_p/r_r_p_mag);
+  if (r_mag == 0.)
+    r_i_r_mag.zeros();
+  if (r_r_p_mag == 0.)
+    r_r_p_i_r_r_p_mag.zeros();
+  vec<double> tot = -0.5*(du_dxp_du_dyp(0)*(r_i_r_mag + r_r_p_i_r_r_p_mag) + du_dxp_du_dyp(1)*(r_i_r_mag - r_r_p_i_r_r_p_mag));
+
+  // Subtract out long range part
+  if (use_long_range) {
+    // Limits
+    SetLimits(r_u_min, r_u_max, r_mag, r_p_mag);
+
+    // Splines
+    double tmp_u, tmp_du_dr;
+    eval_NUBspline_1d_d_vg(u_long_r_spline,r_mag,&tmp_u,&tmp_du_dr);
+    tot -= 0.5*tmp_du_dr*r_i_r_mag;
+  }
+
+  return tot;
+}
+
+vec<double> IlkkaPairAction::CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
+{
+  // Should average to 0
+  vec<double> tot;
+  tot.zeros(path.n_d);
+  return tot;
+}
+
+vec<double> IlkkaPairAction::CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t p_i, const uint32_t level)
+{
+  // Get rho k
+  field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
+
+  // Sum over k std::vectors
+  uint32_t skip = 1<<level;
+  vec<double> tot;
+  tot.zeros(path.n_d);
+  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+    for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
+      vec<std::complex<double>> &rho_k_b(path.GetRhoK(path(species_a_i,p_i,b_i)));
+      tot += u_long_k(k_i)*path.ks[k_i]*(rho_k_b(k_i).real()*rho_k(path.bead_loop(b_i),species_b_i)(k_i).imag() - rho_k_b(k_i).imag()*rho_k(path.bead_loop(b_i),species_b_i)(k_i).real());
+    }
+  }
+
+  if (species_b_i != species_a_i)
+    tot *= 2.;
+
+  return tot;
+}
+

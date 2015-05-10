@@ -11,14 +11,14 @@ void Permutation::Init(Input &in)
   // Set up permutation sectors
   path.GetSpeciesInfo(species, species_i);
   cycles.set_size(path.species_list[species_i]->n_part);
-  path.SetupPermSectors(path.species_list[species_i]->n_part, sector_max);
+  path.SetupPermSectors(species_i, sector_max);
   first_sector = true;
 
   // Write out possible sectors
   mat<uint32_t> tmp_perms;
-  tmp_perms.zeros(path.species_list[species_i]->n_part,path.poss_perms.size());
+  tmp_perms.zeros(path.species_list[species_i]->n_part,path.poss_perms[species_i].size());
   std::map<std::vector<uint32_t>,uint32_t>::iterator tmp_iterator;
-  for(tmp_iterator = path.poss_perms.begin(); tmp_iterator != path.poss_perms.end(); tmp_iterator++) {
+  for(tmp_iterator = path.poss_perms[species_i].begin(); tmp_iterator != path.poss_perms[species_i].end(); tmp_iterator++) {
     std::vector<uint32_t> tmpPerm = (*tmp_iterator).first;
     for (uint32_t j=0; j<tmpPerm.size(); ++j)
       tmp_perms(tmpPerm[j]-1,(*tmp_iterator).second)++;
@@ -26,8 +26,8 @@ void Permutation::Init(Input &in)
   out.CreateGroup(prefix+"sectors");
   std::string data_type = "pairs";
   out.Write(prefix+"sectors/data_type",data_type);
-  vec<uint32_t> tmp_perm_indices(path.poss_perms.size());
-  for (uint32_t i=0; i<path.poss_perms.size(); ++i)
+  vec<uint32_t> tmp_perm_indices(path.poss_perms[species_i].size());
+  for (uint32_t i=0; i<path.poss_perms[species_i].size(); ++i)
     tmp_perm_indices(i) = i;
   out.Write(prefix+"sectors/x", tmp_perm_indices);
   out.Write(prefix+"sectors/possPerms", tmp_perms);

@@ -14,7 +14,6 @@ private:
 public:
   bool approximate; ///< Whether or not to use the approximate exponential
   bool pbc; ///< Whether or not using periodic boundary conditions
-  bool perm_sectors_setup; ///< Whether or not permutation sectors are setup
   double beta; ///< Inverse temperature: 1/(k_B T)
   double iL; ///< Inverse of cubic box side length
   double importance_weight; ///< Importance weight of the current configuration
@@ -33,8 +32,9 @@ public:
   field<vec<std::complex<double>>> c_k; ///< Constant defined for each charge density
   field<vec<std::complex<double>>> rho_k; ///< All charge densities
   field<vec<std::complex<double>>> rho_k_c; ///< All charge densities copy
-  std::map<std::vector<uint32_t>,uint32_t,CompareVec<uint32_t>> poss_perms; ///< Map defining all possible permutations
+  std::vector<std::map<std::vector<uint32_t>,uint32_t,CompareVec<uint32_t>>> poss_perms; ///< Vector of maps defining all possible permutations for each species
   std::map<std::vector<uint32_t>,uint32_t,CompareVec<uint32_t>>::const_iterator poss_perms_iterator; ///< Iterator over map that defines all possible permutations
+  std::vector<bool> perm_sectors_setup; ///< Whether or not permutation sectors are setup for each species
   std::vector<double> mag_ks; ///< Vector holding magnitudes of k vectors
   std::vector<std::shared_ptr<Species>> species_list; ///< Vector holding pointers to all species objects
   std::vector<vec<double>> ks; ///< Vector holding k vectors
@@ -164,8 +164,8 @@ public:
   /// Get the current permutation sector of a given species and set the current cycle counts
   uint32_t GetPermSector(const uint32_t s_i, std::vector<uint32_t> &cycles);
 
-  /// Initialize permutation sectors
-  void SetupPermSectors(const uint32_t n, const uint32_t sectors_max);
+  /// Initialize permutation sectors for a given species
+  void SetupPermSectors(const uint32_t s_i, const uint32_t sectors_max);
 
   /// Get dr, dr_p, and drr_p
   inline void DrDrpDrrp(const uint32_t b0, const uint32_t b1, const uint32_t s0, const uint32_t s1, const uint32_t p0, const uint32_t p1, double &r_mag, double &r_p_mag, double &r_r_p_mag)
@@ -180,6 +180,27 @@ public:
       r_p(d_i) += nearbyint((r(d_i)-r_p(d_i))*iL)*L;
     }
     vec<double> r_r_p = r - r_p;
+    for (uint32_t d_i=0; d_i<n_d; ++d_i)
+      r_r_p(d_i) -= nearbyint(r_r_p(d_i)*iL)*L;
+    r_mag = mag(r);
+    r_p_mag = mag(r_p);
+    r_r_p_mag = mag(r_r_p);
+
+  };
+
+  /// Get dr, dr_p, and drr_p and keep vectors
+  inline void DrDrpDrrp(const uint32_t b0, const uint32_t b1, const uint32_t s0, const uint32_t s1, const uint32_t p0, const uint32_t p1, double &r_mag, double &r_p_mag, double &r_r_p_mag, vec<double> &r, vec<double> &r_p, vec<double> &r_r_p)
+  {
+    //Dr((*this)(s1,p1,b0),(*this)(s0,p0,b0),r);
+    //Dr((*this)(s1,p1,b1),(*this)(s0,p0,b1),r_p);
+
+    r = GetR((*this)(s1,p1,b0)) - GetR((*this)(s0,p0,b0));
+    r_p = GetR((*this)(s1,p1,b1)) - GetR((*this)(s0,p0,b1));
+    for (uint32_t d_i=0; d_i<n_d; ++d_i) {
+      r(d_i) -= nearbyint(r(d_i)*iL)*L;
+      r_p(d_i) += nearbyint((r(d_i)-r_p(d_i))*iL)*L;
+    }
+    r_r_p = r - r_p;
     for (uint32_t d_i=0; d_i<n_d; ++d_i)
       r_r_p(d_i) -= nearbyint(r_r_p(d_i)*iL)*L;
     r_mag = mag(r);

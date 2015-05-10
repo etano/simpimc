@@ -59,10 +59,15 @@ void Path::Init(Input &in, IO &out, RNG &rng)
   double k_cut = in.GetChild("System").GetAttribute<double>("k_cut",2.*M_PI/(pow(vol,1./n_d)));
   SetupKs(k_cut);
 
+  // Resize permutation containers
+  poss_perms.resize(n_species);
+  perm_sectors_setup.resize(n_species);
+  for (uint32_t i=0; i<n_species; ++i)
+    perm_sectors_setup[i] = 0;
+
   // Initiate some global things
   sign = 1;
   importance_weight = 1;
-  perm_sectors_setup = 0;
   ref_bead = 0;
   CalcSign();
 
@@ -440,8 +445,8 @@ uint32_t Path::GetPermSector(const uint32_t s_i)
 uint32_t Path::GetPermSector(const uint32_t s_i, std::vector<uint32_t> &cycles)
 {
   sort(cycles.begin(),cycles.end());
-  poss_perms_iterator = poss_perms.find(cycles);
-  if (poss_perms_iterator == poss_perms.end()) { // TODO: Feel confident enough to remove this
+  poss_perms_iterator = poss_perms[s_i].find(cycles);
+  if (poss_perms_iterator == poss_perms[s_i].end()) { // TODO: Feel confident enough to remove this
     std::cout << "Broken Permutation: " << std::endl;
     for (auto& cycle: cycles)
       std::cout << cycle << " ";
@@ -452,9 +457,10 @@ uint32_t Path::GetPermSector(const uint32_t s_i, std::vector<uint32_t> &cycles)
 }
 
 // Setup permutation sectors
-void Path::SetupPermSectors(const uint32_t n, const uint32_t sectors_max)
+void Path::SetupPermSectors(const uint32_t s_i, const uint32_t sectors_max)
 {
-  if (!perm_sectors_setup) {
+  int n = species_list[s_i]->n_part;
+  if (!perm_sectors_setup[s_i]) {
     std::cout << "Setting up permutation sectors..." << std::endl;
     std::vector<int> a;
     a.resize(n);
@@ -463,7 +469,7 @@ void Path::SetupPermSectors(const uint32_t n, const uint32_t sectors_max)
     int k = 1;
     int y = n-1;
     std::vector<std::vector<uint32_t>> tmp_poss_perms;
-    while (k != 0 && (sectors_max > poss_perms.size() || !sectors_max)) {
+    while (k != 0 && (sectors_max > poss_perms[s_i].size() || !sectors_max)) {
       int x = a[k-1] + 1;
       k -= 1;
       while (2*x <= y) {
@@ -472,7 +478,7 @@ void Path::SetupPermSectors(const uint32_t n, const uint32_t sectors_max)
         k += 1;
       }
       int l = k+1;
-      while (x <= y && (sectors_max > poss_perms.size() || !sectors_max)) {
+      while (x <= y && (sectors_max > poss_perms[s_i].size() || !sectors_max)) {
         a[k] = x;
         a[l] = y;
         std::vector<uint32_t> b;
@@ -492,9 +498,9 @@ void Path::SetupPermSectors(const uint32_t n, const uint32_t sectors_max)
 
     int n_sectors = tmp_poss_perms.size();
     for (std::vector<int>::size_type j=0; j != n_sectors; j++)
-      poss_perms[tmp_poss_perms[j]] = j;
+      poss_perms[s_i][tmp_poss_perms[j]] = j;
 
-    perm_sectors_setup = 1;
+    perm_sectors_setup[s_i] = 1;
   }
 
 }

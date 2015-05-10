@@ -302,7 +302,7 @@ double DavidPairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-double DavidPairAction::CalcULong(const uint32_t b0, const uint32_t b1, const uint32_t level)
+double DavidPairAction::CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
 {
   // Get rho k
   field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
@@ -312,7 +312,7 @@ double DavidPairAction::CalcULong(const uint32_t b0, const uint32_t b1, const ui
   double tot = 0.;
   #pragma omp parallel for collapse(2) reduction(+:tot)
   for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
-    for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
+    for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
       double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
       tot += u_long_k(k_i)*rhok2;
     }
