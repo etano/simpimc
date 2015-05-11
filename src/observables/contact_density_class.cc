@@ -65,10 +65,11 @@ void ContactDensity::Accumulate()
   }
 
   // Add up contact probability
-  // FIXME: Currently only looking at origin
+  // TODO: Currently only looking at origin
   double tot = 0.;
+  size_t n_particle_pairs(particle_pairs.size());
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint32_t pp_i=0; pp_i<particle_pairs.size(); ++pp_i) {
+  for (uint32_t pp_i=0; pp_i<n_particle_pairs; ++pp_i) {
     for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
       // Set r's
       vec<double> RA = path(particle_pairs[pp_i][0].first,particle_pairs[pp_i][0].second,b_i)->r;
@@ -79,8 +80,8 @@ void ContactDensity::Accumulate()
       double mag_ri_RA = mag(ri_RA);
 
       // Compute functions
-      double g = 0.; // FIXME: Currently fixing g to 0
-      double f = 1.; // FIXME: Currently fixing f to 1
+      double g = 0.; // TODO: Currently fixing g to 0
+      double f = 1.; // TODO: Currently fixing f to 1
       vec<double> gradient_f;
       gradient_f.zeros(path.n_d);
       double laplacian_f = 0.;

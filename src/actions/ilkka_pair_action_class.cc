@@ -269,8 +269,9 @@ double IlkkaPairAction::CalcVLong()
 
   // Sum over k std::vectors
   double tot = 0.;
+  size_t n_ks = path.ks.size();
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+  for (uint32_t k_i=0; k_i<n_ks; k_i++) {
     for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
       double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
       tot += rhok2*v_long_k(k_i);
@@ -292,8 +293,9 @@ double IlkkaPairAction::CalcULong(const uint32_t b0, const uint32_t b1, const ui
   // Sum over k std::vectors
   uint32_t skip = 1<<level;
   double tot = 0.;
+  size_t n_ks = path.ks.size();
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+  for (uint32_t k_i=0; k_i<n_ks; k_i++) {
     for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
       double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
       tot += u_long_k(k_i)*rhok2;
@@ -314,8 +316,9 @@ double IlkkaPairAction::CalcdUdBetaLong()
 
   // Sum over k std::vectors
   double tot = 0.;
+  size_t n_ks = path.ks.size();
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+  for (uint32_t k_i=0; k_i<n_ks; k_i++) {
     for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
       double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
       tot += du_long_k(k_i)*rhok2;
