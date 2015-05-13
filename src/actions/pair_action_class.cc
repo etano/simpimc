@@ -98,12 +98,13 @@ double PairAction::DActionDBeta()
     return dUdB_constant;
   else {
     double tot = 0.;
+    uint32_t n_part_a(path.species_list[species_a_i]->n_part), n_part_b(path.species_list[species_b_i]->n_part);
     if (species_a_i == species_b_i) {
       #pragma omp parallel
       {
-        for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
+        for (uint32_t p_i=0; p_i<-1; ++p_i) {
           #pragma omp for collapse(2) reduction(+:tot)
-          for (uint32_t p_j=p_i+1; p_j<path.species_list[species_a_i]->n_part; ++p_j) {
+          for (uint32_t p_j=p_i+1; p_j<n_part_a; ++p_j) {
             for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
               double r_mag, r_p_mag, r_r_p_mag;
               path.DrDrpDrrp(b_i,b_i+1,species_a_i,species_a_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
@@ -115,8 +116,8 @@ double PairAction::DActionDBeta()
       }
     } else {
       #pragma omp parallel for collapse(3) reduction(+:tot)
-      for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
-        for (uint32_t p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
+      for (uint32_t p_i=0; p_i<n_part_a; ++p_i) {
+        for (uint32_t p_j=0; p_j<n_part_b; ++p_j) {
           for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
             double r_mag, r_p_mag, r_r_p_mag;
             path.DrDrpDrrp(b_i,b_i+1,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);

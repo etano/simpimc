@@ -283,15 +283,15 @@ double DavidPairAction::CalcdUdBeta(double r, double r_p, double s, const uint32
 double DavidPairAction::CalcVLong()
 {
   // Get rho k
-  field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
+  field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
 
   // Sum over k std::vectors
   double tot = 0.;
+  size_t n_ks = path.ks.size();
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+  for (uint32_t k_i=0; k_i<n_ks; k_i++) {
     for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-      double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
-      tot += rhok2*v_long_k(k_i);
+      tot += v_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));;
     }
   }
 
@@ -305,16 +305,16 @@ double DavidPairAction::CalcVLong()
 double DavidPairAction::CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
 {
   // Get rho k
-  field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
+  field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
 
   // Sum over k std::vectors
   uint32_t skip = 1<<level;
   double tot = 0.;
+  size_t n_ks = path.ks.size();
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+  for (uint32_t k_i=0; k_i<n_ks; k_i++) {
     for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
-      double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
-      tot += u_long_k(k_i)*rhok2;
+      tot += u_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));
     }
   }
 
@@ -328,14 +328,15 @@ double DavidPairAction::CalcULong(const uint32_t b_0, const uint32_t b_1, const 
 double DavidPairAction::CalcdUdBetaLong()
 {
   // Get rho k
-  field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
+  field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
 
   // Sum over k std::vectors
   double tot = 0.;
-  for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
+  size_t n_ks = path.ks.size();
+  #pragma omp parallel for collapse(2) reduction(+:tot)
+  for (uint32_t k_i=0; k_i<n_ks; k_i++) {
     for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-      double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
-      tot += du_long_k(k_i)*rhok2;
+      tot += du_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));
     }
   }
 
