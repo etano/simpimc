@@ -8,15 +8,14 @@
   </Particles>
   <Actions>
     <Action name="Kinetic" type="Kinetic" n_images="0" species="e" />
-    <Action name="Coulomb" type="IlkkaPairAction" file="e-p.h5" nOrder="-1" n_images="0" species_a="e" species_b="p" max_level="0" use_long_range="0" />
+    <Action name="Coulomb" type="IlkkaPairAction" file="e_p.h5" nOrder="-1" n_images="0" species_a="e" species_b="p" max_level="0" use_long_range="0" />
   </Actions>
   <Moves>
     <Move name="BisectE" type="Bisect" species="e" n_level="5" n_images="0" />
   </Moves>
   <Observables>
-    <Observable name="Energy" type="Energy" skip="1" measure_v="1" />
+    <Observable name="Energy" type="Energy" skip="1" use_virial_estimator="0" measure_v="1" />
     <Observable name="PC_ep" type="PairCorrelation" species_a="e" species_b="p" r_min="0." r_max="5." n_r="100" skip="1" />
-    <Observable name="PC_ep_0" type="ContactDensity" species_a="p" species_b="e" z_a="1" skip="1" />
     <Observable name="PathDump" type="PathDump" skip="1" />
     <Observable name="Time" type="Time" />
   </Observables>
@@ -28,7 +27,6 @@
         </Loop>
         <Observable name="Energy" />
         <Observable name="PC_ep" />
-        <Observable name="PC_ep_0" />
       </Loop>
       <Write />
     </Loop>
