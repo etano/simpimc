@@ -102,7 +102,7 @@ double PairAction::DActionDBeta()
     if (species_a_i == species_b_i) {
       #pragma omp parallel
       {
-        for (uint32_t p_i=0; p_i<-1; ++p_i) {
+        for (uint32_t p_i=0; p_i<n_part_a-1; ++p_i) {
           #pragma omp for collapse(2) reduction(+:tot)
           for (uint32_t p_j=p_i+1; p_j<n_part_a; ++p_j) {
             for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
