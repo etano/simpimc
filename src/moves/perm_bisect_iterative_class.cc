@@ -147,7 +147,6 @@ void PermBisectIterative::UpdatePermTable()
   }
 
   // Construct t table
-  #pragma omp parallel for collapse(2)
   for (uint32_t i=0; i<n_part; i++) {
     for (uint32_t j=i; j<n_part; j++) {
       vec<double> dr_ij(path.Dr(b0(i), b1(j)));
