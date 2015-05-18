@@ -14,10 +14,12 @@ bool PermBisectIterative::Attempt()
 
   // Set up permutation
   Cycle c;
-  n_perm_part = 0; // reset to indicate if bisection is atempted or not
-  if (!SelectCycleIterative(c))
+  n_perm_part = 0; // reset to indicate if bisection is attempted or not
+  if (!SelectCycleIterative(c)) {
+    n_perm_part = c.type+1;
     return 0; // do not attempt bisection since permutation not accepted
-  n_perm_part = c.part.size();
+  }
+  n_perm_part = c.type+1;
 
   // Set up pointers
   std::vector<std::pair<uint32_t,uint32_t>> particles;
@@ -171,20 +173,23 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
   uint32_t p0 = rng.UnifRand(n_part) - 1;  // Pick first particle at random
   uint32_t p = p0;
   std::vector<uint32_t> ps;
+  uint32_t n_perm = 0;
   do {
     // Add particle to ps
     ps.push_back(p);
+    n_perm = ps.size();
 
     // Make sure returning to previous particles is not an option
-    for (uint32_t i=0; i<ps.size(); ++i)
+    for (uint32_t i=0; i<n_perm; ++i)
       t_c(p,ps[i]) = 0.;
 
     // Allow cycle to close
-    if (ps.size() > 0)
+    if (n_perm > 0)
       t_c(p,p0) = t(p,p0);
 
     // Disallow even permutations for fixed-node fermions
-    if (path.species_list[species_i]->fermi && path.species_list[species_i]->fixed_node && !(ps.size()%2))
+    bool is_fixed_node_odd = path.species_list[species_i]->fermi && path.species_list[species_i]->fixed_node && !(n_perm%2);
+    if (is_fixed_node_odd)
       t_c(p,p0) = 0.;
 
     // Calculate row total
@@ -196,8 +201,10 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
     }
 
     // Decide whether or not to continue
-    if ((Q_p_c/Q_p) < rng.UnifRand())
+    if (Q_p_c/Q_p < rng.UnifRand()) {
+      c.type = n_perm - 1;
       return 0;
+    }
 
     // Select next particle with bisective search
     double x = rng.UnifRand();
@@ -214,25 +221,24 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
 
   // Set weight
   c.weight = 1.;
-  uint32_t nPerm = ps.size();
-  for (uint32_t i=0; i<nPerm-1; ++i)
+  for (uint32_t i=0; i<n_perm-1; ++i)
     c.weight *= t(ps[i],ps[i+1])/t(ps[i],ps[i]);
-  c.weight *= t(ps[nPerm-1],ps[0])/t(ps[nPerm-1],ps[nPerm-1]);
+  c.weight *= t(ps[n_perm-1],ps[0])/t(ps[n_perm-1],ps[n_perm-1]);
 
   // Set particles
-  c.part.set_size(nPerm);
-  for (uint32_t i=0; i<nPerm; ++i)
+  c.part.set_size(n_perm);
+  for (uint32_t i=0; i<n_perm; ++i)
     c.part(i) = ps[i];
-  c.type = nPerm;
+  c.type = n_perm-1;
 
   // Set perms
-  c.perm.set_size(nPerm);
-  for (uint32_t i=0; i<nPerm-1; ++i)
+  c.perm.set_size(n_perm);
+  for (uint32_t i=0; i<n_perm-1; ++i)
     c.perm(i) = i+1;
-  c.perm(nPerm-1) = 0;
-  c.i_perm.set_size(nPerm);
-  c.i_perm(0) = nPerm-1;
-  for (uint32_t i=1; i<nPerm; ++i)
+  c.perm(n_perm-1) = 0;
+  c.i_perm.set_size(n_perm);
+  c.i_perm(0) = n_perm-1;
+  for (uint32_t i=1; i<n_perm; ++i)
     c.i_perm(i) = i-1;
 
 

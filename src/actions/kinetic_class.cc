@@ -151,14 +151,13 @@ double Kinetic::VirialEnergy(const double virial_window_size)
   for (uint32_t p_i=0; p_i<n_part; p_i++) {
 
     // First bead
-    uint32_t b_i = 0;
-    std::shared_ptr<Bead> b_0(path(species_i,p_i,b_i));
+    std::shared_ptr<Bead> b_0(path(species_i,p_i,0));
     std::shared_ptr<Bead> b_1(path.GetNextBead(b_0,1));
     std::shared_ptr<Bead> b_2(path.GetNextBead(b_1,1));
 
     vec<double> dr_i_1(path.Dr(b_1,b_0));
     vec<double> dr_i_L(dr_i_1);
-    for (uint32_t skip=b_i+1; skip<b_i+virial_window_size; skip++) {
+    for (uint32_t skip=1; skip<virial_window_size; skip++) {
       dr_i_L += path.Dr(b_2, b_1);
       b_1 = b_2;
       b_2 = path.GetNextBead(b_2,1);
@@ -166,7 +165,7 @@ double Kinetic::VirialEnergy(const double virial_window_size)
     tot -= dot(dr_i_L,dr_i_1)*i_4_lambda_tau/(virial_window_size*path.tau);
 
     // Other beads
-    for (b_i=1; b_i<path.n_bead; b_i++) {
+    for (uint32_t b_i=1; b_i<path.n_bead; b_i++) {
       // Subtract first link and add new last link
       dr_i_L -= dr_i_1;
       dr_i_L += path.Dr(b_2,b_1);
