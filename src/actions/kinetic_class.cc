@@ -76,7 +76,7 @@ void Kinetic::SetupSpline()
         d_image_action_d_tau(i) = d_image_action_d_tau(i)/(1.+image_action(i));
         //std::cout << r << " " << -log1p(std::min(10.,image_action(i))) << " " << image_action(i) << " " << d_image_action_d_r(i) << " " << d_image_action_d_tau(i) << std::endl;
       }
-      image_action(i) = -log1p(std::min(10.,image_action(i)));
+      image_action(i) = -log1p(image_action(i));
     }
     BCtype_d xBC = {NATURAL, NATURAL};
     UBspline_1d_d* image_action_spline = create_UBspline_1d_d(r_grid, xBC, image_action.memptr());

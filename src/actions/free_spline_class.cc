@@ -22,7 +22,7 @@ void FreeSpline::Init(const double L, const uint32_t n_images)
       t_r = r - image*L;
       rho_free_r(i) += exp(r2_i_4_lambda_tau - t_r*t_r*i_4_lambda_tau);
     }
-    rho_free_r(i) = log1p(std::min(10.,rho_free_r(i)));
+    rho_free_r(i) = log1p(rho_free_r(i));
   }
   BCtype_d xBC = {NATURAL, NATURAL};
   rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
