@@ -12,7 +12,7 @@ void Kinetic::SetupSpline()
   // Create other splines
   #pragma omp parallel for
   for (uint32_t spline_i=1; spline_i<n_spline; ++spline_i) {
-    rho_free_splines.emplace_back(path.L, n_images, lambda, path.tau, false);
+    rho_free_splines.emplace_back(path.L, n_images, lambda, path.tau*(spline_i+1), false);
   }
 }
 
@@ -103,7 +103,7 @@ double Kinetic::GetAction(const uint32_t b0, const uint32_t b1, const std::vecto
       while(beadA != beadF) {
         std::shared_ptr<Bead> beadB(path.GetNextBead(beadA,skip));
         vec<double> dr(path.Dr(beadA,beadB));
-        tot -= rho_free_splines[skip].GetLogRhoFree(dr);
+        tot -= rho_free_splines[skip-1].GetLogRhoFree(dr);
         beadA = beadB;
       }
     }

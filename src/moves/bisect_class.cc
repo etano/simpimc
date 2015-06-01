@@ -1,5 +1,16 @@
 #include "bisect_class.h"
 
+// Create a spline for each possible slice_diff
+void Bisect::SetupSpline()
+{
+  // Create splines
+  uint32_t n_spline = floor(log2(path.n_bead));
+  #pragma omp parallel for
+  for (uint32_t spline_i=0; spline_i<n_spline; ++spline_i) {
+    rho_free_splines.emplace_back(path.L, n_images, lambda, 0.5*path.tau*(1<<spline_i), false);
+  }
+}
+
 void Bisect::Init(Input &in)
 {
   n_level = in.GetAttribute<uint32_t>("n_level");
@@ -19,6 +30,9 @@ void Bisect::Init(Input &in)
   // Compute constants
   n_bisect_beads = 1<<n_level; // Number of beads in bisection
   i_4_lambda_tau_n_bisect_beads = i_4_lambda_tau/n_bisect_beads;
+
+  // Setup splines
+  SetupSpline();
 
   // Reset counters
   Reset();
@@ -103,7 +117,6 @@ bool Bisect::Attempt()
   // Perform the bisection (move exactly through kinetic action)
   std::shared_ptr<Bead> beadA, beadB, beadC;
   double prev_action_change = 0.;
-  double prefactor_sample_prob = 0.;
   for (int level_i = n_level-1; level_i >= 0; level_i -= 1) {
     uint32_t skip = 1<<level_i;
     double level_tau = path.tau*skip;
@@ -120,35 +133,18 @@ bool Bisect::Attempt()
 
       // Old sampling
       path.SetMode(OLD_MODE);
-      vec<double> r_bar_old(path.RBar(beadC, beadA));
-      vec<double> delta_old(path.Dr(beadB, r_bar_old));
+      vec<double> delta_old(path.Dr(beadB, path.RBar(beadC, beadA)));
+      old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
       // New sampling
       path.SetMode(NEW_MODE);
-      vec<double> r_bar_new(path.RBar(beadC, beadA));
       vec<double> delta_new(path.n_d);
       rng.NormRand(delta_new, 0., sigma);
       path.PutInBox(delta_new);
-      beadB->r = r_bar_new + delta_new;
+      beadB->r = path.RBar(beadC, beadA) + delta_new;
+      new_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_new);
 
-      // Get sampling probs
-      double gauss_prod_old = 1.;
-      double gauss_prod_new = 1.;
-      for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
-        double gauss_sum_old = 0.;
-        double gauss_sum_new = 0.;
-        for (int image=-n_images; image<=n_images; image++) {
-          double dist_old = delta_old(d_i) + (double)image*path.L;
-          double dist_new = delta_new(d_i) + (double)image*path.L;
-          gauss_sum_old += path.FastExp(-0.5*dist_old*dist_old/sigma2);
-          gauss_sum_new += path.FastExp(-0.5*dist_new*dist_new/sigma2);
-        }
-        gauss_prod_old *= gauss_sum_old;
-        gauss_prod_new *= gauss_sum_new;
-      }
-      old_log_sample_prob += prefactor_sample_prob + log(gauss_prod_old);
-      new_log_sample_prob += prefactor_sample_prob + log(gauss_prod_new);
-
+      // Advance beads
       beadA = beadC;
     }
 

@@ -81,9 +81,9 @@ public:
     for (const auto &r_d : r) {
       double image_action;
       eval_UBspline_1d_d(image_action_spline,r_d,&image_action);
-      tot -= image_action + r_d*r_d*i_4_lambda_tau;
+      tot -= image_action;
     }
-    return tot;
+    return tot - dot(r,r)*i_4_lambda_tau;
   }
 
   /// Returns d(rho_free)/dtau
@@ -99,9 +99,9 @@ public:
     for (const auto &r_d : r) {
       double d_image_action_d_tau;
       eval_UBspline_1d_d(d_image_action_d_tau_spline,r_d,&d_image_action_d_tau);
-      tot -= (r_d*r_d*i_4_lambda_tau_tau) + d_image_action_d_tau;
+      tot -= d_image_action_d_tau;
     }
-    return tot;
+    return tot - dot(r,r)*i_4_lambda_tau_tau;
   }
 
   /// Sets gradient of rho_free at r and returns rho_free
@@ -121,10 +121,11 @@ public:
     for (uint32_t d_i=0; d_i<r.size(); d_i++) {
       double image_action, d_image_action_d_r;
       eval_UBspline_1d_d_vg(image_action_spline,r(d_i),&image_action,&d_image_action_d_r);
-      grad_log_rho_free(d_i) = -(r(d_i)*2.*i_4_lambda_tau + d_image_action_d_r);
-      tot -= image_action + r(d_i)*r(d_i)*i_4_lambda_tau;
+      grad_log_rho_free(d_i) = -d_image_action_d_r;
+      tot -= image_action;
     }
-    return tot;
+    grad_log_rho_free -= r*2.*i_4_lambda_tau;
+    return tot - dot(r,r)*i_4_lambda_tau;
   }
 
 };

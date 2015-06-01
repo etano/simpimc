@@ -2,6 +2,7 @@
 #define SIMPIMC_MOVES_BISECT_CLASS_H_
 
 #include "single_species_move_class.h"
+#include "../actions/free_spline_class.h"
 
 /// Performs a bisection move
 class Bisect : public SingleSpeciesMove
@@ -17,6 +18,7 @@ protected:
   uint32_t bead1; ///< Last time slice in bisection
   uint32_t n_bisect_beads; ///< Number of beads involved in a bisection of level n_level
   uint32_t n_level; ///< Number of levels in the bisection
+  std::vector<FreeSpline> rho_free_splines; ///< Holds the splined action for every time slice
   std::vector<std::shared_ptr<Bead>> affected_beads; ///< Vector of the beads affected by the current bisection
 
   /// Accept the move
@@ -33,6 +35,9 @@ protected:
 
   /// Resets the relevant counters
   virtual void Reset();
+
+  /// Creates splined action for all time slices
+  virtual void SetupSpline();
 public:
   /// Constructor instantiates parent and calls Init
   Bisect(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)

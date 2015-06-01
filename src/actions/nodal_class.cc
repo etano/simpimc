@@ -5,8 +5,6 @@ void Nodal::Init(Input &in)
 {
   // Read in things
   std::cout << "Setting up nodal action for " << species << "..." << std::endl;
-  n_images = in.GetAttribute<int>("n_images",0);
-  out.Write("Actions/"+name+"/n_images", n_images);
   is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
   max_level = in.GetAttribute<uint32_t>("max_level",0);
   out.Write("Actions/"+name+"/max_level", max_level);

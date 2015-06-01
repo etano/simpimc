@@ -23,88 +23,65 @@ bool PermBisectIterative::Attempt()
 
   // Set up pointers
   std::vector<std::pair<uint32_t,uint32_t>> particles;
-  field< std::shared_ptr<Bead>> beadI(n_perm_part), beadFm1(n_perm_part), beadF(n_perm_part);
+  field< std::shared_ptr<Bead>> bead_i(n_perm_part), bead_fm1(n_perm_part), bead_f(n_perm_part);
   for (uint32_t i=0; i<n_perm_part; i++) {
-    beadI(i) = path(species_i,c.part(i),bead0);
-    beadFm1(i) = beadI(i)->NextB(n_bisect_beads-1);
-    beadF(i) = beadFm1(i)->next;
+    bead_i(i) = path(species_i,c.part(i),bead0);
+    bead_fm1(i) = bead_i(i)->NextB(n_bisect_beads-1);
+    bead_f(i) = bead_fm1(i)->next;
     particles.push_back(std::make_pair(species_i,c.part(i)));
   }
   if (roll_over) {
     for (uint32_t i=0; i<n_perm_part; ++i)
-      particles.push_back(std::make_pair(species_i,beadF(i)->p));
+      particles.push_back(std::make_pair(species_i,bead_f(i)->p));
     sort(particles.begin(), particles.end());
     particles.erase(unique(particles.begin(), particles.end()), particles.end());
   }
 
   // Permute particles
-  PermuteBeads(beadFm1, beadF, c);
+  PermuteBeads(bead_fm1, bead_f, c);
 
   // Note affected beads
-  field< std::shared_ptr<Bead>> beadA(n_perm_part);
+  field< std::shared_ptr<Bead>> bead_a(n_perm_part);
   affected_beads.clear();
   for (uint32_t i=0; i<n_perm_part; i++) {
-    for(beadA(i) = beadI(i)->next; beadA(i) != beadF(i); beadA(i) = beadA(i)->next)
-      affected_beads.push_back(beadA(i));
+    for(bead_a(i) = bead_i(i)->next; bead_a(i) != bead_f(i); bead_a(i) = bead_a(i)->next)
+      affected_beads.push_back(bead_a(i));
   }
 
   // Perform the bisection (move exactly through kinetic action)
-  field< std::shared_ptr<Bead>> beadB(n_perm_part), beadC(n_perm_part);
-  double prevActionChange = -log(c.weight);
-  double prefactorOfSampleProb = 0.;
-  vec<double> rBarOld(path.n_d), deltaOld(path.n_d), rBarNew(path.n_d), deltaNew(path.n_d);
-  double gaussProdOld, gaussSumOld, distOld, gaussProdNew, gaussSumNew, distNew;
-  for (int iLevel = n_level-1; iLevel >= 0; iLevel -= 1) {
+  field< std::shared_ptr<Bead>> bead_b(n_perm_part), bead_c(n_perm_part);
+  double prev_action_change = -log(c.weight);
+  for (int level_i = n_level-1; level_i >= 0; level_i -= 1) {
 
     // Level specific quantities
-    uint32_t skip = 1<<iLevel;
-    double levelTau = path.tau*skip;
-    double sigma2 = lambda*levelTau;
-    double sigma = sqrt(sigma2);
+    uint32_t skip = 1<<level_i;
+    double sigma = sqrt(path.tau*skip*lambda);
 
     // Calculate sampling probability
-    double oldLogSampleProb = 0.;
-    double newLogSampleProb = 0.;
+    double old_log_sample_prob = 0.;
+    double new_log_sample_prob = 0.;
     for (uint32_t i=0; i<n_perm_part; i++) {
-      beadA(i) = beadI(i);
-      while(beadA(i) != beadF(i)) {
+      bead_a(i) = bead_i(i);
+      while(bead_a(i) != bead_f(i)) {
         // Old sampling
         path.SetMode(OLD_MODE);
-        beadB(i) = path.GetNextBead(beadA(i),skip);
-        beadC(i) = path.GetNextBead(beadB(i),skip);
-        vec<double> rBarOld(path.RBar(beadC(i), beadA(i)));
-        vec<double> deltaOld(path.Dr(beadB(i), rBarOld));
+        bead_b(i) = path.GetNextBead(bead_a(i),skip);
+        bead_c(i) = path.GetNextBead(bead_b(i),skip);
+        vec<double> delta_old(path.Dr(bead_b(i), path.RBar(bead_c(i),bead_a(i))));
+        old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
         // New sampling
         path.SetMode(NEW_MODE);
-        beadB(i) = path.GetNextBead(beadA(i),skip);
-        beadC(i) = path.GetNextBead(beadB(i),skip);
-        vec<double> rBarNew(path.RBar(beadC(i), beadA(i)));
-        vec<double> deltaNew(path.n_d);
-        rng.NormRand(deltaNew, 0., sigma);
-        path.PutInBox(deltaNew);
-        beadB(i)->r = rBarNew + deltaNew;
-
-        // Get sampling probs
-        gaussProdOld = 1.;
-        gaussProdNew = 1.;
-        for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
-          gaussSumOld = 0.;
-          gaussSumNew = 0.;
-          for (int image=-n_images; image<=n_images; image++) {
-            distOld = deltaOld(d_i) + (double)image*path.L;
-            distNew = deltaNew(d_i) + (double)image*path.L;
-            gaussSumOld += path.FastExp(-0.5*distOld*distOld/sigma2);
-            gaussSumNew += path.FastExp(-0.5*distNew*distNew/sigma2);
-          }
-          gaussProdOld *= gaussSumOld;
-          gaussProdNew *= gaussSumNew;
-        }
-        oldLogSampleProb += prefactorOfSampleProb + log(gaussProdOld);
-        newLogSampleProb += prefactorOfSampleProb + log(gaussProdNew);
+        bead_b(i) = path.GetNextBead(bead_a(i),skip);
+        bead_c(i) = path.GetNextBead(bead_b(i),skip);
+        vec<double> delta_new(path.n_d);
+        rng.NormRand(delta_new, 0., sigma);
+        path.PutInBox(delta_new);
+        bead_b(i)->r = path.RBar(bead_c(i),bead_a(i)) + delta_new;
+        new_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_new);
 
         path.SetMode(NEW_MODE);
-        beadA(i) = path.GetNextBead(beadA(i),2*skip);
+        bead_a(i) = path.GetNextBead(bead_a(i),2*skip);
       }
     }
 
@@ -114,23 +91,23 @@ bool PermBisectIterative::Attempt()
     for (auto& action: action_list) {
       // Old action
       path.SetMode(OLD_MODE);
-      old_action += action->GetAction(bead0, bead1, particles, iLevel);
+      old_action += action->GetAction(bead0, bead1, particles, level_i);
 
       // New action
       path.SetMode(NEW_MODE);
-      new_action += action->GetAction(bead0, bead1, particles, iLevel);
+      new_action += action->GetAction(bead0, bead1, particles, level_i);
     }
 
     // Calculate acceptance ratio
-    double logSampleRatio = -newLogSampleProb + oldLogSampleProb;
+    double log_sample_ratio = -new_log_sample_prob + old_log_sample_prob;
     double current_action_change = new_action - old_action;
-    double log_accept_probablity = logSampleRatio - current_action_change + prevActionChange;
+    double log_accept_probablity = log_sample_ratio - current_action_change + prev_action_change;
 
     // Metropolis step
     if (log_accept_probablity < log(rng.UnifRand()))
       return 0;
 
-    prevActionChange = current_action_change;
+    prev_action_change = current_action_change;
   }
 
   if (include_ref)
@@ -201,7 +178,7 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
     }
 
     // Decide whether or not to continue
-    if (Q_p_c/Q_p < rng.UnifRand() && !is_fixed_node_odd_perm) {
+    if (Q_p_c/Q_p < rng.UnifRand()) {
       c.type = n_perm - 1;
       return 0;
     }
@@ -241,10 +218,6 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
   for (uint32_t i=1; i<n_perm; ++i)
     c.i_perm(i) = i-1;
 
-  // Disallow odd permutations (even number of particles) for fixed-node fermions
-  bool is_fixed_node_odd_perm = path.species_list[species_i]->fermi && path.species_list[species_i]->fixed_node && !(n_perm%2);
-  if (is_fixed_node_odd_perm)
-    return 0;
 
   return 1;
 }
