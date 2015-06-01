@@ -137,8 +137,6 @@ SET (SRCS ${SRCS} src/main.cc
   src/actions/pair_action_class.cc
   src/actions/nodal_class.cc
   src/actions/free_nodal_class.cc
-  src/actions/free_spline_class.cc
-  src/actions/optimized_nodal_class.cc
   src/actions/bare_pair_action_class.cc
   src/actions/david_pair_action_class.cc
   src/actions/ilkka_pair_action_class.cc

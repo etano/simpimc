@@ -2,6 +2,7 @@
 #define SIMPIMC_ACTIONS_KINETIC_CLASS_H_
 
 #include "single_action_class.h"
+#include "free_spline_class.h"
 #include <einspline/multi_bspline.h>
 #include <einspline/bspline.h>
 
@@ -9,40 +10,24 @@
 class Kinetic : public SingleAction
 {
 private:
-  field<UBspline_1d_d*> image_action_splines; ///< Holds the splined action for every time slice
-  UBspline_1d_d* d_image_action_d_tau_spline; ///< Holds the num_sum used in the calculation of the kinetic energy
-  UBspline_1d_d* d_image_action_d_r_spline; ///< Holds the num_sum used in the calculation of the kinetic energy
+  std::vector<FreeSpline*> rho_free_splines; ///< Holds the splined action for every time slice
 
   /// Creates splined action for all time slices
   void SetupSpline();
-
-  /// Returns the free particle propagator
-  double GetRhoFree(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff);
-
-  /// Returns log of the free particle propagator
-  double GetLogRhoFree(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff);
-
-  /// Returns the tau derivative of the free particle propagator
-  double GetDRhoFreeDTau(const double r, const double r2_i_4_lambda_tau);
-
-  /// Returns the tau derivative of the log of the free particle propagator
-  double GetDLogRhoFreeDTau(const double r, const double r2_i_4_lambda_tau);
-
-  /// Returns the spatial derivative of the free particle propagator
-  double GetDRhoFreeDR(const double r, const double r2_i_4_lambda_tau);
-
-  /// Returns the spatial derivative of the log of the free particle propagator
-  double GetDLogRhoFreeDR(const double r, const double r2_i_4_lambda_tau);
 public:
   /// Constructor calls Init
   Kinetic(Path &path, Input &in, IO &out)
     : SingleAction(path,in,out)
   {
-    Init(in);
-  }
+    std::cout << "Setting up kinetic action for " << species << "..." << std::endl;
+    SetupSpline();
 
-  /// Initialize the action
-  virtual void Init(Input &in);
+    vec<double> dr(3);
+    dr(0) = 1.0;
+    dr(1) = 1.0;
+    dr(2) = 1.0;
+    std::cout << rho_free_splines[0]->GetLogRhoFree(dr);
+  }
 
   /// Returns the beta derivative of the action for the whole path
   virtual double DActionDBeta();

@@ -1,128 +1,30 @@
 #include "kinetic_class.h"
 
-void Kinetic::Init(Input &in)
-{
-  // Read in things
-  n_images = in.GetAttribute<int>("n_images");
-  species = in.GetAttribute<std::string>("species");
-  species_list.push_back(species);
-  std::cout << "Setting up kinetic action for " << species << "..." << std::endl;
-  path.GetSpeciesInfo(species,species_i);
-  n_part = path.species_list[species_i]->n_part;
-  i_4_lambda_tau = 1./(4.*path.species_list[species_i]->lambda*path.tau);
-
-  // Write things to file
-  out.Write("Actions/"+name+"/n_images", n_images);
-  out.Write("Actions/"+name+"/species", species);
-
-  // Setup spline
-  SetupSpline();
-}
-
 // Create a spline for each possible slice_diff
-// TODO: Combine with free nodal action splines
 void Kinetic::SetupSpline()
 {
-  // Setup grid
-  Ugrid r_grid;
-  if (path.pbc) {
-    r_grid.start = -path.L/2.;
-    r_grid.end = path.L/2.;
-  } else {
-    r_grid.start = -100.;
-    r_grid.end = 100.;
-    n_images = 0;
-  }
-  r_grid.num = 10000;
-  double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
-
   // Resize spline field
-  uint32_t nSpline = path.n_bead/2 + (path.n_bead%2) + 1;
-  image_action_splines.set_size(nSpline);
+  uint32_t n_spline = path.n_bead/2 + (path.n_bead%2) + 1;
+  rho_free_splines.resize(n_spline);
 
-  // Create splines
+  // Create level 0 splines
+  rho_free_splines.push_back(FreeSpline(path.L, n_images, lambda, path.tau, true));
+
+  // Create other splines
   #pragma omp parallel for
-  for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
-    double t_i_4_lambda_tau = i_4_lambda_tau/(spline_i+1);
-
-    // Make image_action, d_image_action_d_tau, d_image_action_d_r
-    vec<double> image_action, d_image_action_d_tau, d_image_action_d_r;
-    image_action.zeros(r_grid.num);
-    if (spline_i == 0) {
-      d_image_action_d_tau.zeros(r_grid.num);
-      d_image_action_d_r.zeros(r_grid.num);
-    }
-    for (uint32_t i=0; i<r_grid.num; ++i) {
-      double r = r_grid.start + i*dr;
-      double r2 = r*r;
-      double r2_i_4_lambda_tau = r2*t_i_4_lambda_tau;
-      for (uint32_t image=1; image<=n_images; image++) {
-        double r_p(r+image*path.L);
-        double r_p_2_i_4_lambda_tau = r_p*r_p*t_i_4_lambda_tau;
-        double d_r_2_r_p_2_i_4_lambda_tau = r2_i_4_lambda_tau - r_p_2_i_4_lambda_tau;
-        double exp_part_p = path.FastExp(d_r_2_r_p_2_i_4_lambda_tau);
-        double r_m(r-image*path.L);
-        double r_m_2_i_4_lambda_tau = r_m*r_m*t_i_4_lambda_tau;
-        double d_r_2_r_m_2_i_4_lambda_tau = r2_i_4_lambda_tau - r_m_2_i_4_lambda_tau;
-        double exp_part_m = path.FastExp(d_r_2_r_m_2_i_4_lambda_tau);
-        image_action(i) += exp_part_p + exp_part_m;
-        if (spline_i == 0) {
-          d_image_action_d_r(i) += ((r-r_p)*exp_part_p + (r-r_m)*exp_part_m)*2.*t_i_4_lambda_tau;
-          d_image_action_d_tau(i) += (d_r_2_r_p_2_i_4_lambda_tau*exp_part_p + d_r_2_r_m_2_i_4_lambda_tau*exp_part_m)/path.tau;
-        }
-      }
-      if (spline_i == 0) {
-        d_image_action_d_r(i) = -d_image_action_d_r(i)/(1.+image_action(i));
-        d_image_action_d_tau(i) = d_image_action_d_tau(i)/(1.+image_action(i));
-        //std::cout << r << " " << -log1p(std::min(10.,image_action(i))) << " " << image_action(i) << " " << d_image_action_d_r(i) << " " << d_image_action_d_tau(i) << std::endl;
-      }
-      image_action(i) = -log1p(image_action(i));
-    }
-    BCtype_d xBC = {NATURAL, NATURAL};
-    UBspline_1d_d* image_action_spline = create_UBspline_1d_d(r_grid, xBC, image_action.memptr());
-    image_action_splines(spline_i) = image_action_spline;
-    if (spline_i == 0) {
-      d_image_action_d_tau_spline = create_UBspline_1d_d(r_grid, xBC, d_image_action_d_tau.memptr());
-      d_image_action_d_r_spline = create_UBspline_1d_d(r_grid, xBC, d_image_action_d_r.memptr());
-    }
+  for (uint32_t spline_i=1; spline_i<n_spline; ++spline_i) {
+    rho_free_splines.push_back(FreeSpline(path.L, n_images, lambda, path.tau, false));
   }
+  std::cout << "hi" << std::endl;
 
-}
+    vec<double> dr(3);
+    dr(0) = 1.0;
+    dr(1) = 1.0;
+    dr(2) = 1.0;
+    std::cout << rho_free_splines[0].GetLogRhoFree(dr);
 
-double Kinetic::GetRhoFree(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff)
-{
-  return exp(GetLogRhoFree(r,r2_i_4_lambda_tau,slice_diff));
-}
+  std::cout << "hi" << std::endl;
 
-double Kinetic::GetLogRhoFree(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff)
-{
-  double image_action;
-  eval_UBspline_1d_d(image_action_splines(slice_diff-1),r,&image_action);
-  return -(image_action + r2_i_4_lambda_tau/slice_diff);
-};
-
-double Kinetic::GetDRhoFreeDTau(const double r, const double r2_i_4_lambda_tau)
-{
-  return GetDLogRhoFreeDTau(r,r2_i_4_lambda_tau)*GetRhoFree(r,r2_i_4_lambda_tau,1);
-}
-
-double Kinetic::GetDLogRhoFreeDTau(const double r, const double r2_i_4_lambda_tau)
-{
-  double d_image_action_d_tau;
-  eval_UBspline_1d_d(d_image_action_d_tau_spline,r,&d_image_action_d_tau);
-  return -((r2_i_4_lambda_tau/path.tau) + d_image_action_d_tau);
-}
-
-double Kinetic::GetDRhoFreeDR(const double r, const double r2_i_4_lambda_tau)
-{
-  return GetDLogRhoFreeDR(r,r2_i_4_lambda_tau)*GetRhoFree(r,r2_i_4_lambda_tau,1);
-}
-
-double Kinetic::GetDLogRhoFreeDR(const double r, const double r2_i_4_lambda_tau)
-{
-  double d_image_action_d_r;
-  eval_UBspline_1d_d(d_image_action_d_r_spline,r,&d_image_action_d_r);
-  return -(r*.2*i_4_lambda_tau + d_image_action_d_r);
 }
 
 double Kinetic::DActionDBeta()
@@ -132,10 +34,7 @@ double Kinetic::DActionDBeta()
   for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
     for (uint32_t p_i=0; p_i<n_part; p_i++) {
       vec<double> dr(path.Dr(path(species_i,p_i,b_i),path.GetNextBead(path(species_i,p_i,b_i),1)));
-      for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
-        double r2_i_4_lambda_tau = dr(d_i)*dr(d_i)*i_4_lambda_tau;
-        tot += GetDLogRhoFreeDTau(dr(d_i),r2_i_4_lambda_tau);
-      }
+      tot += rho_free_splines[0].GetDLogRhoFreeDTau(dr);
     }
   }
 
@@ -215,8 +114,7 @@ double Kinetic::GetAction(const uint32_t b0, const uint32_t b1, const std::vecto
       while(beadA != beadF) {
         std::shared_ptr<Bead> beadB(path.GetNextBead(beadA,skip));
         vec<double> dr(path.Dr(beadA,beadB));
-        for (uint32_t d_i=0; d_i<path.n_d; d_i++)
-          tot -= GetLogRhoFree(dr(d_i),dr(d_i)*dr(d_i)*i_4_lambda_tau,skip);
+        tot -= rho_free_splines[skip].GetLogRhoFree(dr);
         beadA = beadB;
       }
     }

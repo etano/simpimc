@@ -15,8 +15,10 @@ void Algorithm::Init(Input &in, IO &out, RNG &rng, const uint32_t proc_i)
       actions.push_back(std::make_shared<Trap>(path,action_input,out));
     } else if (type == "FreeNodal") {
       actions.push_back(std::make_shared<FreeNodal>(path,action_input,out));
-    } else if (type == "OptimizedNodal") {
-      actions.push_back(std::make_shared<OptimizedNodal>(path,action_input,out));
+    } else if (type == "OptimizedFreeNodal") {
+      actions.push_back(std::make_shared<OptimizedFreeNodal>(path,action_input,out));
+    } else if (type == "OptimizedSHONodal") {
+      actions.push_back(std::make_shared<OptimizedSHONodal>(path,action_input,out));
     } else if (type == "BarePairAction") {
       actions.push_back(std::make_shared<BarePairAction>(path,action_input,out));
     } else if (type == "DavidPairAction") {

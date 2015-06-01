@@ -1,18 +1,5 @@
 #include "trap_class.h"
 
-void Trap::Init(Input &in)
-{
-  n_images = in.GetAttribute<int>("n_images");
-  omega = in.GetAttribute<double>("omega");
-  species = in.GetAttribute<std::string>("species");
-  species_list.push_back(species);
-  path.GetSpeciesInfo(species,species_i);
-
-  out.Write("/Actions/"+name+"/n_images", n_images);
-  out.Write("/Actions/"+name+"/omega", omega);
-  out.Write("/Actions/"+name+"/species_i", species_i);
-}
-
 double Trap::DActionDBeta()
 {
   double tot = 0.;
@@ -23,7 +10,7 @@ double Trap::DActionDBeta()
     }
   }
 
-  return 0.5*omega*omega*(1. + 3.*path.tau*path.tau*omega*omega/12.)*tot;
+  return cofactor_b*tot;
 }
 
 double Trap::GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
@@ -42,7 +29,6 @@ double Trap::GetAction(const uint32_t b0, const uint32_t b1, const std::vector<s
     return 0.;
 
   uint32_t skip = 1<<level;
-  double level_tau = skip*path.tau;
   double tot = 0.;
   for (uint32_t p=0; p<particles.size(); ++p) {
     uint32_t s_i = particles[p].first;
@@ -53,7 +39,7 @@ double Trap::GetAction(const uint32_t b0, const uint32_t b1, const std::vector<s
     }
   }
 
-  return 0.5*level_tau*omega*omega*(1. + path.tau*path.tau*omega*omega/12.)*tot;
+  return cofactor_a*skip*tot;
 }
 
 void Trap::Write()

@@ -187,9 +187,9 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
     if (n_perm > 0)
       t_c(p,p0) = t(p,p0);
 
-    // Disallow even permutations for fixed-node fermions
-    bool is_fixed_node_odd = path.species_list[species_i]->fermi && path.species_list[species_i]->fixed_node && !(n_perm%2);
-    if (is_fixed_node_odd)
+    // Disallow odd permutations (even number of particles) for fixed-node fermions
+    bool is_fixed_node_odd_perm = path.species_list[species_i]->fermi && path.species_list[species_i]->fixed_node && !(n_perm%2);
+    if (is_fixed_node_odd_perm)
       t_c(p,p0) = 0.;
 
     // Calculate row total
@@ -201,7 +201,7 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
     }
 
     // Decide whether or not to continue
-    if (Q_p_c/Q_p < rng.UnifRand()) {
+    if (Q_p_c/Q_p < rng.UnifRand() && !is_fixed_node_odd_perm) {
       c.type = n_perm - 1;
       return 0;
     }
@@ -209,7 +209,7 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
     // Select next particle with bisective search
     double x = rng.UnifRand();
     double t_Q = 0.;
-    for (uint32_t i=0; i<n_part; ++i) { // fixme: not doing bisection
+    for (uint32_t i=0; i<n_part; ++i) { // TODO: not doing bisection
       t_Q += t_c(p,i)/Q_p_c;
       if (t_Q > x) {
         p = i;
@@ -241,6 +241,10 @@ bool PermBisectIterative::SelectCycleIterative(Cycle& c)
   for (uint32_t i=1; i<n_perm; ++i)
     c.i_perm(i) = i-1;
 
+  // Disallow odd permutations (even number of particles) for fixed-node fermions
+  bool is_fixed_node_odd_perm = path.species_list[species_i]->fermi && path.species_list[species_i]->fixed_node && !(n_perm%2);
+  if (is_fixed_node_odd_perm)
+    return 0;
 
   return 1;
 }

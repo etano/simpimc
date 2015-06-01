@@ -28,10 +28,10 @@ public:
     type = in.GetAttribute<std::string>("type");
     out.CreateGroup("Actions/"+name);
     out.Write("Actions/"+name+"/type",type);
-  }
 
-  /// Initialize the action
-  virtual void Init(Input &in) {};
+    n_images = in.GetAttribute<int>("n_images",0);
+    out.Write("Actions/"+name+"/n_images",n_images);
+  }
 
   /// Returns the beta derivative of the action for the whole path
   virtual double DActionDBeta() { return 0.; };

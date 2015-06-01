@@ -13,7 +13,7 @@ protected:
 public:
   // Constructor
   Species(Input &in, IO &out, int t_s_i, int t_n_d, int t_n_bead)
-    : s_i(t_s_i), n_d(t_n_d), n_bead(t_n_bead)
+    : s_i(t_s_i), n_d(t_n_d), n_bead(t_n_bead), fixed_node(false)
   {
     Init(in, out);
   };
