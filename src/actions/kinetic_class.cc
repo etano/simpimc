@@ -3,17 +3,11 @@
 // Create a spline for each possible slice_diff
 void Kinetic::SetupSpline()
 {
-  // Resize spline field
+  // Create splines
   uint32_t n_spline = path.n_bead/2 + (path.n_bead%2) + 1;
-
-  // Create level 0 splines
   rho_free_splines.emplace_back(path.L, n_images, lambda, path.tau, true);
-
-  // Create other splines
-  #pragma omp parallel for
-  for (uint32_t spline_i=1; spline_i<n_spline; ++spline_i) {
+  for (uint32_t spline_i=1; spline_i<n_spline; ++spline_i)
     rho_free_splines.emplace_back(path.L, n_images, lambda, path.tau*(spline_i+1), false);
-  }
 }
 
 double Kinetic::DActionDBeta()

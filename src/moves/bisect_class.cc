@@ -5,10 +5,8 @@ void Bisect::SetupSpline()
 {
   // Create splines
   uint32_t n_spline = floor(log2(path.n_bead));
-  #pragma omp parallel for
-  for (uint32_t spline_i=0; spline_i<n_spline; ++spline_i) {
+  for (uint32_t spline_i=0; spline_i<n_spline; ++spline_i)
     rho_free_splines.emplace_back(path.L, n_images, lambda, 0.5*path.tau*(1<<spline_i), false);
-  }
 }
 
 void Bisect::Init(Input &in)
