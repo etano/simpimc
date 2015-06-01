@@ -62,7 +62,7 @@ protected:
   virtual double CalcU(double r, double r_p, double s, const uint32_t level) = 0;
 
   /// Calculate the long ranged part of the action
-  virtual double CalcULong(const uint32_t b0, const uint32_t b1, const uint32_t level) = 0;
+  virtual double CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level) = 0;
 
   /// Calculate the beta derivative of the action
   virtual double CalcdUdBeta(double r, double r_p, double s, const uint32_t level) = 0;
@@ -70,11 +70,17 @@ protected:
   /// Calculate the long ranged part of the beta derivative of the action
   virtual double CalcdUdBetaLong() = 0;
 
-  /// Calculate the gradient of the action
-  vec<double> CalcGradientU(const uint32_t b_i, const uint32_t jB, const uint32_t p_i, const uint32_t p_j, const uint32_t level);
+  /// Calculate the gradient of the action for the particle pair p_i, p_j in the direction of particle p_i
+  virtual vec<double> CalcGradientU(const uint32_t b_i, const uint32_t b_j, const uint32_t p_i, const uint32_t p_j, const uint32_t level);
+
+  /// Calculate the gradient of the long ranged part of the action for all particles
+  virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level) { vec<double> tot; tot.zeros(path.n_d); return tot; };
+
+  /// Calculate the gradient of the long ranged part of the action in the direction of p_i
+  virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t p_i, const uint32_t level) { vec<double> tot; tot.zeros(path.n_d); return tot; };
 
   /// Calculate the Laplacian of the action
-  double CalcLaplacianU(const uint32_t b_i, const uint32_t jB, const uint32_t p_i, const uint32_t p_j, const uint32_t level);
+  double CalcLaplacianU(const uint32_t b_i, const uint32_t b_j, const uint32_t p_i, const uint32_t p_j, const uint32_t level);
 
 public:
   /// Constructor only instantiates the parent Action class
@@ -88,14 +94,14 @@ public:
   /// Returns the beta derivative of the action for the whole path
   virtual double DActionDBeta();
 
-  /// Returns the value of the action between time slices b0 and b1 for a vector of particles
-  virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
+  /// Returns the value of the action between time slices b_0 and b_1 for a vector of particles
+  virtual double GetAction(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
 
-  /// Returns the spatial gradient of the action between time slices b0 and b1 for a vector of particles
-  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
+  /// Returns the spatial gradient of the action between time slices b_0 and b_1 for a vector of particles
+  virtual vec<double> GetActionGradient(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
 
-  /// Returns the spatial laplacian of the action between time slices b0 and b1 for a vector of particles
-  virtual double GetActionLaplacian(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
+  /// Returns the spatial laplacian of the action between time slices b_0 and b_1 for a vector of particles
+  virtual double GetActionLaplacian(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);
 
   /// Returns the potential of the action for the whole path
   virtual double Potential();

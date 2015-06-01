@@ -7,14 +7,26 @@
 class Energy : public Observable
 {
 private:
-  bool measure_potential; ///< Whether or not to measure the potential
-  bool measure_per_sector; ///< Whether or not to measure per permutation section
   bool first_sector; ///< Whether or not this is the first sector being written to file
-  uint32_t species_i; ///< Species index for per permutation sector measuring
-  std::vector<std::pair<uint32_t,double>> sector_energies; ///< Vector of (sector,energy_per_sector) pairs
+  bool measure_per_sector; ///< Whether or not to measure per permutation section
+  bool measure_potential; ///< Whether or not to measure the potential
+  bool use_thermal_estimator; ///< Whether or not to use the thermal estimator of the energy
+  bool use_virial_estimator; ///< Whether or not to use the virial estimator of the energy
+  uint32_t b_i_last; ///< Which bead to average over for virial estimator
+  uint32_t virial_window_size; ///< Size of averaging window for virial estimator
+  std::vector<std::vector<std::pair<uint32_t,double>>> sector_energies; ///< Vector of vectors of (sector,energy_per_sector) pairs for each species
   std::vector<std::shared_ptr<Action>> &action_list; ///< Reference to vector of all actions
   vec<double> energies; ///< Vector of energies for each action
   vec<double> potentials; ///< Vector of potentials for each action
+
+  /// Thermal estimator of the energy
+  double ThermalEstimator();
+
+  /// Virial estimator of the energy
+  double VirialEstimator();
+
+  /// Potential estimator
+  double PotentialEstimator();
 
   /// Initiate the observable
   virtual void Init(Input &in);

@@ -1,26 +1,22 @@
 #include "vary_action_class.h"
 
-void VaryAction::Init(Input &in)
-{
-  std::string action_name = in.GetAttribute<std::string>("action_name");
-
-  // Select action from list
-  for (auto& t_action : action_list) {
-    if (t_action->name == action_name)
-      action = t_action;
-  }
-
-  // Set species
-  std::string species = action->species_list[0]; // FIXME: Not very general
-  path.GetSpeciesInfo(species,species_i);
-}
-
 // Accept current move
 void VaryAction::Accept()
 {
-  // Call accept for each action
-  action->SetParamSet(param_set_new);
-  action->Accept();
+  if (switch_param_sets) {
+    // Call accept for each action
+    action->SetParamSet(param_set_new);
+    action->Accept();
+  } else {
+    // Call accept for each action
+    action->SetParamSet(param_set_old);
+    action->Reject();
+  }
+
+  // Iterate counters
+  n_param_accept(param_set_old,param_set_new) += 1;
+  n_param_attempt(param_set_old,param_set_new) += 1;
+
 }
 
 // Reject current move
@@ -29,6 +25,9 @@ void VaryAction::Reject()
   // Call reject for each action
   action->SetParamSet(param_set_old);
   action->Reject();
+
+  // Iterate counters
+  n_param_attempt(param_set_old,param_set_new) += 1;
 
 }
 
@@ -67,4 +66,40 @@ bool VaryAction::Attempt()
     return 0;
 
   return 1;
+}
+
+void VaryAction::Write()
+{
+  mat<double> param_accept_ratio(n_param_sets,n_param_sets);
+  for (uint32_t i=0; i<n_param_sets; i++) {
+    for (uint32_t j=0; j<n_param_sets; j++) {
+      double ratio = n_param_accept(i,j)/n_param_attempt(i,j);
+      if (!std::isnormal(ratio))
+        ratio = 0.;
+      param_accept_ratio(i,j) = ratio;
+    }
+  }
+
+  // Write
+  if (first_time) {
+    out.CreateExtendableDataSet("/Moves/"+name+"/ParamSets/", "n_param_accept", n_param_accept);
+    out.CreateExtendableDataSet("/Moves/"+name+"/ParamSets/", "n_param_attempt", n_param_attempt);
+    out.CreateExtendableDataSet("/Moves/"+name+"/ParamSets/", "y", param_accept_ratio);
+  } else {
+    out.AppendDataSet("/Moves/"+name+"/ParamSets/", "n_param_attempt", n_param_attempt);
+    out.AppendDataSet("/Moves/"+name+"/ParamSets/", "n_param_accept", n_param_accept);
+    out.AppendDataSet("/Moves/"+name+"/ParamSets/", "y", param_accept_ratio);
+  }
+
+  // Reset
+  Reset();
+
+  Move::Write();
+}
+
+void VaryAction::Reset()
+{
+  // Reset counters
+  n_param_accept.zeros();
+  n_param_attempt.zeros();
 }

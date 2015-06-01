@@ -8,16 +8,16 @@
 class FreeNodal : public Nodal
 {
 private:
-  std::vector<FreeSpline> rho_free_r_splines; ///< Holds the splined action for every time slice
+  std::vector<FreeSpline> rho_free_splines; ///< Holds the splined action for every time slice
 
   /// Creates splined action for all time slices
   virtual void SetupSpline();
 
   /// Returns the value of g_ij
-  virtual double GetGij(const vec<double> &r, const uint32_t slice_diff);
+  virtual double GetGij(const std::shared_ptr<Bead> &b_i, const std::shared_ptr<Bead> &b_j, const uint32_t slice_diff);
 
   /// Returns the spatial derivative of g_ij
-  virtual double GetGijDGijDr(const vec<double> &r, const uint32_t slice_diff, vec<double> &dgij_dr);
+  virtual double GetGijDGijDr(const std::shared_ptr<Bead> &b_i, const std::shared_ptr<Bead> &b_j, const uint32_t slice_diff, vec<double> &dgij_dr);
 public:
   // Constructor calls Init
   FreeNodal(Path &path, Input &in, IO &out)

@@ -134,7 +134,7 @@ double BarePairAction::CalcVLong()
 }
 
 /// Calculate the ULong value
-double BarePairAction::CalcULong(const uint32_t b0, const uint32_t b1, const uint32_t level)
+double BarePairAction::CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
 {
   // Get rho k
   field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
@@ -144,7 +144,7 @@ double BarePairAction::CalcULong(const uint32_t b0, const uint32_t b1, const uin
   double tot = 0.;
   for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
     if (path.mag_ks[k_i] < k_cut) {
-      for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
+      for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
         double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
         tot += v_long_k(k_i)*rhok2;
       }

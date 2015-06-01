@@ -4,20 +4,10 @@
 void Nodal::Init(Input &in)
 {
   // Read in things
-  n_images = in.GetAttribute<int>("n_images",0);
-  out.Write("Actions/"+name+"/n_images", n_images);
-  is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
-
-  // Set species variables
-  species = in.GetAttribute<std::string>("species");
-  out.Write("Actions/"+name+"/species", species);
-  species_list.push_back(species);
   std::cout << "Setting up nodal action for " << species << "..." << std::endl;
+  is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
   max_level = in.GetAttribute<uint32_t>("max_level",0);
   out.Write("Actions/"+name+"/max_level", max_level);
-  path.GetSpeciesInfo(species,species_i);
-  n_part = path.species_list[species_i]->n_part;
-  i_4_lambda_tau = 1./(4.*path.species_list[species_i]->lambda*path.tau);
   path.species_list[species_i]->fixed_node = true;
 
   // Nodal distance things
@@ -249,7 +239,7 @@ void Nodal::SetRhoF(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref
   mat<double> g_ij(n_part,n_part);
   for (uint32_t p_i=0; p_i<n_part; ++p_i) {
     for (uint32_t p_j=0; p_j<n_part; ++p_j) {
-      g_ij(p_i,p_j) = GetGij(path.Dr(ref_b[p_i], other_b_i[p_j]), min_slice_diff);
+      g_ij(p_i,p_j) = GetGij(ref_b[p_i], other_b_i[p_j], min_slice_diff);
     }
   }
 
@@ -577,7 +567,7 @@ void Nodal::SetRhoFGradRhoF(const int b_i, const std::vector<std::shared_ptr<Bea
   for (uint32_t p_i=0; p_i<n_part; ++p_i) {
     for (uint32_t p_j=0; p_j<n_part; ++p_j) {
       dg_ij_dr(p_i,p_j).zeros(path.n_d);
-      g_ij(p_i,p_j) = GetGijDGijDr(path.Dr(ref_b[p_i], other_b_i[p_j]), min_slice_diff, dg_ij_dr(p_i,p_j));
+      g_ij(p_i,p_j) = GetGijDGijDr(ref_b[p_i], other_b_i[p_j], min_slice_diff, dg_ij_dr(p_i,p_j));
     }
   }
 

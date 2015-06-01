@@ -1,132 +1,85 @@
 #include "kinetic_class.h"
 
-void Kinetic::Init(Input &in)
-{
-  // Read in things
-  n_images = in.GetAttribute<int>("n_images");
-  species = in.GetAttribute<std::string>("species");
-  species_list.push_back(species);
-  std::cout << "Setting up kinetic action for " << species << "..." << std::endl;
-  path.GetSpeciesInfo(species,species_i);
-  n_part = path.species_list[species_i]->n_part;
-  i_4_lambda_tau = 1./(4.*path.species_list[species_i]->lambda*path.tau);
-
-  // Write things to file
-  out.Write("Actions/"+name+"/n_images", n_images);
-  out.Write("Actions/"+name+"/species", species);
-
-  // Setup spline
-  SetupSpline();
-}
-
 // Create a spline for each possible slice_diff
-// TODO: Combine with free nodal action splines
 void Kinetic::SetupSpline()
 {
-  // Setup grid
-  Ugrid r_grid;
-  if (path.pbc) {
-    r_grid.start = -path.L/2.;
-    r_grid.end = path.L/2.;
-  } else {
-    r_grid.start = -100.;
-    r_grid.end = 100.;
-    n_images = 0;
-  }
-  r_grid.num = 10000;
-  double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
-
-  // Resize spline field
-  uint32_t nSpline = path.n_bead/2 + (path.n_bead%2) + 1;
-  rho_free_r_splines.set_size(nSpline);
-
   // Create splines
-  #pragma omp parallel for
-  for (uint32_t spline_i=0; spline_i<nSpline; ++spline_i) {
-    double t_i_4_lambda_tau = i_4_lambda_tau/(spline_i+1);
-
-    // Make rho_free
-    vec<double> rho_free_r, num_sum_r;
-    rho_free_r.zeros(r_grid.num);
-    if (spline_i == 0)
-      num_sum_r.zeros(r_grid.num);
-    for (uint32_t i=0; i<r_grid.num; ++i) {
-      double r = r_grid.start + i*dr;
-      double r2 = r*r;
-      double r2_i_4_lambda_tau = r2*t_i_4_lambda_tau;
-      for (uint32_t image=1; image<=n_images; image++) {
-          double t_r_p(r+image*path.L);
-          double exp_part_p = path.FastExp(r2_i_4_lambda_tau - t_r_p*t_r_p*t_i_4_lambda_tau);
-          double t_r_m(r-image*path.L);
-          double exp_part_m = path.FastExp(r2_i_4_lambda_tau - t_r_m*t_r_m*t_i_4_lambda_tau);
-          rho_free_r(i) += exp_part_p + exp_part_m;
-          if (spline_i == 0 && r2 != 0.)
-            num_sum_r(i) += (t_r_p*t_r_p*exp_part_p + t_r_m*t_r_m*exp_part_m)/r2;
-      }
-      rho_free_r(i) = log1p(std::min(10.,rho_free_r(i)));
-      if (spline_i == 0)
-        num_sum_r(i) = log1p(std::min(10.,num_sum_r(i)));
-    }
-    BCtype_d xBC = {NATURAL, NATURAL};
-    UBspline_1d_d* rho_free_r_spline = create_UBspline_1d_d(r_grid, xBC, rho_free_r.memptr());
-    rho_free_r_splines(spline_i) = rho_free_r_spline;
-    if (spline_i == 0)
-      num_sum_r_spline = create_UBspline_1d_d(r_grid, xBC, num_sum_r.memptr());
-  }
-
-}
-
-double Kinetic::GetGaussSum(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff)
-{
-  double gauss_sum;
-  eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
-  return exp(gauss_sum - r2_i_4_lambda_tau/slice_diff);
-}
-
-double Kinetic::GetLogGaussSum(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff)
-{
-  double gauss_sum;
-  eval_UBspline_1d_d(rho_free_r_splines(slice_diff-1),r,&gauss_sum);
-  return gauss_sum - r2_i_4_lambda_tau/slice_diff;
-};
-
-double Kinetic::GetNumSum(const double r, const double r2_i_4_lambda_tau)
-{
-  double num_sum;
-  eval_UBspline_1d_d(num_sum_r_spline,r,&num_sum);
-  return -(r2_i_4_lambda_tau/path.tau)*exp(num_sum - r2_i_4_lambda_tau);
+  uint32_t n_spline = path.n_bead/2 + (path.n_bead%2) + 1;
+  rho_free_splines.emplace_back(path.L, n_images, lambda, path.tau, true);
+  for (uint32_t spline_i=1; spline_i<n_spline; ++spline_i)
+    rho_free_splines.emplace_back(path.L, n_images, lambda, path.tau*(spline_i+1), false);
 }
 
 double Kinetic::DActionDBeta()
 {
   double tot = n_part*path.n_bead*path.n_d/(2.*path.tau); // Constant term
   #pragma omp parallel for collapse(2) reduction(+:tot)
-  for (uint32_t p_i=0; p_i<n_part; p_i++) {
-    for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-      vec<double> num_sum(path.n_d), gauss_sum(path.n_d);
+  for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
+    for (uint32_t p_i=0; p_i<n_part; p_i++) {
       vec<double> dr(path.Dr(path(species_i,p_i,b_i),path.GetNextBead(path(species_i,p_i,b_i),1)));
-      double gauss_prod = 1.;
-      for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
-        double r2_i_4_lambda_tau = dr(d_i)*dr(d_i)*i_4_lambda_tau;
-        num_sum(d_i) = GetNumSum(dr(d_i),r2_i_4_lambda_tau);
-        gauss_sum(d_i) = GetGaussSum(dr(d_i),r2_i_4_lambda_tau,1);
-        gauss_prod *= gauss_sum(d_i);
-      }
-      double scalar_num_sum = 0.;
-      for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
-        double num_prod = 1.;
-        for (uint32_t d_j=0; d_j<path.n_d; d_j++) {
-          if (d_i != d_j)
-            num_prod *= gauss_sum(d_j);
-          else
-            num_prod *= num_sum(d_j);
-        }
-        scalar_num_sum += num_prod;
-      }
-      tot += scalar_num_sum/gauss_prod;
+      tot += rho_free_splines[0].GetDLogRhoFreeDTau(dr);
     }
   }
 
+  return tot;
+}
+
+double Kinetic::VirialEnergy(const double virial_window_size)
+{
+  // Constant term
+  double tot = n_part*path.n_bead*path.n_d/(2.*virial_window_size*path.tau);
+
+  // Permutation/winding term
+  for (uint32_t p_i=0; p_i<n_part; p_i++) {
+
+    // First bead
+    std::shared_ptr<Bead> b_0(path(species_i,p_i,0));
+    std::shared_ptr<Bead> b_1(path.GetNextBead(b_0,1));
+    std::shared_ptr<Bead> b_2(path.GetNextBead(b_1,1));
+
+    vec<double> dr_i_1(path.Dr(b_1,b_0));
+    vec<double> dr_i_L(dr_i_1);
+    for (uint32_t skip=1; skip<virial_window_size; skip++) {
+      dr_i_L += path.Dr(b_2, b_1);
+      b_1 = b_2;
+      b_2 = path.GetNextBead(b_2,1);
+    }
+    tot -= dot(dr_i_L,dr_i_1)*i_4_lambda_tau/(virial_window_size*path.tau);
+
+    // Other beads
+    for (uint32_t b_i=1; b_i<path.n_bead; b_i++) {
+      // Subtract first link and add new last link
+      dr_i_L -= dr_i_1;
+      dr_i_L += path.Dr(b_2,b_1);
+
+      // Move beads one forward
+      b_0 = path.GetNextBead(b_0,1);
+      dr_i_1 = path.Dr(path.GetNextBead(b_0,1),b_0);
+      b_1 = b_2;
+      b_2 = path.GetNextBead(b_2,1);
+
+      // Add to total
+      tot -= dot(dr_i_L,dr_i_1)*i_4_lambda_tau/(virial_window_size*path.tau);
+    }
+
+      //// Image tau derivative
+      //vec<double> dr_i(path.Dr(b_0, path.GetPrevBead(b_0,1)));
+      //for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
+      //  double r2_i_4_lambda_tau = dr_i(d_i)*dr_i(d_i)*i_4_lambda_tau;
+      //  tot -= GetDLogRhoFreeDTau(dr_i(d_i),r2_i_4_lambda_tau) + r2_i_4_lambda_tau/path.tau;
+      //}
+
+      //// Image r derivative
+      //vec<double> image_action_gradient(path.n_d);
+      //for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
+      //  double r2_i_4_lambda_tau = dr_i(d_i)*dr_i(d_i)*i_4_lambda_tau;
+      //  image_action_gradient(d_i) = GetDLogRhoFreeDR(dr_i(d_i),r2_i_4_lambda_tau) + dr_i(d_i)*.2*i_4_lambda_tau;
+      //  r2_i_4_lambda_tau = dr_i_1(d_i)*dr_i_1(d_i)*i_4_lambda_tau;
+      //  image_action_gradient(d_i) += GetDLogRhoFreeDR(dr_i_1(d_i),r2_i_4_lambda_tau) + dr_i_1(d_i)*.2*i_4_lambda_tau;
+      //}
+      //tot -= dot(image_action_gradient,path.Dr(b_0,path(species_i,p_i,0)))/(2.*path.tau);
+
+  }
   return tot;
 }
 
@@ -144,12 +97,7 @@ double Kinetic::GetAction(const uint32_t b0, const uint32_t b1, const std::vecto
       while(beadA != beadF) {
         std::shared_ptr<Bead> beadB(path.GetNextBead(beadA,skip));
         vec<double> dr(path.Dr(beadA,beadB));
-        double gauss_prod_exp = 0;
-        for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
-          double r2_i_4_lambda_tau = dr(d_i)*dr(d_i)*i_4_lambda_tau;
-          gauss_prod_exp += GetLogGaussSum(dr(d_i),r2_i_4_lambda_tau,skip);
-        }
-        tot -= gauss_prod_exp;
+        tot -= rho_free_splines[skip-1].GetLogRhoFree(dr);
         beadA = beadB;
       }
     }
@@ -169,7 +117,7 @@ vec<double> Kinetic::GetActionGradient(const uint32_t b0, const uint32_t b1, con
     uint32_t s_i = p.first;
     uint32_t p_i = p.second;
     if (s_i == species_i) {
-      double gauss_prod, gauss_sum, dist;
+      double gauss_prod, rho_free, dist;
       beadA = path(species_i,p_i,b0);
       beadF = path.GetNextBead(beadA,b1-b0);
       while(beadA != beadF) {
@@ -198,7 +146,7 @@ double Kinetic::GetActionLaplacian(const uint32_t b0, const uint32_t b1, const s
     uint32_t s_i = p.first;
     uint32_t p_i = p.second;
     if (s_i == species_i) {
-      double gauss_prod, gauss_sum, dist;
+      double gauss_prod, rho_free, dist;
       beadA = path(species_i,p_i,b0);
       beadF = path.GetNextBead(beadA,b1-b0);
       while(beadA != beadF) {

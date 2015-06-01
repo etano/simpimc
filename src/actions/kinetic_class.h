@@ -2,6 +2,7 @@
 #define SIMPIMC_ACTIONS_KINETIC_CLASS_H_
 
 #include "single_action_class.h"
+#include "free_spline_class.h"
 #include <einspline/multi_bspline.h>
 #include <einspline/bspline.h>
 
@@ -9,33 +10,24 @@
 class Kinetic : public SingleAction
 {
 private:
-  field<UBspline_1d_d*> rho_free_r_splines; ///< Holds the splined action for every time slice
-  UBspline_1d_d* num_sum_r_spline; ///< Holds the num_sum used in the calculation of the kinetic energy
+  std::vector<FreeSpline> rho_free_splines; ///< Holds the splined action for every time slice
 
   /// Creates splined action for all time slices
   void SetupSpline();
-
-  /// Returns gaussian sum over images
-  double GetGaussSum(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff);
-
-  /// Returns log of gaussian sum over images
-  double GetLogGaussSum(const double r, const double r2_i_4_lambda_tau, const uint32_t slice_diff);
-
-  /// Returns the num_sum used in the calculation of the kinetic energy
-  double GetNumSum(const double r, const double r2_i_4_lambda_tau);
 public:
   /// Constructor calls Init
   Kinetic(Path &path, Input &in, IO &out)
     : SingleAction(path,in,out)
   {
-    Init(in);
+    std::cout << "Setting up kinetic action for " << species << "..." << std::endl;
+    SetupSpline();
   }
-
-  /// Initialize the action
-  virtual void Init(Input &in);
 
   /// Returns the beta derivative of the action for the whole path
   virtual double DActionDBeta();
+
+  /// Returns the virial contribution of the action
+  virtual double VirialEnergy(const double virial_window_size);
 
   /// Returns the value of the action between time slices b0 and b1 for a vector of particles
   virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level);

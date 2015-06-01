@@ -8,16 +8,19 @@ class Trap : public SingleAction
 {
 private:
   double omega; ///< Harmonic frequency of the trap
+  double cofactor_a; ///< Constant from 4th order expansion of the action
+  double cofactor_b; ///< Constant from 4th order expansion of the beta derivative of the action
 public:
   /// Constructor calls Init
   Trap(Path &path, Input &in, IO &out)
     : SingleAction(path,in,out)
   {
-    Init(in);
-  }
+    omega = in.GetAttribute<double>("omega");
+    out.Write("/Actions/"+name+"/omega", omega);
 
-  /// Initialize the action
-  virtual void Init(Input &in);
+    cofactor_a = 0.5*path.tau*omega*omega*(1. + path.tau*path.tau*omega*omega/12.);
+    cofactor_b = 0.5*omega*omega*(1. + 3.*path.tau*path.tau*omega*omega/12.);
+  }
 
   /// Returns the beta derivative of the action for the whole path
   virtual double DActionDBeta();

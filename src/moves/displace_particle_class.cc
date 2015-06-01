@@ -45,9 +45,12 @@ bool DisplaceParticle::Attempt()
   // Set which beads are affected by the move
   // and move them
   affected_beads.clear();
-  for(uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-    affected_beads.push_back(path(species_i,p_i,b_i));
-    path.GetR(path(species_i,p_i,b_i)) += dr;
+  std::shared_ptr<Bead> beadA(path(species_i,p_i,0));
+  std::shared_ptr<Bead> beadF(path.GetNextBead(beadA,path.n_bead));
+  while(beadA != beadF) {
+    affected_beads.push_back(beadA);
+    path.GetR(beadA) += dr;
+    std::shared_ptr<Bead> beadA(path.GetNextBead(beadA,1));
   }
 
   // Calculate action change

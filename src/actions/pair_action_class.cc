@@ -58,10 +58,10 @@ double PairAction::Potential()
           for (uint32_t b_i=0; b_i<path.n_bead; b_i+=1) {
             uint32_t b_j = b_i + 1;
             vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_a_i,p_j,b_i)));
-            double rMag = mag(dr);
+            double r_mag = mag(dr);
             dr = path.Dr(path(species_a_i,p_i,b_j),path(species_a_i,p_j,b_j));
             double r_p_mag = mag(dr);
-            tot += CalcV(rMag,r_p_mag,0);
+            tot += CalcV(r_mag,r_p_mag,0);
           }
         }
       }
@@ -71,10 +71,10 @@ double PairAction::Potential()
           for (uint32_t b_i=0; b_i<path.n_bead; b_i+=1) {
             uint32_t b_j = b_i + 1;
             vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_b_i,p_j,b_i)));
-            double rMag = mag(dr);
+            double r_mag = mag(dr);
             dr = path.Dr(path(species_a_i,p_i,b_j),path(species_b_i,p_j,b_j));
             double r_p_mag = mag(dr);
-            tot += CalcV(rMag,r_p_mag,0);
+            tot += CalcV(r_mag,r_p_mag,0);
           }
         }
       }
@@ -98,16 +98,17 @@ double PairAction::DActionDBeta()
     return dUdB_constant;
   else {
     double tot = 0.;
+    uint32_t n_part_a(path.species_list[species_a_i]->n_part), n_part_b(path.species_list[species_b_i]->n_part);
     if (species_a_i == species_b_i) {
       #pragma omp parallel
       {
-        for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
+        for (uint32_t p_i=0; p_i<n_part_a-1; ++p_i) {
           #pragma omp for collapse(2) reduction(+:tot)
-          for (uint32_t p_j=p_i+1; p_j<path.species_list[species_a_i]->n_part; ++p_j) {
+          for (uint32_t p_j=p_i+1; p_j<n_part_a; ++p_j) {
             for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-              double rMag, r_p_mag, r_r_p_mag;
-              path.DrDrpDrrp(b_i,b_i+1,species_a_i,species_a_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
-              double dUdB = CalcdUdBeta(rMag,r_p_mag,r_r_p_mag,0);
+              double r_mag, r_p_mag, r_r_p_mag;
+              path.DrDrpDrrp(b_i,b_i+1,species_a_i,species_a_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+              double dUdB = CalcdUdBeta(r_mag,r_p_mag,r_r_p_mag,0);
               tot += dUdB;
             }
           }
@@ -115,12 +116,12 @@ double PairAction::DActionDBeta()
       }
     } else {
       #pragma omp parallel for collapse(3) reduction(+:tot)
-      for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
-        for (uint32_t p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
+      for (uint32_t p_i=0; p_i<n_part_a; ++p_i) {
+        for (uint32_t p_j=0; p_j<n_part_b; ++p_j) {
           for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-            double rMag, r_p_mag, r_r_p_mag;
-            path.DrDrpDrrp(b_i,b_i+1,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
-            double dUdB = CalcdUdBeta(rMag,r_p_mag,r_r_p_mag,0);
+            double r_mag, r_p_mag, r_r_p_mag;
+            path.DrDrpDrrp(b_i,b_i+1,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+            double dUdB = CalcdUdBeta(r_mag,r_p_mag,r_r_p_mag,0);
             tot += dUdB;
           }
         }
@@ -141,22 +142,19 @@ double PairAction::DActionDBeta()
 
 void PairAction::GenerateParticlePairs(const std::vector<std::pair<uint32_t,uint32_t>> &particles, std::vector<uint32_t> &particles_a, std::vector<uint32_t> &particles_b, std::vector<std::pair<uint32_t,uint32_t>> &particle_pairs)
 {
-  // Make sure particles are of species A or B and organize them accordingly
-  uint32_t n_a(0), n_b(0);
+  // Make sure particles are of species A or B and organize them accordingly.
+  // If none are A or B, return.
   for (auto& p: particles) {
     uint32_t s_i = p.first;
     uint32_t p_i = p.second;
-    if (s_i == species_a_i) {
+    if (s_i == species_a_i)
       particles_a.push_back(p_i);
-      n_a++;
-    } else if (s_i == species_b_i) {
+    else if (s_i == species_b_i)
       particles_b.push_back(p_i);
-      n_b++;
-    }
   }
-  if (n_a==0)
-    if ((species_a_i==species_b_i) || (n_b==0))
-      return;
+  uint32_t n_a(particles_a.size()), n_b(particles_b.size());
+  if (n_a==0 && n_b==0)
+    return;
 
   // Make std::vectors of other particles of species A
   std::vector<uint32_t> other_particles_a;
@@ -199,7 +197,7 @@ void PairAction::GenerateParticlePairs(const std::vector<std::pair<uint32_t,uint
 
 }
 
-double PairAction::GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
+double PairAction::GetAction(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
 {
   // Return zero if not relevant
   if (level > max_level || is_constant || species_a_i < 0 || species_b_i < 0)
@@ -215,33 +213,33 @@ double PairAction::GetAction(const uint32_t b0, const uint32_t b1, const std::ve
   // Sum up contributing terms
   uint32_t skip = 1<<level;
   double tot = 0.;
-  for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
+  for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
     uint32_t b_j = b_i+skip;
     uint32_t b_k = b_i-skip+path.n_bead;
     for (auto& particle_pair: particle_pairs) {
-      double rMag, r_p_mag, r_r_p_mag;
-      path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,particle_pair.first,particle_pair.second,rMag,r_p_mag,r_r_p_mag);
-      tot += CalcU(rMag,r_p_mag,r_r_p_mag,level);
+      double r_mag, r_p_mag, r_r_p_mag;
+      path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,particle_pair.first,particle_pair.second,r_mag,r_p_mag,r_r_p_mag);
+      tot += CalcU(r_mag,r_p_mag,r_r_p_mag,level);
     }
   }
 
   // Add in long range part
   if (use_long_range) { // FIXME: currently this assumes level = 0
     if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-      path.UpdateRhoKP(b0, b1, species_a_i, particles_a, level);
+      path.UpdateRhoKP(b_0, b_1, species_a_i, particles_a, level);
       path.species_list[species_a_i]->need_update_rho_k = false;
     }
     if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-      path.UpdateRhoKP(b0, b1, species_b_i, particles_b, level);
+      path.UpdateRhoKP(b_0, b_1, species_b_i, particles_b, level);
       path.species_list[species_b_i]->need_update_rho_k = false;
     }
-    tot += CalcULong(b0, b1, level);
+    tot += CalcULong(b_0, b_1, level);
   }
 
   return tot;
 }
 
-vec<double> PairAction::GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
+vec<double> PairAction::GetActionGradient(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
 {
   // Return zero if not relevant
   vec<double> zero_vec;
@@ -259,7 +257,7 @@ vec<double> PairAction::GetActionGradient(const uint32_t b0, const uint32_t b1, 
   // Sum up contributing terms
   uint32_t skip = 1<<level;
   vec<double> tot(zero_vec);
-  for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
+  for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
     uint32_t b_j = b_i+skip;
     uint32_t b_k = b_i-skip+path.n_bead;
     for (auto& particle_pair: particle_pairs) {
@@ -268,24 +266,24 @@ vec<double> PairAction::GetActionGradient(const uint32_t b0, const uint32_t b1, 
     }
   }
 
-  // FIXME: Ignoring long range part for now
-  //// Add in long range part
-  //if (use_long_range) { // fixme: currently this assumes level = 0
-  //  if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-  //    path.UpdateRhoKP(b0, b1, species_a_i, particles_a, level);
-  //    path.species_list[species_a_i]->need_update_rho_k = false;
-  //  }
-  //  if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-  //    path.UpdateRhoKP(b0, b1, species_b_i, particles_b, level);
-  //    path.species_list[species_b_i]->need_update_rho_k = false;
-  //  }
-  //  tot += CalcGradientULong(b0, b1, level);
-  //}
+  // Add in long range part
+  if (use_long_range) { // fixme: currently this assumes level = 0
+    //if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
+    //  path.UpdateRhoKP(b_0, b_1, species_a_i, particles_a, level);
+    //  path.species_list[species_a_i]->need_update_rho_k = false;
+    //}
+    //if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
+    //  path.UpdateRhoKP(b_0, b_1, species_b_i, particles_b, level);
+    //  path.species_list[species_b_i]->need_update_rho_k = false;
+    //}
+    for (auto& particle_pair: particle_pairs)
+      tot += CalcGradientULong(b_0, b_1, particle_pair.first, level);
+  }
 
   return tot;
 }
 
-double PairAction::GetActionLaplacian(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
+double PairAction::GetActionLaplacian(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
 {
   // Return zero if not relevant
   if (level > max_level || is_constant || species_a_i < 0 || species_b_i < 0)
@@ -301,7 +299,7 @@ double PairAction::GetActionLaplacian(const uint32_t b0, const uint32_t b1, cons
   // Sum up contributing terms
   uint32_t skip = 1<<level;
   double tot = 0.;
-  for (uint32_t b_i=b0; b_i<b1; b_i+=skip) {
+  for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
     uint32_t b_j = b_i+skip;
     uint32_t b_k = b_i-skip+path.n_bead;
     for (auto& particle_pair: particle_pairs) {
@@ -314,14 +312,14 @@ double PairAction::GetActionLaplacian(const uint32_t b0, const uint32_t b1, cons
   //// Add in long range part
   //if (use_long_range) { // fixme: currently this assumes level = 0
   //  if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-  //    path.UpdateRhoKP(b0, b1, species_a_i, particles_a, level);
+  //    path.UpdateRhoKP(b_0, b_1, species_a_i, particles_a, level);
   //    path.species_list[species_a_i]->need_update_rho_k = false;
   //  }
   //  if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-  //    path.UpdateRhoKP(b0, b1, species_b_i, particles_b, level);
+  //    path.UpdateRhoKP(b_0, b_1, species_b_i, particles_b, level);
   //    path.species_list[species_b_i]->need_update_rho_k = false;
   //  }
-  //  tot += CalcLaplacianULong(b0, b1, level);
+  //  tot += CalcLaplacianULong(b_0, b_1, level);
   //}
 
   return tot;
@@ -337,15 +335,15 @@ vec<double> PairAction::CalcGradientU(const uint32_t b_i, const uint32_t b_j, co
   double eps = 1.e-7;
 
   // Calculate numerical gradient
-  double rMag, r_p_mag, r_r_p_mag;
+  double r_mag, r_p_mag, r_r_p_mag;
   vec<double> tot(path.n_d);
   for (uint32_t d_i=0; d_i<path.n_d; ++d_i) {
     b->r(d_i) = r0(d_i) + eps;
-    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
-    double f1 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+    double f1 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
     b->r(d_i) = r0(d_i) - eps;
-    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
-    double f2 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+    double f2 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
     tot(d_i) = (f1-f2)/(2.*eps);
     b->r(d_i) = r0(d_i);
   }
@@ -363,17 +361,17 @@ double PairAction::CalcLaplacianU(const uint32_t b_i, const uint32_t b_j, const 
   double eps = 1.e-7;
 
   // Calculate numerical gradient
-  double rMag, r_p_mag, r_r_p_mag;
+  double r_mag, r_p_mag, r_r_p_mag;
   double tot = 0.;
   for (uint32_t d_i=0; d_i<path.n_d; ++d_i) {
-    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
-    double f0 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+    double f0 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
     b->r(d_i) = r0(d_i) + eps;
-    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
-    double f1 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+    double f1 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
     b->r(d_i) = r0(d_i) - eps;
-    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,rMag,r_p_mag,r_r_p_mag);
-    double f2 = CalcU(rMag,r_p_mag,r_r_p_mag,level);
+    path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+    double f2 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
     tot += (f1+f2-2.*f0)/(eps*eps);
     b->r(d_i) = r0(d_i);
   }

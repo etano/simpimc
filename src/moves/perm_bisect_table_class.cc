@@ -15,32 +15,28 @@ bool PermBisectTable::Attempt()
   // Set up pointers
   std::vector<std::pair<uint32_t,uint32_t>> particles;
   n_perm_part = c->part.size();
-  field< std::shared_ptr<Bead>> beadI(n_perm_part), beadFm1(n_perm_part), beadF(n_perm_part);
+  field< std::shared_ptr<Bead>> bead_i(n_perm_part), bead_fm1(n_perm_part), bead_f(n_perm_part);
   for (uint32_t i=0; i<n_perm_part; i++) {
-    beadI(i) = path(species_i,c->part(i),bead0);
-    beadFm1(i) = beadI(i)->NextB(n_bisect_beads-1);
-    beadF(i) = beadFm1(i)->next;
+    bead_i(i) = path(species_i,c->part(i),bead0);
+    bead_fm1(i) = bead_i(i)->NextB(n_bisect_beads-1);
+    bead_f(i) = bead_fm1(i)->next;
     particles.push_back(std::make_pair(species_i,c->part(i)));
   }
 
   // Permute particles
-  PermuteBeads(beadFm1, beadF, *c);
+  PermuteBeads(bead_fm1, bead_f, *c);
 
   // Note affected beads
-  field< std::shared_ptr<Bead>> beadA(n_perm_part);
+  field< std::shared_ptr<Bead>> bead_a(n_perm_part);
   affected_beads.clear();
   for (uint32_t i=0; i<n_perm_part; i++) {
-    for(beadA(i) = beadI(i); beadA(i) != beadF(i); beadA(i) = beadA(i) -> next)
-      affected_beads.push_back(beadA(i));
+    for(bead_a(i) = bead_i(i); bead_a(i) != bead_f(i); bead_a(i) = bead_a(i) -> next)
+      affected_beads.push_back(bead_a(i));
   }
 
   // Perform the bisection (move exactly through kinetic action)
-  field< std::shared_ptr<Bead>> beadB(n_perm_part), beadC(n_perm_part);
-  double oldCycleWeight = -log(c->weight);
-  double prev_action_change = oldCycleWeight;
-  double prefactor_sample_prob = 0.;
-  vec<double> r_bar_old(path.n_d), delta_old(path.n_d), r_bar_new(path.n_d), delta_new(path.n_d);
-  double gauss_prod_old, gauss_sum_old, dist_old, gauss_prod_new, gauss_sum_new, dist_new;
+  field< std::shared_ptr<Bead>> bead_b(n_perm_part), bead_c(n_perm_part);
+  double prev_action_change = -log(c->weight);
   for (int level_i = n_level-1; level_i >= 0; level_i -= 1) {
 
     // Level specific quantities
@@ -53,44 +49,26 @@ bool PermBisectTable::Attempt()
     double old_log_sample_prob = 0.;
     double new_log_sample_prob = 0.;
     for (uint32_t i=0; i<n_perm_part; i++) {
-      beadA(i) = beadI(i);
-      while(beadA(i) != beadF(i)) {
+      bead_a(i) = bead_i(i);
+      while(bead_a(i) != bead_f(i)) {
         // Old sampling
         path.SetMode(OLD_MODE);
-        beadB(i) = path.GetNextBead(beadA(i),skip);
-        beadC(i) = path.GetNextBead(beadB(i),skip);
-        vec<double> r_bar_old(path.RBar(beadC(i), beadA(i)));
-        vec<double> delta_old(path.Dr(beadB(i), r_bar_old));
+        bead_b(i) = path.GetNextBead(bead_a(i),skip);
+        bead_c(i) = path.GetNextBead(bead_b(i),skip);
+        vec<double> delta_old(path.Dr(bead_b(i), path.RBar(bead_c(i), bead_a(i))));
+        old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
         // New sampling
         path.SetMode(NEW_MODE);
-        beadB(i) = path.GetNextBead(beadA(i),skip);
-        beadC(i) = path.GetNextBead(beadB(i),skip);
-        vec<double> r_bar_new(path.RBar(beadC(i), beadA(i)));
+        bead_b(i) = path.GetNextBead(bead_a(i),skip);
+        bead_c(i) = path.GetNextBead(bead_b(i),skip);
         vec<double> delta_new(path.n_d);
         rng.NormRand(delta_new, 0., sigma);
         path.PutInBox(delta_new);
-        beadB(i)->r = r_bar_new + delta_new;
+        bead_b(i)->r = path.RBar(bead_c(i), bead_a(i)) + delta_new;
+        new_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_new);
 
-        // Get sampling probs
-        gauss_prod_old = 1.;
-        gauss_prod_new = 1.;
-        for (uint32_t d_i=0; d_i<path.n_d; d_i++) {
-          gauss_sum_old = 0.;
-          gauss_sum_new = 0.;
-          for (int image=-n_images; image<=n_images; image++) {
-            dist_old = delta_old(d_i) + (double)image*path.L;
-            dist_new = delta_new(d_i) + (double)image*path.L;
-            gauss_sum_old += path.FastExp(-0.5*dist_old*dist_old/sigma2);
-            gauss_sum_new += path.FastExp(-0.5*dist_new*dist_new/sigma2);
-          }
-          gauss_prod_old *= gauss_sum_old;
-          gauss_prod_new *= gauss_sum_new;
-        }
-        old_log_sample_prob += prefactor_sample_prob + log(gauss_prod_old);
-        new_log_sample_prob += prefactor_sample_prob + log(gauss_prod_new);
-
-        beadA(i) = beadC(i);
+        bead_a(i) = bead_c(i);
       }
     }
 
@@ -124,7 +102,7 @@ bool PermBisectTable::Attempt()
     // Construct Permutation Table
     path.SetMode(NEW_MODE);
     double perm_tot_1 = ConstructPermTable();
-  
+
     // Decide whether or not to accept whole bisection
     if ((perm_tot_0/perm_tot_1) < rng.UnifRand())
       return 0;

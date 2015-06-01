@@ -42,7 +42,6 @@ void PermBisect::Reject()
 {
   // No need to do some things if bisection isn't attempted
   if (n_perm_part > 0) {
-    perm_attempt(n_perm_part-1) += 1;
 
     // Restore things
     for (uint32_t p_i=0; p_i<n_part; p_i++) { // TODO: can make this more efficient by only restoring touched particles
@@ -50,6 +49,9 @@ void PermBisect::Reject()
       path(species_i,p_i,bead1-1)->RestoreNext();
     }
   }
+
+  // Increment counter
+  perm_attempt(n_perm_part-1) += 1;
 
   Bisect::Reject();
 }

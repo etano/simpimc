@@ -38,7 +38,7 @@ public:
   virtual double CalcV(double r, double r_p, const uint32_t level);
   virtual double CalcVLong();
   virtual double CalcU(double r, double r_p, double s, const uint32_t level);
-  virtual double CalcULong(const uint32_t b0, const uint32_t b1, const uint32_t level);
+  virtual double CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level);
   virtual double CalcdUdBeta(double r, double r_p, double s, const uint32_t level);
   virtual double CalcdUdBetaLong();
 
