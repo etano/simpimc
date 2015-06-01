@@ -58,6 +58,9 @@ class Scalar(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                except KeyError as e:
+                    print 'Data not found for', self.prefix+self.name, 'in', file
+                    file_not_read = False
         stats = Stats.UnweightedAvg(np.array(data))
         return stats
 
@@ -102,6 +105,9 @@ class Histogram(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                except KeyError as e:
+                    print 'Data not found for', self.prefix+self.name, 'in', file
+                    file_not_read = False
         stats = []
         for i in range(len(xs)):
             yStatsi = [x[i] for x in yStats]
@@ -150,6 +156,9 @@ class Pair(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                except KeyError as e:
+                    print 'Data not found for', self.prefix+self.name, 'in', file
+                    file_not_read = False
             for pair in pairs:
                 try:
                     ys[pair[0]] += pair[1]
@@ -191,6 +200,9 @@ class AvgPair(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                except KeyError as e:
+                    print 'Data not found for', self.prefix+self.name, 'in', file
+                    file_not_read = False
             for avg_pair in avg_pairs:
                 sector = avg_pair[0]
                 [eM,varM,M] = avg_pair[1:]
@@ -242,6 +254,9 @@ class Matrix(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                except KeyError as e:
+                    print 'Data not found for', self.prefix+self.name, 'in', file
+                    file_not_read = False
         stats = {}
         for key,val in data.iteritems():
             stats[key] = Stats.UnweightedAvg(np.array(val))
