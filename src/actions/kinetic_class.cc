@@ -5,26 +5,15 @@ void Kinetic::SetupSpline()
 {
   // Resize spline field
   uint32_t n_spline = path.n_bead/2 + (path.n_bead%2) + 1;
-  rho_free_splines.resize(n_spline);
 
   // Create level 0 splines
-  rho_free_splines.push_back(FreeSpline(path.L, n_images, lambda, path.tau, true));
+  rho_free_splines.emplace_back(path.L, n_images, lambda, path.tau, true);
 
   // Create other splines
   #pragma omp parallel for
   for (uint32_t spline_i=1; spline_i<n_spline; ++spline_i) {
-    rho_free_splines.push_back(FreeSpline(path.L, n_images, lambda, path.tau, false));
+    rho_free_splines.emplace_back(path.L, n_images, lambda, path.tau, false);
   }
-  std::cout << "hi" << std::endl;
-
-    vec<double> dr(3);
-    dr(0) = 1.0;
-    dr(1) = 1.0;
-    dr(2) = 1.0;
-    std::cout << rho_free_splines[0].GetLogRhoFree(dr);
-
-  std::cout << "hi" << std::endl;
-
 }
 
 double Kinetic::DActionDBeta()

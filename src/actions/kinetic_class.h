@@ -10,7 +10,7 @@
 class Kinetic : public SingleAction
 {
 private:
-  std::vector<FreeSpline*> rho_free_splines; ///< Holds the splined action for every time slice
+  std::vector<FreeSpline> rho_free_splines; ///< Holds the splined action for every time slice
 
   /// Creates splined action for all time slices
   void SetupSpline();
@@ -21,12 +21,6 @@ public:
   {
     std::cout << "Setting up kinetic action for " << species << "..." << std::endl;
     SetupSpline();
-
-    vec<double> dr(3);
-    dr(0) = 1.0;
-    dr(1) = 1.0;
-    dr(2) = 1.0;
-    std::cout << rho_free_splines[0]->GetLogRhoFree(dr);
   }
 
   /// Returns the beta derivative of the action for the whole path

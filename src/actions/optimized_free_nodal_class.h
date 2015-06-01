@@ -9,18 +9,18 @@ class OptimizedFreeNodal : public Nodal
 {
 private:
   uint32_t init_param_set; ///< Initial parameter set
-  std::vector<std::vector<std::shared_ptr<FreeSpline>>> rho_free_splines; ///< Holds the splined action for every time slice and parameter set
+  std::vector<std::vector<FreeSpline>> rho_free_splines; ///< Holds the splined action for every time slice and parameter set
 
   /// Returns the value of g_ij
   virtual double GetGij(const std::shared_ptr<Bead> &b_i, const std::shared_ptr<Bead> &b_j, const uint32_t slice_diff)
   {
-    return rho_free_splines[param_set_i][slice_diff-1]->GetRhoFree(path.Dr(b_i,b_j));
+    return rho_free_splines[param_set_i][slice_diff-1].GetRhoFree(path.Dr(b_i,b_j));
   }
 
   /// Returns the spatial derivative of g_ij
   virtual double GetGijDGijDr(const std::shared_ptr<Bead> &b_i, const std::shared_ptr<Bead> &b_j, const uint32_t slice_diff, vec<double> &dgij_dr)
   {
-    return rho_free_splines[param_set_i][slice_diff-1]->GetGradRhoFree(path.Dr(b_i,b_j), dgij_dr);
+    return rho_free_splines[param_set_i][slice_diff-1].GetGradRhoFree(path.Dr(b_i,b_j), dgij_dr);
   }
 
   // Returns 1/(4\lambda\tau)
@@ -46,8 +46,9 @@ private:
     uint32_t n_spline = path.n_bead/2 + (path.n_bead%2) + 1;
     rho_free_splines.resize(param_sets.size());
     for (param_set_i=0; param_set_i<param_sets.size(); ++param_set_i) {
+      #pragma omp parallel for
       for (uint32_t spline_i=0; spline_i<n_spline; ++spline_i) {
-        rho_free_splines[param_set_i].push_back(std::make_shared<FreeSpline>(path.L, n_images, lambda, GetTau(spline_i+1), false));
+        rho_free_splines[param_set_i].emplace_back(path.L, n_images, lambda, GetTau(spline_i+1), false);
       }
       std::cout << "...param set " << param_set_i << " complete." << std::endl;
     }

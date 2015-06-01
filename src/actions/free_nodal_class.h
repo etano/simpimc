@@ -8,7 +8,7 @@
 class FreeNodal : public Nodal
 {
 private:
-  std::vector<std::shared_ptr<FreeSpline>> rho_free_splines; ///< Holds the splined action for every time slice
+  std::vector<FreeSpline> rho_free_splines; ///< Holds the splined action for every time slice
 
   /// Creates splined action for all time slices
   virtual void SetupSpline();

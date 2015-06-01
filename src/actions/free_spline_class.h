@@ -16,7 +16,11 @@ private:
 
 public:
   // Copy constructor
-  FreeSpline() {}
+  FreeSpline(FreeSpline&& fs)
+    : image_action_spline(std::move(fs.image_action_spline)), d_image_action_d_tau_spline(std::move(fs.d_image_action_d_tau_spline)), i_4_lambda_tau(std::move(fs.i_4_lambda_tau)), i_4_lambda_tau_tau(std::move(fs.i_4_lambda_tau_tau))
+  {}
+
+  FreeSpline& operator=(const FreeSpline& fs) = default;
 
   /// Constructor
   FreeSpline(const double L, const uint32_t n_images, const double lambda, const double tau, const bool use_tau_derivative)
@@ -60,15 +64,6 @@ public:
     }
     BCtype_d xBC = {NATURAL, NATURAL};
     image_action_spline = create_UBspline_1d_d(r_grid, xBC, image_action.memptr());
-    double t_image_action;
-    double r_d  = 1.0;
-    eval_UBspline_1d_d(image_action_spline,r_d,&t_image_action);
-    std::cout << r_d << " " << t_image_action << std::endl;
-    vec<double> t_r(3);
-    t_r(0) = 1.0;
-    t_r(1) = 1.0;
-    t_r(2) = 1.0;
-    std::cout << GetLogRhoFree(t_r) << std::endl;
     if (use_tau_derivative)
       d_image_action_d_tau_spline = create_UBspline_1d_d(r_grid, xBC, d_image_action_d_tau.memptr());
   }
@@ -84,10 +79,8 @@ public:
   {
     double tot = 0.;
     for (const auto &r_d : r) {
-      std::cout << r_d << std::endl;
       double image_action;
       eval_UBspline_1d_d(image_action_spline,r_d,&image_action);
-      std::cout << image_action << std::endl;
       tot -= image_action + r_d*r_d*i_4_lambda_tau;
     }
     return tot;
