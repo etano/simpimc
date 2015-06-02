@@ -3,7 +3,6 @@
 
 #include <einspline/multi_bspline.h>
 #include <einspline/bspline.h>
-#include "../config.h"
 
 /// Bare free particle spline class
 class FreeSpline

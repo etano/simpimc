@@ -1,7 +1,7 @@
 #ifndef SIMPIMC_ACTIONS_ACTION_CLASS_H_
 #define SIMPIMC_ACTIONS_ACTION_CLASS_H_
 
-#include "../path_class.h"
+#include "../data_structures/path_class.h"
 
 /// Parent class for all actions
 class Action
