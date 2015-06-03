@@ -21,6 +21,8 @@ public:
 
   FreeSpline& operator=(const FreeSpline& fs) = default;
 
+  FreeSpline() {}
+
   /// Constructor
   FreeSpline(const double L, const uint32_t n_images, const double lambda, const double tau, const bool use_tau_derivative)
   {

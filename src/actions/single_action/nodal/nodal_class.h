@@ -493,8 +493,6 @@ public:
     // Read in things
     std::cout << "Setting up nodal action for " << species << "..." << std::endl;
     is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
-    max_level = in.GetAttribute<uint32_t>("max_level",0);
-    out.Write("Actions/"+name+"/max_level", max_level);
     path.species_list[species_i]->fixed_node = true;
 
     // Nodal distance things

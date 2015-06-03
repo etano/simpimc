@@ -200,14 +200,12 @@ public:
     : Action(path,in,out)
   {
     // Read in things
-    n_images = in.GetAttribute<int>("n_images");
     n_order = in.GetAttribute<uint32_t>("n_order",0);
     species_a = in.GetAttribute<std::string>("species_a");
     species_list.push_back(species_a);
     species_b = in.GetAttribute<std::string>("species_b");
     species_list.push_back(species_b);
     std::cout << "Setting up pair action between " << species_a << " and " << species_b << "..." << std::endl;
-    max_level = in.GetAttribute<uint32_t>("max_level",0);
     use_long_range = in.GetAttribute<bool>("use_long_range",0);
     if (use_long_range) {
       k_cut = in.GetAttribute<double>("k_cut",path.k_c);
@@ -222,11 +220,9 @@ public:
       is_first_time = true;
 
       // Write things to file
-      out.Write("Actions/"+name+"/n_images", n_images);
       out.Write("Actions/"+name+"/n_order", n_order);
       out.Write("Actions/"+name+"/species_a", species_a);
       out.Write("Actions/"+name+"/species_b", species_b);
-      out.Write("Actions/"+name+"/max_level", max_level);
       out.Write("Actions/"+name+"/use_long_range", use_long_range);
       if (use_long_range)
         out.Write("Actions/"+name+"/k_cut", k_cut);

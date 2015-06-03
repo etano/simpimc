@@ -30,7 +30,9 @@ public:
     out.Write("Actions/"+name+"/type",type);
 
     n_images = in.GetAttribute<int>("n_images",0);
+    max_level = in.GetAttribute<uint32_t>("max_level",0);
     out.Write("Actions/"+name+"/n_images",n_images);
+    out.Write("Actions/"+name+"/max_level", max_level);
   }
 
   /// Returns the beta derivative of the action for the whole path

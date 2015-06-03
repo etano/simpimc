@@ -46,8 +46,10 @@ private:
     uint32_t n_spline = path.n_bead/2 + (path.n_bead%2) + 1;
     rho_free_splines.resize(param_sets.size());
     for (param_set_i=0; param_set_i<param_sets.size(); ++param_set_i) {
+      rho_free_splines[param_set_i].resize(n_spline);
+      #pragma omp parallel for
       for (uint32_t spline_i=0; spline_i<n_spline; ++spline_i)
-        rho_free_splines[param_set_i].emplace_back(path.L, n_images, lambda, GetTau(spline_i+1), false);
+        rho_free_splines[param_set_i][spline_i] = FreeSpline(path.L, n_images, lambda, GetTau(spline_i+1), false);
       std::cout << "...param set " << param_set_i << " complete." << std::endl;
     }
 
