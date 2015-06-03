@@ -3,7 +3,6 @@
 void PairAction::Init(Input &in)
 {
   // Read in things
-  n_images = in.GetAttribute<int>("n_images");
   n_order = in.GetAttribute<uint32_t>("n_order",0);
   species_a = in.GetAttribute<std::string>("species_a");
   species_list.push_back(species_a);
@@ -29,7 +28,6 @@ void PairAction::Init(Input &in)
 
     // Write things to file
     out.Write("Actions/"+name+"/file", file_name);
-    out.Write("Actions/"+name+"/n_images", n_images);
     out.Write("Actions/"+name+"/n_order", n_order);
     out.Write("Actions/"+name+"/species_a", species_a);
     out.Write("Actions/"+name+"/species_b", species_b);
