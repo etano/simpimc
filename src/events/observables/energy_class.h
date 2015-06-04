@@ -251,17 +251,17 @@ public:
       energies = energies/norm;
       double E = sum(energies);
       if (first_time) {
-        out.CreateGroup(prefix+"Total");
-        out.CreateExtendableDataSet("/"+prefix+"Total/", "x", E);
+        out.CreateGroup(prefix+"total");
+        out.CreateExtendableDataSet("/"+prefix+"total/", "x", E);
         std::string data_type = "scalar";
-        out.Write(prefix+"Total/data_type",data_type);
+        out.Write(prefix+"total/data_type",data_type);
         for (uint32_t i=0; i<action_list.size(); ++i) {
           out.CreateGroup(prefix+action_list[i]->name);
           out.CreateExtendableDataSet("/"+prefix+action_list[i]->name+"/", "x", energies(i));
           out.Write(prefix+action_list[i]->name+"/data_type", data_type);
         }
       } else {
-        out.AppendDataSet("/"+prefix+"Total/", "x", E);
+        out.AppendDataSet("/"+prefix+"total/", "x", E);
         for (uint32_t i=0; i<action_list.size(); ++i)
           out.AppendDataSet("/"+prefix+action_list[i]->name+"/", "x", energies(i));
       }
@@ -271,19 +271,19 @@ public:
         potentials = potentials/norm;
         double V = sum(potentials);
         if (first_time) {
-          out.CreateGroup(prefix+"VTotal");
-          out.CreateExtendableDataSet("/"+prefix+"VTotal/", "x", V);
+          out.CreateGroup(prefix+"v_total");
+          out.CreateExtendableDataSet("/"+prefix+"v_total/", "x", V);
           std::string data_type = "scalar";
-          out.Write(prefix+"VTotal/data_type",data_type);
+          out.Write(prefix+"v_total/data_type",data_type);
           for (uint32_t i=0; i<action_list.size(); ++i) {
-            out.CreateGroup(prefix+"V"+action_list[i]->name);
-            out.CreateExtendableDataSet("/"+prefix+"V"+action_list[i]->name+"/", "x", potentials(i));
-            out.Write(prefix+"V"+action_list[i]->name+"/data_type", data_type);
+            out.CreateGroup(prefix+"v_"+action_list[i]->name);
+            out.CreateExtendableDataSet("/"+prefix+"v_"+action_list[i]->name+"/", "x", potentials(i));
+            out.Write(prefix+"v_"+action_list[i]->name+"/data_type", data_type);
           }
         } else {
-          out.AppendDataSet("/"+prefix+"VTotal/", "x", V);
+          out.AppendDataSet("/"+prefix+"v_total/", "x", V);
           for (uint32_t i=0; i<action_list.size(); ++i)
-            out.AppendDataSet("/"+prefix+"V"+action_list[i]->name+"/", "x", potentials(i));
+            out.AppendDataSet("/"+prefix+"v_"+action_list[i]->name+"/", "x", potentials(i));
         }
       }
 
