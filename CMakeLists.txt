@@ -125,6 +125,7 @@ SET(LIBS ${LIBS} ${EINSPLINE_LIBS})
 #-------------------------------------------------------------------
 # Sources and target
 #-------------------------------------------------------------------
+
 # simpimc
 SET (SRCS ${SRCS} src/main.cc
   src/algorithm_class.cc
