@@ -1,4 +1,4 @@
-#include "main.h"
+#include "framework/simulation_class.h"
 
 int main(int argc, char** argv)
 {
@@ -13,8 +13,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  Simulation sim;
-  sim.SetupSimulation(in_file);
+  Simulation sim(in_file);
   sim.Run();
 
   COMM::Finalize();
