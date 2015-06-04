@@ -19,14 +19,13 @@ private:
 
     // Construct t table
     for (uint32_t i=0; i<n_part; i++) {
-      for (uint32_t j=i; j<n_part; j++) {
+      for (uint32_t j=0; j<n_part; j++) {
         vec<double> dr_ij(path.Dr(b0(i), b1(j)));
         double exponent = (-dot(dr_ij,dr_ij))*i_4_lambda_tau_n_bisect_beads;
         if (exponent > log_epsilon)
           t(i,j) = exp(exponent);
         else
           t(i,j) = 0.;
-        t(j,i) = t(i,j);
       }
     }
 
