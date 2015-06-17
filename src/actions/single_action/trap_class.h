@@ -32,7 +32,7 @@ public:
         tot += dot(path(species_i,p_i,b_i)->r, path(species_i,p_i,b_i)->r);
       }
     }
-  
+
     return cofactor_b*tot;
   }
 
@@ -41,7 +41,7 @@ public:
   {
     if (level > max_level)
       return 0.;
-  
+
     bool check = false;
     for (uint32_t p=0; p<particles.size(); ++p) {
       if (particles[p].first == species_i) {
@@ -51,7 +51,7 @@ public:
     }
     if (!check)
       return 0.;
-  
+
     uint32_t skip = 1<<level;
     double tot = 0.;
     for (uint32_t p=0; p<particles.size(); ++p) {
@@ -62,7 +62,7 @@ public:
         tot += dot(dr, dr);
       }
     }
-  
+
     return cofactor_a*skip*tot;
   }
 

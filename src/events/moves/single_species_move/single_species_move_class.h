@@ -27,6 +27,8 @@ public:
     std::vector<std::string> species_list;
     species_list.push_back(species);
     GenerateActionList(t_action_list,species_list);
+
+    std::cout << "Setting up " << name << " for " << species << "..." << std::endl;
   }
 };
 

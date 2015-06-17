@@ -102,6 +102,8 @@ public:
     // Get relevant varied action
     std::string action_name = in.GetAttribute<std::string>("action_name");
 
+    std::cout << "Setting up " << name << " for " << action_name << " with species " << species << "..." << std::endl;
+
     // Select action from list
     for (auto& t_action : action_list) {
       if (t_action->name == action_name)

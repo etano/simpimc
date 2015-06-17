@@ -491,7 +491,6 @@ public:
     : SingleAction(path,in,out)
   {
     // Read in things
-    std::cout << "Setting up nodal action for " << species << "..." << std::endl;
     is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
     path.species_list[species_i]->fixed_node = true;
 

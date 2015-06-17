@@ -32,8 +32,11 @@ public:
 
     // Setup grid
     Ugrid r_grid;
-    r_grid.start = -L/2.;
-    r_grid.end = L/2.;
+    double t_l = L;
+    if (L == 0.)
+      t_l = 1000.;
+    r_grid.start = -t_l/2.;
+    r_grid.end = t_l/2.;
     r_grid.num = 10000;
     double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
@@ -47,11 +50,11 @@ public:
       double r_2 = r*r;
       double r_2_i_4_lambda_tau = r_2*i_4_lambda_tau;
       for (uint32_t image=1; image<=n_images; image++) {
-        double r_p(r+image*L);
+        double r_p(r+image*t_l);
         double r_p_2_i_4_lambda_tau = r_p*r_p*i_4_lambda_tau;
         double d_r_2_r_p_2_i_4_lambda_tau = r_2_i_4_lambda_tau - r_p_2_i_4_lambda_tau;
         double exp_part_p = exp(d_r_2_r_p_2_i_4_lambda_tau);
-        double r_m(r-image*L);
+        double r_m(r-image*t_l);
         double r_m_2_i_4_lambda_tau = r_m*r_m*i_4_lambda_tau;
         double d_r_2_r_m_2_i_4_lambda_tau = r_2_i_4_lambda_tau - r_m_2_i_4_lambda_tau;
         double exp_part_m = exp(d_r_2_r_m_2_i_4_lambda_tau);

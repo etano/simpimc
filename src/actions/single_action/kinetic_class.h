@@ -28,7 +28,6 @@ public:
   Kinetic(Path &path, Input &in, IO &out)
     : SingleAction(path,in,out)
   {
-    std::cout << "Setting up kinetic action for " << species << "..." << std::endl;
     SetupSpline();
   }
 

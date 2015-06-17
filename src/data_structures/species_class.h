@@ -28,7 +28,7 @@ public:
     n_part = in.GetAttribute<uint32_t>("n_part");
     lambda = in.GetAttribute<double>("lambda");
     fermi = in.GetAttribute<bool>("fermi", false);
-    init_type = in.GetAttribute<std::string>("init_type","Random");
+    init_type = in.GetAttribute<std::string>("init_type");
 
     // Write to file
     out.CreateGroup("System/Particles/"+name);
@@ -156,6 +156,19 @@ public:
           bead(p_i,b_i)->r = r;
           bead(p_i,b_i)->StoreR();
         }
+      }
+
+    // Line
+    } else if (init_type == "Line") {
+      double dr = in.GetAttribute<double>("spacing",L/n_part);
+      vec<double> r;
+      r.zeros(n_d);
+      for (uint32_t p_i=0; p_i<n_part; p_i++) {
+        for (int b_i=0; b_i<n_bead; ++b_i) {
+          bead(p_i,b_i)->r = r;
+          bead(p_i,b_i)->StoreR();
+        }
+        r(0) += dr;
       }
 
     // Restart from previous run (fixme: This is broken now)
