@@ -22,7 +22,10 @@ private:
       for (uint32_t j=0; j<n_part; j++) {
         vec<double> dr_ij(path.Dr(b0(i), b1(j)));
         double exponent = (-dot(dr_ij,dr_ij))*i_4_lambda_tau_n_bisect_beads;
-        t(i,j) = exp(exponent);
+        if (exponent > log_epsilon)
+          t(i,j) = exp(exponent);
+        else
+          t(i,j) = 0.;
       }
     }
 
