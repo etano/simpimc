@@ -22,6 +22,7 @@ public:
     path.GetSpeciesInfo(species,species_i);
     n_part = path.species_list[species_i]->n_part;
     lambda = path.species_list[species_i]->lambda;
+    i_4_lambda_tau = 1./(4.*lambda*path.tau);
 
     // Generate action list
     std::vector<std::string> species_list;

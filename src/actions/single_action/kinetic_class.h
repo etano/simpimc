@@ -120,8 +120,7 @@ public:
         std::shared_ptr<Bead> beadF(path.GetNextBead(beadA,b1-b0));
         while(beadA != beadF) {
           std::shared_ptr<Bead> beadB(path.GetNextBead(beadA,skip));
-          vec<double> dr(path.Dr(beadA,beadB));
-          tot -= rho_free_splines[skip-1].GetLogRhoFree(dr);
+          tot -= rho_free_splines[skip-1].GetLogRhoFree(path.Dr(beadA,beadB));
           beadA = beadB;
         }
       }

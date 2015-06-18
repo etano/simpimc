@@ -187,6 +187,9 @@ public:
   inline vec<double> Dr(const std::shared_ptr<Bead> b0, const vec<double> &r1) { return Dr(GetR(b0), r1); };
 
   /// Compute the vector between two beads and put it in the box
+  inline vec<double> Dr(const vec<double> &r0, const std::shared_ptr<Bead> b1) { return Dr(r0, GetR(b1)); };
+
+  /// Compute the vector between two beads and put it in the box
   inline vec<double> Dr(const std::shared_ptr<Bead> b0, const std::shared_ptr<Bead> b1) { return Dr(GetR(b0), GetR(b1)); };
 
   /// Compute the vector to the midpoint between two beads and put it in the box

@@ -22,10 +22,7 @@ private:
       for (uint32_t j=0; j<n_part; j++) {
         vec<double> dr_ij(path.Dr(b0(i), b1(j)));
         double exponent = (-dot(dr_ij,dr_ij))*i_4_lambda_tau_n_bisect_beads;
-        if (exponent > log_epsilon)
-          t(i,j) = exp(exponent);
-        else
-          t(i,j) = 0.;
+        t(i,j) = exp(exponent);
       }
     }
 
@@ -129,7 +126,7 @@ private:
     Cycle c;
     n_perm_part = 0; // reset to indicate if bisection is attempted or not
     if (!SelectCycleIterative(c)) {
-      n_perm_part = c.type+1;
+      n_perm_part = 0;
       return 0; // do not attempt bisection since permutation not accepted
     }
     n_perm_part = c.type+1;
@@ -180,7 +177,8 @@ private:
           path.SetMode(OLD_MODE);
           bead_b(i) = path.GetNextBead(bead_a(i),skip);
           bead_c(i) = path.GetNextBead(bead_b(i),skip);
-          vec<double> delta_old(path.Dr(bead_b(i), path.RBar(bead_c(i),bead_a(i))));
+          vec<double> delta_old(0.5*(path.Dr(bead_b(i),bead_c(i)) + path.Dr(bead_b(i),bead_a(i))));
+          path.PutInBox(delta_old);
           old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
           // New sampling
@@ -193,8 +191,7 @@ private:
           bead_b(i)->r = path.RBar(bead_c(i),bead_a(i)) + delta_new;
           new_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_new);
 
-          path.SetMode(NEW_MODE);
-          bead_a(i) = path.GetNextBead(bead_a(i),2*skip);
+          bead_a(i) = bead_c(i);
         }
       }
 
@@ -214,10 +211,10 @@ private:
       // Calculate acceptance ratio
       double log_sample_ratio = -new_log_sample_prob + old_log_sample_prob;
       double current_action_change = new_action - old_action;
-      double log_accept_probablity = log_sample_ratio - current_action_change + prev_action_change;
+      double log_accept_probability = log_sample_ratio - current_action_change + prev_action_change;
 
       // Metropolis step
-      if (log_accept_probablity < log(rng.UnifRand()))
+      if (log_accept_probability < log(rng.UnifRand()))
         return 0;
 
       prev_action_change = current_action_change;

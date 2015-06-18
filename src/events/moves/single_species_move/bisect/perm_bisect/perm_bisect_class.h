@@ -91,10 +91,10 @@ protected:
         path(species_i,p_i,bead1)->RestorePrev();
         path(species_i,p_i,bead1-1)->RestoreNext();
       }
-    }
 
-    // Increment counter
-    perm_attempt(n_perm_part-1) += 1;
+      // Increment counter
+      perm_attempt(n_perm_part-1) += 1;
+    }
 
     Bisect::Reject();
   }
