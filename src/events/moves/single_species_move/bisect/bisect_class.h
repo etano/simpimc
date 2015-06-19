@@ -83,8 +83,7 @@ protected:
 
         // Old sampling
         path.SetMode(OLD_MODE);
-        vec<double> delta_old(0.5*(path.Dr(bead_b,bead_c) + path.Dr(bead_b,bead_a)));
-        path.PutInBox(delta_old);
+        vec<double> delta_old(path.Dr(bead_b,path.RBar(bead_c,bead_a)));
         old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
         // New sampling

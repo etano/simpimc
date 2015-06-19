@@ -180,8 +180,7 @@ private:
           path.SetMode(OLD_MODE);
           bead_b(i) = path.GetNextBead(bead_a(i),skip);
           bead_c(i) = path.GetNextBead(bead_b(i),skip);
-          vec<double> delta_old(0.5*(path.Dr(bead_b(i),bead_c(i)) + path.Dr(bead_b(i),bead_a(i))));
-          path.PutInBox(delta_old);
+          vec<double> delta_old(path.Dr(bead_b(i),path.RBar(bead_c(i),bead_a(i))));
           old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
           // New sampling
