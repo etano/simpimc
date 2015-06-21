@@ -134,8 +134,7 @@ public:
   {
     uint32_t skip = 1<<level;
     double i_4_lambda_level_tau = i_4_lambda_tau/skip;
-    vec<double> tot;
-    tot.zeros(path.n_d);
+    vec<double> tot(zeros<vec<double>>(path.n_d));
     std::shared_ptr<Bead> beadA, beadB, beadC, beadF;
     for (auto& p: particles) {
       uint32_t s_i = p.first;

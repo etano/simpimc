@@ -41,10 +41,8 @@ public:
     double dr = (r_grid.end - r_grid.start)/(r_grid.num - 1);
 
     // Make image_action, d_image_action_d_tau, d_image_action_d_r
-    vec<double> image_action, d_image_action_d_tau, d_image_action_d_r;
-    image_action.zeros(r_grid.num);
-    if (use_tau_derivative)
-      d_image_action_d_tau.zeros(r_grid.num);
+    vec<double> image_action(zeros<vec<double>>(r_grid.num));
+    vec<double> d_image_action_d_tau(zeros<vec<double>>(r_grid.num));
     for (uint32_t i=0; i<r_grid.num; ++i) {
       double r = r_grid.start + i*dr;
       double r_2 = r*r;

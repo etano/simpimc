@@ -67,8 +67,7 @@ private:
     field<Cycle> possible_cycles;
     possible_cycles.set_size(n_perm_type);
     for (uint32_t i=0; i<n_perm_type; ++i) {
-      mat<uint32_t> p_i(n_perm_part,n_perm_part);
-      p_i.zeros();
+      mat<uint32_t> p_i(zeros<mat<uint32_t>>(n_perm_part,n_perm_part));
       possible_cycles(i).perm.set_size(n_perm_part);
       for (uint32_t j=0; j<n_perm_part; ++j) {
         possible_cycles(i).perm(j) = tmp_poss_cycles[i][j];

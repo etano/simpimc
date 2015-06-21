@@ -161,8 +161,7 @@ public:
     // Line
     } else if (init_type == "Line") {
       double dr = in.GetAttribute<double>("spacing",L/n_part);
-      vec<double> r;
-      r.zeros(n_d);
+      vec<double> r(zeros<vec<double>>(n_d));
       for (uint32_t p_i=0; p_i<n_part; p_i++) {
         for (int b_i=0; b_i<n_bead; ++b_i) {
           bead(p_i,b_i)->r = r;

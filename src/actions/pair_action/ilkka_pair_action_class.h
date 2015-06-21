@@ -236,9 +236,7 @@ private:
   virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
   {
     // Should average to 0
-    vec<double> tot;
-    tot.zeros(path.n_d);
-    return tot;
+    return zeros<vec<double>>(path.n_d);
   }
 
   /// Calculate the gradient of the long ranged part of the action in the direction of p_i
@@ -249,8 +247,7 @@ private:
 
     // Sum over k std::vectors
     uint32_t skip = 1<<level;
-    vec<double> tot;
-    tot.zeros(path.n_d);
+    vec<double> tot(zeros<vec<double>>(path.n_d));
     for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
       for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
         vec<std::complex<double>> &rho_k_b(path.GetRhoK(path(species_a_i,p_i,b_i)));

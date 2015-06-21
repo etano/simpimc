@@ -502,8 +502,7 @@ public:
   /// Get the current cycle counts
   void SetCycleCount(const uint32_t s_i, std::vector<uint32_t> &cycles)
   {
-    vec<uint32_t> already_counted;
-    already_counted.zeros(species_list[s_i]->n_part);
+    vec<uint32_t> already_counted(zeros<vec<uint32_t>>(species_list[s_i]->n_part));
     for (uint32_t p_i=0; p_i<species_list[s_i]->n_part; p_i++) {
       if (!already_counted(p_i)) {
         uint32_t cycle_length = 1;

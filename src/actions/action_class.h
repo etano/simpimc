@@ -45,7 +45,7 @@ public:
   virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };
 
   /// Returns the spatial gradient of the action between time slices b0 and b1 for a vector of particles
-  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { vec<double> zero_vec; zero_vec.zeros(path.n_d); return zero_vec; };
+  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return zeros<vec<double>>(path.n_d); };
 
   /// Returns the spatial laplacian of the action between time slices b0 and b1 for a vector of particles
   virtual double GetActionLaplacian(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };

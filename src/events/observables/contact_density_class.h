@@ -61,8 +61,7 @@ private:
         // Compute functions
         double g = 0.; // TODO: Currently fixing g to 0
         double f = 1.; // TODO: Currently fixing f to 1
-        vec<double> gradient_f;
-        gradient_f.zeros(path.n_d);
+        vec<double> gradient_f(zeros<vec<double>>(path.n_d));
         double laplacian_f = 0.;
         //double f = 1. + 2*z_a*(mag_ri_RA);
         //vec<double> gradient_f = 2*z_a*((ri_RA/mag_ri_RA));
@@ -71,8 +70,7 @@ private:
         // Sum over actions for ri
         std::vector<std::pair<uint32_t,uint32_t>> only_ri;
         only_ri.push_back(particle_pairs[pp_i][1]);
-        vec<double> gradient_action;
-        gradient_action.zeros(path.n_d);
+        vec<double> gradient_action(zeros<vec<double>>(path.n_d));
         double laplacian_action = 0.;
         for (auto& action: action_list) {
           gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);

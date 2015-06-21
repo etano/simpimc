@@ -152,17 +152,13 @@ protected:
   /// Calculate the gradient of the long ranged part of the action for all particles
   virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
   {
-    vec<double> tot;
-    tot.zeros(path.n_d);
-    return tot;
+    return zeros<vec<double>>(path.n_d);
   }
 
   /// Calculate the gradient of the long ranged part of the action in the direction of p_i
   virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t p_i, const uint32_t level)
   {
-    vec<double> tot;
-    tot.zeros(path.n_d);
-    return tot;
+    return zeros<vec<double>>(path.n_d);
   }
 
   /// Calculate the Laplacian of the action
@@ -331,8 +327,7 @@ public:
   virtual vec<double> GetActionGradient(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
   {
     // Return zero if not relevant
-    vec<double> zero_vec;
-    zero_vec.zeros(path.n_d);
+    vec<double> zero_vec(zeros<vec<double>>(path.n_d));
     if (level > max_level || is_constant || species_a_i < 0 || species_b_i < 0)
       return zero_vec;
 
