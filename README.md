@@ -1,5 +1,7 @@
 # simpimc
 
+[![Join the chat at https://gitter.im/etano/simpimc](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/etano/simpimc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Simple path integral monte carlo in c++.
 
 master: ![master build status](https://travis-ci.org/etano/simpimc.svg?branch=master)
