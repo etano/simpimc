@@ -10,10 +10,9 @@ private:
   /// Find an event
   std::shared_ptr<Event> FindEvent(std::string name, std::vector<std::shared_ptr<Event>> &event_list)
   {
-    std::vector<std::shared_ptr<Event>>::iterator iter;
-    for (iter=event_list.begin(); iter!=event_list.end(); ++iter)
-      if ((*iter)->name == name)
-        return (*iter);
+    for (auto e : event_list)
+      if (e->name == name)
+        return e;
     return nullptr;
   }
 
