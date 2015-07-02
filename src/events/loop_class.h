@@ -10,10 +10,9 @@ private:
   /// Find an event
   std::shared_ptr<Event> FindEvent(std::string name, std::vector<std::shared_ptr<Event>> &event_list)
   {
-    std::vector<std::shared_ptr<Event>>::iterator iter;
-    for (iter=event_list.begin(); iter!=event_list.end(); ++iter)
-      if ((*iter)->name == name)
-        return (*iter);
+    for (auto e : event_list)
+      if (e->name == name)
+        return e;
     return nullptr;
   }
 
@@ -49,10 +48,9 @@ public:
         else
           std::cerr << "WARNING: Event not found, " << name << std::endl;
       } else if (type == "Write") {
-        events.push_back(FindEvent("Write",event_list));
+        events.push_back(FindEvent("write",event_list));
       } else if (type == "Loop") {
         events.push_back(std::make_shared<Loop>(in,event_list));
-      } else if (type == "n_step") {
       } else
         std::cerr << "WARNING: Unrecognized event, " << type << std::endl;
     }
@@ -62,8 +60,9 @@ public:
   void DoEvent()
   {
     for (int i=0; i<n_steps; i++)
-      for (auto& event: events)
+      for (auto& event: events) {
         event->DoEvent();
+      }
   }
 };
 

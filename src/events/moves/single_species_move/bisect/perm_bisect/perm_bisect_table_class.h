@@ -67,8 +67,7 @@ private:
     field<Cycle> possible_cycles;
     possible_cycles.set_size(n_perm_type);
     for (uint32_t i=0; i<n_perm_type; ++i) {
-      mat<uint32_t> p_i(n_perm_part,n_perm_part);
-      p_i.zeros();
+      mat<uint32_t> p_i(zeros<mat<uint32_t>>(n_perm_part,n_perm_part));
       possible_cycles(i).perm.set_size(n_perm_part);
       for (uint32_t j=0; j<n_perm_part; ++j) {
         possible_cycles(i).perm(j) = tmp_poss_cycles[i][j];
@@ -183,7 +182,7 @@ private:
           path.SetMode(OLD_MODE);
           bead_b(i) = path.GetNextBead(bead_a(i),skip);
           bead_c(i) = path.GetNextBead(bead_b(i),skip);
-          vec<double> delta_old(path.Dr(bead_b(i), path.RBar(bead_c(i), bead_a(i))));
+          vec<double> delta_old(path.Dr(bead_b(i),path.RBar(bead_c(i),bead_a(i))));
           old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
           // New sampling
@@ -193,7 +192,7 @@ private:
           vec<double> delta_new(path.n_d);
           rng.NormRand(delta_new, 0., sigma);
           path.PutInBox(delta_new);
-          bead_b(i)->r = path.RBar(bead_c(i), bead_a(i)) + delta_new;
+          bead_b(i)->r = path.RBar(bead_c(i),bead_a(i)) + delta_new;
           new_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_new);
 
           bead_a(i) = bead_c(i);

@@ -28,8 +28,8 @@ protected:
   void GenerateActionList(std::vector<std::shared_ptr<Action>> &t_action_list, const std::vector<std::string> &species)
   {
     for (auto& action: t_action_list)
-      for (auto& sA: species)
-        if (std::find(action->species_list.begin(), action->species_list.end(), sA) != action->species_list.end()) {
+      for (auto& s: species)
+        if (std::find(action->species_list.begin(), action->species_list.end(), s) != action->species_list.end()) {
           action_list.push_back(action);
           break; // Only add the action once even if it's found by multiple species
         }

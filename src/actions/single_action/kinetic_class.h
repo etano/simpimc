@@ -28,7 +28,6 @@ public:
   Kinetic(Path &path, Input &in, IO &out)
     : SingleAction(path,in,out)
   {
-    std::cout << "Setting up kinetic action for " << species << "..." << std::endl;
     SetupSpline();
   }
 
@@ -121,8 +120,7 @@ public:
         std::shared_ptr<Bead> beadF(path.GetNextBead(beadA,b1-b0));
         while(beadA != beadF) {
           std::shared_ptr<Bead> beadB(path.GetNextBead(beadA,skip));
-          vec<double> dr(path.Dr(beadA,beadB));
-          tot -= rho_free_splines[skip-1].GetLogRhoFree(dr);
+          tot -= rho_free_splines[skip-1].GetLogRhoFree(path.Dr(beadA,beadB));
           beadA = beadB;
         }
       }
@@ -136,8 +134,7 @@ public:
   {
     uint32_t skip = 1<<level;
     double i_4_lambda_level_tau = i_4_lambda_tau/skip;
-    vec<double> tot;
-    tot.zeros(path.n_d);
+    vec<double> tot(zeros<vec<double>>(path.n_d));
     std::shared_ptr<Bead> beadA, beadB, beadC, beadF;
     for (auto& p: particles) {
       uint32_t s_i = p.first;

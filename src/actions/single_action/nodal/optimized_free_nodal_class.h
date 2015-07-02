@@ -64,7 +64,7 @@ public:
   {
     // Read in variational parameters
     model_i = in.GetAttribute<uint32_t>("model");
-    init_param_set = in.GetAttribute<uint32_t>("init_param_set");
+    init_param_set = in.GetAttribute<uint32_t>("init_param_set",0);
     std::vector<Input> param_set_inputs = in.GetChildList("ParamSet");
     for (auto& param_setInput : param_set_inputs) {
       std::vector<Input> param_inputs = param_setInput.GetChildList("Param");

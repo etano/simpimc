@@ -25,6 +25,8 @@ public:
     n_part = path.species_list[species_i]->n_part;
     lambda = path.species_list[species_i]->lambda;
     i_4_lambda_tau = 1./(4.*lambda*path.tau);
+
+    std::cout << "Setting up " << name << " for " << species << "..." << std::endl;
   }
 };
 

@@ -12,7 +12,7 @@ private:
   {
     double omega = param_sets[param_set_i][0];
     double level_tau_omega = slice_diff*path.tau*omega;
-    double cofactor = omega*i_4_lambda_tau/(M_PI*sinh(level_tau_omega));
+    double cofactor = omega*i_4_lambda_tau/(slice_diff*M_PI*sinh(level_tau_omega));
     vec<double> r_i = path.GetR(b_i);
     vec<double> r_j = path.GetR(b_j);
     return pow(cofactor,path.n_d/2.)*exp(-cofactor*((dot(r_i,r_i) + dot(r_j,r_j))*cosh(level_tau_omega) - 2*dot(r_i,r_j)));
@@ -26,7 +26,7 @@ private:
     vec<double> r_i = path.GetR(b_i);
     vec<double> r_j = path.GetR(b_j);
     double gij = GetGij(b_i, b_j, slice_diff);
-    dgij_dr = -omega*i_4_lambda_tau/(M_PI*sinh(level_tau_omega))*(2.*r_i*cosh(level_tau_omega) - 2.*r_j)*gij;
+    dgij_dr = -omega*i_4_lambda_tau/(slice_diff*M_PI*sinh(level_tau_omega))*(2.*r_i*cosh(level_tau_omega) - 2.*r_j)*gij;
     return gij;
   }
 

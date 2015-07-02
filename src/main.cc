@@ -1,4 +1,4 @@
-#include "framework/simulation_class.h"
+#include "framework/framework_class.h"
 
 int main(int argc, char** argv)
 {
@@ -13,8 +13,8 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  Simulation sim(in_file);
-  sim.Run();
+  Framework fw(in_file);
+  fw.Run();
 
   COMM::Finalize();
 

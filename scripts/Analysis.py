@@ -49,7 +49,9 @@ class Scalar(Observable):
         data = []
         for file in files:
             file_not_read = True
-            while (file_not_read):
+            failure_i = 0
+            max_failure = 10
+            while (file_not_read and failure_i < max_failure):
                 try:
                     f = h5.File(file,'r')
                     data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][self.startCut:])))
@@ -58,9 +60,12 @@ class Scalar(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                    failure_i += 1
                 except KeyError as e:
                     print 'Data not found for', self.prefix+self.name, 'in', file
                     file_not_read = False
+            if (failure_i == max_failure):
+                print 'Skipping', self.prefix+self.name, 'in', file
         stats = Stats.UnweightedAvg(np.array(data))
         return stats
 
@@ -92,7 +97,9 @@ class Histogram(Observable):
         count = 0
         for j in range(len(files)):
             file_not_read = True
-            while (file_not_read):
+            failure_i = 0
+            max_failure = 10
+            while (file_not_read and failure_i < max_failure):
                 try:
                     f = h5.File(files[j],'r')
                     xs = np.array(f[self.prefix+self.name+"/x"])
@@ -105,9 +112,12 @@ class Histogram(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                    failure_i += 1
                 except KeyError as e:
                     print 'Data not found for', self.prefix+self.name, 'in', file
                     file_not_read = False
+            if (failure_i == max_failure):
+                print 'Skipping', self.prefix+self.name, 'in', file
         stats = []
         for i in range(len(xs)):
             yStatsi = [x[i] for x in yStats]
@@ -146,7 +156,9 @@ class Pair(Observable):
         for file in files:
             pairs = []
             file_not_read = True
-            while (file_not_read):
+            failure_i = 0
+            max_failure = 10
+            while (file_not_read and failure_i < max_failure):
                 try:
                     f = h5.File(file,'r')
                     xs = np.array(f[self.prefix+self.name+"/x"])
@@ -156,9 +168,12 @@ class Pair(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                    failure_i += 1
                 except KeyError as e:
                     print 'Data not found for', self.prefix+self.name, 'in', file
                     file_not_read = False
+            if (failure_i == max_failure):
+                print 'Skipping', self.prefix+self.name, 'in', file
             for pair in pairs:
                 try:
                     ys[pair[0]] += pair[1]
@@ -190,7 +205,9 @@ class AvgPair(Observable):
         for file in files:
             avg_pairs = []
             file_not_read = True
-            while (file_not_read):
+            failure_i = 0
+            max_failure = 10
+            while (file_not_read and failure_i < max_failure):
                 try:
                     f = h5.File(file,'r')
                     xs = np.array(f[self.prefix+self.name+"/x"])
@@ -200,9 +217,12 @@ class AvgPair(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                    failure_i += 1
                 except KeyError as e:
                     print 'Data not found for', self.prefix+self.name, 'in', file
                     file_not_read = False
+            if (failure_i == max_failure):
+                print 'Skipping', self.prefix+self.name, 'in', file
             for avg_pair in avg_pairs:
                 sector = avg_pair[0]
                 [eM,varM,M] = avg_pair[1:]
@@ -236,7 +256,9 @@ class Matrix(Observable):
         data = {}
         for file in files:
             file_not_read = True
-            while (file_not_read):
+            failure_i = 0
+            max_failure = 10
+            while (file_not_read and failure_i < max_failure):
                 try:
                     f = h5.File(file,'r')
                     matrices = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
@@ -254,9 +276,12 @@ class Matrix(Observable):
                     file_not_read = False
                 except IOError as e:
                     print 'Trouble reading', self.prefix+self.name, 'in', file
+                    failure_i += 1
                 except KeyError as e:
                     print 'Data not found for', self.prefix+self.name, 'in', file
                     file_not_read = False
+            if (failure_i == max_failure):
+                print 'Skipping', self.prefix+self.name, 'in', file
         stats = {}
         for key,val in data.iteritems():
             stats[key] = Stats.UnweightedAvg(np.array(val))

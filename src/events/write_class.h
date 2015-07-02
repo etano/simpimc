@@ -21,7 +21,7 @@ public:
   Writes(IO &tmp_out, std::vector<std::shared_ptr<Event>> &tmp_events, std::vector<std::shared_ptr<Action>> &tmp_actions, const uint32_t t_proc_i)
     : Event(), out(tmp_out), events(tmp_events), actions(tmp_actions), proc_i(t_proc_i)
   {
-    name = "Write";
+    name = "write";
     block_i = 0;
     struct timeval time;
     gettimeofday(&time, NULL); // Start Time

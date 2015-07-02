@@ -78,12 +78,12 @@ protected:
       bead_a = bead_i;
       while(bead_a != bead_f) {
         // Set beads
-        bead_b = bead_a->NextB(skip);
-        bead_c = bead_b->NextB(skip);
+        bead_b = path.GetNextBead(bead_a,skip);
+        bead_c = path.GetNextBead(bead_b,skip);
 
         // Old sampling
         path.SetMode(OLD_MODE);
-        vec<double> delta_old(path.Dr(bead_b, path.RBar(bead_c, bead_a)));
+        vec<double> delta_old(path.Dr(bead_b,path.RBar(bead_c,bead_a)));
         old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
         // New sampling
@@ -113,10 +113,10 @@ protected:
 
       double log_sample_ratio = -new_log_sample_prob + old_log_sample_prob;
       double current_action_change = new_action - old_action;
-      double log_accept_probablity = log_sample_ratio - current_action_change + prev_action_change;
+      double log_accept_probability = log_sample_ratio - current_action_change + prev_action_change;
 
       // Metropolis reject step
-      if (log_accept_probablity < log(rng.UnifRand()))
+      if (log_accept_probability < log(rng.UnifRand()))
         return 0;
 
       prev_action_change = current_action_change;

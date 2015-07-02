@@ -52,8 +52,7 @@ public:
     first_sector = true;
 
     // Write out possible sectors
-    mat<uint32_t> tmp_perms;
-    tmp_perms.zeros(path.species_list[species_i]->n_part,path.poss_perms[species_i].size());
+    mat<uint32_t> tmp_perms(zeros<mat<uint32_t>>(path.species_list[species_i]->n_part,path.poss_perms[species_i].size()));
     std::map<std::vector<uint32_t>,uint32_t>::iterator tmp_iterator;
     for(tmp_iterator = path.poss_perms[species_i].begin(); tmp_iterator != path.poss_perms[species_i].end(); tmp_iterator++) {
       std::vector<uint32_t> tmpPerm = (*tmp_iterator).first;
