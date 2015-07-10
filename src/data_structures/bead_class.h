@@ -8,8 +8,8 @@ public:
   bool is_ira; ///< Whether or not bead is the head of a worm
   bool is_masha; ///< Whether or not bead is the tail of a worm
   uint32_t p; ///< Particle index
-  uint32_t b; ///< Bead index
-  uint32_t s; ///< Species index
+  const uint32_t b; ///< Bead index
+  const uint32_t s; ///< Species index
 
   std::shared_ptr<Bead> next; ///< Pointer to next bead
   std::shared_ptr<Bead> next_c; ///< Copy of pointer to next bead
@@ -20,11 +20,8 @@ public:
   vec<std::complex<double>> rho_k; ///< Single bead contribution to charge density
   vec<std::complex<double>> rho_k_c; ///< Copy of single bead contribution to charge density
 
-  /// Copy constructor
-  Bead() {};
-
   /// Constructor for new bead given spatial dimension, species, particle, and time slice
-  Bead(uint32_t n_d, uint32_t t_s, uint32_t t_p, uint32_t t_b)
+  Bead(const uint32_t n_d, const uint32_t t_s, const uint32_t t_p, const uint32_t t_b)
     : s(t_s), p(t_p), b(t_b), r(n_d), r_c(n_d), is_ira(false), is_masha(false)
   {}
 
@@ -85,33 +82,25 @@ public:
   /// Returns bead n time steps further up the path as determined by next
   std::shared_ptr<Bead> NextB(const uint32_t n)
   {
-    std::shared_ptr<Bead> bead(prev->next);
-    for (uint32_t i=0; i<n; i++) bead = bead->next;
-    return bead;
+    return n == 0 ? prev->next : n == 1 ? next : next->NextB(n-1);
   }
 
   /// Returns bead n time steps further up the path as determined by next_c
   std::shared_ptr<Bead> NextBC(const uint32_t n)
   {
-    std::shared_ptr<Bead> bead(prev->next);
-    for (uint32_t i=0; i<n; i++) bead = bead->next_c;
-    return bead;
+    return n == 0 ? prev_c->next_c : n == 1 ? next_c : next_c->NextBC(n-1);
   }
 
   /// Returns bead n time steps before as determined by prev
   std::shared_ptr<Bead> PrevB(const uint32_t n)
   {
-    std::shared_ptr<Bead> bead(next->prev);
-    for (uint32_t i=0; i<n; i++) bead = bead->prev;
-    return bead;
+    return n == 0 ? next->prev : n == 1 ? prev : prev->PrevB(n-1);
   }
 
   /// Returns bead n time steps before as determined by prev_c
   std::shared_ptr<Bead> PrevBC(const uint32_t n)
   {
-    std::shared_ptr<Bead> bead(next->prev);
-    for (uint32_t i=0; i<n; i++) bead = bead->prev_c;
-    return bead;
+    return n == 0 ? next_c->prev_c : n == 1 ? prev_c : prev_c->PrevBC(n-1);
   }
 
 };

@@ -12,15 +12,15 @@ public:
   double lambda; ///< h_bar^2/2m
   bool need_update_rho_k; ///< Whether or not rho_k needs to be updated
   uint32_t n_bead; ///< Number of time slices
-  uint32_t n_d; ///< Number of physical dimensions
+  const uint32_t n_d; ///< Number of physical dimensions
   uint32_t n_part; ///< Number of particles in species
-  uint32_t s_i; ///< Species index
+  const uint32_t s_i; ///< Species index
   std::string init_type; ///< Type of path initiation
   std::string name; ///< Name of species
   field<std::shared_ptr<Bead>> bead; ///< Container of beads
 
   /// Constructor
-  Species(Input &in, IO &out, int t_s_i, int t_n_d, int t_n_bead)
+  Species(Input &in, IO &out, const int t_s_i, const int t_n_d, const int t_n_bead)
     : s_i(t_s_i), n_d(t_n_d), n_bead(t_n_bead), fixed_node(false)
   {
     // Read inputs
