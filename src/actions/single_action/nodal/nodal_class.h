@@ -149,7 +149,7 @@ protected:
       for (uint32_t p_j=p_i+1; p_j<n_part; ++p_j)
         dist_b_i = std::min(mag(path.Dr(path(species_i,p_i,b_i),path(species_i,p_j,b_i))), dist_b_i);
     dist_b_i *= M_SQRT1_2;
-    return dist_b_i; // FIXME: Should I include ref distance?
+    return dist_b_i;
   }
 
   /// Compute the nodal distance of time slice b_i by finding the distance of a point to the hyperplane formed by the other particles
@@ -271,7 +271,7 @@ protected:
     mat<double> g_ij(n_part,n_part);
     for (uint32_t p_i=0; p_i<n_part; ++p_i) {
       for (uint32_t p_j=0; p_j<n_part; ++p_j) {
-        g_ij(p_i,p_j) = GetGij(ref_b[p_i], other_b_i[p_j], min_slice_diff);
+        g_ij(p_i,p_j) = GetGij(ref_b[p_i], other_b_i[p_j], min_slice_diff); // TODO: Fast updates
       }
     }
 
@@ -319,7 +319,7 @@ protected:
     for (uint32_t p_i=0; p_i<n_part; ++p_i) {
       grad_rho_f(b_i,p_i).zeros();
       for (uint32_t p_j=0; p_j<n_part; ++p_j)
-        grad_rho_f(b_i,p_i) -= dg_ij_dr(p_j,p_i)*cofactors_g_ij(p_j,p_i); // FIXME: Should this be minue? Also, could be written in fewer lines.
+        grad_rho_f(b_i,p_i) -= dg_ij_dr(p_j,p_i)*cofactors_g_ij(p_j,p_i);
     }
 
   }
@@ -335,19 +335,6 @@ protected:
   {
     // Compute action
     double tot = 0.;
-    if (check_all) {
-      std::atomic_bool abort(false);
-      #pragma omp parallel for reduction(+:tot) schedule(dynamic) shared(abort) // FIXME: Could be optimized probably
-      for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-        if (!abort && b_i_vec[b_i] != path.ref_bead) {
-          SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
-          if (rho_f(b_i_vec[b_i]) < 0.) {
-            tot += 1.e100;
-            abort = true;
-          }
-        }
-      }
-    } else {
       for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
         if (b_i_vec[b_i] != path.ref_bead)  {
           SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
@@ -357,7 +344,6 @@ protected:
           }
         }
       }
-    }
 
     return tot;
   }
@@ -368,19 +354,6 @@ protected:
     // Set nodal distances
     double tot = 0.;
     vec<double> t_dist(n_bead_in_move);
-    if (check_all) {
-      std::atomic_bool abort(false);
-      #pragma omp parallel for reduction(+:tot) schedule(dynamic) shared(abort) // TODO: Could be optimized probably
-      for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-        if (!abort && b_i_vec[b_i] != path.ref_bead)  {
-          t_dist(b_i) = GetNodalDistance(b_i_vec[b_i],ref_b,other_b[b_i]);
-          if (t_dist(b_i) < 0.) {
-            tot += 1.e100;
-            abort = true;
-          }
-        }
-      }
-    } else {
       for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
         if (b_i_vec[b_i] != path.ref_bead)  {
           t_dist(b_i) = GetNodalDistance(b_i_vec[b_i],ref_b,other_b[b_i]);
@@ -390,7 +363,6 @@ protected:
           }
         }
       }
-    }
 
     // Compute action from nodal distance
     if (tot == 0.) {
@@ -643,7 +615,7 @@ public:
       ref_b[p_i] = path(species_i,p_i,path.ref_bead);
     if (slice_diff_0 >= 0) {
       for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        other_b[0].push_back(path.GetNextBead(ref_b[p_i],abs_slice_diff_0)); // FIXME: Perhaps this could be faster
+        other_b[0].push_back(path.GetNextBead(ref_b[p_i],abs_slice_diff_0));
     } else {
       for (uint32_t p_i=0; p_i<n_part; ++p_i)
         other_b[0].push_back(path.GetPrevBead(ref_b[p_i],abs_slice_diff_0));

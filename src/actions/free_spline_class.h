@@ -71,13 +71,13 @@ public:
   }
 
   /// Returns rho_free
-  inline double GetRhoFree(const vec<double> &r)
+  double GetRhoFree(const vec<double> &r)
   {
     return exp(GetLogRhoFree(r));
   }
 
   /// Returns log(rho_free)
-  inline double GetLogRhoFree(const vec<double> &r)
+  double GetLogRhoFree(const vec<double> &r)
   {
     double tot = 0.;
     double image_action;
@@ -89,13 +89,13 @@ public:
   }
 
   /// Returns d(rho_free)/dtau
-  inline double GetDRhoFreeDTau(const vec<double> &r)
+  double GetDRhoFreeDTau(const vec<double> &r)
   {
     return GetDLogRhoFreeDTau(r)*GetRhoFree(r);
   }
 
   /// Returns dlog(rho_free)/dtau
-  inline double GetDLogRhoFreeDTau(const vec<double> &r)
+  double GetDLogRhoFreeDTau(const vec<double> &r)
   {
     double tot = 0.;
     double d_image_action_d_tau;
@@ -107,7 +107,7 @@ public:
   }
 
   /// Sets gradient of rho_free at r and returns rho_free
-  inline double GetGradRhoFree(const vec<double> &r, vec<double> &grad_rho_free)
+  double GetGradRhoFree(const vec<double> &r, vec<double> &grad_rho_free)
   {
     vec<double> grad_log_rho_free(r.size());
     double log_rho_free = GetGradLogRhoFree(r,grad_log_rho_free);
@@ -117,7 +117,7 @@ public:
   }
 
   /// Returns gradient of log(rho_free) at r
-  inline double GetGradLogRhoFree(const vec<double> &r, vec<double> &grad_log_rho_free)
+  double GetGradLogRhoFree(const vec<double> &r, vec<double> &grad_log_rho_free)
   {
     double tot = 0.;
     for (uint32_t d_i=0; d_i<r.size(); d_i++) {
