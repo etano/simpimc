@@ -78,7 +78,7 @@ private:
       // Select next particle with bisective search
       double x = rng.UnifRand();
       double t_Q = 0.;
-      for (uint32_t i=0; i<n_part; ++i) { // TODO: not doing bisection
+      for (uint32_t i=0; i<n_part; ++i) { // TODO: not doing bisective search
         t_Q += t_c(p,i)/Q_p_c;
         if (t_Q > x) {
           p = i;
