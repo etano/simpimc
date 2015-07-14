@@ -61,7 +61,7 @@ protected:
     // Set which particles are affected by the move
     std::vector<std::pair<uint32_t,uint32_t>> particles;
     particles.push_back(std::make_pair(species_i,p_i));
-    if (bead_f->p != p_i)  // TODO: may be overkill
+    if (bead_f->p != p_i)  // fixme: may be overkill
       particles.push_back(std::make_pair(species_i,bead_f->p));
 
     // Perform the bisection (move exactly through kinetic action)

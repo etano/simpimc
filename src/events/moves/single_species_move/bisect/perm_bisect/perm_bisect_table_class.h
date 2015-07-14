@@ -7,9 +7,6 @@
 class PermBisectTable : public PermBisect
 {
 private:
-  std::vector<std::shared_ptr<Cycle>> cycles; ///< Vector of all possible cycles
-  field<Cycle> all_cycles; ///< All possible cycles
-
   /// Construct the permutation table
   double ConstructPermTable()
   {
@@ -26,7 +23,7 @@ private:
       if (c.weight > epsilon) {
         total_weight += c.weight;
         c.contribution = total_weight;
-        cycles.emplace_back(&c);
+        cycles.push_back(&c);
       }
     }
     return total_weight;
@@ -140,7 +137,7 @@ private:
     cycles.clear();
     double perm_tot_0 = ConstructPermTable(); // Permutation weight table
     uint32_t cycle_index = SelectCycle(perm_tot_0);
-    std::shared_ptr<Cycle> c = cycles[cycle_index];
+    Cycle* c = cycles[cycle_index]; // TODO: Make a smart pointer
 
     // Set up pointers
     std::vector<std::pair<uint32_t,uint32_t>> particles;

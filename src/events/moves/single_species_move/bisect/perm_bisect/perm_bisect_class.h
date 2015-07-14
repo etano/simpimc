@@ -26,7 +26,9 @@ protected:
   uint32_t perm_type; ///< Type of permutation being performed
   vec<uint32_t> perm_accept; ///< Vector of permutations accepted for each permutation type
   vec<uint32_t> perm_attempt; ///< Vector of permutations attempted for each permutation type
+  std::vector<Cycle*> cycles; ///< Vector of all possible cycles
   mat<double> t; ///< Table of possible permutation weights
+  field<Cycle> all_cycles; ///< All possible cycles
 
   /// Permute the beads in the cycle
   void PermuteBeads(field<std::shared_ptr<Bead>> &b0, field<std::shared_ptr<Bead>> &b1, const Cycle &c)
@@ -65,7 +67,7 @@ protected:
       path.sign *= -1;
 
     // Accept move, so store things
-    for (uint32_t p_i=0; p_i<n_part; p_i++) { // TODO: can make this more efficient by only restoring touched particles
+    for (uint32_t p_i=0; p_i<n_part; p_i++) { // todo: can make this more efficient by only restoring touched particles
       path(species_i,p_i,bead1)->StorePrev();
       path(species_i,p_i,bead1-1)->StoreNext();
     }
