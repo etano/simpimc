@@ -39,7 +39,25 @@ protected:
   virtual bool Attempt()
   {
     int p_i = rng.UnifRand(n_part) - 1;  // Pick particle at random
-    bead0 = rng.UnifRand(path.n_bead) - 1;  // Pick first bead at random
+    std::shared_ptr<Bead> bead_i, bead_f;;
+    bool beads_set = true;
+    do {
+      bead0 = rng.UnifRand(path.n_bead) - 1;  // Pick first bead at random
+      bead_i = path(species_i,p_i,bead0);
+      bead_f = bead_i;
+      affected_beads.clear();
+      affected_beads.push_back(bead_i);
+      for (uint32_t i=0; i<n_bisect_beads; ++i) {
+        if (bead_f->next == nullptr) {
+          beads_set = false;
+          break;
+        } else {
+          bead_f = bead_f->next;
+          affected_beads.push_back(bead_f);
+        }
+      }
+    } while (!beads_set);
+
     bead1 = bead0 + n_bisect_beads; // Set last bead in bisection
     bool roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
     bool include_ref = path.species_list[species_i]->fixed_node &&
@@ -47,16 +65,6 @@ protected:
                       (roll_over && path.bead_loop[bead1]>=path.ref_bead));
     if (include_ref)
       ref_attempt++;
-
-    // Set up pointers
-    std::shared_ptr<Bead> bead_i(path(species_i,p_i,bead0));
-    std::shared_ptr<Bead> bead_f(bead_i);
-    affected_beads.clear();
-    affected_beads.push_back(bead_i);
-    for (uint32_t i=0; i<n_bisect_beads; ++i) {
-      bead_f = bead_f->next;
-      affected_beads.push_back(bead_f);
-    }
 
     // Set which particles are affected by the move
     std::vector<std::pair<uint32_t,uint32_t>> particles;

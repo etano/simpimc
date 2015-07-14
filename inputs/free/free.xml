@@ -1,5 +1,5 @@
 <Input>
-  <RNG />
+  <RNG seed="12345" />
   <IO output_prefix="free.0" />
   <Parallel procs_per_group="1" />
   <System n_d="2" n_bead="64" beta="1.0" L="10.0" pbc="1" />
@@ -14,22 +14,24 @@
     <Action name="NodalD" type="FreeNodal" n_images="200" species="eD" />
   </Actions>
   <Moves>
+    <Move name="OpenD" type="Open" species="eD" />
     <Move name="BisectD" type="PermBisectIterative" species="eD" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
     <Move name="BisectU" type="PermBisectIterative" species="eU" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
   </Moves>
   <Observables>
-    <Observable name="Energy" type="Energy" skip="1" />
     <Observable name="PathDump" type="PathDump" skip="9" />
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
-    <Loop n_step="1000">
+    <Loop n_step="1">
+      <Move name="OpenD" />
       <Loop n_step="1000">
-        <Move name="BisectU" />
-        <Move name="BisectD" />
-        <Observable name="Energy" />
+        <Loop n_step="1000">
+          <Move name="BisectU" />
+          <Move name="BisectD" />
+        </Loop>
+        <Write />
       </Loop>
-      <Write />
     </Loop>
   </Algorithm>
 </Input>

@@ -82,25 +82,25 @@ public:
   /// Returns bead n time steps further up the path as determined by next
   inline std::shared_ptr<Bead> NextB(const uint32_t n)
   {
-    return n==0 ? prev->next : next->NextB(n-1);
+    return n==1 ? next : next->NextB(n-1);
   }
 
   /// Returns bead n time steps further up the path as determined by next_c
   inline std::shared_ptr<Bead> NextBC(const uint32_t n)
   {
-    return n==0 ? prev_c->next_c : next_c->NextBC(n-1);
+    return n==1 ? next_c : next_c->NextBC(n-1);
   }
 
   /// Returns bead n time steps before as determined by prev
   inline std::shared_ptr<Bead> PrevB(const uint32_t n)
   {
-    return n==0 ? next->prev : prev->PrevB(n-1);
+    return n==1 ? prev : prev->PrevB(n-1);
   }
 
   /// Returns bead n time steps before as determined by prev_c
   inline std::shared_ptr<Bead> PrevBC(const uint32_t n)
   {
-    return n==0 ? next_c->prev_c : prev_c->PrevBC(n-1);
+    return n==1 ? prev_c : prev_c->PrevBC(n-1);
   }
 
 };

@@ -515,22 +515,6 @@ public:
     if (!use_nodal_distance)
       return 0.;
 
-    // Initialize other beads
-    std::vector<std::shared_ptr<Bead>> ref_b(n_part);
-    std::vector<std::vector<std::shared_ptr<Bead>>> other_b(path.n_bead);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      ref_b[p_i] = path(species_i,p_i,path.ref_bead);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      other_b[0].push_back(path.GetPrevBead(ref_b[p_i],path.ref_bead));
-
-    std::vector<uint32_t> b_i_vec;
-    b_i_vec.push_back(other_b[0][0]->b);
-    for (uint32_t b_i=1; b_i<path.n_bead; ++b_i) {
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        other_b[b_i].push_back(path.GetNextBead(other_b[b_i-1][p_i],1));
-      b_i_vec.push_back(other_b[b_i][0]->b);
-    }
-
     // Compute action from nodal distance
     double tot = 0.;
     double i_lambda_tau = 1./(path.species_list[species_i]->lambda*path.tau);
@@ -613,9 +597,12 @@ public:
     int abs_slice_diff_0 = abs(slice_diff_0);
     for (uint32_t p_i=0; p_i<n_part; ++p_i)
       ref_b[p_i] = path(species_i,p_i,path.ref_bead);
-    if (slice_diff_0 >= 0) {
+    if (slice_diff_0 > 0) {
       for (uint32_t p_i=0; p_i<n_part; ++p_i)
         other_b[0].push_back(path.GetNextBead(ref_b[p_i],abs_slice_diff_0));
+    } else if (slice_diff_0 == 0) {
+      for (uint32_t p_i=0; p_i<n_part; ++p_i)
+        other_b[0].push_back(ref_b[p_i]);
     } else {
       for (uint32_t p_i=0; p_i<n_part; ++p_i)
         other_b[0].push_back(path.GetPrevBead(ref_b[p_i],abs_slice_diff_0));

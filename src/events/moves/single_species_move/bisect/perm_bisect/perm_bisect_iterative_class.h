@@ -10,22 +10,37 @@ private:
   /// Update the permutation table
   void UpdatePermTable()
   {
+    std::cout<<"updating perm table"<<std::endl;
     // Set initial and final beads
-    field< std::shared_ptr<Bead>> b0(n_part), b1(n_part);
+    field<std::shared_ptr<Bead>> b0(n_part), b1(n_part);
     for (uint32_t p_i=0; p_i<n_part; p_i++) {
       b0(p_i) = path(species_i,p_i,bead0);
-      b1(p_i) = b0(p_i)->NextB(n_bisect_beads);
+      if (b0(p_i) == nullptr)
+        b1(p_i) = nullptr;
+      else {
+        b1(p_i) = b0(p_i);
+        for (uint32_t b_i=0; b_i<n_bisect_beads; b_i++) {
+          b1(p_i) = path.GetNextBead(b1(p_i),1);
+          if (b1(p_i) == nullptr)
+            break;
+        }
+      }
     }
+    std::cout<<"done updating perm table"<<std::endl;
 
     // Construct t table
     for (uint32_t i=0; i<n_part; i++) {
       for (uint32_t j=0; j<n_part; j++) {
-        vec<double> dr_ij(path.Dr(b0(i), b1(j)));
-        double exponent = (-dot(dr_ij,dr_ij))*i_4_lambda_tau_n_bisect_beads;
-        if (exponent > log_epsilon)
-          t(i,j) = exp(exponent);
-        else
+        if (b0(i) == nullptr || b1(j) == nullptr)
           t(i,j) = 0.;
+        else {
+          vec<double> dr_ij(path.Dr(b0(i), b1(j)));
+          double exponent = (-dot(dr_ij,dr_ij))*i_4_lambda_tau_n_bisect_beads;
+          if (exponent > log_epsilon)
+            t(i,j) = exp(exponent);
+          else
+            t(i,j) = 0.;
+        }
       }
     }
 
@@ -34,12 +49,17 @@ private:
   /// Select which cycle to use in the permutation
   bool SelectCycleIterative(Cycle &c)
   {
+    std::cout<<"selecting cycle"<<std::endl;
     // Update t
     UpdatePermTable();
     mat<double> t_c = t;
 
     // Choose particles
-    uint32_t p0 = rng.UnifRand(n_part) - 1;  // Pick first particle at random
+    std::cout<<"choosing particles"<<std::endl;
+    uint32_t p0;
+    do {
+      p0 = rng.UnifRand(n_part) - 1;  // Pick first particle at random
+    } while (t(p0,p0) == 0.); // Hack so only closed loops can permute
     uint32_t p = p0;
     std::vector<uint32_t> ps;
     uint32_t n_perm = 0;
@@ -87,6 +107,7 @@ private:
       }
 
     } while (p != p0);
+    std::cout<<"setting particles"<<std::endl;
 
     // Set weight
     c.weight = 1.;
@@ -109,6 +130,8 @@ private:
     c.i_perm(0) = n_perm-1;
     for (uint32_t i=1; i<n_perm; ++i)
       c.i_perm(i) = i-1;
+    std::cout << c.part.t();
+    std::cout << n_perm << std::endl;
 
     return 1;
   }
@@ -133,8 +156,10 @@ private:
       return 0; // do not attempt bisection since permutation not accepted
     }
     n_perm_part = c.type+1;
+    std::cout << bead0 << " " << bead1 << std::endl;
 
     // Set up pointers
+    std::cout<<"hi"<<std::endl;
     std::vector<std::pair<uint32_t,uint32_t>> particles;
     field< std::shared_ptr<Bead>> bead_i(n_perm_part), bead_fm1(n_perm_part), bead_f(n_perm_part);
     for (uint32_t i=0; i<n_perm_part; i++) {
@@ -149,11 +174,16 @@ private:
       sort(particles.begin(), particles.end());
       particles.erase(unique(particles.begin(), particles.end()), particles.end());
     }
+    for (auto p: particles)
+      std::cout << p.second << " ";
+    std::cout << std::endl;
 
     // Permute particles
+    std::cout<<"hi"<<std::endl;
     PermuteBeads(bead_fm1, bead_f, c);
 
     // Note affected beads
+    std::cout<<"hi"<<std::endl;
     field< std::shared_ptr<Bead>> bead_a(n_perm_part);
     affected_beads.clear();
     for (uint32_t i=0; i<n_perm_part; i++) {
@@ -162,9 +192,11 @@ private:
     }
 
     // Perform the bisection (move exactly through kinetic action)
-    field< std::shared_ptr<Bead>> bead_b(n_perm_part), bead_c(n_perm_part);
+    std::cout<<"hi"<<std::endl;
+    field<std::shared_ptr<Bead>> bead_b(n_perm_part), bead_c(n_perm_part);
     double prev_action_change = -log(c.weight);
     for (int level_i = n_level-1; level_i >= 0; level_i -= 1) {
+      std::cout << level_i << std::endl;
 
       // Level specific quantities
       uint32_t skip = 1<<level_i;
@@ -173,6 +205,7 @@ private:
       // Calculate sampling probability
       double old_log_sample_prob = 0.;
       double new_log_sample_prob = 0.;
+      std::cout << "hello" << std::endl;
       for (uint32_t i=0; i<n_perm_part; i++) {
         bead_a(i) = bead_i(i);
         while(bead_a(i) != bead_f(i)) {
@@ -198,9 +231,11 @@ private:
       }
 
       // Calculate action change
+      std::cout << "hello" << std::endl;
       double old_action = 0.;
       double new_action = 0.;
       for (auto& action: action_list) {
+        std::cout << action->name << std::endl;
         // Old action
         path.SetMode(OLD_MODE);
         old_action += action->GetAction(bead0, bead1, particles, level_i);
@@ -209,6 +244,7 @@ private:
         path.SetMode(NEW_MODE);
         new_action += action->GetAction(bead0, bead1, particles, level_i);
       }
+      std::cout << "hello" << std::endl;
 
       // Calculate acceptance ratio
       double log_sample_ratio = -new_log_sample_prob + old_log_sample_prob;
@@ -225,6 +261,7 @@ private:
     if (include_ref)
       ref_accept++;
 
+    std::cout<<"done"<<std::endl;
     return 1;
   }
 public:

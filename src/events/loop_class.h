@@ -61,6 +61,7 @@ public:
   {
     for (int i=0; i<n_steps; i++)
       for (auto& event: events) {
+        std::cout<<event->name<<std::endl;
         event->DoEvent();
       }
   }
