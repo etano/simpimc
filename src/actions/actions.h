@@ -13,24 +13,26 @@
 std::shared_ptr<Action> ActionFactory(Input &in, IO &out, Path& path)
 {
   std::string type = in.GetAttribute<std::string>("type");
-  if (type == "Kinetic") {
+  if (type == "Kinetic")
     return std::make_shared<Kinetic>(path,in,out);
-  } else if (type == "HarmonicTrap") {
+  else if (type == "HarmonicTrap")
     return std::make_shared<Trap>(path,in,out);
-  } else if (type == "FreeNodal") {
+  else if (type == "FreeNodal")
     return std::make_shared<FreeNodal>(path,in,out);
-  } else if (type == "OptimizedFreeNodal") {
+  else if (type == "OptimizedFreeNodal")
     return std::make_shared<OptimizedFreeNodal>(path,in,out);
-  } else if (type == "OptimizedSHONodal") {
+  else if (type == "OptimizedSHONodal")
     return std::make_shared<OptimizedSHONodal>(path,in,out);
-  } else if (type == "BarePairAction") {
+  else if (type == "BarePairAction")
     return std::make_shared<BarePairAction>(path,in,out);
-  } else if (type == "DavidPairAction") {
+  else if (type == "DavidPairAction")
     return std::make_shared<DavidPairAction>(path,in,out);
-  } else if (type == "IlkkaPairAction") {
+  else if (type == "IlkkaPairAction")
     return std::make_shared<IlkkaPairAction>(path,in,out);
-  } else
-    std::cerr << "Warning: Unrecognized Action, " << type << std::endl;
+  else {
+    std::cerr << "ERROR: Unrecognized Action, " << type << std::endl;
+    exit(1);
+  }
 }
 
 #endif
