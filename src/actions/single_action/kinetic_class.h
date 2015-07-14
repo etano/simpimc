@@ -10,6 +10,7 @@
 class Kinetic : public SingleAction
 {
 private:
+  double d_action_d_beta_const; ///< Constant term for thermal energy
   std::vector<FreeSpline> rho_free_splines; ///< Holds the splined action for every time slice
 
   /// Creates splined action for all time slices
@@ -28,18 +29,18 @@ public:
   Kinetic(Path &path, Input &in, IO &out)
     : SingleAction(path,in,out)
   {
+    d_action_d_beta_const = n_part*path.n_bead*path.n_d/(2.*path.tau);
     SetupSpline();
   }
 
   /// Returns the beta derivative of the action for the whole path
   virtual double DActionDBeta()
   {
-    double tot = n_part*path.n_bead*path.n_d/(2.*path.tau); // Constant term
+    double tot(d_action_d_beta_const); // Constant term
     #pragma omp parallel for collapse(2) reduction(+:tot)
     for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
       for (uint32_t p_i=0; p_i<n_part; p_i++) {
-        vec<double> dr(path.Dr(path(species_i,p_i,b_i),path.GetNextBead(path(species_i,p_i,b_i),1)));
-        tot += rho_free_splines[0].GetDLogRhoFreeDTau(dr);
+        tot += rho_free_splines[0].GetDLogRhoFreeDTau(path.Dr(path(species_i,p_i,b_i),path.GetNextBead(path(species_i,p_i,b_i),1)));
       }
     }
 
@@ -50,7 +51,7 @@ public:
   virtual double VirialEnergy(const double virial_window_size)
   {
     // Constant term
-    double tot = n_part*path.n_bead*path.n_d/(2.*virial_window_size*path.tau);
+    double tot(d_action_d_beta_const/virial_window_size);
 
     // Permutation/winding term
     for (uint32_t p_i=0; p_i<n_part; p_i++) {
