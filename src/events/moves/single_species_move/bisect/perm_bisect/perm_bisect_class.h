@@ -75,8 +75,8 @@ protected:
       AssignParticleLabels();
 
     // Increment permutation counter
-    perm_attempt(perm_type) += 1;
-    perm_accept(perm_type) += 1;
+    perm_attempt(n_perm_part) += 1;
+    perm_accept(n_perm_part) += 1;
 
     Bisect::Accept();
   }
@@ -105,8 +105,6 @@ protected:
     // Reset counters
     perm_attempt.zeros();
     perm_accept.zeros();
-
-    Bisect::Reset();
   }
 
 public:
@@ -124,6 +122,9 @@ public:
     // Initiate acceptance ratio counters
     perm_accept.set_size(n_part);
     perm_attempt.set_size(n_part);
+    Reset();
+    Bisect::Reset();
+    Move::Reset();
   }
 
   /// Writes relevant information about the move to the output file
@@ -139,6 +140,7 @@ public:
       out.AppendDataSet("/Moves/"+name+"/", "perm_accept", perm_accept);
     }
 
+    Reset();
     Bisect::Write();
   }
 };

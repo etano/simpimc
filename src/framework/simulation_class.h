@@ -4,7 +4,7 @@
 #include "../actions/actions.h"
 #include "../events/events.h"
 
-/// Class the actually holds all the events and data objects. This includes the path object which is the main container of all relevant information to the path.
+/// Class that actually holds all the events and data objects. This includes the path object which is the main container of all relevant information to the path.
 class Simulation
 {
 private:
@@ -41,7 +41,11 @@ public:
   }
 
   /// Runs the algorithm by calling the DoEvent of the main_loop
-  void Run() { main_loop.DoEvent(); };
+  void Run()
+  {
+    std::cout << "Running main loop..." << std::endl;
+    main_loop.DoEvent();
+  };
 };
 
 #endif // SIMPIMC_SIMULATION_CLASS_H_
