@@ -201,10 +201,10 @@ private:
     // dxp/dx_i = d(q+0.5*s)/dx_i where q = 0.5*(|r| + |r_p|) and s = |r-r_p|
     //                            with r = r_i-r_j and r_p = r_i'-r_j'
     // d|r|/dx_i = d(sqrt((x_i-x_j)^2 + (y_i-y_j)^2 + (z_i-z_j)^2))/dx_i
-    // d|r|/dx_i = (x_i-x_j)/|r|
+    //           = (x_i-x_j)/|r|
     // d|r_p|/dx_i = 0
     // d|r-r_p|/dx_i = d(sqrt((x_i-x_j-x_i'+x_j')^2 + (y_i-y_j-y_i'+y_j')^2 + (z_i-z_j-z_i'+z_j')^2))/dx_i
-    // d|r-r_p|/dx_i = (x_i-x_j-x_i'+x_j')/|r-r_p|
+    //               = (x_i-x_j-x_i'+x_j')/|r-r_p|
     // => dxp/dx = 0.5*((x_i-x_j)/|r| + (x_i-x_j-x_i'+x_j')/|r-r_p|)
     //    dyp/dx = 0.5*((x_i-x_j)/|r| - (x_i-x_j-x_i'+x_j')/|r-r_p|)
     // => dU/dx = 0.5*[dU/dxp*((x_i-x_j)/|r| + (x_i-x_j-x_i'+x_j')/|r-r_p|) + dU/dyp*((x_i-x_j)/|r| - (x_i-x_j-x_i'+x_j')/|r-r_p|)]
@@ -248,9 +248,9 @@ private:
     // Sum over k std::vectors
     uint32_t skip = 1<<level;
     vec<double> tot(zeros<vec<double>>(path.n_d));
-    for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
-      for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
-        vec<std::complex<double>> &rho_k_b(path.GetRhoK(path(species_a_i,p_i,b_i)));
+    for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
+      vec<std::complex<double>> &rho_k_b(path.GetRhoK(path(species_a_i,p_i,b_i)));
+      for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
         tot += u_long_k(k_i)*path.ks[k_i]*(rho_k_b(k_i).real()*rho_k(path.bead_loop(b_i),species_b_i)(k_i).imag() - rho_k_b(k_i).imag()*rho_k(path.bead_loop(b_i),species_b_i)(k_i).real());
       }
     }
