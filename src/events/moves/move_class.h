@@ -62,7 +62,7 @@ public:
 
     // Reset counters
     first_time = 1;
-    Reset();
+    Move::Reset();
   }
 
   /// Attempts the move and determines if it is accepted or rejected
@@ -100,7 +100,7 @@ public:
       out.AppendDataSet("/Moves/"+name+"/", "x", accept_ratio);
     }
 
-    Reset();
+    Move::Reset();
   }
 
 };

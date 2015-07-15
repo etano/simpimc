@@ -231,7 +231,9 @@ public:
   /// Constructor instantiates parent class and calls Init
   PermBisectIterative(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
     : PermBisect(path, rng, action_list, in, out)
-  {}
+  {
+    n_perm_type = n_part;
+  }
 
 };
 
