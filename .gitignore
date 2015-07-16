@@ -31,6 +31,5 @@ depends/
 lib/
 share/
 etc/
-docs/doxygen/Doxyfile
 docs/html
 docs/_doctrees

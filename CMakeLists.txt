@@ -16,7 +16,7 @@ SET(COMPILER_MAKE "GNU") # INTEL, GNU, or CLANG
 SET(SCAFFOLD_MATRIX_LIBRARY "ARMADILLO") # ARMADILLO or EIGEN
 SET(OPTIMIZE TRUE)
 SET(DEBUG TRUE)
-SET(BUILD_DOCUMENTATION FALSE)
+SET(BUILD_DOCUMENTATION TRUE)
 
 #-------------------------------------------------------------------
 # Compilers
@@ -152,14 +152,11 @@ if(BUILD_DOCUMENTATION)
         message(FATAL_ERROR "Doxygen is needed to build the documentation.")
     endif()
 
-    set(doxyfile_in ${CMAKE_SOURCE_DIR}/doc/doxygen/Doxyfile.in)
-    set(doxyfile ${CMAKE_SOURCE_DIR}/doc/doxygen/Doxyfile)
-
-    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+    set(doxyfile ${CMAKE_SOURCE_DIR}/docs/doxygen/Doxyfile)
 
     add_custom_target(doxygen_doc
-        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/doc/html/doxygen
+        COMMAND cd ${CMAKE_SOURCE_DIR}/docs/doxygen && ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docs/html/doxygen
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM)
 
@@ -176,20 +173,20 @@ if(BUILD_DOCUMENTATION)
     endif()
 
     # configured documentation tools and intermediate build results
-    set(BINARY_BUILD_DIR "${CMAKE_SOURCE_DIR}/doc/sphinx")
+    set(BINARY_BUILD_DIR "${CMAKE_SOURCE_DIR}/docs")
 
     # Sphinx cache with pickled ReST documents
-    set(SPHINX_CACHE_DIR "${CMAKE_SOURCE_DIR}/doc/sphinx/_doctrees")
+    set(SPHINX_CACHE_DIR "${CMAKE_SOURCE_DIR}/docs/_doctrees")
 
     # HTML output directory
-    set(SPHINX_HTML_DIR "${CMAKE_SOURCE_DIR}/doc/html")
+    set(SPHINX_HTML_DIR "${CMAKE_SOURCE_DIR}/docs/html")
 
     add_custom_target(sphinx_doc
         ${SPHINX_EXECUTABLE}
             -q -b html
             -c "${BINARY_BUILD_DIR}"
             -d "${SPHINX_CACHE_DIR}"
-            "${CMAKE_SOURCE_DIR}/doc/sphinx"
+            "${CMAKE_SOURCE_DIR}/docs"
             "${SPHINX_HTML_DIR}"
         COMMENT "Building HTML documentation with Sphinx")
 
