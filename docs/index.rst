@@ -1,10 +1,7 @@
-.. simpimc documentation master file, created by
-   sphinx-quickstart on Sun Apr 12 10:32:04 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Simpimc
+=======
 
-Welcome to simpimc's documentation!
-===================================
+Formal documentation is still under construction. In the meantime, please refer to the Doxygen documentation.
 
 Contents:
 
