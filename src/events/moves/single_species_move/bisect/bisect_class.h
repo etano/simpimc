@@ -157,8 +157,6 @@ protected:
 
     ref_accept = 0;
     ref_attempt = 0;
-
-    Move::Reset();
   }
 
   /// Creates splined action for all time slices
@@ -197,7 +195,8 @@ public:
     SetupSpline();
 
     // Reset counters
-    Reset();
+    Bisect::Reset();
+    Move::Reset();
   }
 
   /// Writes relevant information about the move to the output file
@@ -220,6 +219,7 @@ public:
         out.AppendDataSet("/Moves/"+name+"/", "n_level", n_level);
     }
 
+    Bisect::Reset();
     Move::Write();
   }
 };

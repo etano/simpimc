@@ -92,9 +92,9 @@ protected:
       for (auto& p: particles_a)
         for (auto& q: other_particles_b)
           particle_pairs.push_back(std::make_pair(p,q));
-      // Loop other A particles with B particles
-      for (auto& p: other_particles_a)
-        for (auto& q: particles_b)
+      // Loop B particles with other A particles
+      for (auto& p: particles_b)
+        for (auto& q: other_particles_a)
           particle_pairs.push_back(std::make_pair(p,q));
       // Loop over A particles with B particles
       for (auto& p: particles_a)
@@ -351,7 +351,7 @@ public:
     }
 
     // Add in long range part
-    if (use_long_range) { // fixme: currently this assumes level = 0
+    if (use_long_range) { // FIXME: currently this assumes level = 0
       //if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
       //  path.UpdateRhoKP(b_0, b_1, species_a_i, particles_a, level);
       //  path.species_list[species_a_i]->need_update_rho_k = false;

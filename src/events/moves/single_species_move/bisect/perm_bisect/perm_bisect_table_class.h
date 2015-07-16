@@ -104,9 +104,6 @@ private:
         perm_index += 1;
       }
     }
-
-    perm_accept.set_size(n_perm_type);
-    perm_attempt.set_size(n_perm_type);
   }
 
   /// Select which cycle to perform a permutation with

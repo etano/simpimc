@@ -118,7 +118,7 @@ public:
   }
 
   /// Shortcut to a specific bead given its species, particle number, and time slice
-  std::shared_ptr<Bead> operator() (const uint32_t s_i, const uint32_t p_i, const uint32_t b_i) { return species_list[s_i]->bead(p_i,bead_loop(b_i)); };
+  const std::shared_ptr<Bead>& operator() (const uint32_t s_i, const uint32_t p_i, const uint32_t b_i) { return species_list[s_i]->bead(p_i,bead_loop(b_i)); };
 
   /// Sets species index by matching the species name string
   void GetSpeciesInfo(const std::string &species, uint32_t &species_i)
@@ -172,28 +172,28 @@ public:
   }
 
   /// Get the n_d dimensional vector defining the postion of bead b
-  inline vec<double>& GetR(const std::shared_ptr<Bead> b) { return mode==NEW_MODE ? b->r : b->r_c; };
+  inline vec<double>& GetR(const std::shared_ptr<Bead> &b) { return mode==NEW_MODE ? b->r : b->r_c; };
 
   /// Get the bead n steps after the given bead
-  inline std::shared_ptr<Bead> GetNextBead(const std::shared_ptr<Bead> b, const uint32_t n) { return mode==NEW_MODE ? b->NextB(n) : b->NextBC(n); };
+  inline std::shared_ptr<Bead> GetNextBead(const std::shared_ptr<Bead> &b, const uint32_t n) { return mode==NEW_MODE ? b->NextB(n) : b->NextBC(n); };
 
   /// Get the bead n steps before the given bead
-  inline std::shared_ptr<Bead> GetPrevBead(const std::shared_ptr<Bead> b, const uint32_t n) { return mode==NEW_MODE ? b->PrevB(n) : b->PrevBC(n); };
+  inline std::shared_ptr<Bead> GetPrevBead(const std::shared_ptr<Bead> &b, const uint32_t n) { return mode==NEW_MODE ? b->PrevB(n) : b->PrevBC(n); };
 
   /// Compute the vector between two vectors and put it in the box
-  inline vec<double> Dr(const vec<double> &r0, const vec<double> &r1) { vec<double> dr = r0-r1; PutInBox(dr); return dr; };
+  inline vec<double> Dr(const vec<double> &r0, const vec<double> &r1) { vec<double> dr(r0-r1); PutInBox(dr); return std::move(dr); };
 
   /// Compute the vector between a bead and a vector and put it in the box
-  inline vec<double> Dr(const std::shared_ptr<Bead> b0, const vec<double> &r1) { return Dr(GetR(b0), r1); };
+  inline vec<double> Dr(const std::shared_ptr<Bead> &b0, const vec<double> &r1) { return Dr(GetR(b0), r1); };
 
   /// Compute the vector between two beads and put it in the box
-  inline vec<double> Dr(const vec<double> &r0, const std::shared_ptr<Bead> b1) { return Dr(r0, GetR(b1)); };
+  inline vec<double> Dr(const vec<double> &r0, const std::shared_ptr<Bead> &b1) { return Dr(r0, GetR(b1)); };
 
   /// Compute the vector between two beads and put it in the box
-  inline vec<double> Dr(const std::shared_ptr<Bead> b0, const std::shared_ptr<Bead> b1) { return Dr(GetR(b0), GetR(b1)); };
+  inline vec<double> Dr(const std::shared_ptr<Bead> &b0, const std::shared_ptr<Bead> &b1) { return Dr(GetR(b0), GetR(b1)); };
 
   /// Compute the vector to the midpoint between two beads and put it in the box
-  inline vec<double> RBar(const std::shared_ptr<Bead> b0, const std::shared_ptr<Bead> b1) { return GetR(b1) + 0.5*Dr(b0, b1); };
+  inline vec<double> RBar(const std::shared_ptr<Bead> &b0, const std::shared_ptr<Bead> &b1) { return GetR(b1) + 0.5*Dr(b0, b1); };
 
   /// Compute the distance between two objects
   template<class T>
@@ -444,7 +444,7 @@ public:
   }
 
   /// Calculate rho_k for a single bead
-  inline void CalcRhoKP(const std::shared_ptr<Bead> b)
+  inline void CalcRhoKP(const std::shared_ptr<Bead>& b)
   {
     vec<double> r = GetR(b);
     vec<std::complex<double>> &tmp_rho_k = GetRhoK(b);

@@ -80,8 +80,8 @@ public:
   double GetLogRhoFree(const vec<double> &r)
   {
     double tot = 0.;
+    double image_action;
     for (const auto &r_d : r) {
-      double image_action;
       eval_UBspline_1d_d(image_action_spline,r_d,&image_action);
       tot -= image_action;
     }
@@ -98,8 +98,8 @@ public:
   double GetDLogRhoFreeDTau(const vec<double> &r)
   {
     double tot = 0.;
+    double d_image_action_d_tau;
     for (const auto &r_d : r) {
-      double d_image_action_d_tau;
       eval_UBspline_1d_d(d_image_action_d_tau_spline,r_d,&d_image_action_d_tau);
       tot -= d_image_action_d_tau;
     }
