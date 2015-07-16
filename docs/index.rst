@@ -1,7 +1,7 @@
 Simpimc
 =======
 
-Formal documentation is still under construction. In the meantime, please refer to the Doxygen documentation.
+Formal documentation is still under construction. In the meantime, please refer to the `Doxygen documentation <http://etano.github.io/simpimc/docs/html/doxygen/html/index.html>`_.
 
 Contents:
 
