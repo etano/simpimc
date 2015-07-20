@@ -1,7 +1,7 @@
 #ifndef SIMPIMC_ACTIONS_ACTION_CLASS_H_
 #define SIMPIMC_ACTIONS_ACTION_CLASS_H_
 
-#include "../path_class.h"
+#include "../data_structures/path_class.h"
 
 /// Parent class for all actions
 class Action
@@ -28,10 +28,12 @@ public:
     type = in.GetAttribute<std::string>("type");
     out.CreateGroup("Actions/"+name);
     out.Write("Actions/"+name+"/type",type);
-  }
 
-  /// Initialize the action
-  virtual void Init(Input &in) {};
+    n_images = in.GetAttribute<int>("n_images",0);
+    max_level = in.GetAttribute<uint32_t>("max_level",0);
+    out.Write("Actions/"+name+"/n_images",n_images);
+    out.Write("Actions/"+name+"/max_level", max_level);
+  }
 
   /// Returns the beta derivative of the action for the whole path
   virtual double DActionDBeta() { return 0.; };
@@ -43,7 +45,7 @@ public:
   virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };
 
   /// Returns the spatial gradient of the action between time slices b0 and b1 for a vector of particles
-  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { vec<double> zero_vec; zero_vec.zeros(path.n_d); return zero_vec; };
+  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return zeros<vec<double>>(path.n_d); };
 
   /// Returns the spatial laplacian of the action between time slices b0 and b1 for a vector of particles
   virtual double GetActionLaplacian(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };

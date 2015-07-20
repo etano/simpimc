@@ -51,7 +51,7 @@ def main():
             e = e.split(':')
             N = int(e[1])
             eOut = pathDump.create_group(e[0])
-            eOut.create_dataset('nDump',data=1)
+            eOut.create_dataset('n_dump',data=1)
             ePos0 = np.copy(positions[i:i+N])
             ePos1 = np.copy(positions[i:i+N])
             permutations = []

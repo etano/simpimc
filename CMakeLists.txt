@@ -126,41 +126,7 @@ SET(LIBS ${LIBS} ${EINSPLINE_LIBS})
 # Sources and target
 #-------------------------------------------------------------------
 # simpimc
-SET (SRCS ${SRCS} src/main.cc
-  src/algorithm_class.cc
-  src/loop_class.cc
-  src/path_class.cc
-  src/simulation_class.cc
-  src/species_class.cc
-  src/write_class.cc
-  src/actions/kinetic_class.cc
-  src/actions/pair_action_class.cc
-  src/actions/nodal_class.cc
-  src/actions/free_nodal_class.cc
-  src/actions/free_spline_class.cc
-  src/actions/optimized_nodal_class.cc
-  src/actions/bare_pair_action_class.cc
-  src/actions/david_pair_action_class.cc
-  src/actions/ilkka_pair_action_class.cc
-  src/actions/trap_class.cc
-  src/moves/move_class.cc
-  src/moves/bisect_class.cc
-  src/moves/displace_particle_class.cc
-  src/moves/perm_bisect_class.cc
-  src/moves/perm_bisect_table_class.cc
-  src/moves/perm_bisect_iterative_class.cc
-  src/moves/shift_ref_slice_class.cc
-  src/moves/vary_action_class.cc
-  src/observables/contact_density_class.cc
-  src/observables/energy_class.cc
-  src/observables/importance_weight_class.cc
-  src/observables/pair_correlation_class.cc
-  src/observables/path_dump_class.cc
-  src/observables/permutation_class.cc
-  src/observables/record_optimized_action_class.cc
-  src/observables/sign_class.cc
-  src/observables/structure_factor_class.cc
-  src/observables/time_class.cc)
+SET (SRCS ${SRCS} src/main.cc)
 ADD_EXECUTABLE(simpimc ${SRCS})
 TARGET_LINK_LIBRARIES(simpimc ${LIBS})
 INSTALL(TARGETS simpimc DESTINATION $ENV{HOME}/bin)

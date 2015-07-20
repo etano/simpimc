@@ -22,9 +22,3 @@ make
 # Setup pair action generation things
 cd ../scripts/pagen
 sh setup.sh
-
-# It got confused with blitz and compilers, so fix it and make ewald manually
-cd ewald/include/blitz/
-cp -r intel gnu
-cd ../../../ewald/build/
-make
