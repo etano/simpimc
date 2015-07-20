@@ -5,7 +5,7 @@ source comet_modules.sh
 git clone https://github.com/etano/simpimc.git
 cd simpimc/
 git checkout dev
-git submodule update --init --recursive\
+git submodule update --init --recursive
 
 # Start building
 mkdir build && cd build/
