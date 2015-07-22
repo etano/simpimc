@@ -6,6 +6,8 @@ master: ![master build status](https://travis-ci.org/etano/simpimc.svg?branch=ma
 
 dev: ![dev build status](https://travis-ci.org/etano/simpimc.svg?branch=dev)
 
+[![Join the chat at https://gitter.im/etano/simpimc](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/etano/simpimc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Installation
 
 ### Dependencies
