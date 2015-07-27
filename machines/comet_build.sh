@@ -14,7 +14,7 @@ make
 
 # Meinspline installation breaks because of pkgconfig
 vim ../depends/meinspline/meinspline-master/configure
-# Comment out PKG_CONFIG lines
+# Comment out PKG_CHECK_MODULE lines 22870 and 22871
 
 # Resume make
 make
