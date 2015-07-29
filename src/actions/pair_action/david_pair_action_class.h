@@ -233,11 +233,12 @@ public:
     pa_in.Read(u_kj_str + "/grid/end", r_end);
     pa_in.Read(u_kj_str + "/grid/n_grid_points", n_grid);
     pa_in.Read(u_kj_str + "/grid/type", grid_type);
-    if (grid_type.find("LOG")!=std::string::npos)
+    if ((grid_type.find("LOG")!=std::string::npos) && (grid_type.find("LOGLIN")==std::string::npos))
       grid = create_log_grid(r_start, r_end, n_grid);
     else if (grid_type.find("LINEAR")!=std::string::npos)
       grid = create_linear_grid(r_start, r_end, n_grid);
     else {
+      grid_points.set_size(n_grid);
       pa_in.Read(u_kj_str + "/grid/grid_points", grid_points);
       grid = create_general_grid(grid_points.memptr(), n_grid);
     }
