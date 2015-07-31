@@ -120,17 +120,21 @@ public:
       for (uint32_t p_i=0; p_i<n_part; p_i++) {
         int p = p_i/2;
         vec<int> tmp(n_d);
-        tmp(0) = p/(n_part_per_n_d*n_part_per_n_d);
-        if (n_d > 1)
+        if (n_d == 2) {
+          tmp(0) = p/n_part_per_n_d;
+          tmp(1) = p - tmp(0)*n_part_per_n_d;
+        } if (n_d == 3) {
+          tmp(0) = p/(n_part_per_n_d*n_part_per_n_d);
           tmp(1) = (p-(tmp(0)*n_part_per_n_d*n_part_per_n_d))/n_part_per_n_d;
-        if (n_d > 2)
           tmp(2) = p - tmp(0)*n_part_per_n_d*n_part_per_n_d - tmp(1)*n_part_per_n_d;
+        }
         vec<double> r(n_d);
         for (int d_i=0; d_i<n_d; ++d_i) {
           r(d_i) = delta*tmp(d_i) - 0.5*L;
           if (p_i % 2)
             r(d_i) += 0.5*delta;
         }
+        std::cout << p_i << " " << r.t();
         for (int b_i=0; b_i<n_bead; ++b_i) {
           bead(p_i,b_i)->r = r;
           bead(p_i,b_i)->StoreR();
