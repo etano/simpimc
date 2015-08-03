@@ -94,7 +94,7 @@ private:
         for (uint32_t j=0; j<=k; j++) {
           // indexing into the 2darray
           double u_cof = u_q_vals(k*(k+1)/2 + (j+1));
-          u += (u_cof)*z_2_j*current_s;
+          u += u_cof*z_2_j*current_s;
           z_2_j *= z_2;
           current_s *= i_s_2;
         }
@@ -141,23 +141,18 @@ private:
     GetLimits(r_min, r_max, r, r_p, grid);
 
     // This is the endpoint action
-    double u, v, du;
     vec<double> r_vals(n_val+1), r_p_vals(n_val+1);
-    eval_multi_NUBspline_1d_d(u_kj(level),r,r_vals.memptr());
-    eval_multi_NUBspline_1d_d(u_kj(level),r_p,r_p_vals.memptr());
-    v = 0.5*(r_vals(0) + r_p_vals(0));
-    u = 0.5*(r_vals(1) + r_p_vals(1));
     eval_multi_NUBspline_1d_d(du_kj_dbeta(level),r,r_vals.memptr());
     eval_multi_NUBspline_1d_d(du_kj_dbeta(level),r_p,r_p_vals.memptr());
-    du = 0.5*(r_vals(1) + r_p_vals(1));
+    double v = 0.5*(r_vals(0) + r_p_vals(0));
+    double du = 0.5*(r_vals(1) + r_p_vals(1));
 
     // Compensate for potential, which is subtracted from diaganal action in dm file.
     du += v;
 
     // Add in off-diagonal terms
     if (s > 0.0 && q<r_max) {
-      vec<double> u_q_vals(n_val+1), du_q_vals(n_val+1);
-      eval_multi_NUBspline_1d_d(u_kj(level),q,u_q_vals.memptr());
+      vec<double> du_q_vals(n_val+1);
       eval_multi_NUBspline_1d_d(du_kj_dbeta(level),q,du_q_vals.memptr());
       double z_2 = z*z;
       double s_2 = s*s;
@@ -168,10 +163,8 @@ private:
         double current_s = s_2_k;
         for (uint32_t j=0; j<=k; j++){
           // indexing into the 2darray
-          double u_cof = u_q_vals(k*(k+1)/2+j+1);
           double du_cof = du_q_vals(k*(k+1)/2+j+1);
-          u += (u_cof)*z_2_j*current_s;
-          du += (du_cof)*z_2_j*current_s;
+          du += du_cof*z_2_j*current_s;
           z_2_j *= z_2;
           current_s *= i_s_2;
         }
@@ -237,7 +230,11 @@ public:
       grid = create_log_grid(r_start, r_end, n_grid);
     else if (grid_type.find("LINEAR")!=std::string::npos)
       grid = create_linear_grid(r_start, r_end, n_grid);
-    else {
+    else if (grid_type.find("LOGLIN")!=std::string::npos) {
+      double r_paste;
+      pa_in.Read(u_kj_str + "/grid/r_paste", r_paste);
+      grid = create_loglin_grid(r_start, r_end, r_paste, n_grid);
+    } else {
       grid_points.set_size(n_grid);
       pa_in.Read(u_kj_str + "/grid/grid_points", grid_points);
       grid = create_general_grid(grid_points.memptr(), n_grid);
