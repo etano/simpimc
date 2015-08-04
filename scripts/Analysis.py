@@ -82,7 +82,7 @@ class Scalar(Observable):
         data = np.loadtxt(self.basename+'/'+self.name+'.dat')
         mean = data[0]/sign_data[0]
         if data[0] != 0:
-            err = mean*np.sqrt(pow(data[1]/data[0],2) + pow(sign_data[1]/sign_data[0],2))
+            err = np.abs(mean)*np.sqrt(pow(data[1]/data[0],2) + pow(sign_data[1]/sign_data[0],2))
         else:
             err = 0.
         kappa = data[2]
