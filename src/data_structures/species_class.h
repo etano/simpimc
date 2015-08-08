@@ -120,17 +120,21 @@ public:
       for (uint32_t p_i=0; p_i<n_part; p_i++) {
         int p = p_i/2;
         vec<int> tmp(n_d);
-        tmp(0) = p/(n_part_per_n_d*n_part_per_n_d);
-        if (n_d > 1)
+        if (n_d == 2) {
+          tmp(0) = p/n_part_per_n_d;
+          tmp(1) = p - tmp(0)*n_part_per_n_d;
+        } if (n_d == 3) {
+          tmp(0) = p/(n_part_per_n_d*n_part_per_n_d);
           tmp(1) = (p-(tmp(0)*n_part_per_n_d*n_part_per_n_d))/n_part_per_n_d;
-        if (n_d > 2)
           tmp(2) = p - tmp(0)*n_part_per_n_d*n_part_per_n_d - tmp(1)*n_part_per_n_d;
+        }
         vec<double> r(n_d);
         for (int d_i=0; d_i<n_d; ++d_i) {
           r(d_i) = delta*tmp(d_i) - 0.5*L;
           if (p_i % 2)
             r(d_i) += 0.5*delta;
         }
+        std::cout << p_i << " " << r.t();
         for (int b_i=0; b_i<n_bead; ++b_i) {
           bead(p_i,b_i)->r = r;
           bead(p_i,b_i)->StoreR();
@@ -173,6 +177,7 @@ public:
     // Restart from previous run (fixme: This is broken now)
     } else if (init_type == "Restart") {
       std::string prefix = in.GetAttribute<std::string>("prefix");
+      std::string path_dump_name = in.GetAttribute<std::string>("path_dump_name","path_dump");
       bool parallel = in.GetAttribute<bool>("parallel",false);
       std::stringstream tmp_ss;
       if (parallel)
@@ -187,11 +192,11 @@ public:
 
       // Get number of dumps
       uint32_t n_dump;
-      restart_file.Read("Observables/PathDump/"+name+"/n_dump",n_dump);
+      restart_file.Read("Observables/"+path_dump_name+"/"+name+"/n_dump",n_dump);
 
       // Get positions
       cube<double> path_positions(n_d,n_part*n_bead,n_dump);
-      restart_file.Read("Observables/PathDump/"+name+"/positions",path_positions);
+      restart_file.Read("Observables/"+path_dump_name+"/"+name+"/positions",path_positions);
       for (uint32_t p_i=0; p_i<n_part; ++p_i) {
         for (uint32_t b_i=0; b_i<n_bead; ++b_i) {
           for (uint32_t d_i=0; d_i<n_d; ++d_i)
@@ -202,7 +207,7 @@ public:
 
       // Get permutation
       cube<double> path_permutation(2,n_part,n_dump);
-      restart_file.Read("Observables/PathDump/"+name+"/permutation",path_permutation);
+      restart_file.Read("Observables/"+path_dump_name+"/"+name+"/permutation",path_permutation);
       for (uint32_t p_i=0; p_i<n_part; ++p_i) {
         bead(p_i,0)->prev = bead(path_permutation(0,p_i,n_dump-1),n_bead-1);
         bead(p_i,0)->StorePrev();

@@ -19,12 +19,12 @@ def GetSubsections(f, section_name):
 
 # Observable base class
 class Observable:
-    def __init__(self, prefix, name, type, startCut):
+    def __init__(self, prefix, name, type, start_cut):
         self.basename = './'+prefix
         self.prefix = prefix+'/'
         self.name = name
         self.type = type
-        self.startCut = startCut
+        self.start_cut = start_cut
 
     def Process(self, files):
         print 'Processing', self.prefix+self.name
@@ -54,7 +54,7 @@ class Scalar(Observable):
             while (file_not_read and failure_i < max_failure):
                 try:
                     f = h5.File(file,'r')
-                    data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][self.startCut:])))
+                    data.append(Stats.stats(np.array(f[self.prefix+self.name+"/x"][self.start_cut:])))
                     f.flush()
                     f.close()
                     file_not_read = False
@@ -82,7 +82,7 @@ class Scalar(Observable):
         data = np.loadtxt(self.basename+'/'+self.name+'.dat')
         mean = data[0]/sign_data[0]
         if data[0] != 0:
-            err = mean*np.sqrt(pow(data[1]/data[0],2) + pow(sign_data[1]/sign_data[0],2))
+            err = np.abs(mean)*np.sqrt(pow(data[1]/data[0],2) + pow(sign_data[1]/sign_data[0],2))
         else:
             err = 0.
         kappa = data[2]
@@ -103,7 +103,7 @@ class Histogram(Observable):
                 try:
                     f = h5.File(files[j],'r')
                     xs = np.array(f[self.prefix+self.name+"/x"])
-                    ys = np.transpose(f[self.prefix+self.name+"/y"][self.startCut:])
+                    ys = np.transpose(f[self.prefix+self.name+"/y"][self.start_cut:])
                     f.flush()
                     f.close()
                     yStats.append([])
@@ -162,7 +162,7 @@ class Pair(Observable):
                 try:
                     f = h5.File(file,'r')
                     xs = np.array(f[self.prefix+self.name+"/x"])
-                    pairs = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
+                    pairs = np.array(f[self.prefix+self.name+"/y"][self.start_cut:])
                     f.flush()
                     f.close()
                     file_not_read = False
@@ -211,7 +211,7 @@ class AvgPair(Observable):
                 try:
                     f = h5.File(file,'r')
                     xs = np.array(f[self.prefix+self.name+"/x"])
-                    avg_pairs = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
+                    avg_pairs = np.array(f[self.prefix+self.name+"/y"][self.start_cut:])
                     f.flush()
                     f.close()
                     file_not_read = False
@@ -261,7 +261,7 @@ class Matrix(Observable):
             while (file_not_read and failure_i < max_failure):
                 try:
                     f = h5.File(file,'r')
-                    matrices = np.array(f[self.prefix+self.name+"/y"][self.startCut:])
+                    matrices = np.array(f[self.prefix+self.name+"/y"][self.start_cut:])
                     shape = np.array(f[self.prefix+self.name+"/shape"])
                     for i in range(shape[0]):
                         for j in range(shape[1]):
@@ -300,12 +300,12 @@ class Matrix(Observable):
 
 
 # Recursively add observables
-def AddObservable(f, section, obs, startCut):
+def AddObservable(f, section, obs, start_cut):
 
     # Check any subsections
     subsections = GetSubsections(f,section)
     for subsection in subsections:
-        AddObservable(f, section+'/'+subsection, obs, startCut)
+        AddObservable(f, section+'/'+subsection, obs, start_cut)
 
     # Try to find data type
     try:
@@ -322,15 +322,15 @@ def AddObservable(f, section, obs, startCut):
     section_name = section.split('/')[-1]
     prefix = '/'.join(section.split('/')[:-1])
     if data_type == "scalar":
-        obs.append(Scalar(prefix, section_name, section_type, startCut))
+        obs.append(Scalar(prefix, section_name, section_type, start_cut))
     elif data_type == "histogram":
-        obs.append(Histogram(prefix, section_name, section_type, startCut))
+        obs.append(Histogram(prefix, section_name, section_type, start_cut))
     elif data_type == "pairs":
-        obs.append(Pair(prefix, section_name, section_type, startCut))
+        obs.append(Pair(prefix, section_name, section_type, start_cut))
     elif data_type == "avg_pairs":
-        obs.append(AvgPair(prefix, section_name, section_type, startCut))
+        obs.append(AvgPair(prefix, section_name, section_type, start_cut))
     elif data_type == "matrix":
-        obs.append(Matrix(prefix, section_name, section_type, startCut))
+        obs.append(Matrix(prefix, section_name, section_type, start_cut))
 
 def usage():
     print "Usage: %s [start cut] file0.h5 file1.h5 ..." % os.path.basename(sys.argv[0])
@@ -344,10 +344,10 @@ def main(argv=None):
 
     # Get start cut
     try:
-        startCut = int(sys.argv[1])
+        start_cut = int(sys.argv[1])
         firstArg = 2
     except:
-        startCut = 0
+        start_cut = 0
         firstArg = 1
 
     # Get h5 files
@@ -360,7 +360,7 @@ def main(argv=None):
     f0 = h5.File(files[0],'r')
     ob_names = GetSubsections(f0,'/')
     for ob_name in ob_names:
-        AddObservable(f0, ob_name, obs, startCut)
+        AddObservable(f0, ob_name, obs, start_cut)
     f0.flush()
     f0.close()
 

@@ -5,7 +5,7 @@ source comet_modules.sh
 git clone https://github.com/etano/simpimc.git
 cd simpimc/
 git checkout dev
-git submodule update --init --recursive\
+git submodule update --init --recursive
 
 # Start building
 mkdir build && cd build/
@@ -14,7 +14,7 @@ make
 
 # Meinspline installation breaks because of pkgconfig
 vim ../depends/meinspline/meinspline-master/configure
-# Comment out PKG_CONFIG lines
+# Comment out PKG_CHECK_MODULE lines 22870 and 22871
 
 # Resume make
 make
