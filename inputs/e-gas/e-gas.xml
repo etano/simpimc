@@ -8,7 +8,7 @@
   </Particles>
   <Actions>
     <Action name="Kinetic" type="Kinetic" species="eU" n_images="100" />
-    <Action name="CoulombEUEU" type="IlkkaPairAction" file="e-e.h5" n_images="0" species_a="eU" species_b="eU" max_level="0" use_long_range="1" />
+    <Action name="CoulombEUEU" type="IlkkaPairAction" file="e_e.h5" n_images="0" species_a="eU" species_b="eU" max_level="0" use_long_range="1" />
   </Actions>
   <Moves>
     <Move name="BisectEU" type="PermBisectIterative" n_images="1" species="eU" n_level="6" adaptive="1" target_ratio="0.1" />
