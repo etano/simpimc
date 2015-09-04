@@ -3,7 +3,7 @@
   <Parallel procs_per_group="1" />
   <System n_d="1" n_bead="32" beta="10.0" L="100.0" pbc="0" />
   <Particles>
-    <Species name="e" type="e" n_part="1" lambda="0.5" fermi="0" />
+    <Species name="e" type="e" n_part="1" lambda="0.5" fermi="0" init_type="Random" />
   </Particles>
   <Actions>
     <Action name="Kinetic" type="Kinetic" n_images="0" species="e" />

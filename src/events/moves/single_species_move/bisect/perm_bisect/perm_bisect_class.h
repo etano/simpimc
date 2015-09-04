@@ -75,8 +75,8 @@ protected:
       AssignParticleLabels();
 
     // Increment permutation counter
-    perm_attempt(n_perm_part) += 1;
-    perm_accept(n_perm_part) += 1;
+    perm_attempt(n_perm_part-1) += 1;
+    perm_accept(n_perm_part-1) += 1;
 
     Bisect::Accept();
   }

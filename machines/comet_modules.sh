@@ -5,3 +5,6 @@ module load intel/2015.2.164
 module load mvapich2_ib
 module load mkl
 module load cmake
+module load hdf5
+module load python
+module load scipy
