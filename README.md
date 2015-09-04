@@ -32,6 +32,13 @@ Build like:
     mkdir build && cd build
     cmake ..
     make
+    
+To get pair action creation working, you should do:
+
+    cd scripts/pagen
+    sh setup.sh
+    
+(Note: You may have to change the location of MKL libraries and includes in the davidSquarer Makefile.)
 
 To build the documentation:
 
