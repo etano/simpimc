@@ -137,8 +137,6 @@ public:
     for (uint32_t i=0; i<n_param_sets; i++) {
       for (uint32_t j=0; j<n_param_sets; j++) {
         double ratio = n_param_accept(i,j)/n_param_attempt(i,j);
-        if (!std::isnormal(ratio))
-          ratio = 0.;
         param_accept_ratio(i,j) = ratio;
       }
     }
