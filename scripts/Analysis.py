@@ -266,6 +266,7 @@ class Matrix(Observable):
                     for i in range(shape[0]):
                         for j in range(shape[1]):
                             data_ij = matrices[:,i,j].copy()
+                            data_ij = data_ij[np.isfinite(data_ij)]
                             file_stats = Stats.stats(data_ij)
                             try:
                                 data[i,j].append(file_stats)
