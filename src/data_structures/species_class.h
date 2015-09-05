@@ -6,17 +6,25 @@
 /// Container for a single species. Holds all the bead objects of that species.
 class Species
 {
+private:
+  ModeType mode; ///< Holds the current mode.
 public:
   bool fermi; ///< Whether or not species has Fermi statistics
   bool fixed_node; ///< Whether or not species uses the fixed node approximation
   double lambda; ///< h_bar^2/2m
   bool need_update_rho_k; ///< Whether or not rho_k needs to be updated
+  bool perm_sectors_setup; ///< Whether or not permutation sectors are setup for each species
+  int sign; ///< Current sign of permutation sector
   uint32_t n_bead; ///< Number of time slices
   const uint32_t n_d; ///< Number of physical dimensions
   uint32_t n_part; ///< Number of particles in species
   const uint32_t s_i; ///< Species index
   std::string init_type; ///< Type of path initiation
   std::string name; ///< Name of species
+  vec<uint32_t> bead_loop; ///< Helper vector for indexing the periodicity in beta
+  std::vector<uint32_t> cycles_; ///< Vector of current cycle lengths
+  std::map<std::vector<uint32_t>,uint32_t,CompareVec<uint32_t>> poss_perms; ///< map defining all possible permutations for each species
+  std::map<std::vector<uint32_t>,uint32_t,CompareVec<uint32_t>>::const_iterator poss_perms_iterator; ///< Iterator over map that defines all possible permutations
   field<std::shared_ptr<Bead>> bead; ///< Container of beads
 
   /// Constructor
@@ -63,7 +71,130 @@ public:
       bead(p_i,n_bead-1) -> prev = bead(p_i,n_bead-2);
       bead(p_i,n_bead-1) -> prev_c = bead(p_i,n_bead-2);
     }
+
+    // Initiate bead looping
+    bead_loop.set_size(2*n_bead);
+    for (uint32_t b_i = 0; b_i < n_bead; b_i++) {
+      bead_loop(b_i) = b_i;
+      bead_loop(b_i + n_bead) = bead_loop(b_i);
+    }
+
+    // Permutations not set up yet
+    perm_sectors_setup = false;
+
+    // Calculate sign
+    CalcSign();
   };
+
+  /// Set the mode to the passed mode
+  inline void SetMode(ModeType t_mode) { mode = t_mode; }
+
+  /// Calculate the sign of the current configuration
+  int CalcSign()
+  {
+    sign = 1;
+    if(fermi){
+      SetCycleCount();
+      for (const auto& cycle: cycles_)
+        sign *= pow(-1,cycle-1);
+    }
+    return sign;
+  }
+
+  /// Set the current cycle counts
+  void SetCycleCount()
+  {
+    vec<uint32_t> already_counted(zeros<vec<uint32_t>>(n_part));
+    cycles_.clear();
+    for (uint32_t p_i=0; p_i<n_part; p_i++) {
+      if (!already_counted(p_i)) {
+        uint32_t cycle_length = 1;
+        std::shared_ptr<Bead> b(bead(p_i,n_bead-1));
+        already_counted(p_i) = 1;
+        while (b->GetNextBead(1,mode) != bead(p_i,0)) {
+          cycle_length++;
+          b = b->GetNextBead(n_bead,mode);
+          already_counted(b->p) = 1;
+        }
+        cycles_.push_back(cycle_length);
+      }
+    }
+  }
+
+  /// Get the current cycle counts
+  std::vector<uint32_t>& GetCycleCount()
+  {
+    SetCycleCount();
+    return cycles_;
+  }
+
+  /// Get the current permutation sector of a given species
+  uint32_t GetPermSector()
+  {
+    SetCycleCount();
+    return GetPermSector(cycles_);
+  }
+
+  /// Get the current permutation sector of a given species
+  uint32_t GetPermSector(std::vector<uint32_t>& cycles)
+  {
+    sort(cycles.begin(),cycles.end());
+    poss_perms_iterator = poss_perms.find(cycles);
+    if (poss_perms_iterator == poss_perms.end()) { // TODO: Feel confident enough to remove this
+      std::cout << "Broken Permutation: " << std::endl;
+      for (auto& cycle: cycles)
+        std::cout << cycle << " ";
+      std::cout << std::endl;
+      exit(1);
+    }
+    return poss_perms_iterator->second;
+  }
+
+  /// Initialize permutation sectors for a given species
+  void SetupPermSectors(const uint32_t sectors_max)
+  {
+    if (!perm_sectors_setup) {
+      std::cout << "Setting up permutation sectors..." << std::endl;
+      std::vector<int> a;
+      a.resize(n_part);
+      for (int i=0; i<n_part; i++)
+        a[i] = 0;
+      int k = 1;
+      int y = n_part-1;
+      std::vector<std::vector<uint32_t>> tmp_poss_perms;
+      while (k != 0 && (sectors_max > poss_perms.size() || !sectors_max)) {
+        int x = a[k-1] + 1;
+        k -= 1;
+        while (2*x <= y) {
+          a[k] = x;
+          y -= x;
+          k += 1;
+        }
+        int l = k+1;
+        while (x <= y && (sectors_max > poss_perms.size() || !sectors_max)) {
+          a[k] = x;
+          a[l] = y;
+          std::vector<uint32_t> b;
+          for (std::vector<int>::size_type j=0; j!=k+2; j++)
+            b.push_back(a[j]);
+          tmp_poss_perms.push_back(b);
+          x += 1;
+          y -= 1;
+        }
+        a[k] = x+y;
+        y = x+y-1;
+        std::vector<uint32_t> c;
+        for (std::vector<int>::size_type j=0; j!=k+1; j++)
+          c.push_back(a[j]);
+        tmp_poss_perms.push_back(c);
+      }
+
+      int n_sectors = tmp_poss_perms.size();
+      for (std::vector<int>::size_type j=0; j != n_sectors; j++)
+        poss_perms[tmp_poss_perms[j]] = j;
+      perm_sectors_setup = 1;
+    }
+  }
 
   /// Initiate paths
   void InitPaths(Input &in, IO &out, RNG &rng, const uint32_t proc_i, const double L)

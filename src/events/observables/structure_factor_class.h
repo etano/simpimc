@@ -18,10 +18,11 @@ private:
   virtual void Accumulate()
   {
     path.SetMode(NEW_MODE);
+    int sign = path.CalcSign();
     for (uint32_t k_i=0; k_i<path.k_indices.size(); k_i++) {
       if (path.mag_ks[k_i] < k_cut) {
         for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-          sk(k_i) += path.sign*path.importance_weight*CMag2(path.rho_k(b_i,species_a_i)(k_i),path.rho_k(b_i,species_b_i)(k_i));
+          sk(k_i) += sign*path.importance_weight*CMag2(path.rho_k(b_i,species_a_i)(k_i),path.rho_k(b_i,species_b_i)(k_i));
         }
       }
     }

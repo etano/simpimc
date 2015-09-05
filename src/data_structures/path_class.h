@@ -3,14 +3,12 @@
 
 #include "species_class.h"
 
-/// Controls whether reading/writing new or old objects. This is important for the Metropolis rejection scheme.
-typedef enum {OLD_MODE, NEW_MODE} ModeType;
-
 /// Main data holding object. Contains all information about the path integral. Holds a vector of Species objects.
 class Path
 {
 private:
   ModeType mode; ///< Holds the current mode.
+  int sign; ///< Sign of the current configuration
 public:
   bool approximate; ///< Whether or not to use the approximate exponential
   bool pbc; ///< Whether or not using periodic boundary conditions
@@ -21,7 +19,6 @@ public:
   double k_c; ///< Largest cutoff used for k vectors
   double tau; ///< Time step
   double vol; ///< Volume of the simulation cell
-  int sign; ///< Sign of the current configuration
   uint32_t n_bead; ///< Total number of time slices
   uint32_t n_d; ///< Number of spatial dimensions
   uint32_t n_part; ///< Total number of particles
@@ -32,9 +29,6 @@ public:
   field<vec<std::complex<double>>> c_k; ///< Constant defined for each charge density
   field<vec<std::complex<double>>> rho_k; ///< All charge densities
   field<vec<std::complex<double>>> rho_k_c; ///< All charge densities copy
-  std::vector<std::map<std::vector<uint32_t>,uint32_t,CompareVec<uint32_t>>> poss_perms; ///< Vector of maps defining all possible permutations for each species
-  std::map<std::vector<uint32_t>,uint32_t,CompareVec<uint32_t>>::const_iterator poss_perms_iterator; ///< Iterator over map that defines all possible permutations
-  std::vector<bool> perm_sectors_setup; ///< Whether or not permutation sectors are setup for each species
   std::vector<double> mag_ks; ///< Vector holding magnitudes of k vectors
   std::vector<std::shared_ptr<Species>> species_list; ///< Vector holding pointers to all species objects
   std::vector<vec<double>> ks; ///< Vector holding k vectors
@@ -104,12 +98,6 @@ public:
     double k_cut = in.GetChild("System").GetAttribute<double>("k_cut",2.*M_PI/(pow(vol,1./n_d)));
     SetupKs(k_cut);
 
-    // Resize permutation containers
-    poss_perms.resize(n_species);
-    perm_sectors_setup.resize(n_species);
-    for (uint32_t i=0; i<n_species; ++i)
-      perm_sectors_setup[i] = 0;
-
     // Initiate some global things
     sign = 1;
     importance_weight = 1;
@@ -121,19 +109,33 @@ public:
   const std::shared_ptr<Bead>& operator() (const uint32_t s_i, const uint32_t p_i, const uint32_t b_i) { return species_list[s_i]->bead(p_i,bead_loop(b_i)); };
 
   /// Sets species index by matching the species name string
-  void GetSpeciesInfo(const std::string &species, uint32_t &species_i)
+  void GetSpeciesInfo(const std::string &species_name, uint32_t &species_i)
   {
-    for (uint32_t s_i=0; s_i<n_species; s_i++) {
-      if (species_list[s_i]->name == species) {
-        species_i = s_i;
+    for (const auto& species : species_list) {
+      if (species->name == species_name) {
+        species_i = species->s_i;
         return;
       }
     }
-    std::cout << "ERROR: No species of name " << species << " !" << std::endl;
+    std::cerr << "ERROR: No species of name " << species_name << " !" << std::endl;
+  }
+
+  /// Sets species index by matching the species name string
+  std::shared_ptr<Species> GetSpecies(const std::string &species_name)
+  {
+    for (const auto& species : species_list)
+      if (species->name == species_name)
+        return species;
+    std::cerr << "ERROR: No species of name " << species_name << " !" << std::endl;
   }
 
   /// Set the mode to the passed mode
-  inline void SetMode(ModeType t_mode) { mode = t_mode; };
+  inline void SetMode(ModeType t_mode)
+  {
+    mode = t_mode;
+    for (auto& species : species_list)
+        species->SetMode(t_mode);
+  }
 
   /// Returns the current mode
   inline ModeType GetMode() { return mode; };
@@ -172,13 +174,13 @@ public:
   }
 
   /// Get the n_d dimensional vector defining the postion of bead b
-  inline vec<double>& GetR(const std::shared_ptr<Bead> &b) { return mode==NEW_MODE ? b->r : b->r_c; };
+  inline vec<double>& GetR(const std::shared_ptr<Bead> &b) { return b->GetR(mode); };
 
   /// Get the bead n steps after the given bead
-  inline std::shared_ptr<Bead> GetNextBead(const std::shared_ptr<Bead> &b, const uint32_t n) { return mode==NEW_MODE ? b->NextB(n) : b->NextBC(n); };
+  inline std::shared_ptr<Bead> GetNextBead(const std::shared_ptr<Bead> &b, const uint32_t n) { return b->GetNextBead(n,mode); };
 
   /// Get the bead n steps before the given bead
-  inline std::shared_ptr<Bead> GetPrevBead(const std::shared_ptr<Bead> &b, const uint32_t n) { return mode==NEW_MODE ? b->PrevB(n) : b->PrevBC(n); };
+  inline std::shared_ptr<Bead> GetPrevBead(const std::shared_ptr<Bead> &b, const uint32_t n) { return b->GetPrevBead(n,mode); };
 
   /// Compute the vector between two vectors and put it in the box
   inline vec<double> Dr(const vec<double> &r0, const vec<double> &r1) { vec<double> dr(r0-r1); PutInBox(dr); return std::move(dr); };
@@ -489,103 +491,9 @@ public:
   int CalcSign()
   {
     sign = 1;
-    for (uint32_t s_i=0; s_i<n_species; s_i++) {
-      if (species_list[s_i]->fermi) {
-        std::vector<uint32_t> cycles;
-        SetCycleCount(s_i, cycles);
-        for (auto& cycle: cycles)
-          sign *= pow(-1,cycle-1);
-      }
-    }
-  }
-
-  /// Get the current cycle counts
-  void SetCycleCount(const uint32_t s_i, std::vector<uint32_t> &cycles)
-  {
-    vec<uint32_t> already_counted(zeros<vec<uint32_t>>(species_list[s_i]->n_part));
-    for (uint32_t p_i=0; p_i<species_list[s_i]->n_part; p_i++) {
-      if (!already_counted(p_i)) {
-        uint32_t cycle_length = 1;
-        std::shared_ptr<Bead> b((*this)(s_i,p_i,n_bead-1));
-        already_counted(p_i) = 1;
-        while (GetNextBead(b,1) != (*this)(s_i,p_i,0)) {
-          cycle_length++;
-          b = GetNextBead(b,n_bead);
-          already_counted(b->p) = 1;
-        }
-        cycles.push_back(cycle_length);
-      }
-    }
-  }
-
-  /// Get the current permutation sector of a given species
-  uint32_t GetPermSector(const uint32_t s_i)
-  {
-    std::vector<uint32_t> cycles;
-    SetCycleCount(s_i, cycles);
-    return GetPermSector(s_i, cycles);
-  }
-
-  /// Get the current permutation sector of a given species and set the current cycle counts
-  uint32_t GetPermSector(const uint32_t s_i, std::vector<uint32_t> &cycles)
-  {
-    sort(cycles.begin(),cycles.end());
-    poss_perms_iterator = poss_perms[s_i].find(cycles);
-    if (poss_perms_iterator == poss_perms[s_i].end()) { // TODO: Feel confident enough to remove this
-      std::cout << "Broken Permutation: " << std::endl;
-      for (auto& cycle: cycles)
-        std::cout << cycle << " ";
-      std::cout << std::endl;
-      exit(1);
-    }
-    return poss_perms_iterator->second;
-  }
-
-  /// Initialize permutation sectors for a given species
-  void SetupPermSectors(const uint32_t s_i, const uint32_t sectors_max)
-  {
-    int n = species_list[s_i]->n_part;
-    if (!perm_sectors_setup[s_i]) {
-      std::cout << "Setting up permutation sectors..." << std::endl;
-      std::vector<int> a;
-      a.resize(n);
-      for (int i=0; i<n; i++)
-        a[i] = 0;
-      int k = 1;
-      int y = n-1;
-      std::vector<std::vector<uint32_t>> tmp_poss_perms;
-      while (k != 0 && (sectors_max > poss_perms[s_i].size() || !sectors_max)) {
-        int x = a[k-1] + 1;
-        k -= 1;
-        while (2*x <= y) {
-          a[k] = x;
-          y -= x;
-          k += 1;
-        }
-        int l = k+1;
-        while (x <= y && (sectors_max > poss_perms[s_i].size() || !sectors_max)) {
-          a[k] = x;
-          a[l] = y;
-          std::vector<uint32_t> b;
-          for (std::vector<int>::size_type j=0; j!=k+2; j++)
-            b.push_back(a[j]);
-          tmp_poss_perms.push_back(b);
-          x += 1;
-          y -= 1;
-        }
-        a[k] = x+y;
-        y = x+y-1;
-        std::vector<uint32_t> c;
-        for (std::vector<int>::size_type j=0; j!=k+1; j++)
-          c.push_back(a[j]);
-        tmp_poss_perms.push_back(c);
-      }
-
-      int n_sectors = tmp_poss_perms.size();
-      for (std::vector<int>::size_type j=0; j != n_sectors; j++)
-        poss_perms[s_i][tmp_poss_perms[j]] = j;
-      perm_sectors_setup[s_i] = 1;
-    }
+    for (uint32_t s_i=0; s_i<n_species; s_i++)
+      sign *= species_list[s_i]->CalcSign();
+    return sign;
   }
 
   /// Get dr, dr_p, and drr_p

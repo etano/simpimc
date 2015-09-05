@@ -18,6 +18,7 @@ private:
   {
     path.SetMode(NEW_MODE);
     // Homogeneous
+    int sign = path.CalcSign();
     if (species_a_i == species_b_i) {
       for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
         for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
@@ -25,7 +26,7 @@ private:
             vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_a_i,p_j,b_i)));
             uint32_t i = gr.x.ReverseMap(mag(dr));
             if (i < gr.x.n_r)
-              gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
+              gr.y(i) = gr.y(i) + 1.*sign*path.importance_weight;
           }
         }
       }
@@ -37,7 +38,7 @@ private:
             vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_b_i,p_j,b_i)));
             uint32_t i = gr.x.ReverseMap(mag(dr));
             if (i < gr.x.n_r)
-              gr.y(i) = gr.y(i) + 1.*path.sign*path.importance_weight;
+              gr.y(i) = gr.y(i) + 1.*sign*path.importance_weight;
           }
         }
       }

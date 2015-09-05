@@ -7,7 +7,7 @@
 class Energy : public Observable
 {
 private:
-  bool first_sector; ///< Whether or not this is the first sector being written to file
+  std::vector<bool> first_sector; ///< Whether or not this is the first sector being written to file
   bool measure_per_sector; ///< Whether or not to measure per permutation section
   bool measure_potential; ///< Whether or not to measure the potential
   bool use_thermal_estimator; ///< Whether or not to use the thermal estimator of the energy
@@ -23,9 +23,10 @@ private:
   double ThermalEstimator()
   {
     double total_energy = 0.;
+    int sign = path.CalcSign();
     for (uint32_t i=0; i<action_list.size(); ++i) {
       if (!action_list[i]->is_importance_weight) {
-        double action_energy = path.sign*path.importance_weight*action_list[i]->DActionDBeta();
+        double action_energy = sign*path.importance_weight*action_list[i]->DActionDBeta();
         energies(i) += action_energy;
         total_energy += action_energy;
       }
@@ -38,6 +39,7 @@ private:
   double VirialEstimator()
   {
     // Kinetic term
+    int sign = path.CalcSign();
     double kinetic_energy = 0.;
     for (auto &action: action_list) {
       if (action->type == "Kinetic") {
@@ -103,7 +105,7 @@ private:
           if (action_list[i]->type == "Kinetic") {
             for (auto &species_name : action_list[i]->species_list) {
               if (species_name == species->name)
-                 energies(i) += path.sign*path.importance_weight*kinetic_energy;
+                 energies(i) += sign*path.importance_weight*kinetic_energy;
             }
           }
         }
@@ -115,7 +117,7 @@ private:
     double interaction_energy = 0.;
     for (uint32_t i=0; i<action_list.size(); ++i) {
       if (!action_list[i]->is_importance_weight && action_list[i]->type!="Kinetic") {
-        double action_energy = path.sign*path.importance_weight*action_list[i]->DActionDBeta();
+        double action_energy = sign*path.importance_weight*action_list[i]->DActionDBeta();
         energies(i) += action_energy;
         interaction_energy += action_energy;
       }
@@ -128,9 +130,10 @@ private:
   double PotentialEstimator()
   {
     double total_potential = 0.;
+    int sign = path.CalcSign();
     for (uint32_t i=0; i<action_list.size(); ++i) {
       if (!action_list[i]->is_importance_weight) {
-        double action_potential = path.sign*path.importance_weight*action_list[i]->Potential();
+        double action_potential = sign*path.importance_weight*action_list[i]->Potential();
         potentials(i) += action_potential;
         total_potential += action_potential;
       }
@@ -158,12 +161,8 @@ private:
     if (measure_per_sector) {
       // Loop through species
       for (auto &species: path.species_list) {
-        uint32_t species_i = species->s_i;
-        std::vector<uint32_t> cycle;
-        path.SetCycleCount(species_i, cycle);
-        uint32_t sector = path.GetPermSector(species_i, cycle);
-        std::pair<uint32_t,double> sector_energy(sector,path.sign*total_energy/path.n_bead);
-        sector_energies[species_i].push_back(sector_energy);
+        std::pair<uint32_t,double> sector_energy(species->GetPermSector(),species->CalcSign()*total_energy/path.n_bead);
+        sector_energies[species->s_i].push_back(sector_energy);
       }
     }
 
@@ -204,29 +203,29 @@ public:
     measure_per_sector = in.GetAttribute<uint32_t>("measure_per_sector",0);
     if (measure_per_sector) {
       uint32_t sector_max = in.GetAttribute<uint32_t>("sector_max",0);
+      out.CreateGroup(prefix+"sectors");
 
       // Loop through all species
       sector_energies.resize(path.n_species);
+      first_sector.resize(path.n_species);
       for (auto &species: path.species_list) {
         // Set up permutation sectors
-        uint32_t species_i = species->s_i;
-        path.SetupPermSectors(species->s_i, sector_max);
-        first_sector = true;
+        species->SetupPermSectors(sector_max);
+        first_sector[species->s_i] = true;
 
         // Write out possible sectors
-        mat<uint32_t> tmp_perms(zeros<mat<uint32_t>>(species->n_part,path.poss_perms[species_i].size()));
+        mat<uint32_t> tmp_perms(zeros<mat<uint32_t>>(species->n_part,species->poss_perms.size()));
         std::map<std::vector<uint32_t>,uint32_t>::iterator tmp_iterator;
-        for(tmp_iterator = path.poss_perms[species_i].begin(); tmp_iterator != path.poss_perms[species_i].end(); tmp_iterator++) {
+        for(tmp_iterator = species->poss_perms.begin(); tmp_iterator != species->poss_perms.end(); tmp_iterator++) {
           std::vector<uint32_t> tmpPerm = (*tmp_iterator).first;
           for (uint32_t j=0; j<tmpPerm.size(); ++j)
             tmp_perms(tmpPerm[j]-1,(*tmp_iterator).second)++;
         }
-        out.CreateGroup(prefix+"sectors");
         out.CreateGroup(prefix+"sectors/"+species->name);
         std::string data_type = "avg_pairs";
         out.Write(prefix+"sectors/"+species->name+"/data_type",data_type);
-        vec<uint32_t> tmp_perm_indices(path.poss_perms[species_i].size());
-        for (uint32_t i=0; i<path.poss_perms[species_i].size(); ++i)
+        vec<uint32_t> tmp_perm_indices(species->poss_perms.size());
+        for (uint32_t i=0; i<species->poss_perms.size(); ++i)
           tmp_perm_indices(i) = i;
         out.Write(prefix+"sectors/"+species->name+"/x", tmp_perm_indices);
         out.Write(prefix+"sectors/"+species->name+"/poss_perms", tmp_perms);
@@ -321,8 +320,8 @@ public:
             sector_info_vec(1) = sector_info.second[0];
             sector_info_vec(2) = sector_info.second[1];
             sector_info_vec(3) = sector_info.second[2];
-            if (first_time && first_sector) {
-              first_sector = false;
+            if (first_time && first_sector[species->s_i]) {
+              first_sector[species->s_i] = false;
               out.CreateExtendableDataSet("/"+prefix+"/sectors/"+species->name+"/", "y", sector_info_vec);
             } else
               out.AppendDataSet("/"+prefix+"/sectors/"+species->name+"/", "y", sector_info_vec);

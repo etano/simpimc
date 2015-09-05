@@ -14,7 +14,7 @@ private:
   virtual void Accumulate()
   {
     path.SetMode(NEW_MODE);
-    path.importance_weight = path.sign;
+    path.importance_weight = path.CalcSign();
     for (uint32_t i=0; i<action_list.size(); ++i) {
       double tmp_iw = 1.;
       if (action_list[i]->is_importance_weight)

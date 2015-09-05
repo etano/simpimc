@@ -4,29 +4,31 @@
   <Parallel procs_per_group="1" />
   <System n_d="2" n_bead="64" beta="1.0" L="10.0" pbc="1" />
   <Particles>
-    <Species name="eU" n_part="5" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" cofactor="0.5" prefix="free.0" />
-    <Species name="eD" n_part="5" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" cofactor="0.5" prefix="free.0" />
+    <Species name="eU" n_part="5" lambda="0.5" fermi="1" fixed_node="0" init_type="Random" cofactor="0.5" prefix="free.0" />
   </Particles>
   <Actions>
     <Action name="KineticU" type="Kinetic" n_images="200" species="eU" />
-    <Action name="KineticD" type="Kinetic" n_images="200" species="eD" />
-    <Action name="NodalU" type="FreeNodal" n_images="200" species="eU" />
-    <Action name="NodalD" type="FreeNodal" n_images="200" species="eD" />
   </Actions>
   <Moves>
-    <Move name="BisectD" type="PermBisectIterative" species="eD" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
-    <Move name="BisectU" type="PermBisectIterative" species="eU" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
+    <Move name="PermBisectU" type="PermBisectIterative" species="eU" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
+    <Move name="BisectU" type="Bisect" species="eU" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
   </Moves>
   <Observables>
-    <Observable name="Energy" type="Energy" skip="1" />
+    <Observable name="Energy" type="Energy" measure_per_sector="1" skip="1" />
     <Observable name="PathDump" type="PathDump" skip="9" />
+    <Observable name="Sign" type="Sign" skip="1" />
+    <Observable name="PermutationU" type="Permutation" skip="1" species="eU" />
     <Observable name="Time" type="Time" />
   </Observables>
   <Algorithm>
     <Loop n_step="1000">
       <Loop n_step="1000">
-        <Move name="BisectU" />
-        <Move name="BisectD" />
+        <Move name="PermBisectU" />
+        <Loop n_step="100">
+          <Move name="BisectU" />
+        </Loop>
+        <Observable name="Sign" />
+        <Observable name="PermutationU" />
         <Observable name="Energy" />
       </Loop>
       <Write />

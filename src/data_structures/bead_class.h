@@ -1,6 +1,9 @@
 #ifndef SIMPIMC_BEAD_CLASS_H_
 #define SIMPIMC_BEAD_CLASS_H_
 
+/// Controls whether reading/writing new or old objects. This is important for the Metropolis rejection scheme.
+typedef enum {OLD_MODE, NEW_MODE} ModeType;
+
 /// Class that contains all information about a single bead
 class Bead
 {
@@ -102,6 +105,15 @@ public:
   {
     return n==0 ? next_c->prev_c : prev_c->PrevBC(n-1);
   }
+
+  /// Get the n_d dimensional vector defining the postion of bead b
+  inline vec<double>& GetR(const ModeType mode) { return mode==NEW_MODE ? r : r_c; };
+
+  /// Get the bead n steps after the given bead
+  inline std::shared_ptr<Bead> GetNextBead(const uint32_t n, const ModeType mode) { return mode==NEW_MODE ? NextB(n) : NextBC(n); };
+
+  /// Get the bead n steps before the given bead
+  inline std::shared_ptr<Bead> GetPrevBead(const uint32_t n, const ModeType mode) { return mode==NEW_MODE ? PrevB(n) : PrevBC(n); };
 
 };
 

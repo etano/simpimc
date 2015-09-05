@@ -64,7 +64,7 @@ protected:
   {
     // Change sign weight for fermions
     if (!(n_perm_part%2) && path.species_list[species_i]->fermi)
-      path.sign *= -1;
+      path.species_list[species_i]->sign *= -1;
 
     // Accept move, so store things
     for (uint32_t p_i=0; p_i<n_part; p_i++) { // todo: can make this more efficient by only restoring touched particles

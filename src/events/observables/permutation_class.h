@@ -8,21 +8,18 @@ class Permutation : public Observable
 {
 private:
   bool first_sector; ///< Whether or not the first permutation sector has been written
-  uint32_t species_i; ///< Index of relevant species
-  std::string species; ///< Name of relevant species
+  std::shared_ptr<Species> species; ///< Pointer to the relevant species
   std::vector<uint32_t> sectors; ///< Vector of sector indices
   vec<double> cycles; ///< Vector of cycle counts
 
   /// Accumulate the observable
   virtual void Accumulate()
   {
-    path.SetMode(NEW_MODE);
-    std::vector<uint32_t> cycle;
-    path.SetCycleCount(species_i, cycle);
-    uint32_t sector = path.GetPermSector(species_i, cycle);
-    sectors.push_back(sector);
+    species->SetMode(NEW_MODE);
+    auto cycle = species->GetCycleCount();
+    sectors.push_back(species->GetPermSector(cycle));
     for (auto& c: cycle)
-      cycles(c-1) += 1.;
+      cycles(c-1) += 1;
     n_measure += 1;
   }
 
@@ -41,20 +38,20 @@ public:
   {
     // Read in info
     uint32_t sector_max = in.GetAttribute<uint32_t>("sector_max",0);
-    species = in.GetAttribute<std::string>("species");
-    out.Write("/Observables/"+name+"/species", species);
+    std::string species_name = in.GetAttribute<std::string>("species");
+    out.Write("/Observables/"+name+"/species", species_name);
     out.Write("/Observables/"+name+"/sector_max", sector_max);
 
     // Set up permutation sectors
-    path.GetSpeciesInfo(species, species_i);
-    cycles.set_size(path.species_list[species_i]->n_part);
-    path.SetupPermSectors(species_i, sector_max);
+    species = path.GetSpecies(species_name);
+    cycles.set_size(species->n_part);
+    species->SetupPermSectors(sector_max);
     first_sector = true;
 
     // Write out possible sectors
-    mat<uint32_t> tmp_perms(zeros<mat<uint32_t>>(path.species_list[species_i]->n_part,path.poss_perms[species_i].size()));
+    mat<uint32_t> tmp_perms(zeros<mat<uint32_t>>(species->n_part,species->poss_perms.size()));
     std::map<std::vector<uint32_t>,uint32_t>::iterator tmp_iterator;
-    for(tmp_iterator = path.poss_perms[species_i].begin(); tmp_iterator != path.poss_perms[species_i].end(); tmp_iterator++) {
+    for(tmp_iterator = species->poss_perms.begin(); tmp_iterator != species->poss_perms.end(); tmp_iterator++) {
       std::vector<uint32_t> tmpPerm = (*tmp_iterator).first;
       for (uint32_t j=0; j<tmpPerm.size(); ++j)
         tmp_perms(tmpPerm[j]-1,(*tmp_iterator).second)++;
@@ -62,15 +59,15 @@ public:
     out.CreateGroup(prefix+"sectors");
     std::string data_type = "pairs";
     out.Write(prefix+"sectors/data_type",data_type);
-    vec<uint32_t> tmp_perm_indices(path.poss_perms[species_i].size());
-    for (uint32_t i=0; i<path.poss_perms[species_i].size(); ++i)
+    vec<uint32_t> tmp_perm_indices(species->poss_perms.size());
+    for (uint32_t i=0; i<species->poss_perms.size(); ++i)
       tmp_perm_indices(i) = i;
     out.Write(prefix+"sectors/x", tmp_perm_indices);
     out.Write(prefix+"sectors/possPerms", tmp_perms);
 
     // Write out possible cycles
-    vec<uint32_t> tmp_cycles(path.species_list[species_i]->n_part);
-    for (uint32_t p_i=0; p_i<path.species_list[species_i]->n_part; ++p_i)
+    vec<uint32_t> tmp_cycles(species->n_part);
+    for (uint32_t p_i=0; p_i<species->n_part; ++p_i)
       tmp_cycles(p_i) = p_i+1;
     out.CreateGroup(prefix+"cycles");
     data_type = "histogram";
