@@ -25,14 +25,11 @@ protected:
   virtual bool Attempt() = 0;
 
   /// Generate a list of actions that affect a given vector of species names
-  void GenerateActionList(std::vector<std::shared_ptr<Action>> &t_action_list, const std::vector<std::string> &species)
+  void GenerateActionList(std::vector<std::shared_ptr<Action>> &t_action_list, std::shared_ptr<Species> &species)
   {
     for (auto& action: t_action_list)
-      for (auto& s: species)
-        if (std::find(action->species_list.begin(), action->species_list.end(), s) != action->species_list.end()) {
-          action_list.push_back(action);
-          break; // Only add the action once even if it's found by multiple species
-        }
+      if (std::find(action->species_list.begin(), action->species_list.end(), species) != action->species_list.end())
+        action_list.push_back(action);
   }
 
   /// Rejects the move

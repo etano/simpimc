@@ -20,14 +20,13 @@ private:
   vec<double> potentials; ///< Vector of potentials for each action
 
   /// Thermal estimator of the energy
-  double ThermalEstimator()
+  double ThermalEstimator(const double cofactor)
   {
     double total_energy = 0.;
-    int sign = path.CalcSign();
     for (uint32_t i=0; i<action_list.size(); ++i) {
       if (!action_list[i]->is_importance_weight) {
-        double action_energy = sign*path.importance_weight*action_list[i]->DActionDBeta();
-        energies(i) += action_energy;
+        double action_energy = action_list[i]->DActionDBeta();
+        energies(i) += cofactor*action_energy;
         total_energy += action_energy;
       }
     }
@@ -36,10 +35,9 @@ private:
   }
 
   /// Virial estimator of the energy
-  double VirialEstimator()
+  double VirialEstimator(const double cofactor)
   {
     // Kinetic term
-    int sign = path.CalcSign();
     double kinetic_energy = 0.;
     for (auto &action: action_list) {
       if (action->type == "Kinetic") {
@@ -49,15 +47,14 @@ private:
 
     // Centroid term
     for (auto &species: path.species_list) {
-      if (species->lambda > 0.) {
-        uint32_t s_i = species->s_i;
+      if (species->GetLambda() > 0.) {
 
         //// Compute centroids
-        //field<vec<double>> centroids(species->n_part,path.n_bead);
-        //for (uint32_t p_i=0; p_i<species->n_part; p_i++) {
+        //field<vec<double>> centroids(species->GetNPart(),path.GetNBead());
+        //for (uint32_t p_i=0; p_i<species->GetNPart(); p_i++) {
 
         //  // First centroid
-        //  centroids(p_i,0).zeros(path.n_d);
+        //  centroids(p_i,0).zeros(path.GetND());
         //  std::shared_ptr<Bead> b_0 = path(s_i,p_i,0);
         //  std::shared_ptr<Bead> b_1 = path.GetNextBead(path(s_i,p_i,0),1);
         //  for (uint32_t skip=1; skip<virial_window_size; skip++) {
@@ -69,7 +66,7 @@ private:
         //  //
         //  // |_____.___o_|_____.__o__|_o___._____|
         //  //
-        //  for (uint32_t b_i=1; b_i<path.n_bead; b_i++) {
+        //  for (uint32_t b_i=1; b_i<path.GetNBead(); b_i++) {
         //    centroids(p_i,b_i) = centroids(p_i,b_i-1);
         //    centroids(p_i,b_i) -= path.GetR(b_0);
         //    centroids(p_i,b_i) += path.GetR(b_1);
@@ -78,18 +75,18 @@ private:
         //  }
 
         //  // Normalize
-        //  for (uint32_t b_i=0; b_i<path.n_bead; b_i++)
+        //  for (uint32_t b_i=0; b_i<path.GetNBead(); b_i++)
         //    centroids(p_i,b_i) /= virial_window_size; // FIXME: Does this need to be put in the box?
         //}
 
         // Multiply by force and sum
-        b_i_last = path.bead_loop(b_i_last+1);
+        b_i_last = species->bead_loop(b_i_last+1);
         double centroid_term = 0.;
-        for (uint32_t p_i=0; p_i<species->n_part; p_i++) {
-          std::vector<std::pair<uint32_t,uint32_t>> particles;
-          particles.push_back(std::make_pair(s_i,p_i));
-          for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-            vec<double> dr(path.Dr(path(s_i,p_i,b_i),path(s_i,p_i,0)));//centroids(p_i,b_i)));
+        for (uint32_t p_i=0; p_i<species->GetNPart(); p_i++) {
+          std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
+          particles.push_back(std::make_pair(species,p_i));
+          for (uint32_t b_i=0; b_i<path.GetNBead(); b_i++) {
+            vec<double> dr(path.Dr(species->GetBead(p_i,b_i),species->GetBead(p_i,0)));//centroids(p_i,b_i)));
             for (uint32_t i=0; i<action_list.size(); ++i) {
               if (!action_list[i]->is_importance_weight && action_list[i]->type!="Kinetic") {
                 vec<double> action_gradient = action_list[i]->GetActionGradient(b_i, b_i+1, particles, 0);
@@ -98,17 +95,14 @@ private:
             }
           }
         }
-        kinetic_energy += centroid_term/(2.*path.tau);
+        kinetic_energy += centroid_term/(2.*path.GetTau());
 
         // Record kinetic energy
-        for (uint32_t i=0; i<action_list.size(); ++i) {
-          if (action_list[i]->type == "Kinetic") {
-            for (auto &species_name : action_list[i]->species_list) {
-              if (species_name == species->name)
-                 energies(i) += sign*path.importance_weight*kinetic_energy;
-            }
-          }
-        }
+        for (uint32_t i=0; i<action_list.size(); ++i)
+          if (action_list[i]->type == "Kinetic")
+            for (const auto &s : action_list[i]->species_list)
+              if (s == species)
+                 energies(i) += cofactor*kinetic_energy;
       }
 
     }
@@ -117,8 +111,8 @@ private:
     double interaction_energy = 0.;
     for (uint32_t i=0; i<action_list.size(); ++i) {
       if (!action_list[i]->is_importance_weight && action_list[i]->type!="Kinetic") {
-        double action_energy = sign*path.importance_weight*action_list[i]->DActionDBeta();
-        energies(i) += action_energy;
+        double action_energy = action_list[i]->DActionDBeta();
+        energies(i) += cofactor*action_energy;
         interaction_energy += action_energy;
       }
     }
@@ -127,14 +121,13 @@ private:
   }
 
   /// Potential estimator
-  double PotentialEstimator()
+  double PotentialEstimator(const double cofactor)
   {
     double total_potential = 0.;
-    int sign = path.CalcSign();
     for (uint32_t i=0; i<action_list.size(); ++i) {
       if (!action_list[i]->is_importance_weight) {
-        double action_potential = sign*path.importance_weight*action_list[i]->Potential();
-        potentials(i) += action_potential;
+        double action_potential = action_list[i]->Potential();
+        potentials(i) += cofactor*action_potential;
         total_potential += action_potential;
       }
     }
@@ -145,24 +138,29 @@ private:
   /// Accumulate the observable
   virtual void Accumulate()
   {
+    // Calculate sign and importance weight
+    int sign = path.GetSign();
+    double importance_weight = path.GetImportanceWeight();
+    double cofactor = sign*importance_weight;
+
     // Measure energy
     path.SetMode(NEW_MODE);
     double total_energy = 0.;
     if (use_thermal_estimator)
-      total_energy = ThermalEstimator();
+      total_energy = ThermalEstimator(cofactor);
     else if (use_virial_estimator)
-      total_energy = VirialEstimator();
+      total_energy = VirialEstimator(cofactor);
 
     double total_potential = 0.;
     if (measure_potential)
-      total_potential += PotentialEstimator();
+      total_potential += PotentialEstimator(cofactor);
 
-    // Store sector with total energy
+    // Measure per sector
     if (measure_per_sector) {
       // Loop through species
       for (auto &species: path.species_list) {
-        std::pair<uint32_t,double> sector_energy(species->GetPermSector(),species->CalcSign()*total_energy/path.n_bead);
-        sector_energies[species->s_i].push_back(sector_energy);
+        std::pair<uint32_t,double> sector_energy(species->GetPermSector(),species->GetSign()*importance_weight*total_energy/species->GetNBead());
+        sector_energies[species->GetId()].push_back(sector_energy);
       }
     }
 
@@ -180,7 +178,7 @@ private:
     // Loop through species
     if (measure_per_sector) {
       for (auto &species: path.species_list)
-        sector_energies[species->s_i].clear();
+        sector_energies[species->GetId()].clear();
     }
   }
 public:
@@ -194,7 +192,7 @@ public:
     measure_potential = in.GetAttribute<bool>("measure_potential",0);
     use_virial_estimator = in.GetAttribute<bool>("use_virial_estimator",0);
     if (use_virial_estimator) {
-      virial_window_size = in.GetAttribute<uint32_t>("virial_window_size",path.n_bead);
+      virial_window_size = in.GetAttribute<uint32_t>("virial_window_size",path.GetNBead());
       use_thermal_estimator = in.GetAttribute<bool>("use_thermal_estimator",0);
     } else
       use_thermal_estimator = in.GetAttribute<bool>("use_thermal_estimator",1);
@@ -206,29 +204,28 @@ public:
       out.CreateGroup(prefix+"sectors");
 
       // Loop through all species
-      sector_energies.resize(path.n_species);
-      first_sector.resize(path.n_species);
+      sector_energies.resize(path.GetNSpecies());
+      first_sector.resize(path.GetNSpecies());
       for (auto &species: path.species_list) {
         // Set up permutation sectors
         species->SetupPermSectors(sector_max);
-        first_sector[species->s_i] = true;
+        first_sector[species->GetId()] = true;
 
         // Write out possible sectors
-        mat<uint32_t> tmp_perms(zeros<mat<uint32_t>>(species->n_part,species->poss_perms.size()));
-        std::map<std::vector<uint32_t>,uint32_t>::iterator tmp_iterator;
-        for(tmp_iterator = species->poss_perms.begin(); tmp_iterator != species->poss_perms.end(); tmp_iterator++) {
-          std::vector<uint32_t> tmpPerm = (*tmp_iterator).first;
-          for (uint32_t j=0; j<tmpPerm.size(); ++j)
-            tmp_perms(tmpPerm[j]-1,(*tmp_iterator).second)++;
+        mat<uint32_t> perms(zeros<mat<uint32_t>>(species->GetNPart(),species->GetNPerm()));
+        for(const auto& poss_perm : species->GetPossPerms()) {
+          std::vector<uint32_t> perm = poss_perm.first;
+          for (uint32_t j=0; j<perm.size(); ++j)
+            perms(perm[j]-1,poss_perm.second)++;
         }
-        out.CreateGroup(prefix+"sectors/"+species->name);
+        out.CreateGroup(prefix+"sectors/"+species->GetName());
         std::string data_type = "avg_pairs";
-        out.Write(prefix+"sectors/"+species->name+"/data_type",data_type);
-        vec<uint32_t> tmp_perm_indices(species->poss_perms.size());
-        for (uint32_t i=0; i<species->poss_perms.size(); ++i)
-          tmp_perm_indices(i) = i;
-        out.Write(prefix+"sectors/"+species->name+"/x", tmp_perm_indices);
-        out.Write(prefix+"sectors/"+species->name+"/poss_perms", tmp_perms);
+        out.Write(prefix+"sectors/"+species->GetName()+"/data_type",data_type);
+        vec<uint32_t> perm_indices(species->GetNPerm());
+        for (uint32_t i=0; i<species->GetNPerm(); ++i)
+          perm_indices(i) = i;
+        out.Write(prefix+"sectors/"+species->GetName()+"/x", perm_indices);
+        out.Write(prefix+"sectors/"+species->GetName()+"/poss_perms", perms);
       }
     }
 
@@ -243,7 +240,7 @@ public:
   virtual void Write()
   {
     if (n_measure > 0) {
-      double norm = path.n_bead*n_measure;
+      double norm = path.GetNBead()*n_measure;
 
       // Write energies
       energies = energies/norm;
@@ -292,7 +289,7 @@ public:
           // Map out the sectors std::vector
           std::map<uint32_t,std::vector<double>> sector_map;
           for (uint32_t i=0; i<n_measure; i++) {
-            std::pair<uint32_t,double> sector_energy = sector_energies[species->s_i].back();
+            std::pair<uint32_t,double> sector_energy = sector_energies[species->GetId()].back();
             uint32_t sector = sector_energy.first;
             double energy = sector_energy.second;
             if (sector_map.find(sector) == sector_map.end()) {
@@ -309,7 +306,7 @@ public:
               sector_map[sector][1] = var1;
               sector_map[sector][2] = N1;
             }
-            sector_energies[species->s_i].pop_back();
+            sector_energies[species->GetId()].pop_back();
           }
 
           // Put thestd::map into an array and write
@@ -320,11 +317,11 @@ public:
             sector_info_vec(1) = sector_info.second[0];
             sector_info_vec(2) = sector_info.second[1];
             sector_info_vec(3) = sector_info.second[2];
-            if (first_time && first_sector[species->s_i]) {
-              first_sector[species->s_i] = false;
-              out.CreateExtendableDataSet("/"+prefix+"/sectors/"+species->name+"/", "y", sector_info_vec);
+            if (first_time && first_sector[species->GetId()]) {
+              first_sector[species->GetId()] = false;
+              out.CreateExtendableDataSet("/"+prefix+"/sectors/"+species->GetName()+"/", "y", sector_info_vec);
             } else
-              out.AppendDataSet("/"+prefix+"/sectors/"+species->name+"/", "y", sector_info_vec);
+              out.AppendDataSet("/"+prefix+"/sectors/"+species->GetName()+"/", "y", sector_info_vec);
           }
         }
       }

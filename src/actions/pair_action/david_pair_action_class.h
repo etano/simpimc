@@ -44,19 +44,18 @@ private:
   virtual double CalcVLong()
   {
     // Get rho k
-    field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_a(species_a->GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_b(species_b->GetRhoK());
 
     // Sum over k std::vectors
     double tot = 0.;
-    size_t n_ks = path.ks.size();
+    size_t n_ks = path.ks.vecs.size();
     #pragma omp parallel for collapse(2) reduction(+:tot)
-    for (uint32_t k_i=0; k_i<n_ks; k_i++) {
-      for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-        tot += v_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));;
-      }
-    }
+    for (uint32_t k_i=0; k_i<n_ks; k_i++)
+      for (uint32_t b_i=0; b_i<path.GetNBead(); b_i++)
+        tot += v_long_k(k_i)*CMag2(rho_k_a(b_i)(k_i),rho_k_b(b_i)(k_i));;
 
-    if (species_b_i != species_a_i)
+    if (species_a != species_b)
       tot *= 2.;
 
     return tot + v_long_k_0 + v_long_r_0;
@@ -110,20 +109,19 @@ private:
   virtual double CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
   {
     // Get rho k
-    field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_a(species_a->GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_b(species_b->GetRhoK());
 
     // Sum over k std::vectors
     uint32_t skip = 1<<level;
     double tot = 0.;
-    size_t n_ks = path.ks.size();
+    size_t n_ks = path.ks.vecs.size();
     #pragma omp parallel for collapse(2) reduction(+:tot)
-    for (uint32_t k_i=0; k_i<n_ks; k_i++) {
-      for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
-        tot += u_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));
-      }
-    }
+    for (uint32_t k_i=0; k_i<n_ks; k_i++)
+      for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip)
+        tot += u_long_k(k_i)*CMag2(rho_k_a(path.bead_loop(b_i))(k_i),rho_k_b(path.bead_loop(b_i))(k_i));
 
-    if (species_b_i != species_a_i)
+    if (species_a != species_b)
       tot *= 2.;
 
     return tot;
@@ -179,19 +177,18 @@ private:
   virtual double CalcdUdBetaLong()
   {
     // Get rho k
-    field<vec<std::complex<double>>> &rho_k(path.GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_a(species_a->GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_b(species_b->GetRhoK());
 
     // Sum over k std::vectors
     double tot = 0.;
-    size_t n_ks = path.ks.size();
+    size_t n_ks = path.ks.vecs.size();
     #pragma omp parallel for collapse(2) reduction(+:tot)
-    for (uint32_t k_i=0; k_i<n_ks; k_i++) {
-      for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-        tot += du_long_k(k_i)*CMag2(rho_k(path.bead_loop(b_i),species_a_i)(k_i),rho_k(path.bead_loop(b_i),species_b_i)(k_i));
-      }
-    }
+    for (uint32_t k_i=0; k_i<n_ks; k_i++)
+      for (uint32_t b_i=0; b_i<path.GetNBead(); b_i++)
+        tot += du_long_k(k_i)*CMag2(rho_k_a(b_i)(k_i),rho_k_b(b_i)(k_i));
 
-    if (species_b_i != species_a_i)
+    if (species_a != species_b)
       tot *= 2.;
 
     return tot + du_long_k_0 + du_long_r_0;
@@ -246,10 +243,10 @@ public:
     pa_in.Read(u_kj_str + "/taus", taus);
     bool tauFound = 0;
     for (uint32_t tau_i=0; tau_i<n_tau; tau_i++)
-      if (abs(taus(tau_i)-path.tau) < 1.0e-6)
+      if (abs(taus(tau_i)-path.GetTau()) < 1.0e-6)
         tauFound = 1;
     if (!tauFound) {
-      std::cerr << "ERROR: tau of " << path.tau << " not found." << std::endl;
+      std::cerr << "ERROR: tau of " << path.GetTau() << " not found." << std::endl;
       std::cerr << "Possible taus: " << taus << std::endl;
       exit(1);
     }
@@ -331,17 +328,17 @@ public:
       // Read in k space potential
       vec<double> t_v_long_k(n_k_v);
       pa_in.Read("long_range/u_k", t_v_long_k);
-      v_long_k = t_v_long_k/path.vol;
+      v_long_k = t_v_long_k/path.GetVol();
 
       // Build k std::vectors
-      u_long_k.zeros(path.mag_ks.size());
-      du_long_k.zeros(path.mag_ks.size());
+      u_long_k.zeros(path.ks.mags.size());
+      du_long_k.zeros(path.ks.mags.size());
       for (uint32_t k_i_v=0; k_i_v<k_v.size(); ++k_i_v) {
         if (fequal(0.,k_v(k_i_v),1.e-8))
           v_long_k_0 = v_long_k(k_i_v);
-        for (uint32_t k_i=0; k_i<path.mag_ks.size(); ++k_i) {
-          if (fequal(path.mag_ks[k_i],k_v(k_i_v),1.e-8)) {
-            u_long_k(k_i) = v_long_k(k_i_v)*path.tau;
+        for (uint32_t k_i=0; k_i<path.ks.mags.size(); ++k_i) {
+          if (fequal(path.ks.mags[k_i],k_v(k_i_v),1.e-8)) {
+            u_long_k(k_i) = v_long_k(k_i_v)*path.GetTau();
             du_long_k(k_i) = v_long_k(k_i_v);
           }
         }
@@ -349,24 +346,22 @@ public:
 
       // Set constants
       pa_in.Read("squarer/v_image",v_long_r_0);
-      u_long_r_0 = v_long_r_0*path.tau; //FIXME: Set to single tau value
+      u_long_r_0 = v_long_r_0*path.GetTau(); //FIXME: Set to single tau value
       du_long_r_0 = v_long_r_0;
-      u_long_k_0 = v_long_k_0*path.tau;
+      u_long_k_0 = v_long_k_0*path.GetTau();
       du_long_k_0 = v_long_k_0;
 
       // Calculate constants
-      uint32_t N1 = path.species_list[species_a_i]->n_part;
-      uint32_t N2 = path.species_list[species_b_i]->n_part;
-      if (species_a_i == species_b_i) { // homologous
-        du_long_k_0 *= 0.5*N1*N1*path.n_bead; //FIXME: Confirm this is correct
-        du_long_r_0 *= -0.5*N1*path.n_bead;
-        v_long_k_0 *= 0.5*N1*N1*path.n_bead;
-        v_long_r_0 *= -0.5*N1*path.n_bead;
+      if (species_a == species_b) { // homologous
+        du_long_k_0 *= 0.5*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead(); //FIXME: Confirm this is correct
+        du_long_r_0 *= -0.5*species_a->GetNPart()*path.GetNBead();
+        v_long_k_0 *= 0.5*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead();
+        v_long_r_0 *= -0.5*species_a->GetNPart()*path.GetNBead();
       } else { // heterologous
-        du_long_k_0 *= N1*N2*path.n_bead;
-        du_long_r_0 *= 0.*path.n_bead;
-        v_long_k_0 *= N1*N2*path.n_bead;
-        v_long_r_0 *= 0.*path.n_bead;
+        du_long_k_0 *= species_a->GetNPart()*species_b->GetNPart()*path.GetNBead();
+        du_long_r_0 *= 0.;
+        v_long_k_0 *= species_a->GetNPart()*species_b->GetNPart()*path.GetNBead();
+        v_long_r_0 *= 0.;
       }
 
     }

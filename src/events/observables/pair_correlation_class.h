@@ -7,38 +7,36 @@
 class PairCorrelation : public Observable
 {
 private:
-  uint32_t species_a_i; ///< Index of first species
-  uint32_t species_b_i; ///< Index of second species
   Histogram gr; ///< Histogram representing g(r)
-  std::string species_a; ///< Name of first species
-  std::string species_b; ///< Name of second species
+  std::shared_ptr<Species> species_a; ///< First species
+  std::shared_ptr<Species> species_b; ///< Second species
 
   /// Accumulate the observable
   virtual void Accumulate()
   {
     path.SetMode(NEW_MODE);
     // Homogeneous
-    int sign = path.CalcSign();
-    if (species_a_i == species_b_i) {
-      for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-        for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
-          for (uint32_t p_j=p_i+1; p_j<path.species_list[species_a_i]->n_part; ++p_j) {
-            vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_a_i,p_j,b_i)));
+    double cofactor = path.GetSign()*path.GetImportanceWeight();
+    if (species_a == species_b) {
+      for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
+        for (uint32_t p_i=0; p_i<species_a->GetNPart()-1; ++p_i) {
+          for (uint32_t p_j=p_i+1; p_j<species_b->GetNPart(); ++p_j) {
+            vec<double> dr(path.Dr(species_a->GetBead(p_i,b_i),species_b->GetBead(p_j,b_i)));
             uint32_t i = gr.x.ReverseMap(mag(dr));
             if (i < gr.x.n_r)
-              gr.y(i) = gr.y(i) + 1.*sign*path.importance_weight;
+              gr.y(i) = gr.y(i) + 1.*cofactor;
           }
         }
       }
     // Homologous
     } else {
-      for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-        for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
-          for (uint32_t p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
-            vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_b_i,p_j,b_i)));
+      for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
+        for (uint32_t p_i=0; p_i<species_a->GetNPart(); ++p_i) {
+          for (uint32_t p_j=0; p_j<species_b->GetNPart(); ++p_j) {
+            vec<double> dr(path.Dr(species_a->GetBead(p_i,b_i),species_b->GetBead(p_j,b_i)));
             uint32_t i = gr.x.ReverseMap(mag(dr));
             if (i < gr.x.n_r)
-              gr.y(i) = gr.y(i) + 1.*sign*path.importance_weight;
+              gr.y(i) = gr.y(i) + 1.*cofactor;
           }
         }
       }
@@ -60,14 +58,14 @@ public:
     : Observable(path, in, out, "histogram")
   {
     // Read in species info
-    species_a = in.GetAttribute<std::string>("species_a");
-    species_b = in.GetAttribute<std::string>("species_b");
-    path.GetSpeciesInfo(species_a, species_a_i);
-    path.GetSpeciesInfo(species_b, species_b_i);
+    std::string species_a_name = in.GetAttribute<std::string>("species_a");
+    std::string species_b_name = in.GetAttribute<std::string>("species_b");
+    species_a = path.GetSpecies(species_a_name);
+    species_b = path.GetSpecies(species_b_name);
 
     // Read in grid info
     double r_min = in.GetAttribute<double>("r_min",0.);
-    double r_max = in.GetAttribute<double>("r_max",path.L/2.);
+    double r_max = in.GetAttribute<double>("r_max",path.GetL()/2.);
     uint32_t n_r = in.GetAttribute<double>("n_r",1000);
     gr.x.CreateGrid(r_min,r_max,n_r);
     gr.y.zeros(n_r);
@@ -77,17 +75,17 @@ public:
     for (uint32_t i=0; i<gr.x.n_r-1; i++) {
       double r1 = gr.x(i);
       double r2 = gr.x(i+1);
-      if (path.n_d == 3)
+      if (path.GetND() == 3)
         rs(i) = 0.75 * (r2*r2*r2*r2-r1*r1*r1*r1)/(r2*r2*r2-r1*r1*r1);
-      else if (path.n_d == 2)
-        rs(i) = (r2*r2*r2-r1*r1*r1)/(r2*r2-r1*r1); // fixme: Not sure if 2D and 1D are correct here
-      else if (path.n_d == 1)
+      else if (path.GetND() == 2)
+        rs(i) = (r2*r2*r2-r1*r1*r1)/(r2*r2-r1*r1); // FIXME: Not sure if 2D and 1D are correct here
+      else if (path.GetND() == 1)
         rs(i) = 0.5*(r2-r1);
     }
 
     // Write things to file
-    out.Write(prefix+"/species_a", species_a);
-    out.Write(prefix+"/species_b", species_b);
+    out.Write(prefix+"/species_a", species_a_name);
+    out.Write(prefix+"/species_b", species_b_name);
     out.Write(prefix+"/r_min", r_min);
     out.Write(prefix+"/r_max", r_max);
     out.Write(prefix+"/n_r", n_r);
@@ -101,24 +99,22 @@ public:
   {
     if (n_measure > 0) {
       // Normalize histograms
-      uint32_t N_a = path.species_list[species_a_i]->n_part;
-      uint32_t N_b = path.species_list[species_b_i]->n_part;
-      double vol = path.vol;
+      double vol = path.GetVol();
       double norm;
-      if (species_a_i == species_b_i)
-        norm = 0.5*n_measure*N_a*(N_a-1.)*path.n_bead/vol;
+      if (species_a == species_b)
+        norm = 0.5*n_measure*species_a->GetNPart()*(species_b->GetNPart()-1)*path.GetNBead()/vol;
       else
-        norm = n_measure*N_a*N_b*path.n_bead/vol;
+        norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/vol;
       for (uint32_t i=0; i<gr.x.n_r; i++) {
         double r1 = gr.x(i);
         double r2 = (i<(gr.x.n_r-1)) ? gr.x(i+1):(2.*gr.x(i)-gr.x(i-1));
         double r = 0.5*(r1+r2);
         double bin_vol;
-        if (path.n_d == 3)
+        if (path.GetND() == 3)
           bin_vol = 4.*M_PI/3. * (r2*r2*r2-r1*r1*r1);
-        else if (path.n_d == 2)
+        else if (path.GetND() == 2)
           bin_vol = M_PI * (r2*r2-r1*r1);
-        else if (path.n_d == 1)
+        else if (path.GetND() == 1)
           bin_vol = r2-r1;
         gr.y(i) = gr.y(i)/(bin_vol*norm);
         //gr.y(i) = gr.y(i)/(norm);

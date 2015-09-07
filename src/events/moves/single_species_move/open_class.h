@@ -14,14 +14,12 @@ private:
   virtual bool Attempt()
   {
     // Pick particle and bead at random
-    uint32_t p_i = rng.UnifRand(path.species_list[species_i]->n_part) - 1;
-    uint32_t b_i = rng.UnifRand(path.n_bead) - 1;
+    uint32_t p_i = rng.UnifRand(species->GetNPart()) - 1;
+    uint32_t b_i = rng.UnifRand(path.GetNBead()) - 1;
 
     // Open path at (p_i,b_i)
-    path(species_i,p_i,b_i)->next->prev = nullptr;
-    path(species_i,p_i,b_i)->next_c->prev_c = nullptr;
-    path(species_i,p_i,b_i)->next = nullptr;
-    path(species_i,p_i,b_i)->next_c = nullptr;
+    species->GetBead(p_i,b_i)->GetNextBead(1)->SetPrevBead(nullptr);
+    species->GetBead(p_i,b_i)->SetNextBead(nullptr);
 
     return 1;
   }

@@ -15,7 +15,7 @@ private:
   /// Accumulate the observable
   virtual void Accumulate()
   {
-    species->SetMode(NEW_MODE);
+    path.SetMode(NEW_MODE);
     auto cycle = species->GetCycleCount();
     sectors.push_back(species->GetPermSector(cycle));
     for (auto& c: cycle)
@@ -44,35 +44,34 @@ public:
 
     // Set up permutation sectors
     species = path.GetSpecies(species_name);
-    cycles.set_size(species->n_part);
+    cycles.set_size(species->GetNPart());
     species->SetupPermSectors(sector_max);
     first_sector = true;
 
     // Write out possible sectors
-    mat<uint32_t> tmp_perms(zeros<mat<uint32_t>>(species->n_part,species->poss_perms.size()));
-    std::map<std::vector<uint32_t>,uint32_t>::iterator tmp_iterator;
-    for(tmp_iterator = species->poss_perms.begin(); tmp_iterator != species->poss_perms.end(); tmp_iterator++) {
-      std::vector<uint32_t> tmpPerm = (*tmp_iterator).first;
-      for (uint32_t j=0; j<tmpPerm.size(); ++j)
-        tmp_perms(tmpPerm[j]-1,(*tmp_iterator).second)++;
+    mat<uint32_t> perms(zeros<mat<uint32_t>>(species->GetNPart(),species->GetNPerm()));
+    for(const auto& poss_perm : species->GetPossPerms()) {
+      std::vector<uint32_t> perm = poss_perm.first;
+      for (uint32_t j=0; j<perm.size(); ++j)
+        perms(perm[j]-1,poss_perm.second)++;
     }
     out.CreateGroup(prefix+"sectors");
     std::string data_type = "pairs";
     out.Write(prefix+"sectors/data_type",data_type);
-    vec<uint32_t> tmp_perm_indices(species->poss_perms.size());
-    for (uint32_t i=0; i<species->poss_perms.size(); ++i)
-      tmp_perm_indices(i) = i;
-    out.Write(prefix+"sectors/x", tmp_perm_indices);
-    out.Write(prefix+"sectors/possPerms", tmp_perms);
+    vec<uint32_t> perm_indices(species->GetNPerm());
+    for (uint32_t i=0; i<species->GetNPerm(); ++i)
+      perm_indices(i) = i;
+    out.Write(prefix+"sectors/x", perm_indices);
+    out.Write(prefix+"sectors/possPerms", perms);
 
     // Write out possible cycles
-    vec<uint32_t> tmp_cycles(species->n_part);
-    for (uint32_t p_i=0; p_i<species->n_part; ++p_i)
-      tmp_cycles(p_i) = p_i+1;
+    vec<uint32_t> t_cycles(species->GetNPart());
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+      t_cycles(p_i) = p_i+1;
     out.CreateGroup(prefix+"cycles");
     data_type = "histogram";
     out.Write(prefix+"cycles/data_type",data_type);
-    out.Write(prefix+"cycles/x", tmp_cycles);
+    out.Write(prefix+"cycles/x", t_cycles);
 
     Reset();
   }

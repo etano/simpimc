@@ -33,4 +33,4 @@ ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 # Show plot
 plt.title(section)
-plt.show()
+plt.savefig('fig.eps')

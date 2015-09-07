@@ -14,7 +14,7 @@ private:
   virtual void Accept()
   {
     // Set new ref bead
-    path.ref_bead = ref_bead_1;
+    species->SetRefBead(ref_bead_1);
 
     // Call accept for each action
     for (auto& action: action_list) {
@@ -26,12 +26,12 @@ private:
   /// Attempt the move
   virtual bool Attempt()
   {
-    ref_bead_0 = path.ref_bead;
-    ref_bead_1 = rng.UnifRand(path.n_bead) - 1;  // Pick new ref bead at random
+    ref_bead_0 = species->GetRefBead();
+    ref_bead_1 = rng.UnifRand(species->GetNBead()) - 1;  // Pick new ref bead at random
 
     // Insert dummy particle
-    std::vector<std::pair<uint32_t,uint32_t>> particles;
-    particles.push_back(std::make_pair(species_i,0));
+    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
+    particles.push_back(std::make_pair(species,0));
 
     // Calculate action change
     double old_action = 0.;
@@ -41,13 +41,13 @@ private:
       if (action->type == "Nodal") {
         // Old action
         path.SetMode(OLD_MODE);
-        path.ref_bead = ref_bead_0;
-        old_action += action->GetAction(0, path.n_bead-1, particles, 0);
+        species->SetRefBead(ref_bead_0);
+        old_action += action->GetAction(0, species->GetNBead()-1, particles, 0);
 
         // New action
         path.SetMode(NEW_MODE);
-        path.ref_bead = ref_bead_1;
-        new_action += action->GetAction(0, path.n_bead-1, particles, 0);
+        species->SetRefBead(ref_bead_1);
+        new_action += action->GetAction(0, species->GetNBead()-1, particles, 0);
       }
     }
 
@@ -65,7 +65,7 @@ private:
   virtual void Reject()
   {
     // Reset old ref bead
-    path.ref_bead = ref_bead_0;
+    species->SetRefBead(ref_bead_0);
 
     // Call reject for each action
     for (auto& action: action_list) {

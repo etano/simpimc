@@ -74,24 +74,22 @@ public:
       pa_in.Read("v/diag/v_long_k_0",v_long_k_0);
 
       // Build k std::vectors
-      v_long_k.zeros(path.mag_ks.size());
-      for (uint32_t k_i=0; k_i<path.mag_ks.size(); ++k_i) {
+      v_long_k.zeros(path.ks.mags.size());
+      for (uint32_t k_i=0; k_i<path.ks.mags.size(); ++k_i) {
         for (uint32_t k_i_v=0; k_i_v<k_v.size(); ++k_i_v) {
-          if (fequal(path.mag_ks[k_i],k_v(k_i_v),1.e-8))
+          if (fequal(path.ks.mags[k_i],k_v(k_i_v),1.e-8))
             v_long_k(k_i) = tmp_v_long_k(k_i_v);
         }
       }
     }
 
     // Calculate constants
-    uint32_t N1 = path.species_list[species_a_i]->n_part;
-    uint32_t N2 = path.species_list[species_b_i]->n_part;
-    if (species_a_i == species_b_i) { // homologous
-      v_long_k_0 *= 0.5*N1*N1*path.n_bead;
-      v_long_r_0 *= -0.5*N1*path.n_bead;
+    if (species_a == species_b) { // homologous
+      v_long_k_0 *= 0.5*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead();
+      v_long_r_0 *= -0.5*species_a->GetNPart()*path.GetNBead();
     } else { // heterologous
-      v_long_k_0 *= N1*N2*path.n_bead;
-      v_long_r_0 *= 0.*path.n_bead;
+      v_long_k_0 *= species_a->GetNPart()*species_b->GetNPart()*path.GetNBead();
+      v_long_r_0 *= 0.;
     }
 
   }
@@ -124,20 +122,18 @@ public:
   virtual double CalcVLong()
   {
     // Get rho k
-    field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_a(species_a->GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_b(species_b->GetRhoK());
 
     // Sum over k std::vectors
     double tot = 0.;
-    for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
-      if (path.mag_ks[k_i] < k_cut) {
-        for (uint32_t b_i=0; b_i<path.n_bead; b_i++) {
-          double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
-          tot += rhok2*v_long_k(k_i);
-        }
-      }
-    }
+    size_t n_ks = path.ks.vecs.size();
+    #pragma omp parallel for collapse(2) reduction(+:tot)
+    for (uint32_t k_i=0; k_i<n_ks; k_i++)
+      for (uint32_t b_i=0; b_i<path.GetNBead(); b_i++)
+        tot += CMag2(rho_k_a(b_i)(k_i),rho_k_b(b_i)(k_i))*v_long_k(k_i);
 
-    if (species_b_i != species_a_i)
+    if (species_a != species_b)
       tot *= 2.;
 
     return tot + v_long_k_0 + v_long_r_0;
@@ -147,7 +143,7 @@ public:
   virtual double CalcU(double r, double r_p, double s, const uint32_t level)
   {
     uint32_t skip = 1>>level;
-    double level_tau = skip*path.tau;
+    double level_tau = skip*path.GetTau();
     return level_tau*CalcV(r,r_p,level);
   }
 
@@ -155,21 +151,19 @@ public:
   virtual double CalcULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
   {
     // Get rho k
-    field<vec<std::complex<double>>> &rhoK(path.GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_a(species_a->GetRhoK());
+    field<vec<std::complex<double>>> &rho_k_b(species_b->GetRhoK());
 
     // Sum over k std::vectors
     uint32_t skip = 1<<level;
     double tot = 0.;
-    for (uint32_t k_i=0; k_i<path.ks.size(); k_i++) {
-      if (path.mag_ks[k_i] < k_cut) {
-        for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
-          double rhok2 = CMag2(rhoK(path.bead_loop(b_i),species_a_i)(k_i),rhoK(path.bead_loop(b_i),species_b_i)(k_i));
-          tot += v_long_k(k_i)*rhok2;
-        }
-      }
-    }
+    size_t n_ks = path.ks.vecs.size();
+    #pragma omp parallel for collapse(2) reduction(+:tot)
+    for (uint32_t k_i=0; k_i<n_ks; k_i++)
+      for (uint32_t b_i=0; b_i<path.GetNBead(); b_i++)
+        tot += CMag2(rho_k_a(b_i)(k_i),rho_k_b(b_i)(k_i))*v_long_k(k_i);
 
-    if (species_b_i != species_a_i)
+    if (species_a != species_b)
       tot *= 2.;
 
     return tot;

@@ -14,11 +14,11 @@ private:
   virtual void SetupSpline()
   {
     // Create splines
-    uint32_t n_spline = path.n_bead/2 + (path.n_bead%2) + 1;
+    uint32_t n_spline = species->GetNBead()/2 + (species->GetNBead()%2) + 1;
     rho_free_splines.resize(n_spline);
     #pragma omp parallel for
     for (uint32_t spline_i=0; spline_i<n_spline; ++spline_i)
-      rho_free_splines[spline_i] = FreeSpline(path.L, n_images, lambda, path.tau*(spline_i+1), false);
+      rho_free_splines[spline_i] = FreeSpline(path.GetL(), n_images, species->GetLambda(), path.GetTau()*(spline_i+1), false);
   }
 
   /// Returns the value of g_ij

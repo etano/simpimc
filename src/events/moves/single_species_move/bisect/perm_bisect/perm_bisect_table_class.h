@@ -33,16 +33,16 @@ private:
   void UpdatePermTable()
   {
     // Set initial and final beads
-    field< std::shared_ptr<Bead>> b0(n_part), b1(n_part);
-    for (uint32_t p_i=0; p_i<n_part; p_i++) {
-      b0(p_i) = path(species_i,p_i,bead0);
-      b1(p_i) = path.GetNextBead(b0(p_i),n_bisect_beads);
+    field< std::shared_ptr<Bead>> b0(species->GetNPart()), b1(species->GetNPart());
+    for (uint32_t p_i=0; p_i<species->GetNPart(); p_i++) {
+      b0(p_i) = species->GetBead(p_i,bead0);
+      b1(p_i) = b0(p_i)->GetNextBead(n_bisect_beads);
     }
 
     // Construct t table
-    for (uint32_t i=0; i<n_part; i++) {
+    for (uint32_t i=0; i<species->GetNPart(); i++) {
       vec<double> dr_ii(path.Dr(b0(i), b1(i)));
-      for (uint32_t j=0; j<n_part; j++) {
+      for (uint32_t j=0; j<species->GetNPart(); j++) {
         vec<double> dr_ij(path.Dr(b0(i), b1(j)));
         double exponent = (-dot(dr_ij, dr_ij) + dot(dr_ii, dr_ii))*i_4_lambda_tau_n_bisect_beads;
         if (exponent > log_epsilon)
@@ -84,7 +84,7 @@ private:
 
     // Run through permatation types
     std::vector<uint32_t> tmp_cycle;
-    for (uint32_t i=0; i<n_part; ++i)
+    for (uint32_t i=0; i<species->GetNPart(); ++i)
       tmp_cycle.push_back(i);
     std::vector<std::vector<uint32_t>> tmp_cycles;
     GenCombPermK(tmp_cycles, tmp_cycle, n_perm_part, false, false);
@@ -127,9 +127,9 @@ private:
   /// Attempt the move
   virtual bool Attempt()
   {
-    bead0 = rng.UnifRand(path.n_bead) - 1;  // Pick first bead at random
+    bead0 = rng.UnifRand(species->GetNBead()) - 1;  // Pick first bead at random
     bead1 = bead0 + n_bisect_beads; // Set last bead in bisection
-    bool roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
+    bool roll_over = bead1 > (species->GetNBead()-1);  // See if bisection overflows to next particle
     // Set up permutation
     cycles.clear();
     double perm_tot_0 = ConstructPermTable(); // Permutation weight table
@@ -137,14 +137,14 @@ private:
     Cycle* c = cycles[cycle_index]; // TODO: Make a smart pointer
 
     // Set up pointers
-    std::vector<std::pair<uint32_t,uint32_t>> particles;
+    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
     n_perm_part = c->part.size();
     field< std::shared_ptr<Bead>> bead_i(n_perm_part), bead_fm1(n_perm_part), bead_f(n_perm_part);
     for (uint32_t i=0; i<n_perm_part; i++) {
-      bead_i(i) = path(species_i,c->part(i),bead0);
-      bead_fm1(i) = bead_i(i)->NextB(n_bisect_beads-1);
-      bead_f(i) = bead_fm1(i)->next;
-      particles.push_back(std::make_pair(species_i,c->part(i)));
+      bead_i(i) = species->GetBead(c->part(i),bead0);
+      bead_fm1(i) = bead_i(i)->GetNextBead(n_bisect_beads-1);
+      bead_f(i) = bead_fm1(i)->GetNextBead(1);
+      particles.push_back(std::make_pair(species,c->part(i)));
     }
 
     // Permute particles
@@ -154,7 +154,7 @@ private:
     field< std::shared_ptr<Bead>> bead_a(n_perm_part);
     affected_beads.clear();
     for (uint32_t i=0; i<n_perm_part; i++) {
-      for(bead_a(i) = bead_i(i); bead_a(i) != bead_f(i); bead_a(i) = bead_a(i) -> next)
+      for(bead_a(i) = bead_i(i); bead_a(i) != bead_f(i); bead_a(i) = bead_a(i)->GetNextBead(1))
         affected_beads.push_back(bead_a(i));
     }
 
@@ -165,8 +165,8 @@ private:
 
       // Level specific quantities
       uint32_t skip = 1<<level_i;
-      double levelTau = path.tau*skip;
-      double sigma2 = lambda*levelTau;
+      double levelTau = path.GetTau()*skip;
+      double sigma2 = species->GetLambda()*levelTau;
       double sigma = sqrt(sigma2);
 
       // Calculate sampling probability
@@ -177,19 +177,19 @@ private:
         while(bead_a(i) != bead_f(i)) {
           // Old sampling
           path.SetMode(OLD_MODE);
-          bead_b(i) = path.GetNextBead(bead_a(i),skip);
-          bead_c(i) = path.GetNextBead(bead_b(i),skip);
+          bead_b(i) = bead_a(i)->GetNextBead(skip);
+          bead_c(i) = bead_b(i)->GetNextBead(skip);
           vec<double> delta_old(path.Dr(bead_b(i),path.RBar(bead_c(i),bead_a(i))));
           old_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_old);
 
           // New sampling
           path.SetMode(NEW_MODE);
-          bead_b(i) = path.GetNextBead(bead_a(i),skip);
-          bead_c(i) = path.GetNextBead(bead_b(i),skip);
-          vec<double> delta_new(path.n_d);
+          bead_b(i) = bead_a(i)->GetNextBead(skip);
+          bead_c(i) = bead_b(i)->GetNextBead(skip);
+          vec<double> delta_new(path.GetND());
           rng.NormRand(delta_new, 0., sigma);
           path.PutInBox(delta_new);
-          bead_b(i)->r = path.RBar(bead_c(i),bead_a(i)) + delta_new;
+          bead_b(i)->SetR(path.RBar(bead_c(i),bead_a(i)) + delta_new);
           new_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_new);
 
           bead_a(i) = bead_c(i);
@@ -222,7 +222,7 @@ private:
     }
 
     // Have to check this if neighborhood has changed
-    if (n_perm_part < n_part) {
+    if (n_perm_part < species->GetNPart()) {
       // Construct Permutation Table
       path.SetMode(NEW_MODE);
       double perm_tot_1 = ConstructPermTable();

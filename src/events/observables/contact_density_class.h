@@ -9,10 +9,8 @@ class ContactDensity : public Observable
 private:
   double total; ///< Running total
   uint32_t z_a; ///< Charge of ion-like particle
-  uint32_t species_a_i; ///< Ion species index
-  uint32_t species_b_i; ///< Other species index
-  std::string species_a; ///< Name of ion species
-  std::string species_b; ///< Name of other species
+  std::shared_ptr<Species> species_a; ///< ion species
+  std::shared_ptr<Species> species_b; ///< other species
   std::vector<std::shared_ptr<Action>> action_list; ///< Vector of pointers to actions that involves species_a or species_b
   std::vector<std::shared_ptr<Action>> &full_action_list; ///< Vector of pointers to all actions
 
@@ -22,25 +20,15 @@ private:
     path.SetMode(NEW_MODE);
 
     // Form particle pairs
-    std::vector<std::vector<std::pair<uint32_t,uint32_t>>> particle_pairs;
-    if (species_a_i == species_b_i) { // Homogeneous
-      for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
-        for (uint32_t p_j=p_i+1; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
-          std::vector<std::pair<uint32_t,uint32_t>> particles;
-          particles.push_back(std::make_pair(species_a_i,p_i));
-          particles.push_back(std::make_pair(species_b_i,p_j));
-          particle_pairs.push_back(particles);
-        }
-      }
+    std::vector<std::pair<uint32_t,uint32_t>> particle_pairs;
+    if (species_a == species_b) { // Homogeneous
+      for (uint32_t p_i=0; p_i<species_a->GetNPart()-1; ++p_i)
+        for (uint32_t p_j=p_i+1; p_j<species_b->GetNPart(); ++p_j)
+          particle_pairs.push_back(std::make_pair(p_i,p_j));
     } else { // Homologous
-      for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
-        for (uint32_t p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
-          std::vector<std::pair<uint32_t,uint32_t>> particles;
-          particles.push_back(std::make_pair(species_a_i,p_i));
-          particles.push_back(std::make_pair(species_b_i,p_j));
-          particle_pairs.push_back(particles);
-        }
-      }
+      for (uint32_t p_i=0; p_i<species_a->GetNPart(); ++p_i)
+        for (uint32_t p_j=0; p_j<species_b->GetNPart(); ++p_j)
+          particle_pairs.push_back(std::make_pair(p_i,p_j));
     }
 
     // Add up contact probability
@@ -49,10 +37,10 @@ private:
     size_t n_particle_pairs(particle_pairs.size());
     #pragma omp parallel for collapse(2) reduction(+:tot)
     for (uint32_t pp_i=0; pp_i<n_particle_pairs; ++pp_i) {
-      for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
+      for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
         // Set r's
-        vec<double> RA = path(particle_pairs[pp_i][0].first,particle_pairs[pp_i][0].second,b_i)->r;
-        vec<double> ri = path(particle_pairs[pp_i][1].first,particle_pairs[pp_i][1].second,b_i)->r;
+        vec<double> RA = species_a->GetBead(particle_pairs[pp_i].first,b_i)->GetR();
+        vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
 
         // Get differences
         vec<double> ri_RA(path.Dr(ri, RA));
@@ -61,16 +49,15 @@ private:
         // Compute functions
         double g = 0.; // TODO: Currently fixing g to 0
         double f = 1.; // TODO: Currently fixing f to 1
-        vec<double> gradient_f(zeros<vec<double>>(path.n_d));
+        vec<double> gradient_f(zeros<vec<double>>(path.GetND()));
         double laplacian_f = 0.;
         //double f = 1. + 2*z_a*(mag_ri_RA);
         //vec<double> gradient_f = 2*z_a*((ri_RA/mag_ri_RA));
-        //double laplacian_f = 2*z_a*(path.n_d-1)*((1./mag_ri_RA));
+        //double laplacian_f = 2*z_a*(path.GetND()-1)*((1./mag_ri_RA));
 
         // Sum over actions for ri
-        std::vector<std::pair<uint32_t,uint32_t>> only_ri;
-        only_ri.push_back(particle_pairs[pp_i][1]);
-        vec<double> gradient_action(zeros<vec<double>>(path.n_d));
+        std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
+        vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
         double laplacian_action = 0.;
         for (auto& action: action_list) {
           gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
@@ -82,7 +69,8 @@ private:
       }
     }
 
-    total += tot;
+    double cofactor = path.GetSign()*path.GetImportanceWeight();
+    total += cofactor*tot;
     n_measure += 1;
   }
 
@@ -99,30 +87,22 @@ public:
     : full_action_list(t_action_list), Observable(path, in, out, "scalar")
   {
     // Read in species info
-    species_a = in.GetAttribute<std::string>("species_a");
-    species_b = in.GetAttribute<std::string>("species_b");
-    path.GetSpeciesInfo(species_a, species_a_i);
-    path.GetSpeciesInfo(species_b, species_b_i);
+    std::string species_a_name = in.GetAttribute<std::string>("species_a");
+    std::string species_b_name = in.GetAttribute<std::string>("species_b");
+    species_a = path.GetSpecies(species_a_name);
+    species_b = path.GetSpecies(species_b_name);
 
     // Write things to file
-    out.Write(prefix+"/species_a", species_a);
-    out.Write(prefix+"/species_b", species_b);
+    out.Write(prefix+"/species_a", species_a_name);
+    out.Write(prefix+"/species_b", species_b_name);
 
     // Read in z_a
     z_a = in.GetAttribute<uint32_t>("z_a");
 
     // Generate action list
-    std::vector<std::string> species_list;
-    species_list.push_back(species_a);
-    species_list.push_back(species_b);
-    for (auto& action: full_action_list) {
-      for (auto& sA: species_list) {
-        if (std::find(action->species_list.begin(), action->species_list.end(), sA) != action->species_list.end()) {
+    for (auto& action: full_action_list)
+        if ((std::find(action->species_list.begin(), action->species_list.end(), species_a)!=action->species_list.end()) or (std::find(action->species_list.begin(), action->species_list.end(), species_b)!=action->species_list.end()))
           action_list.push_back(action);
-          break;
-        }
-      }
-    }
 
     Reset();
   }
@@ -132,13 +112,11 @@ public:
   {
     if (n_measure > 0) {
       // Normalize
-      uint32_t N_a = path.species_list[species_a_i]->n_part;
-      uint32_t N_b = path.species_list[species_b_i]->n_part;
       double norm;
-      if (species_a_i == species_b_i)
-        norm = 0.5*n_measure*N_a*(N_a-1.)*path.n_bead/path.vol;
+      if (species_a == species_b)
+        norm = 0.5*n_measure*species_a->GetNPart()*(species_a->GetNPart()-1.)*path.GetNBead()/path.GetVol();
       else
-        norm = n_measure*N_a*N_b*path.n_bead/path.vol;
+        norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/path.GetVol();
       total /= norm;
 
       // Write to file

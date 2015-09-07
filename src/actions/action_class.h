@@ -18,7 +18,7 @@ public:
   bool is_importance_weight; ///< Whether or not the action is actually an importance weight
   std::string name; ///< Action name
   std::string type; ///< Action type
-  std::vector<std::string> species_list; ///< List of species affected by the action
+  std::vector<std::shared_ptr<Species>> species_list; ///< List of species affected by the action
 
   /// Constructor sets the name and type, as well as the relevant references to the path and output file. It also creates the space in the output file for which to write information about the action
   Action(Path &tmp_path, Input &in, IO &tmpOut)
@@ -42,13 +42,13 @@ public:
   virtual double VirialEnergy(const double virial_window_size) { return DActionDBeta(); }
 
   /// Returns the value of the action between time slices b0 and b1 for a vector of particles
-  virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };
+  virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> &particles, const uint32_t level) { return 0.; };
 
   /// Returns the spatial gradient of the action between time slices b0 and b1 for a vector of particles
-  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return zeros<vec<double>>(path.n_d); };
+  virtual vec<double> GetActionGradient(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> &particles, const uint32_t level) { return zeros<vec<double>>(path.GetND()); };
 
   /// Returns the spatial laplacian of the action between time slices b0 and b1 for a vector of particles
-  virtual double GetActionLaplacian(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level) { return 0.; };
+  virtual double GetActionLaplacian(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> &particles, const uint32_t level) { return 0.; };
 
   /// Returns the potential of the action for the whole path
   virtual double Potential() { return 0.; };

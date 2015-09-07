@@ -14,14 +14,15 @@ private:
   virtual void Accumulate()
   {
     path.SetMode(NEW_MODE);
-    path.importance_weight = path.CalcSign();
+    double importance_weight = 1.;
     for (uint32_t i=0; i<action_list.size(); ++i) {
-      double tmp_iw = 1.;
+      double action_importance_weight = 1.;
       if (action_list[i]->is_importance_weight)
-        tmp_iw = action_list[i]->ImportanceWeight();
-      importance_weights(i) += tmp_iw;
-      path.importance_weight *= tmp_iw;
+        action_importance_weight = action_list[i]->ImportanceWeight();
+      importance_weights(i) += action_importance_weight;
+      importance_weight *= action_importance_weight;
     }
+    path.SetImportanceWeight(importance_weight);
     n_measure += 1;
   }
 

@@ -25,10 +25,12 @@ protected:
   virtual void Accept()
   {
     // Move Accepted, so copy new coordinates
-    path.StoreR(affected_beads);
-    path.StoreRhoKP(affected_beads);
+    for (auto& b: affected_beads){
+      b->StoreR();
+      b->StoreRhoK();
+    }
     for (uint32_t b_i=bead0; b_i<bead1; ++b_i)
-      path.StoreRhoK(b_i,species_i);
+      species->StoreRhoK(b_i);
 
     // Call accept for each action
     for (auto& action: action_list)
@@ -38,39 +40,39 @@ protected:
   /// Attempt the move
   virtual bool Attempt()
   {
-    int p_i = rng.UnifRand(n_part) - 1;  // Pick particle at random
-    bead0 = rng.UnifRand(path.n_bead) - 1;  // Pick first bead at random
+    int p_i = rng.UnifRand(species->GetNPart()) - 1;  // Pick particle at random
+    bead0 = rng.UnifRand(species->GetNBead()) - 1;  // Pick first bead at random
     bead1 = bead0 + n_bisect_beads; // Set last bead in bisection
-    bool roll_over = bead1 > (path.n_bead-1);  // See if bisection overflows to next particle
-    bool include_ref = path.species_list[species_i]->fixed_node &&
-                      ((bead0<=path.ref_bead && bead1>=path.ref_bead) ||
-                      (roll_over && path.bead_loop[bead1]>=path.ref_bead));
+    bool roll_over = bead1 > (species->GetNBead()-1);  // See if bisection overflows to next particle
+    bool include_ref = species->IsFixedNode() &&
+                      ((bead0<=species->GetRefBead() && bead1>=species->GetRefBead()) ||
+                      (roll_over && species->bead_loop(bead1)>=species->GetRefBead()));
     if (include_ref)
       ref_attempt++;
 
     // Set up pointers
-    std::shared_ptr<Bead> bead_i(path(species_i,p_i,bead0));
+    std::shared_ptr<Bead> bead_i(species->GetBead(p_i,bead0));
     std::shared_ptr<Bead> bead_f(bead_i);
     affected_beads.clear();
     affected_beads.push_back(bead_i);
     for (uint32_t i=0; i<n_bisect_beads; ++i) {
-      bead_f = bead_f->next;
+      bead_f = bead_f->GetNextBead(1);
       affected_beads.push_back(bead_f);
     }
 
     // Set which particles are affected by the move
-    std::vector<std::pair<uint32_t,uint32_t>> particles;
-    particles.push_back(std::make_pair(species_i,p_i));
-    if (bead_f->p != p_i)  // fixme: may be overkill
-      particles.push_back(std::make_pair(species_i,bead_f->p));
+    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
+    particles.push_back(std::make_pair(species,p_i));
+    if (bead_f->GetP() != p_i)  // fixme: may be overkill
+      particles.push_back(std::make_pair(species,bead_f->GetP()));
 
     // Perform the bisection (move exactly through kinetic action)
     std::shared_ptr<Bead> bead_a, bead_b, bead_c;
     double prev_action_change = 0.;
     for (int level_i = n_level-1; level_i >= 0; level_i -= 1) {
       uint32_t skip = 1<<level_i;
-      double level_tau = path.tau*skip;
-      double sigma2 = lambda*level_tau;
+      double level_tau = path.GetTau()*skip;
+      double sigma2 = species->GetLambda()*level_tau;
       double sigma = sqrt(sigma2);
 
       double old_log_sample_prob = 0.;
@@ -78,8 +80,8 @@ protected:
       bead_a = bead_i;
       while(bead_a != bead_f) {
         // Set beads
-        bead_b = path.GetNextBead(bead_a,skip);
-        bead_c = path.GetNextBead(bead_b,skip);
+        bead_b = bead_a->GetNextBead(skip);
+        bead_c = bead_b->GetNextBead(skip);
 
         // Old sampling
         path.SetMode(OLD_MODE);
@@ -88,10 +90,10 @@ protected:
 
         // New sampling
         path.SetMode(NEW_MODE);
-        vec<double> delta_new(path.n_d);
+        vec<double> delta_new(path.GetND());
         rng.NormRand(delta_new, 0., sigma);
         path.PutInBox(delta_new);
-        bead_b->r = path.RBar(bead_c, bead_a) + delta_new;
+        bead_b->SetR(path.RBar(bead_c, bead_a) + delta_new);
         new_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_new);
 
         // Advance beads
@@ -132,10 +134,12 @@ protected:
   virtual void Reject()
   {
     // Move rejected, so return old coordinates
-    path.RestoreR(affected_beads);
-    path.RestoreRhoKP(affected_beads);
+    for (auto& b: affected_beads){
+      b->RestoreR();
+      b->RestoreRhoK();
+    }
     for (uint32_t b_i=bead0; b_i<bead1; ++b_i)
-      path.RestoreRhoK(b_i,species_i);
+      species->RestoreRhoK(b_i);
 
     // Call reject for each action
     for (auto& action: action_list)
@@ -149,7 +153,7 @@ protected:
       double accept_ratio = (double) n_accept / (double) n_attempt;
       if (accept_ratio < target_ratio && n_level > 1)
         n_level--;
-      else if (1<<n_level < path.n_bead/2)
+      else if (1<<n_level < species->GetNBead()/2)
         n_level++;
       n_bisect_beads = 1<<n_level; // Number of beads in bisection
       i_4_lambda_tau_n_bisect_beads = i_4_lambda_tau/n_bisect_beads;
@@ -163,9 +167,9 @@ protected:
   virtual void SetupSpline()
   {
     // Create splines
-    uint32_t n_spline = floor(log2(path.n_bead));
+    uint32_t n_spline = floor(log2(species->GetNBead()));
     for (uint32_t spline_i=0; spline_i<n_spline; ++spline_i)
-      rho_free_splines.emplace_back(path.L, n_images, lambda, 0.5*path.tau*(1<<spline_i), false);
+      rho_free_splines.emplace_back(path.GetL(), n_images, species->GetLambda(), 0.5*path.GetTau()*(1<<spline_i), false);
   }
 
 public:
@@ -174,13 +178,10 @@ public:
     : SingleSpeciesMove(path, rng, action_list, in, out)
   {
     n_level = in.GetAttribute<uint32_t>("n_level");
-    uint32_t max_possible_level = floor(log2(path.n_bead));
+    uint32_t max_possible_level = floor(log2(species->GetNBead()));
     if (n_level > max_possible_level)
       std::cout << "Warning: n_level > max_possible_level!" << std::endl;
-    if (path.pbc)
-      n_images = in.GetAttribute<int>("n_images");
-    else
-      n_images = 0;
+    n_images = in.GetAttribute<int>("n_images",0);
 
     // Adaptive bisection level
     adaptive = in.GetAttribute<bool>("adaptive",false);
@@ -204,14 +205,14 @@ public:
   {
     // Write
     if (first_time) {
-      if (path.species_list[species_i]->fixed_node) {
+      if (species->IsFixedNode()) {
         out.CreateExtendableDataSet("/Moves/"+name+"/", "ref_accept", ref_accept);
         out.CreateExtendableDataSet("/Moves/"+name+"/", "ref_attempt", ref_attempt);
       }
       if (adaptive)
         out.CreateExtendableDataSet("/Moves/"+name+"/", "n_level", n_level);
     } else {
-      if (path.species_list[species_i]->fixed_node) {
+      if (species->IsFixedNode()) {
         out.AppendDataSet("/Moves/"+name+"/", "ref_attempt", ref_attempt);
         out.AppendDataSet("/Moves/"+name+"/", "ref_accept", ref_accept);
       }

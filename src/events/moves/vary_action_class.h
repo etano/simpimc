@@ -10,7 +10,6 @@ private:
   bool switch_param_sets; ///< Whether or not to actually switch parameter sets
   std::shared_ptr<Action> action; ///< Pointer to the variable action
   uint32_t n_param_sets; ///< Number of parameter sets
-  uint32_t species_i; ///< Index of a species affected by the action
   uint32_t param_set_new; ///< Index of new parameter set for the action
   uint32_t param_set_old; ///< Index of old parameter set for the action
   mat<double> n_param_accept; ///< Number of parameter switches accepted
@@ -38,8 +37,8 @@ private:
   virtual bool Attempt()
   {
     // Insert dummy particle
-    std::vector<std::pair<uint32_t,uint32_t>> particles;
-    particles.push_back(std::make_pair(species_i,0));
+    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
+    particles.push_back(std::make_pair(action->species_list[0],0));
 
     // Get old and set new parameter sets
     param_set_old = action->GetParamSet();
@@ -53,12 +52,12 @@ private:
       // Old action
       path.SetMode(OLD_MODE);
       action->SetParamSet(param_set_old);
-      old_action += action->GetAction(0, path.n_bead-1, particles, 0);
+      old_action += action->GetAction(0, path.GetNBead()-1, particles, 0);
 
       // New action
       path.SetMode(NEW_MODE);
       action->SetParamSet(param_set_new);
-      new_action += action->GetAction(0, path.n_bead-1, particles, 0);
+      new_action += action->GetAction(0, path.GetNBead()-1, particles, 0);
     }
 
     double current_action_change = new_action - old_action;
@@ -95,14 +94,10 @@ public:
   VaryAction(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
     : Move(path, rng, action_list, in, out)
   {
-    // Get species
-    std::string species = in.GetAttribute<std::string>("species");
-    path.GetSpeciesInfo(species,species_i);
-
     // Get relevant varied action
     std::string action_name = in.GetAttribute<std::string>("action_name");
 
-    std::cout << "Setting up " << name << " for " << action_name << " with species " << species << "..." << std::endl;
+    std::cout << "Setting up " << name << " for " << action_name << "..." << std::endl;
 
     // Select action from list
     for (auto& t_action : action_list) {

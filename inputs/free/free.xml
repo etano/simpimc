@@ -1,5 +1,5 @@
 <Input>
-  <RNG />
+  <RNG seed="12345" />
   <IO output_prefix="free.0" />
   <Parallel procs_per_group="1" />
   <System n_d="2" n_bead="64" beta="1.0" L="10.0" pbc="1" />
@@ -22,11 +22,8 @@
   </Observables>
   <Algorithm>
     <Loop n_step="1000">
-      <Loop n_step="1000">
+      <Loop n_step="10000">
         <Move name="PermBisectU" />
-        <Loop n_step="100">
-          <Move name="BisectU" />
-        </Loop>
         <Observable name="Sign" />
         <Observable name="PermutationU" />
         <Observable name="Energy" />

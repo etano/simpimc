@@ -13,7 +13,7 @@ private:
   virtual void Accumulate()
   {
     path.SetMode(NEW_MODE);
-    sign += path.CalcSign();
+    sign += path.GetSign();
     n_measure += 1;
   }
 

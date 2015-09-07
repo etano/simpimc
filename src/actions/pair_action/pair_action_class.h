@@ -19,10 +19,8 @@ protected:
   double k_cut; ///< Cutoff in k space for the action
   double potential_constant; ///< Constant used in the calculating the potential
   uint32_t n_order; ///< Order of action expansion if used
-  uint32_t species_a_i; ///< Index of species affected by the action
-  uint32_t species_b_i; ///< Index of species affected by the action
-  std::string species_a; ///< Name of species affected by the action
-  std::string species_b; ///< Name of species affected by the action
+  std::shared_ptr<Species> species_a; ///< first species affected by the action
+  std::shared_ptr<Species> species_b; ///< second species affected by the action
 
   /// Sets the limits of the pair action and applies them
   inline void GetLimits(double &r_min, double &r_max, double &r, double &r_p, const NUgrid* const g)
@@ -47,16 +45,33 @@ protected:
   }
 
   /// Generate all possible pairs that the action affects
-  void GenerateParticlePairs(const std::vector<std::pair<uint32_t,uint32_t>> &particles, std::vector<uint32_t> &particles_a, std::vector<uint32_t> &particles_b, std::vector<std::pair<uint32_t,uint32_t>> &particle_pairs)
+  const std::vector<std::pair<uint32_t,uint32_t>> GenerateParticlePairs()
+  {
+    std::vector<std::pair<uint32_t,uint32_t>> particle_pairs;
+    // Homologous
+    if (species_a == species_b) {
+      for (uint32_t p=0; p<species_a->GetNPart()-1; ++p)
+        for (uint32_t q=p+1; q<species_b->GetNPart(); ++q)
+          particle_pairs.push_back(std::make_pair(p,q));
+    // Heterologous
+    } else {
+      for (uint32_t p=0; p<species_a->GetNPart(); ++p)
+        for (uint32_t q=0; q<species_b->GetNPart(); ++q)
+          particle_pairs.push_back(std::make_pair(p,q));
+    }
+    return particle_pairs;
+  }
+
+  /// Generate all possible pairs that the action affects
+  void GenerateParticlePairs(const std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> &particles, std::vector<uint32_t> &particles_a, std::vector<uint32_t> &particles_b, std::vector<std::pair<uint32_t,uint32_t>> &particle_pairs)
   {
     // Make sure particles are of species A or B and organize them accordingly.
     // If none are A or B, return.
     for (auto& p: particles) {
-      uint32_t s_i = p.first;
       uint32_t p_i = p.second;
-      if (s_i == species_a_i)
+      if (p.first == species_a)
         particles_a.push_back(p_i);
-      else if (s_i == species_b_i)
+      else if (p.first == species_b)
         particles_b.push_back(p_i);
     }
     uint32_t n_a(particles_a.size()), n_b(particles_b.size());
@@ -65,22 +80,22 @@ protected:
 
     // Make std::vectors of other particles of species A
     std::vector<uint32_t> other_particles_a;
-    for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
+    for (uint32_t p_i=0; p_i<species_a->GetNPart(); ++p_i) {
       if (find(particles_a.begin(), particles_a.end(), p_i)==particles_a.end())
         other_particles_a.push_back(p_i);
     }
     // Make std::vectors of other particles of species B
     std::vector<uint32_t> other_particles_b;
-    for (uint32_t p_i=0; p_i<path.species_list[species_b_i]->n_part; ++p_i) {
+    for (uint32_t p_i=0; p_i<species_b->GetNPart(); ++p_i) {
       if (find(particles_b.begin(), particles_b.end(), p_i)==particles_b.end())
         other_particles_b.push_back(p_i);
     }
 
     // Homologous
-    if (species_a_i == species_b_i) {
+    if (species_a == species_b) {
       // Loop over A particles with other A particles
-      for (auto& p: particles_a)
-        for (auto& q: other_particles_a)
+      for (const auto& p: particles_a)
+        for (const auto& q: other_particles_a)
           particle_pairs.push_back(std::make_pair(p,q));
       // Loop over A particles with A particles
       for (uint32_t p=0; p<n_a-1; ++p)
@@ -89,16 +104,16 @@ protected:
     // Heterologous
     } else {
       // Loop over A particles with other B particles
-      for (auto& p: particles_a)
-        for (auto& q: other_particles_b)
+      for (const auto& p: particles_a)
+        for (const auto& q: other_particles_b)
           particle_pairs.push_back(std::make_pair(p,q));
       // Loop B particles with other A particles
-      for (auto& p: particles_b)
-        for (auto& q: other_particles_a)
+      for (const auto& p: particles_b)
+        for (const auto& q: other_particles_a)
           particle_pairs.push_back(std::make_pair(p,q));
       // Loop over A particles with B particles
-      for (auto& p: particles_a)
-        for (auto& q: particles_b)
+      for (const auto& p: particles_a)
+        for (const auto& q: particles_b)
           particle_pairs.push_back(std::make_pair(p,q));
     }
 
@@ -126,24 +141,24 @@ protected:
   virtual vec<double> CalcGradientU(const uint32_t b_i, const uint32_t b_j, const uint32_t p_i, const uint32_t p_j, const uint32_t level)
   {
     // Store original position for particle i
-    std::shared_ptr<Bead> b(path(species_a_i,p_i,b_i));
-    vec<double> r0(b->r);
+    std::shared_ptr<Bead> b(species_a->GetBead(p_i,b_i));
+    vec<double> r0(b->GetR());
 
     // Numerical tolerance
     double eps = 1.e-7;
 
     // Calculate numerical gradient
     double r_mag, r_p_mag, r_r_p_mag;
-    vec<double> tot(path.n_d);
-    for (uint32_t d_i=0; d_i<path.n_d; ++d_i) {
-      b->r(d_i) = r0(d_i) + eps;
-      path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+    vec<double> tot(path.GetND());
+    for (uint32_t d_i=0; d_i<path.GetND(); ++d_i) {
+      b->SetR(d_i,r0(d_i) + eps);
+      path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
       double f1 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
-      b->r(d_i) = r0(d_i) - eps;
-      path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+      b->SetR(d_i,r0(d_i) - eps);
+      path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
       double f2 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
       tot(d_i) = (f1-f2)/(2.*eps);
-      b->r(d_i) = r0(d_i);
+      b->SetR(d_i,r0(d_i));
     }
 
     return tot;
@@ -152,21 +167,21 @@ protected:
   /// Calculate the gradient of the long ranged part of the action for all particles
   virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t level)
   {
-    return zeros<vec<double>>(path.n_d);
+    return zeros<vec<double>>(path.GetND());
   }
 
   /// Calculate the gradient of the long ranged part of the action in the direction of p_i
   virtual vec<double> CalcGradientULong(const uint32_t b_0, const uint32_t b_1, const uint32_t p_i, const uint32_t level)
   {
-    return zeros<vec<double>>(path.n_d);
+    return zeros<vec<double>>(path.GetND());
   }
 
   /// Calculate the Laplacian of the action
   double CalcLaplacianU(const uint32_t b_i, const uint32_t b_j, const uint32_t p_i, const uint32_t p_j, const uint32_t level)
   {
     // Store original position for particle i
-    std::shared_ptr<Bead> b(path(species_a_i,p_i,b_i));
-    vec<double> r0(b->r);
+    std::shared_ptr<Bead> b(species_a->GetBead(p_i,b_i));
+    vec<double> r0(b->GetR());
 
     // Numerical tolerance
     double eps = 1.e-7;
@@ -174,17 +189,17 @@ protected:
     // Calculate numerical gradient
     double r_mag, r_p_mag, r_r_p_mag;
     double tot = 0.;
-    for (uint32_t d_i=0; d_i<path.n_d; ++d_i) {
-      path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+    for (uint32_t d_i=0; d_i<path.GetND(); ++d_i) {
+      path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
       double f0 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
-      b->r(d_i) = r0(d_i) + eps;
-      path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+      b->SetR(d_i,r0(d_i) + eps);
+      path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
       double f1 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
-      b->r(d_i) = r0(d_i) - eps;
-      path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+      b->SetR(d_i,r0(d_i) - eps);
+      path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
       double f2 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
       tot += (f1+f2-2.*f0)/(eps*eps);
-      b->r(d_i) = r0(d_i);
+      b->SetR(d_i,r0(d_i));
     }
 
     return tot;
@@ -197,38 +212,33 @@ public:
   {
     // Read in things
     n_order = in.GetAttribute<uint32_t>("n_order",0);
-    species_a = in.GetAttribute<std::string>("species_a");
+    std::string species_a_name = in.GetAttribute<std::string>("species_a");
     species_list.push_back(species_a);
-    species_b = in.GetAttribute<std::string>("species_b");
+    std::string species_b_name = in.GetAttribute<std::string>("species_b");
     species_list.push_back(species_b);
-    std::cout << "Setting up pair action between " << species_a << " and " << species_b << "..." << std::endl;
+    std::cout << "Setting up pair action between " << species_a_name << " and " << species_b_name << "..." << std::endl;
     use_long_range = in.GetAttribute<bool>("use_long_range",0);
     if (use_long_range) {
-      k_cut = in.GetAttribute<double>("k_cut",path.k_c);
-      path.SetupKs(k_cut);
+      k_cut = in.GetAttribute<double>("k_cut",path.ks.cutoff);
+      path.ks.Setup(k_cut);
+      species_a->InitRhoK();
+      species_b->InitRhoK();
     }
-    path.GetSpeciesInfo(species_a,species_a_i);
-    path.GetSpeciesInfo(species_b,species_b_i);
-    if (species_a_i >= 0 && species_b_i >= 0) {
-      is_constant = ((species_a_i == species_b_i)
-                   && (path.species_list[species_a_i]->n_part == 1
-                      || path.species_list[species_a_i]->lambda == 0.));
-      is_first_time = true;
+    species_a = path.GetSpecies(species_a_name);
+    species_b = path.GetSpecies(species_b_name);
+    is_constant = ((species_a == species_b) && (species_a->GetNPart() == 1 || species_a->GetLambda() == 0.));
+    is_first_time = true;
 
-      // Write things to file
-      out.Write("Actions/"+name+"/n_order", n_order);
-      out.Write("Actions/"+name+"/species_a", species_a);
-      out.Write("Actions/"+name+"/species_b", species_b);
-      out.Write("Actions/"+name+"/use_long_range", use_long_range);
-      if (use_long_range)
-        out.Write("Actions/"+name+"/k_cut", k_cut);
-    } else {
-      is_constant = true;
-      is_first_time = false;
-      dUdB_constant = 0.;
-      potential_constant = 0.;
-    }
+    // TODO: Make this work for different time steps
+    assert(species_a->GetNBead() == species_b->GetNBead());
 
+    // Write things to file
+    out.Write("Actions/"+name+"/n_order", n_order);
+    out.Write("Actions/"+name+"/species_a", species_a_name);
+    out.Write("Actions/"+name+"/species_b", species_b_name);
+    out.Write("Actions/"+name+"/use_long_range", use_long_range);
+    if (use_long_range)
+      out.Write("Actions/"+name+"/k_cut", k_cut);
   }
 
   /// Returns the beta derivative of the action for the whole path
@@ -238,53 +248,31 @@ public:
       return dUdB_constant;
     else {
       double tot = 0.;
-      uint32_t n_part_a(path.species_list[species_a_i]->n_part), n_part_b(path.species_list[species_b_i]->n_part);
-      if (species_a_i == species_b_i) {
-        #pragma omp parallel
-        {
-          for (uint32_t p_i=0; p_i<n_part_a-1; ++p_i) {
-            #pragma omp for collapse(2) reduction(+:tot)
-            for (uint32_t p_j=p_i+1; p_j<n_part_a; ++p_j) {
-              for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-                double r_mag, r_p_mag, r_r_p_mag;
-                path.DrDrpDrrp(b_i,b_i+1,species_a_i,species_a_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
-                double dUdB = CalcdUdBeta(r_mag,r_p_mag,r_r_p_mag,0);
-                tot += dUdB;
-              }
-            }
-          }
-        }
-      } else {
-        #pragma omp parallel for collapse(3) reduction(+:tot)
-        for (uint32_t p_i=0; p_i<n_part_a; ++p_i) {
-          for (uint32_t p_j=0; p_j<n_part_b; ++p_j) {
-            for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-              double r_mag, r_p_mag, r_r_p_mag;
-              path.DrDrpDrrp(b_i,b_i+1,species_a_i,species_b_i,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
-              double dUdB = CalcdUdBeta(r_mag,r_p_mag,r_r_p_mag,0);
-              tot += dUdB;
-            }
-          }
+      const auto particle_pairs(GenerateParticlePairs());
+      size_t n_particle_pairs = particle_pairs.size();
+      #pragma omp parallel for collapse(2) reduction(+:tot)
+      for(uint32_t i=0; i<n_particle_pairs; i++) {
+        for (uint32_t b_i=0; b_i<species_a->GetNBead(); ++b_i) {
+          double r_mag, r_p_mag, r_r_p_mag;
+          path.DrDrpDrrp(b_i,b_i+1,species_a,species_b,particle_pairs[i].first,particle_pairs[i].second,r_mag,r_p_mag,r_r_p_mag);
+          tot += CalcdUdBeta(r_mag,r_p_mag,r_r_p_mag,0);
         }
       }
-
       if (use_long_range)
         tot += CalcdUdBetaLong();
-
       if (is_first_time) {
         is_first_time = false;
         dUdB_constant = tot;
       }
-
       return tot;
     }
   }
 
   /// Returns the value of the action between time slices b_0 and b_1 for a vector of particles
-  virtual double GetAction(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
+  virtual double GetAction(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> &particles, const uint32_t level)
   {
     // Return zero if not relevant
-    if (level > max_level || is_constant || species_a_i < 0 || species_b_i < 0)
+    if (level > max_level || is_constant)
       return 0.;
 
     // Generate particle pairs
@@ -299,24 +287,20 @@ public:
     double tot = 0.;
     for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
       uint32_t b_j = b_i+skip;
-      uint32_t b_k = b_i-skip+path.n_bead;
+      uint32_t b_k = b_i-skip+species_a->GetNBead();
       for (auto& particle_pair: particle_pairs) {
         double r_mag, r_p_mag, r_r_p_mag;
-        path.DrDrpDrrp(b_i,b_j,species_a_i,species_b_i,particle_pair.first,particle_pair.second,r_mag,r_p_mag,r_r_p_mag);
+        path.DrDrpDrrp(b_i,b_j,species_a,species_b,particle_pair.first,particle_pair.second,r_mag,r_p_mag,r_r_p_mag);
         tot += CalcU(r_mag,r_p_mag,r_r_p_mag,level);
       }
     }
 
     // Add in long range part
     if (use_long_range) { // FIXME: currently this assumes level = 0
-      if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-        path.UpdateRhoKP(b_0, b_1, species_a_i, particles_a, level);
-        path.species_list[species_a_i]->need_update_rho_k = false;
-      }
-      if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-        path.UpdateRhoKP(b_0, b_1, species_b_i, particles_b, level);
-        path.species_list[species_b_i]->need_update_rho_k = false;
-      }
+      if (species_a->GetNeedUpdateRhoK() && path.GetMode()==NEW_MODE)
+        species_a->UpdateRhoK(b_0, b_1, particles_a, level);
+      if (species_b->GetNeedUpdateRhoK() && path.GetMode()==NEW_MODE)
+        species_b->UpdateRhoK(b_0, b_1, particles_b, level);
       tot += CalcULong(b_0, b_1, level);
     }
 
@@ -324,11 +308,11 @@ public:
   }
 
   /// Returns the spatial gradient of the action between time slices b_0 and b_1 for a vector of particles
-  virtual vec<double> GetActionGradient(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
+  virtual vec<double> GetActionGradient(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> &particles, const uint32_t level)
   {
     // Return zero if not relevant
-    vec<double> zero_vec(zeros<vec<double>>(path.n_d));
-    if (level > max_level || is_constant || species_a_i < 0 || species_b_i < 0)
+    vec<double> zero_vec(zeros<vec<double>>(path.GetND()));
+    if (level > max_level || is_constant)
       return zero_vec;
 
     // Generate particle pairs
@@ -343,7 +327,7 @@ public:
     vec<double> tot(zero_vec);
     for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
       uint32_t b_j = b_i+skip;
-      uint32_t b_k = b_i-skip+path.n_bead;
+      uint32_t b_k = b_i-skip+species_a->GetNBead();
       for (auto& particle_pair: particle_pairs) {
         tot += CalcGradientU(b_i,b_j,particle_pair.first,particle_pair.second,level);
         tot += CalcGradientU(b_i,b_k,particle_pair.first,particle_pair.second,level);
@@ -352,14 +336,6 @@ public:
 
     // Add in long range part
     if (use_long_range) { // FIXME: currently this assumes level = 0
-      //if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-      //  path.UpdateRhoKP(b_0, b_1, species_a_i, particles_a, level);
-      //  path.species_list[species_a_i]->need_update_rho_k = false;
-      //}
-      //if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-      //  path.UpdateRhoKP(b_0, b_1, species_b_i, particles_b, level);
-      //  path.species_list[species_b_i]->need_update_rho_k = false;
-      //}
       for (auto& particle_pair: particle_pairs)
         tot += CalcGradientULong(b_0, b_1, particle_pair.first, level);
     }
@@ -368,10 +344,10 @@ public:
   }
 
   /// Returns the spatial laplacian of the action between time slices b_0 and b_1 for a vector of particles
-  virtual double GetActionLaplacian(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
+  virtual double GetActionLaplacian(const uint32_t b_0, const uint32_t b_1, const std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> &particles, const uint32_t level)
   {
     // Return zero if not relevant
-    if (level > max_level || is_constant || species_a_i < 0 || species_b_i < 0)
+    if (level > max_level || is_constant)
       return 0.;
 
     // Generate particle pairs
@@ -386,7 +362,7 @@ public:
     double tot = 0.;
     for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip) {
       uint32_t b_j = b_i+skip;
-      uint32_t b_k = b_i-skip+path.n_bead;
+      uint32_t b_k = b_i-skip+species_a->GetNBead();
       for (auto& particle_pair: particle_pairs) {
         tot += CalcLaplacianU(b_i,b_j,particle_pair.first,particle_pair.second,level)
             + CalcLaplacianU(b_i,b_k,particle_pair.first,particle_pair.second,level);
@@ -394,18 +370,6 @@ public:
     }
 
     // FIXME: Ignoring long range part for now
-    //// Add in long range part
-    //if (use_long_range) { // fixme: currently this assumes level = 0
-    //  if (path.species_list[species_a_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-    //    path.UpdateRhoKP(b_0, b_1, species_a_i, particles_a, level);
-    //    path.species_list[species_a_i]->need_update_rho_k = false;
-    //  }
-    //  if (path.species_list[species_b_i]->need_update_rho_k && path.GetMode()==NEW_MODE) {
-    //    path.UpdateRhoKP(b_0, b_1, species_b_i, particles_b, level);
-    //    path.species_list[species_b_i]->need_update_rho_k = false;
-    //  }
-    //  tot += CalcLaplacianULong(b_0, b_1, level);
-    //}
 
     return tot;
   }
@@ -417,42 +381,25 @@ public:
       return potential_constant;
     else {
       double tot = 0.;
-      if (species_a_i == species_b_i) {
-        for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part-1; ++p_i) {
-          for (uint32_t p_j=p_i+1; p_j<path.species_list[species_a_i]->n_part; ++p_j) {
-            for (uint32_t b_i=0; b_i<path.n_bead; b_i+=1) {
-              uint32_t b_j = b_i + 1;
-              vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_a_i,p_j,b_i)));
-              double r_mag = mag(dr);
-              dr = path.Dr(path(species_a_i,p_i,b_j),path(species_a_i,p_j,b_j));
-              double r_p_mag = mag(dr);
-              tot += CalcV(r_mag,r_p_mag,0);
-            }
-          }
-        }
-      } else {
-        for (uint32_t p_i=0; p_i<path.species_list[species_a_i]->n_part; ++p_i) {
-          for (uint32_t p_j=0; p_j<path.species_list[species_b_i]->n_part; ++p_j) {
-            for (uint32_t b_i=0; b_i<path.n_bead; b_i+=1) {
-              uint32_t b_j = b_i + 1;
-              vec<double> dr(path.Dr(path(species_a_i,p_i,b_i),path(species_b_i,p_j,b_i)));
-              double r_mag = mag(dr);
-              dr = path.Dr(path(species_a_i,p_i,b_j),path(species_b_i,p_j,b_j));
-              double r_p_mag = mag(dr);
-              tot += CalcV(r_mag,r_p_mag,0);
-            }
-          }
+      const auto particle_pairs(GenerateParticlePairs());
+      size_t n_particle_pairs = particle_pairs.size();
+      #pragma omp parallel for collapse(2) reduction(+:tot)
+      for(uint32_t i=0; i<n_particle_pairs; i++) {
+        for (uint32_t b_i=0; b_i<species_a->GetNBead(); ++b_i) {
+          uint32_t b_j = b_i + 1;
+          vec<double> dr(path.Dr(species_a->GetBead(particle_pairs[i].first,b_i),species_b->GetBead(particle_pairs[i].second,b_i)));
+          double r_mag = mag(dr);
+          dr = path.Dr(species_a->GetBead(particle_pairs[i].first,b_j),species_b->GetBead(particle_pairs[i].second,b_j));
+          double r_p_mag = mag(dr);
+          tot += CalcV(r_mag,r_p_mag,0);
         }
       }
-
       if (use_long_range)
         tot += CalcVLong();
-
       if (is_first_time) {
         is_first_time = false;
         potential_constant = tot;
       }
-
       return tot;
     }
   }
@@ -460,7 +407,7 @@ public:
   /// Returns the importance weight of the action for the whole path
   virtual double ImportanceWeight()
   {
-    return is_importance_weight ? exp(DActionDBeta()/path.n_bead) : 1.;
+    return is_importance_weight ? exp(DActionDBeta()/species_a->GetNBead()) : 1.;
   }
 
   /// Write information about the action
@@ -469,9 +416,9 @@ public:
   /// Accepts relevant information about the action
   virtual void Accept()
   {
-    if (use_long_range && species_a_i >= 0 && species_b_i >= 0) {
-      path.species_list[species_a_i]->need_update_rho_k = true;
-      path.species_list[species_b_i]->need_update_rho_k = true;
+    if (use_long_range) {
+      species_a->SetNeedUpdateRhoK(true);
+      species_b->SetNeedUpdateRhoK(true);
     }
 
   }
@@ -479,9 +426,9 @@ public:
   /// Rejects relevant information about the action
   virtual void Reject()
   {
-    if (use_long_range && species_a_i >= 0 && species_b_i >= 0) {
-      path.species_list[species_a_i]->need_update_rho_k = true;
-      path.species_list[species_b_i]->need_update_rho_k = true;
+    if (use_long_range) {
+      species_a->SetNeedUpdateRhoK(true);
+      species_b->SetNeedUpdateRhoK(true);
     }
 
   }

@@ -11,20 +11,20 @@ private:
   virtual double GetGij(const std::shared_ptr<Bead> &b_i, const std::shared_ptr<Bead> &b_j, const uint32_t slice_diff)
   {
     double omega = param_sets[param_set_i][0];
-    double level_tau_omega = slice_diff*path.tau*omega;
+    double level_tau_omega = slice_diff*path.GetTau()*omega;
     double cofactor = omega*i_4_lambda_tau/(slice_diff*M_PI*sinh(level_tau_omega));
-    vec<double> r_i = path.GetR(b_i);
-    vec<double> r_j = path.GetR(b_j);
-    return pow(cofactor,path.n_d/2.)*exp(-cofactor*((dot(r_i,r_i) + dot(r_j,r_j))*cosh(level_tau_omega) - 2*dot(r_i,r_j)));
+    vec<double> r_i = b_i->GetR();
+    vec<double> r_j = b_j->GetR();
+    return pow(cofactor,path.GetND()/2.)*exp(-cofactor*((dot(r_i,r_i) + dot(r_j,r_j))*cosh(level_tau_omega) - 2*dot(r_i,r_j)));
   }
 
   /// Returns the spatial derivative of g_ij
   virtual double GetGijDGijDr(const std::shared_ptr<Bead> &b_i, const std::shared_ptr<Bead> &b_j, const uint32_t slice_diff, vec<double> &dgij_dr)
   {
     double omega = param_sets[param_set_i][0];
-    double level_tau_omega = slice_diff*path.tau*omega;
-    vec<double> r_i = path.GetR(b_i);
-    vec<double> r_j = path.GetR(b_j);
+    double level_tau_omega = slice_diff*path.GetTau()*omega;
+    vec<double> r_i = b_i->GetR();
+    vec<double> r_j = b_j->GetR();
     double gij = GetGij(b_i, b_j, slice_diff);
     dgij_dr = -omega*i_4_lambda_tau/(slice_diff*M_PI*sinh(level_tau_omega))*(2.*r_i*cosh(level_tau_omega) - 2.*r_j)*gij;
     return gij;

@@ -88,9 +88,9 @@ protected:
       return -1.;
 
     // Set up temporary storage fields
-    field<vec<double>> other_b_i_0(n_part);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      other_b_i_0(p_i) = path.GetR(other_b_i[p_i]);
+    field<vec<double>> other_b_i_0(species->GetNPart());
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+      other_b_i_0(p_i) = other_b_i[p_i]->GetR();
 
     // Set initial gradient unit vector
     field<vec<double>> grad_rho_f_0(grad_rho_f.row(b_i));
@@ -105,8 +105,8 @@ protected:
     double min_factor(0.), max_factor(0.5), max_dist(MaxDistance(b_i,ref_b,other_b_i));
     while ((rho_f_0*rho_f(b_i) > 0.) && (max_factor*dist_0 < max_dist)) {
       max_factor *= 2.;
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        path.GetR(other_b_i[p_i]) = other_b_i_0(p_i) - max_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
+      for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+        other_b_i[p_i]->GetR() = other_b_i_0(p_i) - max_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
       SetRhoF(b_i,ref_b,other_b_i);
     }
 
@@ -116,8 +116,8 @@ protected:
       double try_factor(1.);
       while (((max_factor-min_factor)*abs_dist_0>dist_tolerance) && (min_factor*abs_dist_0<max_dist)) {
         try_factor = 0.5*(max_factor+min_factor);
-        for (uint32_t p_i=0; p_i<n_part; ++p_i)
-          path.GetR(other_b_i[p_i]) = other_b_i_0(p_i) - try_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
+        for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+          other_b_i[p_i]->GetR() = other_b_i_0(p_i) - try_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
         SetRhoF(b_i,ref_b,other_b_i);
         if (rho_f_0*rho_f(b_i) > 0.)
           min_factor = try_factor;
@@ -131,8 +131,8 @@ protected:
     }
 
     // Reset positions and determinant
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      path.GetR(other_b_i[p_i]) = other_b_i_0(p_i);
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+      other_b_i[p_i]->GetR() = other_b_i_0(p_i);
     rho_f(b_i) = rho_f_0;
 
     // Track number of complete line search calls
@@ -145,9 +145,9 @@ protected:
   double MaxDistance(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
   {
     double dist_b_i = 1./dist_tolerance;
-    for (uint32_t p_i=0; p_i<n_part-1; ++p_i)
-      for (uint32_t p_j=p_i+1; p_j<n_part; ++p_j)
-        dist_b_i = std::min(mag(path.Dr(path(species_i,p_i,b_i),path(species_i,p_j,b_i))), dist_b_i);
+    for (uint32_t p_i=0; p_i<species->GetNPart()-1; ++p_i)
+      for (uint32_t p_j=p_i+1; p_j<species->GetNPart(); ++p_j)
+        dist_b_i = std::min(mag(path.Dr(species->GetBead(p_i,b_i),species->GetBead(p_j,b_i))), dist_b_i);
     dist_b_i *= M_SQRT1_2;
     return dist_b_i;
   }
@@ -156,18 +156,18 @@ protected:
   double HyperplaneDistance(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
   {
     double dist_b_i = 1./dist_tolerance;
-    for (uint32_t p_i=0; p_i<n_part-1; ++p_i) {
-      for (uint32_t p_j=p_i+1; p_j<n_part; ++p_j) {
-        vec<double> r_tau_0 = path.GetR(path(species_i,p_i,b_i));
-        vec<double> r_tau_1 = path.GetR(path(species_i,p_j,b_i));
-        vec<double> r_star_0 = path.GetR(ref_b[p_i]);
-        vec<double> r_star_1 = path.GetR(ref_b[p_j]);
+    for (uint32_t p_i=0; p_i<species->GetNPart()-1; ++p_i) {
+      for (uint32_t p_j=p_i+1; p_j<species->GetNPart(); ++p_j) {
+        vec<double> r_tau_0 = species->GetBead(p_i,b_i)->GetR();
+        vec<double> r_tau_1 = species->GetBead(p_j,b_i)->GetR();
+        vec<double> r_star_0 = ref_b[p_i]->GetR();
+        vec<double> r_star_1 = ref_b[p_j]->GetR();
         vec<double> r_tau_0_p(r_tau_0);
         r_tau_0_p(1) = r_tau_1(0) - (r_tau_0(1)-r_tau_1(1))*(r_star_0(1)-r_star_1(1))/(r_star_0(0)-r_star_1(0));
         double a, b(-1.), c;
         GetLine(r_tau_0_p, r_tau_1, a, c);
         dist_b_i = fabs(a*r_tau_0(0) + b*r_tau_0(1) + c)/sqrt(a*a + b*b);
-        dist_b_i -= nearbyint(dist_b_i*path.iL)*path.L;
+        dist_b_i -= nearbyint(dist_b_i*path.GetInverseL())*path.GetL();
         dist_b_i = fabs(dist_b_i);
       }
     }
@@ -185,10 +185,10 @@ protected:
       return LineSearchDistance(b_i,ref_b,other_b_i);
 
     // Set up temporary storage fields
-    field<vec<double>> t_other_b_i(n_part), other_b_i_0(n_part);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
-      other_b_i_0(p_i) = path.GetR(other_b_i[p_i]);
-      t_other_b_i(p_i) = path.GetR(other_b_i[p_i]);
+    field<vec<double>> t_other_b_i(species->GetNPart()), other_b_i_0(species->GetNPart());
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
+      other_b_i_0(p_i) = other_b_i[p_i]->GetR();
+      t_other_b_i(p_i) = other_b_i[p_i]->GetR();
     }
 
     // Set initial gradient unit vector
@@ -207,15 +207,15 @@ protected:
       double t_dist = 2.*rho_f(b_i)/grad_mag;
       do {
         t_dist *= 0.5;
-        for (uint32_t p_i=0; p_i<n_part; ++p_i) {
-          path.GetR(other_b_i[p_i]) = t_other_b_i(p_i) - (t_dist/grad_mag)*grad_rho_f(b_i,p_i);
+        for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
+          other_b_i[p_i]->GetR() = t_other_b_i(p_i) - (t_dist/grad_mag)*grad_rho_f(b_i,p_i);
         }
         SetRhoF(b_i,ref_b,other_b_i);
       } while (rho_f(b_i) < 0.);
 
       // Set new temporary path
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        t_other_b_i(p_i) = path.GetR(other_b_i[p_i]);
+      for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+        t_other_b_i(p_i) = other_b_i[p_i]->GetR();
 
       // Check if tolerance is satisfied
       if (t_dist < dist_tolerance*dist_0)
@@ -233,8 +233,8 @@ protected:
       }
 
       // Reset positions, determinant, and gradient
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        path.GetR(other_b_i[p_i]) = other_b_i_0(p_i);
+      for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+        other_b_i[p_i]->GetR() = other_b_i_0(p_i);
       grad_rho_f.row(b_i) = grad_rho_f_0;
       rho_f(b_i) = rho_f_0;
       return LineSearchDistance(b_i,ref_b,other_b_i);
@@ -242,15 +242,15 @@ protected:
     }
 
     // Compute distance
-    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
       t_other_b_i(p_i) -= other_b_i_0(p_i);
       path.PutInBox(t_other_b_i(p_i));
     }
     double dist_b_i(FieldVecMag(t_other_b_i));
 
     // Reset positions, determinant, and gradient
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      path.GetR(other_b_i[p_i]) = other_b_i_0(p_i);
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+      other_b_i[p_i]->GetR() = other_b_i_0(p_i);
     grad_rho_f.row(b_i) = grad_rho_f_0;
     rho_f(b_i) = rho_f_0;
 
@@ -264,13 +264,13 @@ protected:
   void SetRhoF(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
   {
     // Set slice distance
-    uint32_t abs_slice_diff = abs(path.bead_loop(b_i)-path.ref_bead);
-    uint32_t min_slice_diff = std::min(abs_slice_diff, path.n_bead-abs_slice_diff);
+    uint32_t abs_slice_diff = abs(species->bead_loop(b_i)-species->GetRefBead());
+    uint32_t min_slice_diff = std::min(abs_slice_diff, species->GetNBead()-abs_slice_diff);
 
     // Compute Gij matrix
-    mat<double> g_ij(n_part,n_part);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
-      for (uint32_t p_j=0; p_j<n_part; ++p_j) {
+    mat<double> g_ij(species->GetNPart(),species->GetNPart());
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
+      for (uint32_t p_j=0; p_j<species->GetNPart(); ++p_j) {
         g_ij(p_i,p_j) = GetGij(ref_b[p_i], other_b_i[p_j], min_slice_diff); // TODO: Fast updates
       }
     }
@@ -285,15 +285,15 @@ protected:
   void SetRhoFGradRhoF(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
   {
     // Set slice distance
-    uint32_t abs_slice_diff = abs(path.bead_loop(b_i)-path.ref_bead);
-    uint32_t min_slice_diff = std::min(abs_slice_diff, path.n_bead-abs_slice_diff);
+    uint32_t abs_slice_diff = abs(species->bead_loop(b_i)-species->GetRefBead());
+    uint32_t min_slice_diff = std::min(abs_slice_diff, species->GetNBead()-abs_slice_diff);
 
     // Compute Gij matrix and its gradient
-    mat<double> g_ij(n_part,n_part);
-    field<vec<double>> dg_ij_dr(n_part,n_part);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
-      for (uint32_t p_j=0; p_j<n_part; ++p_j) {
-        dg_ij_dr(p_i,p_j).zeros(path.n_d);
+    mat<double> g_ij(species->GetNPart(),species->GetNPart());
+    field<vec<double>> dg_ij_dr(species->GetNPart(),species->GetNPart());
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
+      for (uint32_t p_j=0; p_j<species->GetNPart(); ++p_j) {
+        dg_ij_dr(p_i,p_j).zeros(path.GetND());
         g_ij(p_i,p_j) = GetGijDGijDr(ref_b[p_i], other_b_i[p_j], min_slice_diff, dg_ij_dr(p_i,p_j));
       }
     }
@@ -316,9 +316,9 @@ protected:
     mat<double> cofactors_g_ij(rho_f(b_i)*trans(i_g_ij)); // TODO: Should just compute directly from adjugate
 
     // Compute gradient of determinant
-    for (uint32_t p_i=0; p_i<n_part; ++p_i) {
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
       grad_rho_f(b_i,p_i).zeros();
-      for (uint32_t p_j=0; p_j<n_part; ++p_j)
+      for (uint32_t p_j=0; p_j<species->GetNPart(); ++p_j)
         grad_rho_f(b_i,p_i) -= dg_ij_dr(p_j,p_i)*cofactors_g_ij(p_j,p_i);
     }
 
@@ -336,7 +336,7 @@ protected:
     // Compute action
     double tot = 0.;
       for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-        if (b_i_vec[b_i] != path.ref_bead)  {
+        if (b_i_vec[b_i] != species->GetRefBead())  {
           SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
           if (rho_f(b_i_vec[b_i]) < 0.) {
             tot += 1.e100;
@@ -355,7 +355,7 @@ protected:
     double tot = 0.;
     vec<double> t_dist(n_bead_in_move);
       for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-        if (b_i_vec[b_i] != path.ref_bead)  {
+        if (b_i_vec[b_i] != species->GetRefBead())  {
           t_dist(b_i) = GetNodalDistance(b_i_vec[b_i],ref_b,other_b[b_i]);
           if (t_dist(b_i) < 0.) {
             tot += 1.e100;
@@ -367,13 +367,13 @@ protected:
     // Compute action from nodal distance
     if (tot == 0.) {
       uint32_t skip = b_i_vec[1] - b_i_vec[0];
-      double i_lambda_level_tau = 1./(path.species_list[species_i]->lambda*skip*path.tau);
+      double i_lambda_level_tau = 1./(species->GetLambda()*skip*path.GetTau());
       for (uint32_t b_i=0; b_i<n_bead_in_move-1; ++b_i) {
 
         // Set slice variables
         uint32_t b_j = b_i + 1;
-        bool b_i_is_ref = b_i_vec[b_i] == path.ref_bead;
-        bool b_j_is_ref = b_i_vec[b_j] == path.ref_bead;
+        bool b_i_is_ref = b_i_vec[b_i] == species->GetRefBead();
+        bool b_j_is_ref = b_i_vec[b_j] == species->GetRefBead();
 
         // Compute action
         if (!b_i_is_ref && (t_dist(b_i)<0.)) {
@@ -432,20 +432,20 @@ protected:
   bool TestNodes()
   {
     // Test initial configuration
-    is_first_time.resize(path.n_bead);
-    for (uint32_t b_i=0; b_i<path.n_bead; ++b_i)
+    is_first_time.resize(species->GetNBead());
+    for (uint32_t b_i=0; b_i<species->GetNBead(); ++b_i)
       is_first_time[b_i] = true;
-    std::vector< std::pair<uint32_t,uint32_t>> particles;
-    particles.push_back(std::make_pair(species_i,0));
+    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
+    particles.push_back(std::make_pair(species,0));
     bool init_good = true;
     ModeType t_mode(path.GetMode());
     path.SetMode(NEW_MODE);
-    if (GetAction(0, path.n_bead, particles, 0) >= 1.e100) {
+    if (GetAction(0, species->GetNBead(), particles, 0) >= 1.e100) {
       std::cout << "Warning: initializing with broken nodes!" << std::endl;
       init_good = false;
     }
     start_b = 0;
-    end_b = path.n_bead;
+    end_b = species->GetNBead();
     Accept();
     path.SetMode(t_mode);
 
@@ -464,7 +464,6 @@ public:
   {
     // Read in things
     is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
-    path.species_list[species_i]->fixed_node = true;
 
     // Nodal distance things
     use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
@@ -490,19 +489,19 @@ public:
       out.Write("Actions/"+name+"/dist_type", dist_type);
       dist_tolerance = in.GetAttribute<double>("tolerance",1.e-4);
       out.Write("Actions/"+name+"/dist_tolerance", dist_tolerance);
-      dist.zeros(path.n_bead);
-      dist_c.zeros(path.n_bead);
+      dist.zeros(species->GetNBead());
+      dist_c.zeros(species->GetNBead());
     }
 
     // Set up determinants
-    rho_f.zeros(path.n_bead);
-    rho_f_c.zeros(path.n_bead);
-    grad_rho_f.set_size(path.n_bead,n_part);
-    grad_rho_f_c.set_size(path.n_bead,n_part);
-    for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
-      for (uint32_t p_i=0; p_i<n_part; ++p_i) {
-        grad_rho_f(b_i,p_i).zeros(path.n_d);
-        grad_rho_f_c(b_i,p_i).zeros(path.n_d);
+    rho_f.zeros(species->GetNBead());
+    rho_f_c.zeros(species->GetNBead());
+    grad_rho_f.set_size(species->GetNBead(),species->GetNPart());
+    grad_rho_f_c.set_size(species->GetNBead(),species->GetNPart());
+    for (uint32_t b_i=0; b_i<species->GetNBead(); ++b_i) {
+      for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
+        grad_rho_f(b_i,p_i).zeros(path.GetND());
+        grad_rho_f_c(b_i,p_i).zeros(path.GetND());
       }
     }
 
@@ -516,29 +515,29 @@ public:
       return 0.;
 
     // Initialize other beads
-    std::vector<std::shared_ptr<Bead>> ref_b(n_part);
-    std::vector<std::vector<std::shared_ptr<Bead>>> other_b(path.n_bead);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      ref_b[p_i] = path(species_i,p_i,path.ref_bead);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      other_b[0].push_back(path.GetPrevBead(ref_b[p_i],path.ref_bead));
+    std::vector<std::shared_ptr<Bead>> ref_b(species->GetNPart());
+    std::vector<std::vector<std::shared_ptr<Bead>>> other_b(species->GetNBead());
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+      ref_b[p_i] = species->GetBead(p_i,species->GetRefBead());
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+      other_b[0].push_back(ref_b[p_i]->GetPrevBead(species->GetRefBead()));
 
     std::vector<uint32_t> b_i_vec;
-    b_i_vec.push_back(other_b[0][0]->b);
-    for (uint32_t b_i=1; b_i<path.n_bead; ++b_i) {
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        other_b[b_i].push_back(path.GetNextBead(other_b[b_i-1][p_i],1));
-      b_i_vec.push_back(other_b[b_i][0]->b);
+    b_i_vec.push_back(other_b[0][0]->GetB());
+    for (uint32_t b_i=1; b_i<species->GetNBead(); ++b_i) {
+      for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+        other_b[b_i].push_back(other_b[b_i-1][p_i]->GetNextBead(1));
+      b_i_vec.push_back(other_b[b_i][0]->GetB());
     }
 
     // Compute action from nodal distance
     double tot = 0.;
-    double i_lambda_tau = 1./(path.species_list[species_i]->lambda*path.tau);
-    for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
+    double i_lambda_tau = 1./(species->GetLambda()*path.GetTau());
+    for (uint32_t b_i=0; b_i<species->GetNBead(); ++b_i) {
       // Set slice variables
-      uint32_t b_j = path.bead_loop(b_i + 1);
-      bool b_i_is_ref(b_i == path.ref_bead);
-      bool b_j_is_ref(b_j == path.ref_bead);
+      uint32_t b_j = species->bead_loop(b_i + 1);
+      bool b_i_is_ref(b_i == species->GetRefBead());
+      bool b_j_is_ref(b_j == species->GetRefBead());
 
       // Compute dist2
       double dist_b_i, dist_b_j, dist2;
@@ -557,25 +556,25 @@ public:
       double dist2_i_lambda_tau = dist2*i_lambda_tau;
       double exp_dist2_i_lambda_tau_m1 = expm1(dist2_i_lambda_tau);
       if (std::fpclassify(exp_dist2_i_lambda_tau_m1) == FP_NORMAL)
-        tot += dist2_i_lambda_tau/(path.tau*exp_dist2_i_lambda_tau_m1);
+        tot += dist2_i_lambda_tau/(path.GetTau()*exp_dist2_i_lambda_tau_m1);
     }
 
-    return tot/path.n_bead;
+    return tot/species->GetNBead();
   }
 
   /// Returns the value of the action between time slices b0 and b1 for a vector of particles
-  virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<uint32_t,uint32_t>> &particles, const uint32_t level)
+  virtual double GetAction(const uint32_t b0, const uint32_t b1, const std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> &particles, const uint32_t level)
   {
     // No need to check old action if not using the nodal distance
     if (path.GetMode()==OLD_MODE && !use_nodal_distance)
       return 0.;
 
     // Decide whether or not to check the node
-    if (level > max_level || !path.species_list[species_i]->fermi)
+    if (level > max_level || !species->IsFermi())
       return 0.;
     bool check_node = false;
     for (auto& p: particles) {
-      if (p.first == species_i) {
+      if (p.first == species) {
         check_node = true;
         break;
       }
@@ -585,15 +584,15 @@ public:
 
     // See if ref slice included
     bool check_all = false;
-    if (b1 < path.n_bead)
-      check_all = ((b0 <= path.ref_bead) && (b1 >= path.ref_bead));
+    if (b1 < species->GetNBead())
+      check_all = ((b0 <= species->GetRefBead()) && (b1 >= species->GetRefBead()));
     else
-      check_all = (path.bead_loop(b1) >= path.ref_bead);
+      check_all = (species->bead_loop(b1) >= species->GetRefBead());
 
     // Set start and end beads
     if (check_all) {
       start_b = 0;
-      end_b = path.n_bead-1;
+      end_b = species->GetNBead()-1;
     } else {
       start_b = b0;
       end_b = b1;
@@ -604,25 +603,25 @@ public:
     int n_bead_in_move = 1 + (end_b - start_b)/skip;
     std::vector<uint32_t> b_i_vec;
     for (uint32_t b_i=start_b; b_i<=end_b; b_i+=skip)
-      b_i_vec.push_back(path.bead_loop(b_i));
+      b_i_vec.push_back(species->bead_loop(b_i));
 
     // Initialize other beads
-    std::vector<std::shared_ptr<Bead>> ref_b(n_part);
+    std::vector<std::shared_ptr<Bead>> ref_b(species->GetNPart());
     std::vector<std::vector<std::shared_ptr<Bead>>> other_b(n_bead_in_move);
-    int slice_diff_0 = path.bead_loop(start_b) - path.ref_bead;
+    int slice_diff_0 = species->bead_loop(start_b) - species->GetRefBead();
     int abs_slice_diff_0 = abs(slice_diff_0);
-    for (uint32_t p_i=0; p_i<n_part; ++p_i)
-      ref_b[p_i] = path(species_i,p_i,path.ref_bead);
+    for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+      ref_b[p_i] = species->GetBead(p_i,species->GetRefBead());
     if (slice_diff_0 >= 0) {
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        other_b[0].push_back(path.GetNextBead(ref_b[p_i],abs_slice_diff_0));
+      for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+        other_b[0].push_back(ref_b[p_i]->GetNextBead(abs_slice_diff_0));
     } else {
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        other_b[0].push_back(path.GetPrevBead(ref_b[p_i],abs_slice_diff_0));
+      for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+        other_b[0].push_back(ref_b[p_i]->GetPrevBead(abs_slice_diff_0));
     }
     for (uint32_t b_i=1; b_i<n_bead_in_move; ++b_i)
-      for (uint32_t p_i=0; p_i<n_part; ++p_i)
-        other_b[b_i].push_back(path.GetNextBead(other_b[b_i-1][p_i],skip));
+      for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
+        other_b[b_i].push_back(other_b[b_i-1][p_i]->GetNextBead(skip));
 
     // Decide which type of action to compute
     if (use_nodal_distance)
@@ -635,10 +634,10 @@ public:
   virtual double ImportanceWeight()
   {
     if (is_importance_weight) {
-      std::vector<std::pair<uint32_t,uint32_t>> particles;
-      particles.push_back(std::make_pair(species_i,0));
+      std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
+      particles.push_back(std::make_pair(species,0));
       path.SetMode(NEW_MODE);
-      return GetAction(0, path.n_bead, particles, 0);
+      return GetAction(0, species->GetNBead(), particles, 0);
     } else
       return 1.;
   }
@@ -669,7 +668,7 @@ public:
   {
     if (use_nodal_distance) {
       for (uint32_t b_i=start_b; b_i<=end_b; ++b_i) {
-        uint32_t t_b_i = path.bead_loop(b_i);
+        uint32_t t_b_i = species->bead_loop(b_i);
         rho_f_c(t_b_i) = rho_f(t_b_i);
         grad_rho_f_c.row(t_b_i) = grad_rho_f.row(t_b_i);
         dist_c(t_b_i) = dist(t_b_i);
@@ -682,7 +681,7 @@ public:
   {
     if (use_nodal_distance) {
       for (uint32_t b_i=start_b; b_i<=end_b; ++b_i) {
-        uint32_t t_b_i = path.bead_loop(b_i);
+        uint32_t t_b_i = species->bead_loop(b_i);
         rho_f(t_b_i) = rho_f_c(t_b_i);
         grad_rho_f.row(t_b_i) = grad_rho_f_c.row(t_b_i);
         dist(t_b_i) = dist_c(t_b_i);

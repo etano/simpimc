@@ -29,12 +29,12 @@ private:
     // Choose model
     switch(model_i) {
       case 0: // \alpha n \tau
-        return path.tau*param_sets[param_set_i][0]*slice_diff;
+        return path.GetTau()*param_sets[param_set_i][0]*slice_diff;
         break;
       case 1: // \alpha[i] n \tau
-        return path.tau*param_sets[param_set_i][slice_diff]*slice_diff;
+        return path.GetTau()*param_sets[param_set_i][slice_diff]*slice_diff;
       default: // n \tau
-        return path.tau*slice_diff;;
+        return path.GetTau()*slice_diff;;
         break;
     }
   };
@@ -43,13 +43,13 @@ private:
   virtual void SetupSpline()
   {
     // Create splines
-    uint32_t n_spline = path.n_bead/2 + (path.n_bead%2) + 1;
+    uint32_t n_spline = species->GetNBead()/2 + (species->GetNBead()%2) + 1;
     rho_free_splines.resize(param_sets.size());
     for (param_set_i=0; param_set_i<param_sets.size(); ++param_set_i) {
       rho_free_splines[param_set_i].resize(n_spline);
       #pragma omp parallel for
       for (uint32_t spline_i=0; spline_i<n_spline; ++spline_i)
-        rho_free_splines[param_set_i][spline_i] = FreeSpline(path.L, n_images, lambda, GetTau(spline_i+1), false);
+        rho_free_splines[param_set_i][spline_i] = FreeSpline(path.GetL(), n_images, species->GetLambda(), GetTau(spline_i+1), false);
       std::cout << "...param set " << param_set_i << " complete." << std::endl;
     }
 

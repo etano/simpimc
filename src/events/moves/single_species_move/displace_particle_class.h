@@ -14,10 +14,12 @@ private:
   virtual void Accept()
   {
     // Move Accepted, so copy new coordinates
-    path.StoreR(affected_beads);
-    path.StoreRhoKP(affected_beads);
-    for (uint32_t b_i=0; b_i<path.n_bead; ++b_i)
-      path.StoreRhoK(b_i,species_i);
+    for (auto& b: affected_beads){
+      b->StoreR();
+      b->StoreRhoK();
+    }
+    for (uint32_t b_i=0; b_i<species->GetNBead(); ++b_i)
+      species->StoreRhoK(b_i);
 
     // Call accept for each action
     for (auto& action: action_list)
@@ -28,25 +30,24 @@ private:
   virtual bool Attempt()
   {
     // Set which particles are affected by the move
-    uint32_t p_i = rng.UnifRand(path.species_list[species_i]->n_part) - 1;  // Pick particle at random
-    std::vector<std::pair<uint32_t,uint32_t>> particles;
-    std::pair<uint32_t,uint32_t> particle(species_i,p_i);
-    particles.push_back(particle);
+    uint32_t p_i = rng.UnifRand(species->GetNPart()) - 1;  // Pick particle at random
+    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
+    particles.push_back(std::make_pair(species,p_i));
 
     // New sampling
     path.SetMode(NEW_MODE);
-    vec<double> dr(path.n_d);
+    vec<double> dr(path.GetND());
     rng.UnifRand(dr, step_size);
 
     // Set which beads are affected by the move
     // and move them
     affected_beads.clear();
-    std::shared_ptr<Bead> beadA(path(species_i,p_i,0));
-    std::shared_ptr<Bead> beadF(path.GetNextBead(beadA,path.n_bead));
+    std::shared_ptr<Bead> beadA(species->GetBead(p_i,0));
+    std::shared_ptr<Bead> beadF(beadA->GetNextBead(species->GetNBead()));
     while(beadA != beadF) {
       affected_beads.push_back(beadA);
-      path.GetR(beadA) += dr;
-      std::shared_ptr<Bead> beadA(path.GetNextBead(beadA,1));
+      beadA->GetR() += dr;
+      beadA = beadA->GetNextBead(1);
     }
 
     // Calculate action change
@@ -55,11 +56,11 @@ private:
     for (auto& action: action_list) {
       // Old action
       path.SetMode(OLD_MODE);
-      old_action += action->GetAction(0, path.n_bead, particles, 0);
+      old_action += action->GetAction(0, species->GetNBead(), particles, 0);
 
       // New action
       path.SetMode(NEW_MODE);
-      new_action += action->GetAction(0, path.n_bead, particles, 0);
+      new_action += action->GetAction(0, species->GetNBead(), particles, 0);
     }
 
     double log_accept_probablity = old_action - new_action;
@@ -75,10 +76,12 @@ private:
   virtual void Reject()
   {
     // Move rejected, so return old coordinates
-    path.RestoreR(affected_beads);
-    path.RestoreRhoKP(affected_beads);
-    for (uint32_t b_i=0; b_i<path.n_bead; ++b_i)
-      path.RestoreRhoK(b_i,species_i);
+    for (auto& b: affected_beads){
+      b->RestoreR();
+      b->RestoreRhoK();
+    }
+    for (uint32_t b_i=0; b_i<species->GetNBead(); ++b_i)
+      species->RestoreRhoK(b_i);
 
     // Call reject for each action
     for (auto& action: action_list)
@@ -89,7 +92,7 @@ public:
   DisplaceParticle(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &action_list, Input &in, IO &out)
     : SingleSpeciesMove(path, rng, action_list, in, out)
   {
-    step_size = in.GetAttribute<double>("step_size",path.L/10.);
+    step_size = in.GetAttribute<double>("step_size",path.GetL()/10.);
   }
 
 };

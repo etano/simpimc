@@ -7,29 +7,22 @@
 class SingleSpeciesMove : public Move
 {
 protected:
-  double lambda; ///< \hbar^2/2m for the affected species
   double i_4_lambda_tau; ///< 1/(4\lambda\tau) for the affected species
-  uint32_t n_part; ///< Number of particles in affected species
-  uint32_t species_i; ///< Index of affected species
-  std::string species; ///< Name of affected species
+  std::shared_ptr<Species> species; ///< Pointer to relevant species
 public:
   /// Constructor gets information about the species from the input and generates the action list
   SingleSpeciesMove(Path &path, RNG &rng, std::vector<std::shared_ptr<Action>> &t_action_list, Input &in, IO &out)
     : Move(path,rng,t_action_list,in,out)
   {
     // Get species
-    species = in.GetAttribute<std::string>("species");
-    path.GetSpeciesInfo(species,species_i);
-    n_part = path.species_list[species_i]->n_part;
-    lambda = path.species_list[species_i]->lambda;
-    i_4_lambda_tau = 1./(4.*lambda*path.tau);
+    std::string species_name = in.GetAttribute<std::string>("species");
+    species = path.GetSpecies(species_name);
+    i_4_lambda_tau = 1./(4.*species->GetLambda()*path.GetTau());
 
     // Generate action list
-    std::vector<std::string> species_list;
-    species_list.push_back(species);
-    GenerateActionList(t_action_list,species_list);
+    GenerateActionList(t_action_list,species);
 
-    std::cout << "Setting up " << name << " for " << species << "..." << std::endl;
+    std::cout << "Setting up " << name << " for " << species_name << "..." << std::endl;
   }
 };
 
