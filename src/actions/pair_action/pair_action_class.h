@@ -213,9 +213,10 @@ public:
     // Read in things
     n_order = in.GetAttribute<uint32_t>("n_order",0);
     std::string species_a_name = in.GetAttribute<std::string>("species_a");
+    species_a = path.GetSpecies(species_a_name);
     species_list.push_back(species_a);
     std::string species_b_name = in.GetAttribute<std::string>("species_b");
-    species_list.push_back(species_b);
+    species_b = path.GetSpecies(species_b_name);
     std::cout << "Setting up pair action between " << species_a_name << " and " << species_b_name << "..." << std::endl;
     use_long_range = in.GetAttribute<bool>("use_long_range",0);
     if (use_long_range) {
