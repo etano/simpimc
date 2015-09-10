@@ -94,8 +94,11 @@ public:
   /// Return 1/L
   const double GetInverseL() { return iL; }
 
-  /// Return L
+  /// Return volume
   const double GetVol() { return vol; }
+
+  /// Return surface
+  const double GetSurface() { return surface; }
 
   /// Sets species index by matching the species name string
   std::shared_ptr<Species> GetSpecies(const std::string &species_name)

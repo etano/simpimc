@@ -9,7 +9,7 @@ namespace Contact_Density_Optimization_Functions {
     }
     
     vec<double> gradient_f_simple(vec<double> ri, vec<double> RA){
-        return zeros<vec<double>>(path.n_d);
+        return zeros<vec<double>>(path.GetND());
     }
     double laplace_f_simple(vec<double> ri, vec<double> RA){
         return 0;
@@ -33,13 +33,13 @@ private:
   double (*Function_laplace_f)(vec<double> ri, vec<double> RA)
   
   vec<double> getRelevantNormalVector(vec<double> r1,vec<double> r2){
-    vec<double> n(zeros<vec<double>>(path.n_d)); 
-    double Compare_Measure=path.L/2.0;
-    for(int d=0;d<path.n_d;++d){
-        if(r1[d]>0.9*path.L&&r2[d]<0.1*path.L) {//TODO check with etano if this is hacking or not
+    vec<double> n(zeros<vec<double>>(path.GetND())); 
+    double Compare_Measure=path.GetL()/2.0;
+    for(int d=0;d<path.GetND();++d){
+        if(r1[d]>0.9*path.GetL()&&r2[d]<0.1*path.GetL()) {//TODO check with etano if this is hacking or not
             n[d]=1;
         }
-        else if(r1[d]<0.1*path.L&&r2[d]>0.9*path.L){
+        else if(r1[d]<0.1*path.GetL()&&r2[d]>0.9*path.GetL()){
             n[d]=-1;
         }
     }
@@ -81,7 +81,8 @@ private:
     vec<bool> Checked(zeros<vec<bool>>(n_part_tot));//Make sure to only once measure the boundary terms
     #pragma omp parallel for collapse(2) reduction(+:tot)
     for (uint32_t pp_i=0; pp_i<n_particle_pairs; ++pp_i) {
-      for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
+      for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
+
         // Set r's
         vec<double> RA = path(particle_pairs[pp_i][0].first,particle_pairs[pp_i][0].second,b_i)->r;
         vec<double> ri = path(particle_pairs[pp_i][1].first,particle_pairs[pp_i][1].second,b_i)->r;
@@ -97,16 +98,16 @@ private:
         vec<double> gradient_f=Function_gradient_f(ri, RA);
         double laplacian_f = Function_laplacian_f(ri, RA);
         //double f = 1; // TODO: Currently fixing f to 1
-        //vec<double> gradient_f(zeros<vec<double>>(path.n_d));
+        //vec<double> gradient_f(zeros<vec<double>>(path.GetND()));
         //double laplacian_f = 0.;
         //double f = 1. + 2*z_a*(mag_ri_RA);
         //vec<double> gradient_f = 2*z_a*((ri_RA/mag_ri_RA));
-        //double laplacian_f = 2*z_a*(path.n_d-1)*((1./mag_ri_RA));
+        //double laplacian_f = 2*z_a*(path.GetND()-1)*((1./mag_ri_RA));
 
         // Sum over actions for ri
         std::vector<std::pair<uint32_t,uint32_t>> only_ri;
         only_ri.push_back(particle_pairs[pp_i][1]);
-        vec<double> gradient_action(zeros<vec<double>>(path.n_d));
+        vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
         double laplacian_action = 0.;
         for (auto& action: action_list) {
           gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
@@ -117,17 +118,17 @@ private:
         tot += (-1./mag_ri_RA*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
         //Boundary Term
         int n_part_tot =path.species_list[species_a_i] + (species_a_i==species_b_i ? 0 : path.species_list[species_b_i]->n_part);
-        if((!Checked[particle_pairs[pp_i][1].first])&&(mag_Delta_ri>0.8*path.L)) { //Boundary Event///TODO check because maybe I am summing here over all particles
+        if((!Checked[particle_pairs[pp_i][1].first])&&(mag_Delta_ri>0.8*path.GetL())) { //Boundary Event///TODO check because maybe I am summing here over all particles
             vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
-            for(int d=0;d<path.n_d;d++){//One has now to work with the picture of the particle in the other cell
-                RA[d]+=NormalVector[d]*path.L;
+            for(int d=0;d<path.GetND();d++){//One has now to work with the picture of the particle in the other cell
+                RA[d]+=NormalVector[d]*path.GetL();
             }
             ri_RA=path.Dr(ri,RA);
             mag_ri_RA=mag(ri_RA);
             if(mag_ri_RA<1e-5)//It acts in the 3 power in the following part, this can lead to numerical instabilities
                 continue;
             vec<double> IntegrandVector=f*pow(mag_ri_RA,-3)*ri_RA+(f*gradient_action-gradient_f)/mag_ri_RA;//Compare calculation in "Calculation_Density_Estimator.pdf" Eq. (17)
-            double VolumeFactor = path.vol/path.surface;//To correct the other measure
+            double VolumeFactor = path.GetVol()/path.GetSurface();//To correct the other measure
             tot+= VolumeFactor*dot(IntegrandVector,NormalVector);
         }
         Checked[particle_pairs[pp_i][1].first]=true;//Not to be checked anymore, because already calculated or not relevant
@@ -192,9 +193,9 @@ public:
       uint32_t N_b = path.species_list[species_b_i]->n_part;
       double norm;
       if (species_a_i == species_b_i)
-        norm = 0.5*n_measure*N_a*(N_a-1.)*path.n_bead/path.vol;
+        norm = 0.5*n_measure*N_a*(N_a-1.)*path.GetNBead()/path.GetVol();
       else
-        norm = n_measure*N_a*N_b*path.n_bead/path.vol;
+        norm = n_measure*N_a*N_b*path.GetNBead()/path.GetVol();
       total /= norm;
 
       // Write to file
