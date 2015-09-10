@@ -31,6 +31,22 @@ private:
   double (*Function_f)(vec<double> ri, vec<double> RA); ///< Function pointer for the possible generalization
   vec<double> (*Function_gradient_f)(vec<double> ri, vec<double> RA)
   double (*Function_laplace_f)(vec<double> ri, vec<double> RA)
+  
+  vec<double> getRelevantNormalVector(vec<double> r1,vec<double> r2){
+    vec<double> n(zeros<vec<double>>(path.n_d)); 
+    double Compare_Measure=path.L/2.0;
+    for(int d=0;d<path.n_d;++d){
+        if(r1[d]>0.9*path.L&&r2[d]<0.1*path.L) {//TODO check with etano if this is hacking or not
+            n[d]=1;
+        }
+        else if(r1[d]<0.1*path.L&&r2[d]>0.9*path.L){
+            n[d]=-1;
+        }
+    }
+    return n;
+  }
+
+
   /// Accumulate the observable
   virtual void Accumulate()
   {
@@ -62,17 +78,20 @@ private:
     // TODO: Currently only looking at origin
     double tot = 0.;
     size_t n_particle_pairs(particle_pairs.size());
+    vec<bool> Checked(zeros<vec<bool>>(n_part_tot));//Make sure to only once measure the boundary terms
     #pragma omp parallel for collapse(2) reduction(+:tot)
     for (uint32_t pp_i=0; pp_i<n_particle_pairs; ++pp_i) {
       for (uint32_t b_i=0; b_i<path.n_bead; ++b_i) {
         // Set r's
         vec<double> RA = path(particle_pairs[pp_i][0].first,particle_pairs[pp_i][0].second,b_i)->r;
         vec<double> ri = path(particle_pairs[pp_i][1].first,particle_pairs[pp_i][1].second,b_i)->r;
-
+        vec<double> ri_nextBead = path(particle_pairs[pp_i][1].first,particle_pairs[pp_i][1].second,b_i+1)->r;
         // Get differences
         vec<double> ri_RA(path.Dr(ri, RA));
         double mag_ri_RA = mag(ri_RA);
-
+        double mag_Delta_ri = mag(path.Dr(ri,ri_nextBead));
+        if(mag_ri_RA<10e-12)//possibly dividing by near zero, big numerical instabilities
+            continue;
         // Compute functions
         double f= Function_f(ri, RA);
         vec<double> gradient_f=Function_gradient_f(ri, RA);
@@ -94,12 +113,26 @@ private:
           laplacian_action += action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
         }
 
-        // Sum total
+        // Volume Term
         tot += (-1./mag_ri_RA*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
-        //TODO check if passing a boundary in the imaginary time step, and if so, use the Boundary integrator
+        //Boundary Term
+        int n_part_tot =path.species_list[species_a_i] + (species_a_i==species_b_i ? 0 : path.species_list[species_b_i]->n_part);
+        if((!Checked[particle_pairs[pp_i][1].first])&&(mag_Delta_ri>0.8*path.L)) { //Boundary Event///TODO check because maybe I am summing here over all particles
+            vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
+            for(int d=0;d<path.n_d;d++){//One has now to work with the picture of the particle in the other cell
+                RA[d]+=NormalVector[d]*path.L;
+            }
+            ri_RA=path.Dr(ri,RA);
+            mag_ri_RA=mag(ri_RA);
+            if(mag_ri_RA<1e-5)//It acts in the 3 power in the following part, this can lead to numerical instabilities
+                continue;
+            vec<double> IntegrandVector=f*pow(mag_ri_RA,-3)*ri_RA+(f*gradient_action-gradient_f)/mag_ri_RA;//Compare calculation in "Calculation_Density_Estimator.pdf" Eq. (17)
+            double VolumeFactor = path.vol/path.surface;//To correct the other measure
+            tot+= VolumeFactor*dot(IntegrandVector,NormalVector);
+        }
+        Checked[particle_pairs[pp_i][1].first]=true;//Not to be checked anymore, because already calculated or not relevant
       }
     }
-
     total += tot;
     n_measure += 1;
   }

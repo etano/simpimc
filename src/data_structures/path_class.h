@@ -12,6 +12,7 @@ private:
   double L; ///< Cubic box side length
   double iL; ///< Inverse of cubic box side length
   double vol; ///< Volume of the simulation cell
+  double surface; ///<surface of the simulation cell (relevant for boundary term integration)
   bool pbc; ///< Whether or not using periodic boundary conditions
   double beta; ///< Inverse temperature: 1/(k_B T)
   double importance_weight; ///< Importance weight of current configuration
@@ -39,10 +40,12 @@ public:
     if (pbc) {
       iL = 1./L;
       vol = pow(L,n_d);
+      surface = 2*n_d*pow(L,n_d-1); 
     } else {
       L = 0.;
       iL = 0.;
       vol = 1.;
+      surface=1.;
     }
     tau = beta/(1.*n_bead);
 
