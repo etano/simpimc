@@ -117,8 +117,7 @@ private:
         // Volume Term
         tot += (-1./mag_ri_RA*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
         //Boundary Term
-        int n_part_tot =path.species_list[species_a_i] + (species_a_i==species_b_i ? 0 : path.species_list[species_b_i]->n_part);
-        if((!Checked[particle_pairs[pp_i][1].first])&&(mag_Delta_ri>0.8*path.GetL())) { //Boundary Event///TODO check because maybe I am summing here over all particles
+        if(mag_Delta_ri>0.8*path.GetL()) { //Boundary Event
             vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
             for(int d=0;d<path.GetND();d++){//One has now to work with the picture of the particle in the other cell
                 RA[d]+=NormalVector[d]*path.GetL();
@@ -129,9 +128,8 @@ private:
                 continue;
             vec<double> IntegrandVector=f*pow(mag_ri_RA,-3)*ri_RA+(f*gradient_action-gradient_f)/mag_ri_RA;//Compare calculation in "Calculation_Density_Estimator.pdf" Eq. (17)
             double VolumeFactor = path.GetVol()/path.GetSurface();//To correct the other measure
-            tot+= VolumeFactor*dot(IntegrandVector,NormalVector);
+            tot+= VolumeFactor*dot(IntegrandVector,NormalVector)/path.species_list[species_b_i]->n_part;//if more then one ion is present, make sure to divide to normalize it correctly
         }
-        Checked[particle_pairs[pp_i][1].first]=true;//Not to be checked anymore, because already calculated or not relevant
       }
     }
     total += tot;
