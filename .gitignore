@@ -22,6 +22,8 @@ tags
 *.ch
 *.dg
 *.dm
+inputs/*/*.txt
+inputs/*/INPUT
 data
 simpimc
 bin/
