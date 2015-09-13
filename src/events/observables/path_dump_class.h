@@ -34,7 +34,7 @@ public:
       n_dump += 1;
 
       // Loop through species
-      for (const auto& species : path.species_list) {
+      for (const auto& species : path.GetSpecies()) {
         // Get positions
         cube<double> path_positions(path.GetND(),species->GetNBead(),species->GetNPart());
         for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)

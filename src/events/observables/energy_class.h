@@ -46,7 +46,7 @@ private:
     }
 
     // Centroid term
-    for (auto &species: path.species_list) {
+    for (auto &species: path.GetSpecies()) {
       if (species->GetLambda() > 0.) {
 
         //// Compute centroids
@@ -158,7 +158,7 @@ private:
     // Measure per sector
     if (measure_per_sector) {
       // Loop through species
-      for (auto &species: path.species_list) {
+      for (auto &species: path.GetSpecies()) {
         std::pair<uint32_t,double> sector_energy(species->GetPermSector(),species->GetSign()*importance_weight*total_energy/species->GetNBead());
         sector_energies[species->GetId()].push_back(sector_energy);
       }
@@ -177,7 +177,7 @@ private:
 
     // Loop through species
     if (measure_per_sector) {
-      for (auto &species: path.species_list)
+      for (auto &species: path.GetSpecies())
         sector_energies[species->GetId()].clear();
     }
   }
@@ -206,7 +206,7 @@ public:
       // Loop through all species
       sector_energies.resize(path.GetNSpecies());
       first_sector.resize(path.GetNSpecies());
-      for (auto &species: path.species_list) {
+      for (auto &species: path.GetSpecies()) {
         // Set up permutation sectors
         species->SetupPermSectors(sector_max);
         first_sector[species->GetId()] = true;
@@ -285,7 +285,7 @@ public:
       // Write sector energies
       if (measure_per_sector) {
         // Loop through species
-        for (auto &species: path.species_list) {
+        for (auto &species: path.GetSpecies()) {
           // Map out the sectors std::vector
           std::map<uint32_t,std::vector<double>> sector_map;
           for (uint32_t i=0; i<n_measure; i++) {

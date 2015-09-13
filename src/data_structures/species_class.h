@@ -97,6 +97,9 @@ public:
     // Initiate the paths
     InitPaths(in,out,rng,proc_i,ks_.L);
 
+    // Initiate rho_k
+    InitRhoK();
+
   };
 
   /// Cheap way to do beta periodicity

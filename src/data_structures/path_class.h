@@ -20,10 +20,9 @@ private:
   uint32_t n_d; ///< Number of spatial dimensions
   uint32_t n_species; ///< Total number of species of particles
   uint32_t proc_i; ///< Process index
+  std::vector<std::shared_ptr<Species>> species; ///< Vector holding pointers to all species objects
 public:
   KSpace ks; ///< K space data container
-  std::vector<std::shared_ptr<Species>> species_list; ///< Vector holding pointers to all species objects
-  vec<uint32_t> bead_loop; ///< Helper vector for indexing the periodicity in beta
 
   /// Constructor only sets process index
   Path(uint32_t t_proc_i, Input &in, IO &out, RNG &rng)
@@ -70,18 +69,7 @@ public:
     std::vector<Input> species_input = in.GetChild("Particles").GetChildList("Species");
     n_species = species_input.size();
     for (uint32_t s_i=0; s_i<n_species; s_i++)
-      species_list.push_back(std::make_shared<Species>(species_input[s_i],out,s_i,n_d,n_bead,mode,ks,rng,proc_i));
-
-    // Init rho_k for each species
-    for (auto& species : species_list)
-      species->InitRhoK();
-
-    // Initiate bead looping
-    bead_loop.set_size(2*n_bead);
-    for (uint32_t b_i = 0; b_i < n_bead; b_i++) {
-      bead_loop(b_i) = b_i;
-      bead_loop(b_i + n_bead) = bead_loop(b_i);
-    }
+      species.push_back(std::make_shared<Species>(species_input[s_i],out,s_i,n_d,n_bead,mode,ks,rng,proc_i));
 
   }
 
@@ -94,14 +82,17 @@ public:
   /// Return L
   const double GetVol() { return vol; }
 
-  /// Sets species index by matching the species name string
+  /// Returns species by matching the species name string
   std::shared_ptr<Species> GetSpecies(const std::string &species_name)
   {
-    for (const auto& species : species_list)
-      if (species->GetName() == species_name)
-        return species;
+    for (const auto& s : species)
+      if (s->GetName() == species_name)
+        return s;
     std::cerr << "ERROR: No species of name " << species_name << " !" << std::endl;
   }
+
+  /// Sets species index by matching the species name string
+  std::vector<std::shared_ptr<Species>>& GetSpecies() { return species; }
 
   /// Set the mode to the passed mode
   void SetMode(ModeType t_mode) { mode = t_mode; }
@@ -112,8 +103,8 @@ public:
   /// Print the current configuration to screen
   void Print()
   {
-    for (const auto& species : species_list)
-      species->Print();
+    for (const auto& s : species)
+      s->Print();
     std::cout << std::endl;
   }
 
@@ -182,8 +173,8 @@ public:
   int GetSign()
   {
     int sign = 1;
-    for (auto& species : species_list)
-      sign *= species->GetSign();
+    for (auto& s : species)
+      sign *= s->GetSign();
     return sign;
   }
 
