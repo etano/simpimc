@@ -17,15 +17,13 @@ private:
   double tau_; ///< Time step
   uint32_t n_bead_; ///< Total number of time slices
   uint32_t n_d_; ///< Number of spatial dimensions
-  uint32_t proc_i_; ///< Process index
   std::vector<std::shared_ptr<Species>> species_; ///< Vector holding pointers to all species objects
 public:
   KSpace ks; ///< K space data container
 
   /// Constructor sets system specific variables
   Path(uint32_t proc_i, Input &in, IO &out, RNG &rng)
-   : proc_i_(proc_i),
-     n_d_(in.GetChild("System").GetAttribute<uint32_t>("n_d")),
+   : n_d_(in.GetChild("System").GetAttribute<uint32_t>("n_d")),
      n_bead_(in.GetChild("System").GetAttribute<uint32_t>("n_bead")),
      beta_(in.GetChild("System").GetAttribute<double>("beta")),
      pbc_(in.GetChild("System").GetAttribute<bool>("pbc", true)),
@@ -66,7 +64,7 @@ public:
     out.CreateGroup("System/Particles");
     std::vector<Input> species_input = in.GetChild("Particles").GetChildList("Species");
     for (uint32_t s_i=0; s_i<species_input.size(); s_i++)
-      species_.push_back(std::make_shared<Species>(species_input[s_i],out,s_i,n_d_,n_bead_,mode_,ks,rng,proc_i_));
+      species_.push_back(std::make_shared<Species>(species_input[s_i],out,s_i,n_d_,n_bead_,mode_,ks,rng,proc_i));
 
   }
 
