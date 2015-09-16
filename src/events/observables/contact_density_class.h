@@ -4,12 +4,13 @@
 #include "observable_class.h"
 
 namespace Contact_Density_Optimization_Functions {
+    int ND=3;
     double f_simple(vec<double> ri, vec<double> RA){
         return 1;
     }
     
     vec<double> gradient_f_simple(vec<double> ri, vec<double> RA){
-        return zeros<vec<double>>(path.GetND());
+        return zeros<vec<double>>(ND);
     }
     double laplace_f_simple(vec<double> ri, vec<double> RA){
         return 0;
@@ -30,8 +31,8 @@ private:
   std::vector<std::shared_ptr<Action>> action_list; ///< Vector of pointers to actions that involves species_a or species_b
   std::vector<std::shared_ptr<Action>> &full_action_list; ///< Vector of pointers to all actions
   double (*Function_f)(vec<double> ri, vec<double> RA); ///< Function pointer for the possible generalization
-  vec<double> (*Function_gradient_f)(vec<double> ri, vec<double> RA)
-  double (*Function_laplace_f)(vec<double> ri, vec<double> RA)
+  vec<double> (*Function_gradient_f)(vec<double> ri, vec<double> RA);
+  double (*Function_laplace_f)(vec<double> ri, vec<double> RA);
   
   vec<double> getRelevantNormalVector(vec<double> r1,vec<double> r2){
     vec<double> n(zeros<vec<double>>(path.GetND())); 
@@ -47,7 +48,7 @@ private:
   }
 
   ///Get the relevant histogram running variable R
-  inline histR(double minimal_R, double maximal_R, int Number_R, int i){
+  inline double histR(double minimal_R, double maximal_R, int Number_R, int i){
     return minimal_R+(maximal_R-minimal_R)*(i*1.0/Number_R);
   }
   
@@ -68,7 +69,7 @@ private:
           particle_pairs.push_back(std::make_pair(p_i,p_j));
     }
     // Add up contact probability
-    double * tot = new double[r_n]();//save here the values for the histogram
+    double * tot = new double[n_r]();//save here the values for the histogram
     assert(tot[0]==0); //Check if initialization works as assumed
     size_t n_particle_pairs(particle_pairs.size());
     #pragma omp parallel for 
@@ -81,7 +82,7 @@ private:
 		//Histogram loop
         for (uint32_t i=0;i<n_r;++i){
             vec<double> Rhist(zeros<vec<double>>(path.GetND()));
-            if(RA[0]<path.getL()/2.0)//A bit of hacking, however this should be a small bit faster
+            if(RA[0]<path.GetL()/2.0)//A bit of hacking, however this should be a small bit faster
                 Rhist[0]=histR(r_min,r_max, n_r, i); //TODO check with etano if just measuring along x direction is fine or not
             else
                 Rhist[0]=-histR(r_min,r_max, n_r, i);
@@ -95,7 +96,7 @@ private:
 		    // Compute functions
 		    double f= Function_f(ri, R);
 		    vec<double> gradient_f=Function_gradient_f(ri, R);
-		    double laplacian_f = Function_laplacian_f(ri, R);
+		    double laplacian_f = Function_laplace_f(ri, R);
 		    //double f = 1; 
 		    //vec<double> gradient_f(zeros<vec<double>>(path.GetND()));
 		    //double laplacian_f = 0.;
@@ -114,7 +115,7 @@ private:
 
 		    // Volume Term
             #pragma omp atomic
-		    tot[i] += (-1./mag_ri_RA*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
+		    tot[i] += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
 		    //Boundary Term
 		    if(mag_Delta_ri>0.8*path.GetL()) { //Boundary Event
 		        vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
@@ -125,10 +126,10 @@ private:
 		        mag_ri_R=mag(ri_R);
 		        if(mag_ri_R<1e-5)//It acts in the 3 power in the following part, this can lead to numerical instabilities
 		            continue;
-		        vec<double> IntegrandVector=f*pow(mag_ri_R,-3)*ri_RA+(f*gradient_action-gradient_f)/mag_ri_R;//Compare calculation in "Calculation_Density_Estimator.pdf" Eq. (17)
+		        vec<double> IntegrandVector=f*pow(mag_ri_R,-3)*ri_R+(f*gradient_action-gradient_f)/mag_ri_R;//Compare calculation in "Calculation_Density_Estimator.pdf" Eq. (17)
 		        double VolumeFactor = path.GetVol()/path.GetSurface();//To correct the other measurei
                 #pragma omp atomic
-		        tot[i]+= VolumeFactor*dot(IntegrandVector,NormalVector)/path.species_list[species_b_i]->n_part;//if more then one ion is present, make sure to divide to normalize it correctly
+		        tot[i]+= VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart();//if more then one ion is present, make sure to divide to normalize it correctly
 		    }
 		 }
       }
@@ -185,6 +186,7 @@ public:
 
     //Set the improving function f
     //TODO find better f and also allow to choose differently
+    Contact_Density_Optimization_Functions::ND=path.GetND();
     Function_f=&Contact_Density_Optimization_Functions::f_simple; 
     Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_simple;
     Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_simple;
@@ -220,9 +222,9 @@ public:
       // Write to file
       if (first_time) {
         first_time = 0;
-        out.CreateExtendableDataSet("/"+prefix, "x", total);
+        out.CreateExtendableDataSet("/"+prefix, "y", gr.y);
       } else {
-        out.AppendDataSet("/"+prefix, "x", total);
+        out.AppendDataSet("/"+prefix, "y", gr.y);
       }
 
       Reset();
