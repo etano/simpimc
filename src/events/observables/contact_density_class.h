@@ -249,12 +249,17 @@ public:
         //TODO split up volume terms and boundary terms
       // Write to file
       if (first_time) {
+          std::cout << "first time writing into contact density"<< std::endl;
         first_time = 0;
+        std::string data_type = "histogram";
         out.CreateGroup(prefix+"volume");
         out.CreateExtendableDataSet("/"+prefix+"volume/", "y", gr_vol.y);
+        out.Write(prefix+"volume/data_type",data_type);
         out.CreateGroup(prefix+"boundary");
         out.CreateExtendableDataSet("/"+prefix+"boundary/", "y", gr_b.y);
+        out.Write(prefix+"boundary/data_type",data_type);
       } else {
+          std::cout << "again writing into contact density"<< std::endl;
         out.AppendDataSet("/"+prefix+"volume/", "y", gr_vol.y);
         out.AppendDataSet("/"+prefix+"boundary/", "y", gr_b.y);
       }
