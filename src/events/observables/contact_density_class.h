@@ -64,13 +64,12 @@ private:
   {
     path.SetMode(NEW_MODE);
     // Add up contact probability
-    vec<double> tot_vol(zeros<vec<double>>(path.GetND()));//Save the values for the volume terms in here 
-    vec<double> tot_b(zeros<vec<double>>(path.GetND())); //Save the values for the boundary terms in here
-    #pragma omp parallel for 
+    vec<double> tot_vol(zeros<vec<double>>(n_r));//Save the values for the volume terms in here 
+    vec<double> tot_b(zeros<vec<double>>(n_r)); //Save the values for the boundary terms in here
     for (uint32_t pp_i=0; pp_i<n_particle_pairs; ++pp_i) {
-      for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
+	    for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
 	    // Set r's
-	    vec<double> RA = species_a->GetBead(particle_pairs[pp_i].first,b_i)->GetR();
+        vec<double> RA = species_a->GetBead(particle_pairs[pp_i].first,b_i)->GetR();
 	    vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
 	    vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
 		//Histogram loop
@@ -102,15 +101,13 @@ private:
 		    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
 		    vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
 		    double laplacian_action = 0.;
-		    for (auto& action: action_list) {
+            for (auto& action: action_list) {
 		      gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
 		      laplacian_action += action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
 		    }
-
 		    // Volume Term
-            #pragma omp atomic
-		    tot_vol[i] += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
-            n_measure_vol[i]++;
+		    tot_vol(i) += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
+            n_measure_vol(i)++;
 		    //Boundary Term
 		    if((mag_Delta_ri>3*lambda_tau)&&path.GetPBC()) { //Boundary Event //TODO check with etano if 3 times lambda_tau is fine
 		        vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
@@ -121,9 +118,8 @@ private:
 		            continue;
 		        vec<double> IntegrandVector=f*pow(mag_ri_R,-3)*ri_R+(f*gradient_action-gradient_f)/mag_ri_R;//Compare calculation in "Calculation_Density_Estimator.pdf" Eq. (17)
 		        double VolumeFactor = path.GetVol()/path.GetSurface();//To correct the other measure
-                #pragma omp atomic
-		        tot_b[i]+= VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart();//if more then one ion is present, make sure to divide to normalize it correctly
-                n_measure_b[i]++;
+		        tot_b(i)+= VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart();//if more then one ion is present, make sure to divide to normalize it correctly
+                n_measure_b(i)++;
 		    }
 		 }
       }
@@ -154,7 +150,6 @@ public:
     std::string species_b_name = in.GetAttribute<std::string>("species_b");
     species_a = path.GetSpecies(species_a_name);
     species_b = path.GetSpecies(species_b_name);
-
     // Write things to file
     out.Write(prefix+"/species_a", species_a_name);
     out.Write(prefix+"/species_b", species_b_name);
@@ -224,7 +219,7 @@ public:
       double norm_vol;
       double norm_b;
       //if (species_a == species_b)
-      //  norm = 0.5*n_measure*species_a->GetNPart()*(species_a->GetNPart()-1.)*path.GetNBead()/path.GetVol();//TODO normalization issue mentioned above in Accumulate
+      //  norm = 0.5*n_measure*species_a->GetNPart()*(species_a->GetNPart()-1.)*path.GetNBead()/path.GetVol();
       //else
       //  norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/path.GetVol();
       for (uint32_t i=0; i<gr_vol.x.n_r; i++) {
@@ -249,7 +244,6 @@ public:
         //TODO split up volume terms and boundary terms
       // Write to file
       if (first_time) {
-          std::cout << "first time writing into contact density"<< std::endl;
         first_time = 0;
         std::string data_type = "histogram";
         out.CreateGroup(prefix+"volume");
@@ -259,7 +253,6 @@ public:
         out.CreateExtendableDataSet("/"+prefix+"boundary/", "y", gr_b.y);
         out.Write(prefix+"boundary/data_type",data_type);
       } else {
-          std::cout << "again writing into contact density"<< std::endl;
         out.AppendDataSet("/"+prefix+"volume/", "y", gr_vol.y);
         out.AppendDataSet("/"+prefix+"boundary/", "y", gr_b.y);
       }
