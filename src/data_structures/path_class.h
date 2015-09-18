@@ -202,15 +202,17 @@ public:
   /// Return the time step
   const double GetTau() { return tau; }
 
-  /// Return the time step
+  /// Return the dimension
   const uint32_t GetND() { return n_d; }
 
-  /// Return the time step
+  /// Return the number of beads
   const uint32_t GetNBead() { return n_bead; }
 
-  /// Return the time step
+  /// Return the the number of different species
   const uint32_t GetNSpecies() { return n_species; }
 
+  /// Return if we are using periodic boundary conditions or not
+  const bool GetPBC() { return pbc; }
 };
 
 #endif // SIMPIMC_PATH_CLASS_H_
