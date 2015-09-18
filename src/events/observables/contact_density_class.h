@@ -2,7 +2,6 @@
 #define SIMPIMC_OBSERVABLES_CONTACT_DENSITY_CLASS_H_
 
 #include "observable_class.h"
-
 namespace Contact_Density_Optimization_Functions {
     extern int ND=3;
     double f_simple(const vec<double> &ri, const vec<double> &RA){
@@ -36,6 +35,7 @@ private:
   std::vector<std::shared_ptr<Action>> action_list; ///< Vector of pointers to actions that involves species_a or species_b
   std::vector<std::shared_ptr<Action>> &full_action_list; ///< Vector of pointers to all actions
   std::vector<std::pair<uint32_t,uint32_t>> particle_pairs; ///< contains all the pairs of particles of species_a and species_b
+  int counter;
   size_t n_particle_pairs;
   double (*Function_f)(const vec<double> &ri, const vec<double> &RA); ///< Function pointer for the possible generalization
   vec<double> (*Function_gradient_f)(const vec<double> &ri, const vec<double> &RA);
@@ -73,6 +73,7 @@ private:
 	    vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
 	    vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
 		//Histogram loop
+        #pragma omp parallel for
         for (uint32_t i=0;i<n_r;++i){
             vec<double> Rhist(zeros<vec<double>>(path.GetND()));
             if(RA[0]<path.GetL()/2.0)//A bit of hacking, however this should be a small bit faster
@@ -106,6 +107,7 @@ private:
 		      laplacian_action += action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
 		    }
 		    // Volume Term
+            #pragma omp atomic
 		    tot_vol(i) += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
             n_measure_vol(i)++;
 		    //Boundary Term
@@ -118,7 +120,8 @@ private:
 		            continue;
 		        vec<double> IntegrandVector=f*pow(mag_ri_R,-3)*ri_R+(f*gradient_action-gradient_f)/mag_ri_R;//Compare calculation in "Calculation_Density_Estimator.pdf" Eq. (17)
 		        double VolumeFactor = path.GetVol()/path.GetSurface();//To correct the other measure
-		        tot_b(i)+= VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart();//if more then one ion is present, make sure to divide to normalize it correctly
+		        #pragma omp atomic
+                tot_b(i)+= VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart();//if more then one ion is present, make sure to divide to normalize it correctly
                 n_measure_b(i)++;
 		    }
 		 }
@@ -129,6 +132,7 @@ private:
         gr_vol.y(i) += cofactor*tot_vol[i];
         gr_b.y(i) += cofactor*tot_b[i];
     }
+    std::chrono::high_resolution_clock::time_point t2=std::chrono::high_resolution_clock::now();
   }
 
   /// Reset the observable's counters
@@ -138,6 +142,7 @@ private:
     n_measure_vol = zeros<vec<int>>(n_r);
     gr_b.y.zeros();
     n_measure_b = zeros<vec<int>>(n_r);
+    counter=0;
   }
 
 public:
@@ -153,7 +158,7 @@ public:
     // Write things to file
     out.Write(prefix+"/species_a", species_a_name);
     out.Write(prefix+"/species_b", species_b_name);
-
+    counter =0;
     // Read in grid info
     r_min = in.GetAttribute<double>("r_min",0.);
     r_max = in.GetAttribute<double>("r_max",path.GetL()/2.);
