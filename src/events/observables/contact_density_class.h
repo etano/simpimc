@@ -102,13 +102,15 @@ private:
 		    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
 		    vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
 		    double laplacian_action = 0.;
-            for (auto& action: action_list) {
+            for (auto& action: action_list) {//TODO check all laplacians of them, because they are wrong, or at least i think they are
 		      gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
 		      laplacian_action += action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
 		    }
+            //std::cout << laplacian_action<<std::endl;
 		    // Volume Term
             #pragma omp atomic
 		    tot_vol(i) += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
+            std::cout << laplacian_action << std::endl;
             n_measure_vol(i)++;
 		    //Boundary Term
 		    if((mag_Delta_ri>3*lambda_tau)&&path.GetPBC()) { //Boundary Event //TODO check with etano if 3 times lambda_tau is fine
@@ -268,8 +270,10 @@ public:
         //assert(bin_vol!=-1);//Make sure one case is fulfilled
         norm_vol = n_measure_vol[i]/path.GetVol();
         gr_vol.y(i) = gr_vol.y(i)/(bin_vol*norm_vol);
-        norm_b = n_measure_b[i]/path.GetVol();
-        gr_b.y(i) = gr_b.y(i)/(bin_vol*norm_b);
+        if(!(path.GetPBC())){//If we do not have pbc then we just save 0, otherwise similar to volume term
+            norm_b = n_measure_b[i]/path.GetVol();
+            gr_b.y(i) = gr_b.y(i)/(bin_vol*norm_b);
+        }
         tot[i]=gr_vol.y(i)+gr_b.y(i);
       }
       // Write to file
