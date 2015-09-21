@@ -132,7 +132,6 @@ private:
         gr_vol.y(i) += cofactor*tot_vol[i];
         gr_b.y(i) += cofactor*tot_b[i];
     }
-    std::chrono::high_resolution_clock::time_point t2=std::chrono::high_resolution_clock::now();
   }
 
   /// Reset the observable's counters
@@ -168,10 +167,37 @@ public:
     gr_b.x.CreateGrid(r_min,r_max,n_r);
     gr_b.y.zeros(n_r);
 
+    // Compute rs
+    vec<double> rs(n_r-1);
+    for (uint32_t i=0; i<n_r-1; i++) {
+        double r1 = gr_vol.x(i);
+        double r2 = gr_vol.x(i+1);
+        if (path.GetND() == 3)
+            rs(i) = 0.75 * (r2*r2*r2*r2-r1*r1*r1*r1)/(r2*r2*r2-r1*r1*r1);
+        else if (path.GetND() == 2)
+            rs(i) = (r2*r2*r2-r1*r1*r1)/(r2*r2-r1*r1); // FIXME: Not sure if 2D and 1D are correct here
+        else if (path.GetND() == 1)
+            rs(i) = 0.5*(r2-r1);
+    }
+
     //Write things to file
+    std::string data_type = "histogram";
     out.Write(prefix+"/r_min", r_min);
     out.Write(prefix+"/r_max", r_max);
     out.Write(prefix+"/n_r", n_r);
+    out.Write(prefix+"/x", rs);
+    out.CreateGroup(prefix+"volume");
+    out.Write(prefix+"volume/r_min", r_min);
+    out.Write(prefix+"volume/r_max", r_max);
+    out.Write(prefix+"volume/n_r", n_r);
+    out.Write(prefix+"volume/x", rs);
+    out.Write(prefix+"volume/data_type",data_type);
+    out.CreateGroup(prefix+"boundary");
+    out.Write(prefix+"boundary/r_min", r_min);
+    out.Write(prefix+"boundary/r_max", r_max);
+    out.Write(prefix+"boundary/n_r", n_r);
+    out.Write(prefix+"boundary/x", rs);
+    out.Write(prefix+"boundary/data_type",data_type);
     // Read in z_a
     z_a = in.GetAttribute<uint32_t>("z_a");
     
@@ -246,18 +272,14 @@ public:
         gr_b.y(i) = gr_b.y(i)/(bin_vol*norm_b);
         tot[i]=gr_vol.y(i)+gr_b.y(i);
       }
-        //TODO split up volume terms and boundary terms
       // Write to file
       if (first_time) {
         first_time = 0;
-        std::string data_type = "histogram";
-        out.CreateGroup(prefix+"volume");
+        out.CreateExtendableDataSet("/"+prefix,"y",tot);
         out.CreateExtendableDataSet("/"+prefix+"volume/", "y", gr_vol.y);
-        out.Write(prefix+"volume/data_type",data_type);
-        out.CreateGroup(prefix+"boundary");
         out.CreateExtendableDataSet("/"+prefix+"boundary/", "y", gr_b.y);
-        out.Write(prefix+"boundary/data_type",data_type);
       } else {
+        out.AppendDataSet("/"+prefix,"y",tot);
         out.AppendDataSet("/"+prefix+"volume/", "y", gr_vol.y);
         out.AppendDataSet("/"+prefix+"boundary/", "y", gr_b.y);
       }
