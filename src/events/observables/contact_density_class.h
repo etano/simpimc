@@ -66,6 +66,7 @@ private:
     // Add up contact probability
     vec<double> tot_vol(zeros<vec<double>>(n_r));//Save the values for the volume terms in here 
     vec<double> tot_b(zeros<vec<double>>(n_r)); //Save the values for the boundary terms in here
+    #pragma omp parallel for
     for (uint32_t pp_i=0; pp_i<n_particle_pairs; ++pp_i) {
 	    for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
 	    // Set r's
@@ -73,7 +74,6 @@ private:
 	    vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
 	    vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
 		//Histogram loop
-        #pragma omp parallel for
         for (uint32_t i=0;i<n_r;++i){
             vec<double> Rhist(zeros<vec<double>>(path.GetND()));
             if(RA[0]<path.GetL()/2.0)//A bit of hacking, however this should be a small bit faster
@@ -104,13 +104,13 @@ private:
 		    double laplacian_action = 0.;
             for (auto& action: action_list) {//TODO check all laplacians of them, because they are wrong, or at least i think they are
 		      gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
-		      laplacian_action += action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
+		      double tmp = action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
+              if(tmp>10000) std::cout << "Action:\t "<< action->name <<"\twith contribution:\t"<< tmp<< std::endl;
+              laplacian_action+=tmp;
 		    }
-            //std::cout << laplacian_action<<std::endl;
 		    // Volume Term
             #pragma omp atomic
 		    tot_vol(i) += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
-            std::cout << laplacian_action << std::endl;
             n_measure_vol(i)++;
 		    //Boundary Term
 		    if((mag_Delta_ri>3*lambda_tau)&&path.GetPBC()) { //Boundary Event //TODO check with etano if 3 times lambda_tau is fine
@@ -122,7 +122,7 @@ private:
 		            continue;
 		        vec<double> IntegrandVector=f*pow(mag_ri_R,-3)*ri_R+(f*gradient_action-gradient_f)/mag_ri_R;//Compare calculation in "Calculation_Density_Estimator.pdf" Eq. (17)
 		        double VolumeFactor = path.GetVol()/path.GetSurface();//To correct the other measure
-		        #pragma omp atomic
+                #pragma omp atomic
                 tot_b(i)+= VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart();//if more then one ion is present, make sure to divide to normalize it correctly
                 n_measure_b(i)++;
 		    }
