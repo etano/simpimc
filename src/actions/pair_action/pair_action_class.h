@@ -146,7 +146,8 @@ protected:
 
     // Numerical tolerance
     double eps = 1.e-4; //TODO only used as a check if this solves the problem of the numerical instability, if so, maybe use a higher order method for laplacian
-
+    //other possible method:
+    //f''=(-f(+2h)+16f(+1h)-30f(0h)+16f(-1h)-f(-2h))/12h+O(h^4)
     // Calculate numerical gradient
     double r_mag, r_p_mag, r_r_p_mag;
     vec<double> tot(path.GetND());
@@ -160,7 +161,6 @@ protected:
       tot(d_i) = (f1-f2)/(2.*eps);
       b->SetR(d_i,r0(d_i));
     }
-    std::cout << "in pair action class: laplacian returned:\t"<< tot<<std::endl;
     return tot;
   }
 
