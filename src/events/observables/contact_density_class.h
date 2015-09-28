@@ -92,13 +92,13 @@ private:
           gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
           laplacian_action+= action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
         }
-	//Histogram loop
+        //Histogram loop
         for (uint32_t i=0;i<gr_vol.x.n_r;++i){
             vec<double> Rhist(zeros<vec<double>>(path.GetND()));
             if(RA[0]<path.GetL()/2.0)//A bit of hacking, however this should be a small bit faster
-                Rhist[0]= histR(gr_vol.x.r_min,gr_vol.x.r_max, gr_vol.x.n_r, i); 
+                Rhist[0]= gr_vol.x.rs(i); 
             else
-                Rhist[0]=-histR(gr_vol.x.r_min,gr_vol.x.r_max, gr_vol.x.n_r, i);
+                Rhist[0]=-gr_vol.x.rs(i);
             vec<double> R=Rhist+RA;
 		    // Get differences
 		    vec<double> ri_R(ri-R);
@@ -176,31 +176,23 @@ public:
     gr_b.x.CreateGrid(r_min,r_max,n_r);
     gr_b.y.zeros(n_r);
 
-    // Compute rs
-    vec<double> rs(n_r-1);
-    for (uint32_t i=0; i<gr_vol.x.n_r-1; i++) {
-        double r1 = gr_vol.x(i);
-        double r2 = gr_vol.x(i+1);
-        rs(i) = 0.5*(r2+r1);//TODO maybe -, as it was in first version
-    }
-
     //Write things to file
     std::string data_type = "histogram";
     out.Write(prefix+"/r_min", gr_vol.x.r_min);
     out.Write(prefix+"/r_max", gr_vol.x.r_max);
     out.Write(prefix+"/n_r", gr_vol.x.n_r);
-    out.Write(prefix+"/x", rs);
+    out.Write(prefix+"/x", gr_vol.x.rs);
     out.CreateGroup(prefix+"volume");
     out.Write(prefix+"volume/r_min", gr_vol.x.r_min);
     out.Write(prefix+"volume/r_max", gr_vol.x.r_max);
     out.Write(prefix+"volume/n_r", gr_vol.x.n_r);
-    out.Write(prefix+"volume/x", rs);
+    out.Write(prefix+"volume/x", gr_vol.x.rs);
     out.Write(prefix+"volume/data_type",data_type);
     out.CreateGroup(prefix+"boundary");
     out.Write(prefix+"boundary/r_min", gr_vol.x.r_min);
     out.Write(prefix+"boundary/r_max", gr_vol.x.r_max);
     out.Write(prefix+"boundary/n_r", gr_vol.x.n_r);
-    out.Write(prefix+"boundary/x", rs);
+    out.Write(prefix+"boundary/x", gr_vol.x.rs);
     out.Write(prefix+"boundary/data_type",data_type);
     // Read in z_a
     z_a = in.GetAttribute<uint32_t>("z_a");
