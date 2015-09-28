@@ -1,6 +1,5 @@
 #ifndef SIMPIMC_OBSERVABLES_CONTACT_DENSITY_CLASS_H_
 #define SIMPIMC_OBSERVABLES_CONTACT_DENSITY_CLASS_H_
-
 #include "observable_class.h"
 namespace Contact_Density_Optimization_Functions {
     extern int ND=3;
@@ -27,7 +26,7 @@ namespace Contact_Density_Optimization_Functions {
 		return 2*z_a*(ri_RA/mag_ri_RA);
     }
     double laplace_f_Assaraf(const vec<double> &ri, const vec<double> &RA){
-        return 2*z_a*(ND-1)*(1./mag(ri-RA));
+        return 2*z_a*(ND-1)/mag(ri-RA);
     }
 
 }
@@ -41,17 +40,14 @@ private:
   vec<int> n_measure_vol; ///< How many times the volume term at the i'th position gets measured
   vec<int> n_measure_b; ///< How many times the boundary term at the i'th position gets measured
   uint32_t z_a; ///< Charge of ion-like particle
-  double r_min; ///< minimal r in the histogram
-  double r_max; ///< maximal r in the histogram
-  int n_r; ///< number of bins in the histogram //TODO numerology suggests to divide the end result by the number of r used for the histogram, however i am not sure why
   double lambda_tau; ///< the typical length of a path between two beads
   std::shared_ptr<Species> species_a; ///< ion species
   std::shared_ptr<Species> species_b; ///< other species 
   std::vector<std::shared_ptr<Action>> action_list; ///< Vector of pointers to actions that involves species_a or species_b
   std::vector<std::shared_ptr<Action>> &full_action_list; ///< Vector of pointers to all actions
   std::vector<std::pair<uint32_t,uint32_t>> particle_pairs; ///< contains all the pairs of particles of species_a and species_b
-  int counter;
   size_t n_particle_pairs;
+  std::string Optimization_Strategy;
   double (*Function_f)(const vec<double> &ri, const vec<double> &RA); ///< Function pointer for the possible generalization
   vec<double> (*Function_gradient_f)(const vec<double> &ri, const vec<double> &RA);
   double (*Function_laplace_f)(const vec<double> &ri, const vec<double> &RA);
@@ -79,8 +75,8 @@ private:
   {
     path.SetMode(NEW_MODE);
     // Add up contact probability
-    vec<double> tot_vol(zeros<vec<double>>(n_r));//Save the values for the volume terms in here 
-    vec<double> tot_b(zeros<vec<double>>(n_r)); //Save the values for the boundary terms in here
+    vec<double> tot_vol(zeros<vec<double>>(gr_vol.x.n_r));//Save the values for the volume terms in here 
+    vec<double> tot_b(zeros<vec<double>>(gr_vol.x.n_r)); //Save the values for the boundary terms in here
     #pragma omp parallel for
     for (uint32_t pp_i=0; pp_i<n_particle_pairs; ++pp_i) {
 	    for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
@@ -88,19 +84,27 @@ private:
         vec<double> RA = species_a->GetBead(particle_pairs[pp_i].first,b_i)->GetR();
 	    vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
 	    vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
-		//Histogram loop
-        for (uint32_t i=0;i<n_r;++i){
+        // Sum over actions for ri
+        std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
+        vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
+        double laplacian_action = 0.;
+        for (auto& action: action_list) {
+          gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
+          laplacian_action+= action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
+        }
+	//Histogram loop
+        for (uint32_t i=0;i<gr_vol.x.n_r;++i){
             vec<double> Rhist(zeros<vec<double>>(path.GetND()));
             if(RA[0]<path.GetL()/2.0)//A bit of hacking, however this should be a small bit faster
-                Rhist[0]=histR(r_min,r_max, n_r, i); 
+                Rhist[0]= histR(gr_vol.x.r_min,gr_vol.x.r_max, gr_vol.x.n_r, i); 
             else
-                Rhist[0]=-histR(r_min,r_max, n_r, i);
+                Rhist[0]=-histR(gr_vol.x.r_min,gr_vol.x.r_max, gr_vol.x.n_r, i);
             vec<double> R=Rhist+RA;
 		    // Get differences
 		    vec<double> ri_R(ri-R);
 		    double mag_ri_R = mag(ri_R);
 		    double mag_Delta_ri = mag(ri - ri_nextBead);
-		    if(mag_ri_R<1e-12){//possibly dividing by near zero, big numerical instabilities, possible normalization errors are accounted with n_measure arrays 
+		    if(mag_ri_R<1e-9){//possibly dividing by near zero, big numerical instabilities therefore skip 
                 continue;
             }
 		    // Compute functions
@@ -108,20 +112,17 @@ private:
 		    vec<double> gradient_f=Function_gradient_f(ri, R);
 		    double laplacian_f = Function_laplace_f(ri, R);
 
-		    // Sum over actions for ri
-		    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
-		    vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
-		    double laplacian_action = 0.;
-            for (auto& action: action_list) {//TODO check all laplacians of them, because they are wrong, or at least i think they are
-		      gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
-              laplacian_action+= action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
-		    }
 		    // Volume Term
+            //double tmp1=(-1./mag_ri_R*4.*M_PI) * laplacian_f;
+            //double tmp2=(-1./mag_ri_R*4.*M_PI) * (-f*laplacian_action);
+            //double tmp3=(-1./mag_ri_R*4.*M_PI) * f*dot(gradient_action,gradient_action);
+            //double tmp4=(-1./mag_ri_R*4.*M_PI) * (-2*dot(gradient_f,gradient_action));
+            //std::cout << Optimization_Strategy << ": tmp1=" <<tmp1<< "\ttmp2="<<tmp2<< "\ttmp3="<<tmp3<< "\ttmp4="<<tmp4 <<std::endl; 
             #pragma omp atomic
-		    tot_vol(i) += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));//TODO seems correct, however the results are pretty wrong, probably a normalization issue
+		    tot_vol(i) += (-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
             n_measure_vol(i)++;
 		    //Boundary Term
-		    if((mag_Delta_ri>3*lambda_tau)&&path.GetPBC()) { //Boundary Event //TODO check with etano if 3 times lambda_tau is fine
+		    if((mag_Delta_ri>2*lambda_tau)&&path.GetPBC()) { //Boundary Event
 		        vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
                 R+=NormalVector*path.GetL();//One has now to work with the picture of the particle in the other cell
 		        ri_R=ri-R;
@@ -138,7 +139,7 @@ private:
       }
     }
     double cofactor = path.GetSign()*path.GetImportanceWeight();
-    for (uint32_t i=0;i<n_r;++i){
+    for (uint32_t i=0;i<gr_vol.x.n_r;++i){
         gr_vol.y(i) += cofactor*tot_vol[i];
         gr_b.y(i) += cofactor*tot_b[i];
     }
@@ -148,10 +149,9 @@ private:
   virtual void Reset()
   {
     gr_vol.y.zeros();
-    n_measure_vol = zeros<vec<int>>(n_r);
+    n_measure_vol = zeros<vec<int>>(gr_vol.x.n_r);
     gr_b.y.zeros();
-    n_measure_b = zeros<vec<int>>(n_r);
-    counter=0;
+    n_measure_b = zeros<vec<int>>(gr_vol.x.n_r);
   }
 
 public:
@@ -167,11 +167,10 @@ public:
     // Write things to file
     out.Write(prefix+"/species_a", species_a_name);
     out.Write(prefix+"/species_b", species_b_name);
-    counter =0;
     // Read in grid info
-    r_min = in.GetAttribute<double>("r_min",0.);
-    r_max = in.GetAttribute<double>("r_max",path.GetL()/2.);
-    n_r = in.GetAttribute<double>("n_r",1000);
+    double r_min = in.GetAttribute<double>("r_min",0.);
+    double r_max = in.GetAttribute<double>("r_max",path.GetL()/2.);
+    int n_r = in.GetAttribute<double>("n_r",1000);
     gr_vol.x.CreateGrid(r_min,r_max,n_r);
     gr_vol.y.zeros(n_r);
     gr_b.x.CreateGrid(r_min,r_max,n_r);
@@ -179,7 +178,7 @@ public:
 
     // Compute rs
     vec<double> rs(n_r-1);
-    for (uint32_t i=0; i<n_r-1; i++) {
+    for (uint32_t i=0; i<gr_vol.x.n_r-1; i++) {
         double r1 = gr_vol.x(i);
         double r2 = gr_vol.x(i+1);
         rs(i) = 0.5*(r2+r1);//TODO maybe -, as it was in first version
@@ -187,20 +186,20 @@ public:
 
     //Write things to file
     std::string data_type = "histogram";
-    out.Write(prefix+"/r_min", r_min);
-    out.Write(prefix+"/r_max", r_max);
-    out.Write(prefix+"/n_r", n_r);
+    out.Write(prefix+"/r_min", gr_vol.x.r_min);
+    out.Write(prefix+"/r_max", gr_vol.x.r_max);
+    out.Write(prefix+"/n_r", gr_vol.x.n_r);
     out.Write(prefix+"/x", rs);
     out.CreateGroup(prefix+"volume");
-    out.Write(prefix+"volume/r_min", r_min);
-    out.Write(prefix+"volume/r_max", r_max);
-    out.Write(prefix+"volume/n_r", n_r);
+    out.Write(prefix+"volume/r_min", gr_vol.x.r_min);
+    out.Write(prefix+"volume/r_max", gr_vol.x.r_max);
+    out.Write(prefix+"volume/n_r", gr_vol.x.n_r);
     out.Write(prefix+"volume/x", rs);
     out.Write(prefix+"volume/data_type",data_type);
     out.CreateGroup(prefix+"boundary");
-    out.Write(prefix+"boundary/r_min", r_min);
-    out.Write(prefix+"boundary/r_max", r_max);
-    out.Write(prefix+"boundary/n_r", n_r);
+    out.Write(prefix+"boundary/r_min", gr_vol.x.r_min);
+    out.Write(prefix+"boundary/r_max", gr_vol.x.r_max);
+    out.Write(prefix+"boundary/n_r", gr_vol.x.n_r);
     out.Write(prefix+"boundary/x", rs);
     out.Write(prefix+"boundary/data_type",data_type);
     // Read in z_a
@@ -229,15 +228,15 @@ public:
     
     //Choose the optimization stategy
     //TODO find better f and also allow to choose differently
-    std::string optimization_strategy = in.GetAttribute<std::string>("optimization_strategy");
+    Optimization_Strategy = in.GetAttribute<std::string>("optimization_strategy");
     Contact_Density_Optimization_Functions::ND=path.GetND();
 	Contact_Density_Optimization_Functions::z_a=z_a;
-    if(optimization_strategy=="Simple"){
+    if(Optimization_Strategy=="Simple"){
         Function_f=&Contact_Density_Optimization_Functions::f_simple; 
         Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_simple;
         Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_simple;
     }
-    else if (optimization_strategy=="Assaraf"){
+    else if (Optimization_Strategy=="Assaraf"){
 		Function_f=&Contact_Density_Optimization_Functions::f_Assaraf; 
         Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_Assaraf;
         Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_Assaraf;
@@ -253,7 +252,7 @@ public:
   virtual void Write()
   {
     if (min(n_measure_vol+n_measure_b) > 0) {
-      vec<double> tot(zeros<vec<double>>(n_r)); 
+      vec<double> tot(zeros<vec<double>>(gr_vol.x.n_r)); 
       // Normalize
       double norm_vol;
       double norm_b;
