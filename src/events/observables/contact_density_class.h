@@ -4,7 +4,9 @@
 #include "observable_class.h"
 namespace Contact_Density_Optimization_Functions {
     extern int ND=3;
-    double f_simple(const vec<double> &ri, const vec<double> &RA){
+	extern int z_a=1;
+    
+	double f_simple(const vec<double> &ri, const vec<double> &RA){
         return 1;
     }
     
@@ -13,6 +15,19 @@ namespace Contact_Density_Optimization_Functions {
     }
     double laplace_f_simple(const vec<double> &ri, const vec<double> &RA){
         return 0;
+    }
+
+    double f_Assaraf(const vec<double> &ri, const vec<double> &RA){
+        return 1. + 2*z_a*(mag(ri-RA));
+    }
+    
+    vec<double> gradient_f_Assaraf(const vec<double> &ri, const vec<double> &RA){
+		vec<double> ri_RA=ri-RA;
+		double mag_ri_RA=mag(ri_RA);        
+		return 2*z_a*(ri_RA/mag_ri_RA);
+    }
+    double laplace_f_Assaraf(const vec<double> &ri, const vec<double> &RA){
+        return 2*z_a*(ND-1)*(1./mag(ri-RA));
     }
 
 }
@@ -28,7 +43,7 @@ private:
   uint32_t z_a; ///< Charge of ion-like particle
   double r_min; ///< minimal r in the histogram
   double r_max; ///< maximal r in the histogram
-  int n_r; ///< number of bins in the histogram
+  int n_r; ///< number of bins in the histogram //TODO numerology suggests to divide the end result by the number of r used for the histogram, however i am not sure why
   double lambda_tau; ///< the typical length of a path between two beads
   std::shared_ptr<Species> species_a; ///< ion species
   std::shared_ptr<Species> species_b; ///< other species 
@@ -85,18 +100,13 @@ private:
 		    vec<double> ri_R(ri-R);
 		    double mag_ri_R = mag(ri_R);
 		    double mag_Delta_ri = mag(ri - ri_nextBead);
-		    if(mag_ri_R<1e-12)//possibly dividing by near zero, big numerical instabilities, possible normalization errors are accounted with n_measure arrays 
-		        continue;
+		    if(mag_ri_R<1e-12){//possibly dividing by near zero, big numerical instabilities, possible normalization errors are accounted with n_measure arrays 
+                continue;
+            }
 		    // Compute functions
 		    double f= Function_f(ri, R);
 		    vec<double> gradient_f=Function_gradient_f(ri, R);
 		    double laplacian_f = Function_laplace_f(ri, R);
-		    //double f = 1; 
-		    //vec<double> gradient_f(zeros<vec<double>>(path.GetND()));
-		    //double laplacian_f = 0.;
-		    //double f = 1. + 2*z_a*(mag_ri_RA);
-		    //vec<double> gradient_f = 2*z_a*((ri_RA/mag_ri_RA));
-		    //double laplacian_f = 2*z_a*(path.GetND()-1)*((1./mag_ri_RA));
 
 		    // Sum over actions for ri
 		    std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
@@ -104,13 +114,11 @@ private:
 		    double laplacian_action = 0.;
             for (auto& action: action_list) {//TODO check all laplacians of them, because they are wrong, or at least i think they are
 		      gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
-		      double tmp = action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
-              if(tmp>10000) std::cout << "Action:\t "<< action->name <<"\twith contribution:\t"<< tmp<< std::endl;
-              laplacian_action+=tmp;
+              laplacian_action+= action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
 		    }
 		    // Volume Term
             #pragma omp atomic
-		    tot_vol(i) += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
+		    tot_vol(i) += (-1./mag_ri_R*4.*M_PI)*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));//TODO seems correct, however the results are pretty wrong, probably a normalization issue
             n_measure_vol(i)++;
 		    //Boundary Term
 		    if((mag_Delta_ri>3*lambda_tau)&&path.GetPBC()) { //Boundary Event //TODO check with etano if 3 times lambda_tau is fine
@@ -174,12 +182,7 @@ public:
     for (uint32_t i=0; i<n_r-1; i++) {
         double r1 = gr_vol.x(i);
         double r2 = gr_vol.x(i+1);
-        if (path.GetND() == 3)
-            rs(i) = 0.75 * (r2*r2*r2*r2-r1*r1*r1*r1)/(r2*r2*r2-r1*r1*r1);
-        else if (path.GetND() == 2)
-            rs(i) = (r2*r2*r2-r1*r1*r1)/(r2*r2-r1*r1); // FIXME: Not sure if 2D and 1D are correct here
-        else if (path.GetND() == 1)
-            rs(i) = 0.5*(r2-r1);
+        rs(i) = 0.5*(r2+r1);//TODO maybe -, as it was in first version
     }
 
     //Write things to file
@@ -228,13 +231,16 @@ public:
     //TODO find better f and also allow to choose differently
     std::string optimization_strategy = in.GetAttribute<std::string>("optimization_strategy");
     Contact_Density_Optimization_Functions::ND=path.GetND();
+	Contact_Density_Optimization_Functions::z_a=z_a;
     if(optimization_strategy=="Simple"){
         Function_f=&Contact_Density_Optimization_Functions::f_simple; 
         Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_simple;
         Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_simple;
     }
-    else if (optimization_strategy==""){
-        assert(false);//TODO implement other functions here
+    else if (optimization_strategy=="Assaraf"){
+		Function_f=&Contact_Density_Optimization_Functions::f_Assaraf; 
+        Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_Assaraf;
+        Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_Assaraf;
     }
     else {
         std::cout << "ERROR: unrecognized optimization strategy in contact density, please check again"<< std::endl;
@@ -270,11 +276,11 @@ public:
         //assert(bin_vol!=-1);//Make sure one case is fulfilled
         norm_vol = n_measure_vol[i]/path.GetVol();
         gr_vol.y(i) = gr_vol.y(i)/(bin_vol*norm_vol);
-        if(!(path.GetPBC())){//If we do not have pbc then we just save 0, otherwise similar to volume term
+        if(path.GetPBC()){//If we do not have pbc then we just save 0, otherwise similar to volume term
             norm_b = n_measure_b[i]/path.GetVol();
             gr_b.y(i) = gr_b.y(i)/(bin_vol*norm_b);
         }
-        tot[i]=gr_vol.y(i)+gr_b.y(i);
+        tot(i)=gr_vol.y(i)+gr_b.y(i);
       }
       // Write to file
       if (first_time) {
