@@ -66,7 +66,7 @@ public:
     // Read in grid info
     double r_min = in.GetAttribute<double>("r_min",0.);
     double r_max = in.GetAttribute<double>("r_max",path.GetL()/2.);
-    uint32_t n_r = in.GetAttribute<double>("n_r",1000);
+    uint32_t n_r = in.GetAttribute<double>("n_r",1000)+1;
     gr.x.CreateGrid(r_min,r_max,n_r);
     gr.y.zeros(n_r);
 
