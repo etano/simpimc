@@ -1,7 +1,7 @@
 <Input>
   <IO output_prefix="H.0" />
   <Parallel procs_per_group="1" />
-  <System n_d="3" n_bead="320" beta="40.0" L="1000.0" PBC="0" />
+  <System n_d="3" n_bead="320" beta="40.0" L="1000.0" pbc="0" />
   <Particles>
     <Species name="e" n_part="1" lambda="0.5" fermi="0" init_type="File" file_name="e.xyz" />
     <Species name="p" n_part="1" lambda="0.0" fermi="0" init_type="File" file_name="p.xyz" />
