@@ -143,7 +143,6 @@ protected:
     // Store original position for particle i
     std::shared_ptr<Bead> b(species_a->GetBead(p_i,b_i));
     vec<double> r0(b->GetR());
-
     // Numerical tolerance
     double eps = 1.e-4;
     // Calculate numerical gradient
