@@ -63,7 +63,7 @@ protected:
     // Set which particles are affected by the move
     std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> particles;
     particles.push_back(std::make_pair(species,p_i));
-    if (bead_f->GetP() != p_i)  // fixme: may be overkill
+    if (bead_f->GetP() != p_i)  // TODO: may be overkill
       particles.push_back(std::make_pair(species,bead_f->GetP()));
 
     // Perform the bisection (move exactly through kinetic action)
@@ -104,20 +104,16 @@ protected:
       double old_action = 0.;
       double new_action = 0.;
       for (auto& action: action_list) {
-        // Old action
         path.SetMode(OLD_MODE);
-        old_action += action->GetAction(bead0, bead1, particles, level_i);
-
-        // New action
+        old_action += action->GetAction(bead0,bead1,particles,level_i);
         path.SetMode(NEW_MODE);
-        new_action += action->GetAction(bead0, bead1, particles, level_i);
+        new_action += action->GetAction(bead0,bead1,particles,level_i);
       }
 
+      // Metropolis reject step
       double log_sample_ratio = -new_log_sample_prob + old_log_sample_prob;
       double current_action_change = new_action - old_action;
       double log_accept_probability = log_sample_ratio - current_action_change + prev_action_change;
-
-      // Metropolis reject step
       if (log_accept_probability < log(rng.UnifRand()))
         return 0;
 

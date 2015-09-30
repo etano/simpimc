@@ -115,12 +115,12 @@ public:
     double tot = 0.;
     for (auto& p: particles) {
       if (p.first == species) {
-        std::shared_ptr<Bead> beadA(species->GetBead(p.second,b0));
-        std::shared_ptr<Bead> beadF(beadA->GetNextBead(b1-b0));
-        while(beadA != beadF) {
-          std::shared_ptr<Bead> beadB(beadA->GetNextBead(skip));
-          tot -= rho_free_splines[skip-1].GetLogRhoFree(path.Dr(beadA,beadB));
-          beadA = beadB;
+        std::shared_ptr<Bead> bead_a(species->GetBead(p.second,b0));
+        std::shared_ptr<Bead> bead_b(bead_a->GetNextBead(b1-b0));
+        while(bead_a != bead_b) {
+          std::shared_ptr<Bead> next_bead_a(bead_a->GetNextBead(skip));
+          tot -= rho_free_splines[skip-1].GetLogRhoFree(path.Dr(bead_a,next_bead_a));
+          bead_a = next_bead_a;
         }
       }
     }
@@ -134,20 +134,16 @@ public:
     uint32_t skip = 1<<level;
     double i_4_lambda_level_tau = i_4_lambda_tau/skip;
     vec<double> tot(zeros<vec<double>>(path.GetND()));
-    std::shared_ptr<Bead> beadA, beadB, beadC, beadF;
     for (auto& p: particles) {
       if (p.first == species) {
         double gauss_prod, rho_free, dist;
-        beadA = species->GetBead(p.second,b0);
-        beadF = beadA->GetNextBead(b1-b0);
-        while(beadA != beadF) {
-          beadB = beadA->GetPrevBead(skip);
-          vec<double> dr(path.Dr(beadB,beadA));
-          tot -= dr;
-          beadC = beadA->GetNextBead(skip);
-          dr = path.Dr(beadA,beadC);
-          tot += dr;
-          beadA = beadC;
+        std::shared_ptr<Bead> bead_a(species->GetBead(p.second,b0));
+        std::shared_ptr<Bead> bead_b(bead_a->GetNextBead(b1-b0));
+        while(bead_a != bead_b) {
+          tot -= path.Dr(bead_a->GetPrevBead(skip),bead_a);
+          std::shared_ptr<Bead> next_bead_a = bead_a->GetNextBead(skip);
+          tot += path.Dr(bead_a,next_bead_a);
+          bead_a = next_bead_a;
         }
       }
     }
@@ -162,15 +158,14 @@ public:
     double i_4_lambda_level_tau = i_4_lambda_tau/skip;
     double tot = 0.;
     vec<double> dr(path.GetND());
-    std::shared_ptr<Bead> beadA, beadF;
     for (auto& p: particles) {
       if (p.first == species) {
         double gauss_prod, rho_free, dist;
-        beadA = species->GetBead(p.second,b0);
-        beadF = beadA->GetNextBead(b1-b0);
-        while(beadA != beadF) {
+        std::shared_ptr<Bead> bead_a(species->GetBead(p.second,b0));
+        std::shared_ptr<Bead> bead_b(bead_a->GetNextBead(b1-b0));
+        while(bead_a != bead_b) {
           tot += path.GetND()*4.*i_4_lambda_level_tau;
-          beadA = beadA->GetNextBead(skip);
+          bead_a = bead_a->GetNextBead(skip);
         }
       }
     }

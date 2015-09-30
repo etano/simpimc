@@ -13,7 +13,7 @@ protected:
   uint32_t model_i; ///< Current model being used
   std::vector<std::vector<double>> param_sets; ///< Vector of variational
   IO &out; ///< Reference to ouput file
-  Path& path; ///< Reference to pathparameter sets
+  Path& path; ///< Reference to path
 public:
   bool is_importance_weight; ///< Whether or not the action is actually an importance weight
   std::string name; ///< Action name

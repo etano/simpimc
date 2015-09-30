@@ -9,7 +9,7 @@ SET(CMAKE_VERBOSE_MAKEFILE OFF)
 # Options
 #-------------------------------------------------------------------
 SET(PRECISION double) #double float
-SET(USE_MPI TRUE)
+SET(USE_MPI FALSE)
 SET(USE_OPENMP TRUE)
 SET(BUILD_STATIC FALSE)
 SET(COMPILER_MAKE "GNU") # INTEL, GNU, or CLANG
