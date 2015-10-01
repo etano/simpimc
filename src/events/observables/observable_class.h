@@ -37,7 +37,7 @@ protected:
       d_ir = 1./dr;
       rs.set_size(n_r);
       for (uint32_t i=0; i<n_r; ++i)
-        rs(i) = r_min + i*dr;
+        rs(i) = r_min + (i+0.5)*dr;//TODO check with etano if this is ok, just to have the rs pointing in the middle of the bin
     };
 
     /// Access an element of the grid
