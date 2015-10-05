@@ -5,28 +5,27 @@ namespace Contact_Density_Optimization_Functions {
     extern int ND=3;
     extern int z_a=1;
     
-    double f_simple(const vec<double> &ri, const vec<double> &RA){
+    double f_simple(const double &mag_ri_RA){
         return 1;
     }
     
-    vec<double> gradient_f_simple(const vec<double> &ri, const vec<double> &RA){
+    vec<double> gradient_f_simple(const double &mag_ri_RA, const vec<double> &ri_RA){
         return zeros<vec<double>>(ND);
     }
-    double laplace_f_simple(const vec<double> &ri, const vec<double> &RA){
+    double laplace_f_simple(const double &mag_ri_RA){
         return 0;
     }
 
-    double f_Assaraf(const vec<double> &ri, const vec<double> &RA){
-        return 1. + 2*z_a*(mag(ri-RA));
+    double f_Assaraf(const double &mag_ri_RA){
+        return 1. + 2*z_a*mag_ri_RA;
     }
     
-    vec<double> gradient_f_Assaraf(const vec<double> &ri, const vec<double> &RA){
-        vec<double> ri_RA=ri-RA;
-        double mag_ri_RA=mag(ri_RA);        
+    vec<double> gradient_f_Assaraf(const double &mag_ri_RA, const vec<double> &ri_RA){
         return 2*z_a*(ri_RA/mag_ri_RA);
     }
-    double laplace_f_Assaraf(const vec<double> &ri, const vec<double> &RA){
-        return 2*z_a*(ND-1)/mag(ri-RA);
+    double laplace_f_Assaraf(const double &mag_ri_RA){
+        //return 2*z_a*(ND-1)/mag(ri-RA);
+        return 0;
     }
 
 }
@@ -48,9 +47,9 @@ private:
     std::vector<std::pair<uint32_t,uint32_t>> particle_pairs; ///< contains all the pairs of particles of species_a and species_b
     size_t n_particle_pairs;
     std::string Optimization_Strategy;
-    double (*Function_f)(const vec<double> &ri, const vec<double> &RA); ///< Function pointer for the possible generalization
-    vec<double> (*Function_gradient_f)(const vec<double> &ri, const vec<double> &RA);
-    double (*Function_laplace_f)(const vec<double> &ri, const vec<double> &RA);
+    double (*Function_f)(const double &mag_ri_RA); ///< Function pointer for the possible generalization
+    vec<double> (*Function_gradient_f)(const double &mag_ri_RA, const vec<double> &ri_RA);
+    double (*Function_laplace_f)(const double &mag_ri_RA);
   
     vec<double> getRelevantNormalVector(vec<double> r1,vec<double> r2){
         vec<double> n(zeros<vec<double>>(path.GetND())); 
@@ -90,10 +89,7 @@ private:
                 //Histogram loop
                 for (uint32_t i=0;i<gr_vol.x.n_r;++i){
                     vec<double> Rhist(zeros<vec<double>>(path.GetND()));
-                    if(RA[0]<path.GetL()/2.0)//A bit of hacking, however this should be a small bit faster
-                        Rhist[0]= gr_vol.x.rs(i); 
-                    else
-                        Rhist[0]=-gr_vol.x.rs(i);
+                    Rhist[0]= gr_vol.x.rs(i); 
                     vec<double> R=RA-Rhist;
                     // Get differences
                     vec<double> ri_R(ri-R);
@@ -103,17 +99,19 @@ private:
                         continue;
                     }
                     // Compute functions
-                    double f= Function_f(ri, R);
-                    vec<double> gradient_f=Function_gradient_f(ri, R);
-                    double laplacian_f = Function_laplace_f(ri, R);
+                    double f= Function_f(mag_ri_R);
+                    vec<double> gradient_f=Function_gradient_f(mag_ri_R, ri_R);
+                    double laplacian_f = Function_laplace_f(mag_ri_R);
 
                     // Volume Term
-                    //double tmp1=(-1./mag_ri_R*4.*M_PI) * laplacian_f;
-                    //double tmp2=(-1./mag_ri_R*4.*M_PI) * (-f*laplacian_action);
-                    //double tmp3=(-1./mag_ri_R*4.*M_PI) * f*dot(gradient_action,gradient_action);
-                    //double tmp4=(-1./mag_ri_R*4.*M_PI) * (-2*dot(gradient_f,gradient_action));
-                    //std::cout << Optimization_Strategy << ": tmp1=" <<tmp1<< "\ttmp2="<<tmp2<< "\ttmp3="<<tmp3<< "\ttmp4="<<tmp4 <<std::endl; 
-                    #pragma omp atomic
+                   // double tmp1=(-1./(mag_ri_R*4.*M_PI)) * laplacian_f;
+                   // double tmp2=(-1./(mag_ri_R*4.*M_PI)) * (-f*laplacian_action);
+                   // double tmp3=(-1./(mag_ri_R*4.*M_PI)) * (f*dot(gradient_action,gradient_action));
+                   // double tmp4=(-1./(mag_ri_R*4.*M_PI)) * (-2*dot(gradient_f,gradient_action));
+                    //if(i==0) std::cout << Optimization_Strategy << "\tn_meas="<<n_measure_vol(i)<<"\t" << tmp1+tmp2+tmp3+tmp4<<std::endl;
+                    //std::cout << Optimization_Strategy <<" R="<<gr_vol.x.rs(i)<< ":\ttmp1=" <<tmp1<< "\ttmp2="<<tmp2<< "\ttmp3="<<tmp3<< "\ttmp4="<<tmp4 <<"\ttot="<< tmp1+tmp2+tmp3+tmp4<<std::endl; 
+                    //std::cout << Optimization_Strategy<<" R="<<gr_vol.x.rs(i)<< ": \tf= "<<f<<"\tLap_Act= "<<laplacian_action << "\t-f*lap="<<-f*laplacian_action<<"\t prefactor="<<std::endl;
+                    //#pragma omp atomic
                     tot_vol(i) += (-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
                     n_measure_vol(i)++;
                     //Boundary Term
@@ -247,23 +245,25 @@ public:
             //else
             //  norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/path.GetVol();
             for (uint32_t i=0; i<gr_vol.x.n_r; i++) {
-                double r1 = gr_vol.x(i);
-                double r2 = (i<(gr_vol.x.n_r-1)) ? gr_vol.x(i+1):(2.*gr_vol.x(i)-gr_vol.x(i-1));
-                double r = 0.5*(r1+r2);
-                double bin_vol = r2-r1;
+                //double r1 = gr_vol.x(i);
+                //double r2 = (i<(gr_vol.x.n_r-1)) ? gr_vol.x(i+1):(2.*gr_vol.x(i)-gr_vol.x(i-1));
+                //double r = 0.5*(r1+r2);
+                //double bin_vol = r2-r1;
                 //double bin_vol=-1;
                 //if (path.GetND() == 3)
-                //    double bin_vol = 4.*M_PI/3. * (r2*r2*r2-r1*r1*r1);
+                //double bin_vol = 4.*M_PI/3. * (r2*r2*r2-r1*r1*r1);
                 //else if (path.GetND() == 2)
                 //    bin_vol = M_PI * (r2*r2-r1*r1);
                 //else if (path.GetND() == 1)
                 //    bin_vol = r2-r1;
                 //assert(bin_vol!=-1);//Make sure one case is fulfilled
                 norm_vol = n_measure_vol[i]/path.GetVol();
-                gr_vol.y(i) = gr_vol.y(i)/(bin_vol*norm_vol);
+                //if(i==0) std::cout << Optimization_Strategy<<"\t"<<gr_vol.y(i)<< "\t" << bin_vol<< "\t" << norm_vol << "\t" << gr_vol.y(i)/(norm_vol) << std::endl;
+                //gr_vol.y(i) = gr_vol.y(i)/(bin_vol*norm_vol);
+                gr_vol.y(i) = gr_vol.y(i)/(norm_vol);
                 if(path.GetPBC()){//If we do not have pbc then we just save 0, otherwise similar to volume term
                     norm_b = n_measure_b[i]/path.GetVol();
-                    gr_b.y(i) = gr_b.y(i)/(bin_vol*norm_b);
+                    gr_b.y(i) = gr_b.y(i)/(norm_b);
                 }
                 tot(i)=gr_vol.y(i)+gr_b.y(i);
             }
