@@ -27,6 +27,17 @@ namespace Contact_Density_Optimization_Functions {
         //return 2*z_a*(ND-1)/mag(ri-RA);
         return 0;
     }
+    
+    double f_Squared(const double &mag_ri_RA){
+        return 1+2*z_a*mag_ri_RA*mag_ri_RA;
+    }
+    vec<double> gradient_f_Squared(const double &mag_ri_RA, const vec<double> &ri_RA){
+        return 4*z_a*ri_RA;
+    }
+    double laplace_f_Squared(const double &mag_ri_RA){
+        //return 2*z_a*(ND-1)/mag(ri-RA);
+        return 3*4*z_a;
+    }
 
 }
 
@@ -95,7 +106,7 @@ private:
                     vec<double> ri_R(ri-R);
                     double mag_ri_R = mag(ri_R);
                     double mag_Delta_ri = mag(ri - ri_nextBead);
-                    if(mag_ri_R<1e-9){//possibly dividing by near zero, big numerical instabilities therefore skip 
+                    if(mag_ri_R<1e-6){//possibly dividing by near zero, big numerical instabilities therefore skip 
                         continue;
                     }
                     // Compute functions
@@ -104,16 +115,15 @@ private:
                     double laplacian_f = Function_laplace_f(mag_ri_R);
 
                     // Volume Term
-                   // double tmp1=(-1./(mag_ri_R*4.*M_PI)) * laplacian_f;
-                   // double tmp2=(-1./(mag_ri_R*4.*M_PI)) * (-f*laplacian_action);
-                   // double tmp3=(-1./(mag_ri_R*4.*M_PI)) * (f*dot(gradient_action,gradient_action));
-                   // double tmp4=(-1./(mag_ri_R*4.*M_PI)) * (-2*dot(gradient_f,gradient_action));
-                    //if(i==0) std::cout << Optimization_Strategy << "\tn_meas="<<n_measure_vol(i)<<"\t" << tmp1+tmp2+tmp3+tmp4<<std::endl;
-                    //std::cout << Optimization_Strategy <<" R="<<gr_vol.x.rs(i)<< ":\ttmp1=" <<tmp1<< "\ttmp2="<<tmp2<< "\ttmp3="<<tmp3<< "\ttmp4="<<tmp4 <<"\ttot="<< tmp1+tmp2+tmp3+tmp4<<std::endl; 
-                    //std::cout << Optimization_Strategy<<" R="<<gr_vol.x.rs(i)<< ": \tf= "<<f<<"\tLap_Act= "<<laplacian_action << "\t-f*lap="<<-f*laplacian_action<<"\t prefactor="<<std::endl;
+                    //double tmp1=(-1./(mag_ri_R*4.*M_PI)) * laplacian_f;
+                    //double tmp2=(-1./(mag_ri_R*4.*M_PI)) * (-f*laplacian_action);
+                    //double tmp3=(-1./(mag_ri_R*4.*M_PI)) * (f*dot(gradient_action,gradient_action));
+                    //double tmp4=(-1./(mag_ri_R*4.*M_PI)) * (-2*dot(gradient_f,gradient_action));
                     //#pragma omp atomic
                     tot_vol(i) += (-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
                     n_measure_vol(i)++;
+                    //if(i==0&&((n_measure_vol(i)==1))&&Optimization_Strategy=="Assaraf") std::cout << Optimization_Strategy <<" tmp1="<<tmp1<<"\ttmp2="<<tmp2<<"\ttmp3="<<tmp3<<"\ttmp4="<<tmp4<<"\ttot="<<tmp1+tmp2+tmp3+tmp4<<"\test="<<tot_vol(i)/n_measure_vol(i)<<"\tdiff="<<tot_vol(i)/n_measure_vol(i)-(tmp1+tmp2+tmp3+tmp4)<<"\tmeas="<<n_measure_vol(i)<<std::endl;
+                    //if(i==0&&((n_measure_vol(i)==3000))&&Optimization_Strategy=="Assaraf") std::cout << Optimization_Strategy <<" tmp1="<<tmp1<<"\ttmp2="<<tmp2<<"\ttmp3="<<tmp3<<"\ttmp4="<<tmp4<<"\ttot="<<tmp1+tmp2+tmp3+tmp4<<"\test="<<tot_vol(i)/n_measure_vol(i)<<"\tdiff="<<tot_vol(i)/n_measure_vol(i)-(tmp1+tmp2+tmp3+tmp4)<<"\tmeas="<<n_measure_vol(i)<<std::endl;
                     //Boundary Term
                     if((mag_Delta_ri>2*lambda_tau)&&path.GetPBC()) { //Boundary Event
                         vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
@@ -224,6 +234,11 @@ public:
             Function_f=&Contact_Density_Optimization_Functions::f_Assaraf; 
             Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_Assaraf;
             Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_Assaraf;
+        }
+        else if (Optimization_Strategy=="Squared"){
+            Function_f=&Contact_Density_Optimization_Functions::f_Squared; 
+            Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_Squared;
+            Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_Squared;
         }
         else {
             std::cout << "ERROR: unrecognized optimization strategy in contact density, please check again"<< std::endl;
