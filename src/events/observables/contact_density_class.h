@@ -90,18 +90,28 @@ private:
                 vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
                 vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
                 // Sum over actions for ri
+                double actionVal=0;
                 std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
                 vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
                 double laplacian_action = 0.;    
                 for (auto& action: action_list) {
+                    actionVal += action->GetAction(b_i,b_i+1,only_ri,0);
                     gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
                     laplacian_action+= action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
                 }
+                vec<double> Direction(path.GetND());
+                Direction.randn();
+                Direction=Direction/norm(Direction);
                 //Histogram loop
                 for (uint32_t i=0;i<gr_vol.x.n_r;++i){
-                    vec<double> Rhist(zeros<vec<double>>(path.GetND()));
-                    Rhist[0]= gr_vol.x.rs(i); 
-                    vec<double> R=RA-Rhist;
+                    /// TODO this is the version with just measuring along plus x direction (which should be ok theoretically)
+                    //vec<double> Rhist(zeros<vec<double>>(path.GetND()));
+                    //Rhist[0]= gr_vol.x.rs(i); 
+                    /// TODO the version with the randomized direction (for all of the histogram the same, otherwise non-correlated)
+                    vec<double> Rhist=gr_vol.x.rs(i)*Direction;
+                   
+                    vec<double> R=path.Dr(RA,Rhist);
+                    
                     // Get differences
                     vec<double> ri_R(ri-R);
                     double mag_ri_R = mag(ri_R);
@@ -119,9 +129,10 @@ private:
                     //double tmp2=(-1./(mag_ri_R*4.*M_PI)) * (-f*laplacian_action);
                     //double tmp3=(-1./(mag_ri_R*4.*M_PI)) * (f*dot(gradient_action,gradient_action));
                     //double tmp4=(-1./(mag_ri_R*4.*M_PI)) * (-2*dot(gradient_f,gradient_action));
-                    //#pragma omp atomic
-                    tot_vol(i) += (-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
+                    #pragma omp atomic
+                    tot_vol(i) +=(-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
                     n_measure_vol(i)++;
+                    //if(i==gr_vol.x.n_r-1 && Optimization_Strategy=="Assaraf") std::cout << tmp1<< "\t"<<tmp2<<"\t"<<tmp3<<"\t"<<tmp4<<std::endl;
                     //if(i==0&&((n_measure_vol(i)==1))&&Optimization_Strategy=="Assaraf") std::cout << Optimization_Strategy <<" tmp1="<<tmp1<<"\ttmp2="<<tmp2<<"\ttmp3="<<tmp3<<"\ttmp4="<<tmp4<<"\ttot="<<tmp1+tmp2+tmp3+tmp4<<"\test="<<tot_vol(i)/n_measure_vol(i)<<"\tdiff="<<tot_vol(i)/n_measure_vol(i)-(tmp1+tmp2+tmp3+tmp4)<<"\tmeas="<<n_measure_vol(i)<<std::endl;
                     //if(i==0&&((n_measure_vol(i)==3000))&&Optimization_Strategy=="Assaraf") std::cout << Optimization_Strategy <<" tmp1="<<tmp1<<"\ttmp2="<<tmp2<<"\ttmp3="<<tmp3<<"\ttmp4="<<tmp4<<"\ttot="<<tmp1+tmp2+tmp3+tmp4<<"\test="<<tot_vol(i)/n_measure_vol(i)<<"\tdiff="<<tot_vol(i)/n_measure_vol(i)-(tmp1+tmp2+tmp3+tmp4)<<"\tmeas="<<n_measure_vol(i)<<std::endl;
                     //Boundary Term
@@ -221,7 +232,6 @@ public:
         n_particle_pairs = particle_pairs.size();
     
         //Choose the optimization stategy
-        //TODO find better f 
         Optimization_Strategy = in.GetAttribute<std::string>("optimization_strategy");
         Contact_Density_Optimization_Functions::ND=path.GetND();
         Contact_Density_Optimization_Functions::z_a=z_a;
