@@ -324,7 +324,7 @@ public:
     // Generate particle pairs
     std::vector<uint32_t> particles_a, particles_b;
     std::vector<std::pair<uint32_t,uint32_t>> particle_pairs;
-    GenerateParticlePairs(particles, particles_a, particles_b, particle_pairs);
+    GenerateParticlePairs(particles, particles_a, particles_b, particle_pairs);//FIXME this is wrong for helium contact density
     if (particle_pairs.size() == 0)
       return zero_vec;
 

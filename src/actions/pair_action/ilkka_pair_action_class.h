@@ -189,7 +189,6 @@ private:
     double u = 0.;
     vec<double> du_dxp_du_dyp(2);
     eval_NUBspline_2d_d_vg(u_xy_spline,x,y,&u,du_dxp_du_dyp.memptr());
-
     // Do chain rule to get (dU/dx_i,dU/dy_i,dU/dz_i)
     // dU/dx_i = dU/dxp dxp/dx_i + dU/dyp dyp/dx_i
     // and same for y_i and z_i
@@ -224,7 +223,6 @@ private:
       eval_NUBspline_1d_d_vg(u_long_r_spline,r_mag,&tmp_u,&tmp_du_dr);
       tot -= 0.5*tmp_du_dr*r_i_r_mag;
    }
-
     return tot;
   }
 

@@ -82,7 +82,6 @@ private:
         // Add up contact probability
         vec<double> tot_vol(zeros<vec<double>>(gr_vol.x.n_r));//Save the values for the volume terms in here 
         vec<double> tot_b(zeros<vec<double>>(gr_vol.x.n_r)); //Save the values for the boundary terms in here
-        #pragma omp parallel for
         for (uint32_t pp_i=0; pp_i<n_particle_pairs; ++pp_i) {
             for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
                 // Set r's
@@ -90,12 +89,10 @@ private:
                 vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
                 vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
                 // Sum over actions for ri
-                double actionVal=0;
                 std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
                 vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
-                double laplacian_action = 0.;    
+                double laplacian_action = 0.;
                 for (auto& action: action_list) {
-                    actionVal += action->GetAction(b_i,b_i+1,only_ri,0);
                     gradient_action += action->GetActionGradient(b_i,b_i+1,only_ri,0);
                     laplacian_action+= action->GetActionLaplacian(b_i,b_i+1,only_ri,0);
                 }
@@ -189,7 +186,6 @@ public:
         gr_vol.y.zeros(n_r);
         gr_b.x.CreateGrid(r_min,r_max,n_r);
         gr_b.y.zeros(n_r);
-
         //Write things to file
         std::string data_type = "histogram";
         out.Write(prefix+"/r_min", gr_vol.x.r_min);

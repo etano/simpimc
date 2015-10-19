@@ -164,7 +164,6 @@ public:
     r_mag = mag(r);
     r_p_mag = mag(r_p);
     r_r_p_mag = mag(r_r_p);
-
   }
 
   /// Get dr, dr_p, and drr_p and keep vectors
