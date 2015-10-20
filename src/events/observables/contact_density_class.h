@@ -16,7 +16,7 @@ namespace Contact_Density_Optimization_Functions {
         return 0;
     }
 
-    double f_Assaraf(const double &mag_ri_RA){
+    double f_Assaraf(const double &mag_ri_RA){//TODO include the exponential factor for the long range part (compare to Assarafs paper eq 11)
         return 1. + 2*z_a*mag_ri_RA;
     }
     
@@ -89,7 +89,7 @@ private:
                 vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
                 vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
                 // Sum over actions for ri
-                std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_a,particle_pairs[pp_i].second)};
+                std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_b,particle_pairs[pp_i].second)};
                 vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
                 double laplacian_action = 0.;
                 for (auto& action: action_list) {
