@@ -24,7 +24,7 @@ namespace Contact_Density_Optimization_Functions {
         return 2*z_a*(ri_RA/mag_ri_RA);
     }
     double laplace_f_Assaraf(const double &mag_ri_RA){
-        //return 2*z_a*(ND-1)/mag(ri-RA);
+        return 4*z_a/mag_ri_RA;
         return 0;
     }
     
@@ -100,15 +100,10 @@ private:
                 Direction.randn();
                 Direction=Direction/norm(Direction);
                 //Histogram loop
+#pragma omp parallel for
                 for (uint32_t i=0;i<gr_vol.x.n_r;++i){
-                    /// TODO this is the version with just measuring along plus x direction (which should be ok theoretically)
-                    //vec<double> Rhist(zeros<vec<double>>(path.GetND()));
-                    //Rhist[0]= gr_vol.x.rs(i); 
-                    /// TODO the version with the randomized direction (for all of the histogram the same, otherwise non-correlated)
                     vec<double> Rhist=gr_vol.x.rs(i)*Direction;
-                   
                     vec<double> R=path.Dr(RA,Rhist);
-                    
                     // Get differences
                     vec<double> ri_R(ri-R);
                     double mag_ri_R = mag(ri_R);
@@ -129,9 +124,7 @@ private:
                     #pragma omp atomic
                     tot_vol(i) +=(-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
                     n_measure_vol(i)++;
-                    //if(i==gr_vol.x.n_r-1 && Optimization_Strategy=="Assaraf") std::cout << tmp1<< "\t"<<tmp2<<"\t"<<tmp3<<"\t"<<tmp4<<std::endl;
-                    //if(i==0&&((n_measure_vol(i)==1))&&Optimization_Strategy=="Assaraf") std::cout << Optimization_Strategy <<" tmp1="<<tmp1<<"\ttmp2="<<tmp2<<"\ttmp3="<<tmp3<<"\ttmp4="<<tmp4<<"\ttot="<<tmp1+tmp2+tmp3+tmp4<<"\test="<<tot_vol(i)/n_measure_vol(i)<<"\tdiff="<<tot_vol(i)/n_measure_vol(i)-(tmp1+tmp2+tmp3+tmp4)<<"\tmeas="<<n_measure_vol(i)<<std::endl;
-                    //if(i==0&&((n_measure_vol(i)==3000))&&Optimization_Strategy=="Assaraf") std::cout << Optimization_Strategy <<" tmp1="<<tmp1<<"\ttmp2="<<tmp2<<"\ttmp3="<<tmp3<<"\ttmp4="<<tmp4<<"\ttot="<<tmp1+tmp2+tmp3+tmp4<<"\test="<<tot_vol(i)/n_measure_vol(i)<<"\tdiff="<<tot_vol(i)/n_measure_vol(i)-(tmp1+tmp2+tmp3+tmp4)<<"\tmeas="<<n_measure_vol(i)<<std::endl;
+                    //if(i==0) std::cout << Optimization_Strategy<<"\t"<<tmp1<< "\t"<<tmp2<<"\t"<<tmp3<<"\t"<<tmp4<<"\t"<<tmp1+tmp2+tmp3+tmp4<<std::endl;
                     //Boundary Term
                     if((mag_Delta_ri>2*lambda_tau)&&path.GetPBC()) { //Boundary Event
                         vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
