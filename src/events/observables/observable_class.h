@@ -27,7 +27,7 @@ protected:
     double d_ir; ///< Inverse grid spacing
     uint32_t n_r; ///< Number of grid points
 
-    /// Create the r grid
+    /// Create the r grid (rs pointing at boundary)
     void CreateGrid(double t_r_min, double t_r_max, uint32_t t_n_r)
     {
       r_min = t_r_min;
@@ -37,8 +37,22 @@ protected:
       d_ir = 1./dr;
       rs.set_size(n_r);
       for (uint32_t i=0; i<n_r; ++i)
-        rs(i) = r_min + (i+0.5)*dr;//TODO check with etano if this is ok, just to have the rs pointing in the middle of the bin
+        rs(i) = r_min + i*dr;
     };
+
+    /// Create the r grid (rs pointing at mid-points)
+    void CreateGridMiddle(double t_r_min, double t_r_max, uint32_t t_n_r)
+    {
+      r_min = t_r_min;
+      r_max = t_r_max;
+      n_r = t_n_r;
+      dr = (r_max-r_min)/(n_r-1.);
+      d_ir = 1./dr;
+      rs.set_size(n_r);
+      for (uint32_t i=0; i<n_r; ++i)
+        rs(i) = r_min + (i+0.5)*dr;
+    };
+
 
     /// Access an element of the grid
     inline double operator() (uint32_t i) { return rs(i); };

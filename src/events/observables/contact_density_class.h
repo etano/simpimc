@@ -100,7 +100,7 @@ private:
                 Direction.randn();
                 Direction=Direction/norm(Direction);
                 //Histogram loop
-#pragma omp parallel for
+                #pragma omp parallel for
                 for (uint32_t i=0;i<gr_vol.x.n_r;++i){
                     vec<double> Rhist=gr_vol.x.rs(i)*Direction;
                     vec<double> R=path.Dr(RA,Rhist);
@@ -175,9 +175,9 @@ public:
         double r_min = in.GetAttribute<double>("r_min",0.);
         double r_max = in.GetAttribute<double>("r_max",path.GetL()/2.);
         int n_r = in.GetAttribute<double>("n_r",1000);
-        gr_vol.x.CreateGrid(r_min,r_max,n_r);
+        gr_vol.x.CreateGridMiddle(r_min,r_max,n_r);
         gr_vol.y.zeros(n_r);
-        gr_b.x.CreateGrid(r_min,r_max,n_r);
+        gr_b.x.CreateGridMiddle(r_min,r_max,n_r);
         gr_b.y.zeros(n_r);
         //Write things to file
         std::string data_type = "histogram";
