@@ -271,12 +271,14 @@ public:
                 //else if (path.GetND() == 1)
                 //    bin_vol = r2-r1;
                 //assert(bin_vol!=-1);//Make sure one case is fulfilled
-                norm_vol = n_measure_vol[i]/path.GetVol();
+                //norm_vol = n_measure_vol[i]/path.GetVol();//TODO
+                norm_vol = n_measure_vol[i];
                 //if(i==0) std::cout << Optimization_Strategy<<"\t"<<gr_vol.y(i)<< "\t" << bin_vol<< "\t" << norm_vol << "\t" << gr_vol.y(i)/(norm_vol) << std::endl;
                 //gr_vol.y(i) = gr_vol.y(i)/(bin_vol*norm_vol);
                 gr_vol.y(i) = gr_vol.y(i)/(norm_vol);
                 if(path.GetPBC()){//If we do not have pbc then we just save 0, otherwise similar to volume term
-                    norm_b = n_measure_b[i]/path.GetVol();
+                    //norm_b = n_measure_b[i]/path.GetVol();
+                    norm_b = n_measure_b[i];
                     gr_b.y(i) = gr_b.y(i)/(norm_b);
                 }
                 tot(i)=gr_vol.y(i)+gr_b.y(i);
