@@ -61,20 +61,30 @@ private:
     double (*Function_f)(const double &mag_ri_RA); ///< Function pointer for the possible generalization
     vec<double> (*Function_gradient_f)(const double &mag_ri_RA, const vec<double> &ri_RA);
     double (*Function_laplace_f)(const double &mag_ri_RA);
+
+    //double Min=0;
+    //double Max=0; //just for debug
   
     vec<double> getRelevantNormalVector(vec<double> r1,vec<double> r2){
         vec<double> n(zeros<vec<double>>(path.GetND())); 
         for(int d=0;d<path.GetND();++d){
-            if(r1[d]>(path.GetL()-2*lambda_tau)&&r2[d]<2*lambda_tau) {
-                  n[d]=1;
+            if(r1[d]<-0.4*path.GetL()&&r2[d]>0.4*path.GetL()) {
+                  n[d]=-1;
             }
-        else if(r2[d]>(path.GetL()-2*lambda_tau)&&r1[d]<2*lambda_tau) {
-                n[d]=-1;
+        else if(r2[d]<-0.4*path.GetL()&&r1[d]>0.4*path.GetL()) {
+                n[d]=1;
             }
         }
         return n;
       }
-  
+    bool BE(vec<double> r1, vec<double> r2) {
+        int nd=r1.n_elem;
+        for(int i =0;i<nd;++i)
+            if((r1[i]<-0.4*path.GetL()&&r2[i]>0.4*path.GetL())||(r2[i]<-0.4*path.GetL()&&r1[i]>0.4*path.GetL()))
+                return true;
+        return false;
+    }
+
     /// Accumulate the observable
     virtual void Accumulate()
     {
@@ -86,8 +96,16 @@ private:
             for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
                 // Set r's
                 vec<double> RA = species_a->GetBead(particle_pairs[pp_i].first,b_i)->GetR();
-                vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
-                vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
+                vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();//TODO check when put in box is called, this doesn't make sense now... maybe afterwards, which would be easier for me to measure
+                //vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
+                //double mag_Delta_ri = mag(ri - ri_nextBead);
+                //double maxri=max(ri);
+                //double minri=min(ri);
+                //if(Min>minri||Max<maxri){
+                //    Min=std::min(Min,minri);
+                //    Max=std::max(Max,maxri);
+                //    std::cout << "new extremal value detected:\t max="<<Max<<"\tmin="<<Min<<std::endl;
+                //}
                 // Sum over actions for ri
                 std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_b,particle_pairs[pp_i].second)};
                 vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
@@ -100,14 +118,12 @@ private:
                 Direction.randn();
                 Direction=Direction/norm(Direction);
                 //Histogram loop
-                #pragma omp parallel for
                 for (uint32_t i=0;i<gr_vol.x.n_r;++i){
                     vec<double> Rhist=gr_vol.x.rs(i)*Direction;
                     vec<double> R=path.Dr(RA,Rhist);
                     // Get differences
                     vec<double> ri_R(ri-R);
                     double mag_ri_R = mag(ri_R);
-                    double mag_Delta_ri = mag(ri - ri_nextBead);
                     if(mag_ri_R<1e-6){//possibly dividing by near zero, big numerical instabilities therefore skip 
                         continue;
                     }
@@ -117,17 +133,15 @@ private:
                     double laplacian_f = Function_laplace_f(mag_ri_R);
 
                     // Volume Term
-                    //double tmp1=(-1./(mag_ri_R*4.*M_PI)) * laplacian_f;
-                    //double tmp2=(-1./(mag_ri_R*4.*M_PI)) * (-f*laplacian_action);
-                    //double tmp3=(-1./(mag_ri_R*4.*M_PI)) * (f*dot(gradient_action,gradient_action));
-                    //double tmp4=(-1./(mag_ri_R*4.*M_PI)) * (-2*dot(gradient_f,gradient_action));
                     #pragma omp atomic
                     tot_vol(i) +=(-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
                     n_measure_vol(i)++;
-                    //if(i==0) std::cout << Optimization_Strategy<<"\t"<<tmp1<< "\t"<<tmp2<<"\t"<<tmp3<<"\t"<<tmp4<<"\t"<<tmp1+tmp2+tmp3+tmp4<<std::endl;
                     //Boundary Term
-                    if((mag_Delta_ri>2*lambda_tau)&&path.GetPBC()) { //Boundary Event
-                        vec<double> NormalVector=getRelevantNormalVector(ri,ri_nextBead);
+                    //if((mag_Delta_ri>4*lambda_tau)&&path.GetPBC()) { //Boundary Event FIXME, doesn't work, this condition is always fulfilled without even touching a boundary event....
+                    if(BE(R,ri)&&path.GetPBC()) {
+                        //if(i==0) std::cout << b_i <<std::endl<<ri<<ri_nextBead<<std::endl; 
+                        std::cout << "be---------"<<ri<<"-----"<<R<<"------"<<std::endl;
+                        vec<double> NormalVector=getRelevantNormalVector(R,ri);
                         R+=NormalVector*path.GetL();//One has now to work with the picture of the particle in the other cell
                         ri_R=ri-R;
                         mag_ri_R=mag(ri_R);
@@ -137,7 +151,8 @@ private:
                         double VolumeFactor = path.GetVol()/path.GetSurface();//To correct the other measure
                         #pragma omp atomic
                         tot_b(i)+= VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart();//if more then one ion is present, make sure to divide to normalize it correctly
-                        n_measure_b(i)++;
+                        ++n_measure_b(i);
+                        //std::cout << "n_meas="<<n_measure_b(i) << "\tnorm="<<norm(NormalVector) << "\tdot="<<dot(IntegrandVector,NormalVector)<<"\ttot="<<VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart()<<std::endl;
                     }
                 }
             }
@@ -275,13 +290,14 @@ public:
                 norm_vol = n_measure_vol[i];
                 //if(i==0) std::cout << Optimization_Strategy<<"\t"<<gr_vol.y(i)<< "\t" << bin_vol<< "\t" << norm_vol << "\t" << gr_vol.y(i)/(norm_vol) << std::endl;
                 //gr_vol.y(i) = gr_vol.y(i)/(bin_vol*norm_vol);
-                gr_vol.y(i) = gr_vol.y(i)/(norm_vol);
-                if(path.GetPBC()){//If we do not have pbc then we just save 0, otherwise similar to volume term
+                gr_vol.y(i) = gr_vol.y(i)/(norm_vol);//FIXME somehow this gets changed drastically, however I am not sure why (L=20 works, L=10 doesn't work)
+                if(path.GetPBC()&&n_measure_b(i)!=0){//If we do not have pbc then we just save 0, otherwise similar to volume term
                     //norm_b = n_measure_b[i]/path.GetVol();
                     norm_b = n_measure_b[i];
                     gr_b.y(i) = gr_b.y(i)/(norm_b);
                 }
                 tot(i)=gr_vol.y(i)+gr_b.y(i);
+                //if(i==0) std::cout << "i=\t"<<i<<"\ttot(i)="<<tot(i) << "\tboundary="<<gr_b.y(i) << "\tvol="<<gr_vol.y(i)<<std::endl;
             }
             // Write to file
             if (first_time) {
