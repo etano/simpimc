@@ -140,7 +140,6 @@ private:
                     //if((mag_Delta_ri>4*lambda_tau)&&path.GetPBC()) { //Boundary Event FIXME, doesn't work, this condition is always fulfilled without even touching a boundary event....
                     if(BE(R,ri)&&path.GetPBC()) {
                         //if(i==0) std::cout << b_i <<std::endl<<ri<<ri_nextBead<<std::endl; 
-                        std::cout << "be---------"<<ri<<"-----"<<R<<"------"<<std::endl;
                         vec<double> NormalVector=getRelevantNormalVector(R,ri);
                         R+=NormalVector*path.GetL();//One has now to work with the picture of the particle in the other cell
                         ri_R=ri-R;
