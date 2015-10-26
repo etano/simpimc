@@ -217,6 +217,7 @@ public:
     species_list.push_back(species_a);
     std::string species_b_name = in.GetAttribute<std::string>("species_b");
     species_b = path.GetSpecies(species_b_name);
+    species_list.push_back(species_b);
     std::cout << "Setting up pair action between " << species_a_name << " and " << species_b_name << "..." << std::endl;
     use_long_range = in.GetAttribute<bool>("use_long_range",0);
     if (use_long_range) {
