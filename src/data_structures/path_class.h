@@ -145,8 +145,9 @@ public:
   /// Enforce the periodic boundary condition on a vector
   void PutInBox(vec<double> &r)
   {
-    for (uint32_t d_i=0; d_i<n_d; ++d_i)
-      r(d_i) -= nearbyint(r(d_i)*iL)*L;
+    if(pbc)//TODO check with etano, otherwise undefined behaviour...
+        for (uint32_t d_i=0; d_i<n_d; ++d_i)
+            r(d_i) -= nearbyint(r(d_i)*iL)*L;
   }
 
   /// Get dr, dr_p, and drr_p
