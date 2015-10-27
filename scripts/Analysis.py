@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import os
 import h5py as h5
