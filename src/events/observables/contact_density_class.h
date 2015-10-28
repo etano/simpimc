@@ -4,7 +4,8 @@
 namespace Contact_Density_Optimization_Functions {
     extern int ND=3;
     extern int z_a=1;
-    
+    extern double l=-2;
+     
     double f_simple(const double &mag_ri_RA){
         return 1;
     }
@@ -16,7 +17,7 @@ namespace Contact_Density_Optimization_Functions {
         return 0;
     }
 
-    double f_Assaraf(const double &mag_ri_RA){//TODO include the exponential factor for the long range part (compare to Assarafs paper eq 11)
+    double f_Assaraf(const double &mag_ri_RA){
         return 1. + 2*z_a*mag_ri_RA;
     }
     
@@ -25,6 +26,16 @@ namespace Contact_Density_Optimization_Functions {
     }
     double laplace_f_Assaraf(const double &mag_ri_RA){
         return 4*z_a/mag_ri_RA;
+    }
+    
+    double f_AssarafExp(const double &mag_ri_RA){
+        return (1. + 2*z_a*mag_ri_RA)*exp(l*mag_ri_RA);
+    }
+    
+    vec<double> gradient_f_AssarafExp(const double &mag_ri_RA, const vec<double> &ri_RA){//TODO Done with Mathematica, check therefore the calculation
+        return exp(l*mag_ri_RA)*ri_RA/mag_ri_RA*(2*z_a+l+2*z_a*l*mag_ri_RA);
+    }
+    double laplace_f_AssarafExp(const double &mag_ri_RA){//TODO still to implement correctly
         return 0;
     }
     
@@ -39,6 +50,15 @@ namespace Contact_Density_Optimization_Functions {
         return 3*4*z_a;
     }
 
+    double f_Exp(const double &mag_ri_RA){
+        return exp(l*mag_ri_RA);
+    }
+    vec<double> gradient_f_Exp(const double &mag_ri_RA, const vec<double> &ri_RA){
+        return l*exp(l*mag_ri_RA)*ri_RA/mag_ri_RA;
+    }
+    double laplace_f_Exp(const double &mag_ri_RA){
+        return exp(l*mag_ri_RA)*l*(2+l*mag_ri_RA)/mag_ri_RA;
+    }
 }
 
 /// Measures the contact density between two species of particles. Taken from Assaraf, Caffarel, and Scemma. Phys Rev E 75, 035701(R) (2007). http://journals.aps.org/pre/pdf/10.1103/PhysRevE.75.035701.
@@ -62,9 +82,6 @@ private:
     vec<double> (*Function_gradient_f)(const double &mag_ri_RA, const vec<double> &ri_RA);
     double (*Function_laplace_f)(const double &mag_ri_RA);
 
-    //double Min=0;
-    //double Max=0; //just for debug
-  
     vec<double> getRelevantNormalVector(vec<double> r1,vec<double> r2){
         vec<double> n(zeros<vec<double>>(path.GetND())); 
         for(int d=0;d<path.GetND();++d){
@@ -96,16 +113,7 @@ private:
             for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
                 // Set r's
                 vec<double> RA = species_a->GetBead(particle_pairs[pp_i].first,b_i)->GetR();
-                vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();//TODO check when put in box is called, this doesn't make sense now... maybe afterwards, which would be easier for me to measure
-                //vec<double> ri_nextBead = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetNextBead(1)->GetR();
-                //double mag_Delta_ri = mag(ri - ri_nextBead);
-                //double maxri=max(ri);
-                //double minri=min(ri);
-                //if(Min>minri||Max<maxri){
-                //    Min=std::min(Min,minri);
-                //    Max=std::max(Max,maxri);
-                //    std::cout << "new extremal value detected:\t max="<<Max<<"\tmin="<<Min<<std::endl;
-                //}
+                vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
                 // Sum over actions for ri
                 std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_b,particle_pairs[pp_i].second)};
                 vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
@@ -118,6 +126,7 @@ private:
                 Direction.randn();
                 Direction=Direction/norm(Direction);
                 //Histogram loop
+                #pragma omp parallel for
                 for (uint32_t i=0;i<gr_vol.x.n_r;++i){
                     vec<double> Rhist=gr_vol.x.rs(i)*Direction;
                     vec<double> R=path.Dr(RA,Rhist);
@@ -137,9 +146,7 @@ private:
                     tot_vol(i) +=(-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
                     n_measure_vol(i)++;
                     //Boundary Term
-                    //if((mag_Delta_ri>4*lambda_tau)&&path.GetPBC()) { //Boundary Event FIXME, doesn't work, this condition is always fulfilled without even touching a boundary event....
                     if(BE(R,ri)&&path.GetPBC()) {
-                        //if(i==0) std::cout << b_i <<std::endl<<ri<<ri_nextBead<<std::endl; 
                         vec<double> NormalVector=getRelevantNormalVector(R,ri);
                         R+=NormalVector*path.GetL();//One has now to work with the picture of the particle in the other cell
                         ri_R=ri-R;
@@ -151,7 +158,6 @@ private:
                         #pragma omp atomic
                         tot_b(i)+= VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart();//if more then one ion is present, make sure to divide to normalize it correctly
                         ++n_measure_b(i);
-                        //std::cout << "n_meas="<<n_measure_b(i) << "\tnorm="<<norm(NormalVector) << "\tdot="<<dot(IntegrandVector,NormalVector)<<"\ttot="<<VolumeFactor*dot(IntegrandVector,NormalVector)/species_b->GetNPart()<<std::endl;
                     }
                 }
             }
@@ -213,7 +219,6 @@ public:
         out.Write(prefix+"boundary/data_type",data_type);
         // Read in z_a
         z_a = in.GetAttribute<uint32_t>("z_a");
-        
         //Get lambda_tau
         lambda_tau=path.GetTau()*species_b->GetLambda(); 
         // Generate action list
@@ -253,6 +258,11 @@ public:
             Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_Squared;
             Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_Squared;
         }
+        else if (Optimization_Strategy=="Exp"){
+            Function_f=&Contact_Density_Optimization_Functions::f_Exp; 
+            Function_gradient_f=&Contact_Density_Optimization_Functions::gradient_f_Exp;
+            Function_laplace_f=&Contact_Density_Optimization_Functions::laplace_f_Exp;
+        }
         else {
             std::cout << "ERROR: unrecognized optimization strategy in contact density, please check again"<< std::endl;
             assert(false);
@@ -273,30 +283,13 @@ public:
             //else
             //  norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/path.GetVol();
             for (uint32_t i=0; i<gr_vol.x.n_r; i++) {
-                //double r1 = gr_vol.x(i);
-                //double r2 = (i<(gr_vol.x.n_r-1)) ? gr_vol.x(i+1):(2.*gr_vol.x(i)-gr_vol.x(i-1));
-                //double r = 0.5*(r1+r2);
-                //double bin_vol = r2-r1;
-                //double bin_vol=-1;
-                //if (path.GetND() == 3)
-                //double bin_vol = 4.*M_PI/3. * (r2*r2*r2-r1*r1*r1);
-                //else if (path.GetND() == 2)
-                //    bin_vol = M_PI * (r2*r2-r1*r1);
-                //else if (path.GetND() == 1)
-                //    bin_vol = r2-r1;
-                //assert(bin_vol!=-1);//Make sure one case is fulfilled
-                //norm_vol = n_measure_vol[i]/path.GetVol();//TODO
                 norm_vol = n_measure_vol[i];
-                //if(i==0) std::cout << Optimization_Strategy<<"\t"<<gr_vol.y(i)<< "\t" << bin_vol<< "\t" << norm_vol << "\t" << gr_vol.y(i)/(norm_vol) << std::endl;
-                //gr_vol.y(i) = gr_vol.y(i)/(bin_vol*norm_vol);
-                gr_vol.y(i) = gr_vol.y(i)/(norm_vol);//FIXME somehow this gets changed drastically, however I am not sure why (L=20 works, L=10 doesn't work)
+                gr_vol.y(i) = gr_vol.y(i)/(norm_vol);
                 if(path.GetPBC()&&n_measure_b(i)!=0){//If we do not have pbc then we just save 0, otherwise similar to volume term
-                    //norm_b = n_measure_b[i]/path.GetVol();
                     norm_b = n_measure_b[i];
                     gr_b.y(i) = gr_b.y(i)/(norm_b);
                 }
                 tot(i)=gr_vol.y(i)+gr_b.y(i);
-                //if(i==0) std::cout << "i=\t"<<i<<"\ttot(i)="<<tot(i) << "\tboundary="<<gr_b.y(i) << "\tvol="<<gr_vol.y(i)<<std::endl;
             }
             // Write to file
             if (first_time) {
