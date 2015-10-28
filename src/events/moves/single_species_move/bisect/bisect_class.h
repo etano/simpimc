@@ -93,10 +93,10 @@ protected:
         vec<double> delta_new(path.GetND());
         rng.NormRand(delta_new, 0., sigma);
         path.PutInBox(delta_new);
-        //bead_b->SetR(path.RBar(bead_c, bead_a) + delta_new);
-        vec<double> rNew(path.RBar(bead_c, bead_a) + delta_new);
-        path.PutInBox(rNew);
-        bead_b->SetR(rNew); //TODO check with etano, but this should be actually correct...
+        bead_b->SetR(path.RBar(bead_c, bead_a) + delta_new);
+        //vec<double> rNew(path.RBar(bead_c, bead_a) + delta_new);
+        //path.PutInBox(rNew);
+        //bead_b->SetR(rNew); //TODO check with etano, but this should be actually correct...
         new_log_sample_prob += rho_free_splines[level_i].GetLogRhoFree(delta_new);
 
         // Advance beads

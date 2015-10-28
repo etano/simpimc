@@ -114,6 +114,7 @@ private:
                 // Set r's
                 vec<double> RA = species_a->GetBead(particle_pairs[pp_i].first,b_i)->GetR();
                 vec<double> ri = species_b->GetBead(particle_pairs[pp_i].second,b_i)->GetR();
+                vec<double> ri_RA(path.Dr(ri,RA));
                 // Sum over actions for ri
                 std::vector<std::pair<std::shared_ptr<Species>,uint32_t>> only_ri{std::make_pair(species_b,particle_pairs[pp_i].second)};
                 vec<double> gradient_action(zeros<vec<double>>(path.GetND()));
@@ -131,7 +132,7 @@ private:
                     vec<double> Rhist=gr_vol.x.rs(i)*Direction;
                     vec<double> R=path.Dr(RA,Rhist);
                     // Get differences
-                    vec<double> ri_R(ri-R);
+                    vec<double> ri_R(path.Dr(ri,R));
                     double mag_ri_R = mag(ri_R);
                     if(mag_ri_R<1e-6){//possibly dividing by near zero, big numerical instabilities therefore skip 
                         continue;
@@ -144,12 +145,16 @@ private:
                     // Volume Term
                     #pragma omp atomic
                     tot_vol(i) +=(-1./(mag_ri_R*4.*M_PI))*(laplacian_f + f*(-laplacian_action + dot(gradient_action,gradient_action)) - 2.*dot(gradient_f,gradient_action));
+                    //double tmp3= (-1./(mag_ri_R*4.*M_PI))*laplacian_f;
+                    //double tmp4= (-1./(mag_ri_R*4.*M_PI))*laplacian_f;
+
+                    //std::cout << "Strat: "<<Optimization_Strategy << "\ttmp1="<<tmp1<< "\ttmp1="<<tmp1<< "\ttmp1="<<tmp1<< "\ttmp1="<<tmp1<<std::endl;
                     n_measure_vol(i)++;
                     //Boundary Term
-                    if(BE(R,ri)&&path.GetPBC()) {
-                        vec<double> NormalVector=getRelevantNormalVector(R,ri);
+                    if(BE(R,ri_RA)&&path.GetPBC()) {
+                        vec<double> NormalVector=getRelevantNormalVector(R,ri_RA);
                         R+=NormalVector*path.GetL();//One has now to work with the picture of the particle in the other cell
-                        ri_R=ri-R;
+                        ri_R=path.Dr(ri,R);
                         mag_ri_R=mag(ri_R);
                         if(mag_ri_R<1e-5)//It acts in the 3 power in the following part, this can lead to numerical instabilities
                             continue;
