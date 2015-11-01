@@ -35,7 +35,7 @@ public:
     if (pbc_) {
       iL_ = 1./L_;
       vol_ = pow(L_,n_d_);
-      surface_ = 2*n_d*pow(L,n_d-1);
+      surface_ = 2*n_d_*pow(L_,n_d_-1);
     } else {
       L_ = 0.;
       iL_ = 0.;

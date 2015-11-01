@@ -1,4 +1,18 @@
+sudo: false
+
 language: cpp
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+      - gfortran-4.8
+      - liblapack-dev
+      - libopenmpi-dev
+      - openmpi-bin
+      - libhdf5-serial-dev
 
 git:
     submodules: false
@@ -9,11 +23,7 @@ compiler:
 before_install:
   - find . -name .gitmodules -type f -print0 | xargs -0 sed -i 's/git@github.com:/https:\/\/github.com\//'
   - git submodule update --init --recursive
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq g++-4.8
   - export CXX="g++-4.8" CC="gcc-4.8"
-  - sudo apt-get install -qq gfortran-4.8
   - export F77="gfortran-4.8" FC="gfortran-4.8"
   - mkdir bin && cd bin
   - ln -s /usr/bin/g++-4.8 /home/travis/build/etano/simpimc/bin/g++
@@ -21,9 +31,6 @@ before_install:
   - ln -s /usr/bin/gfortran-4.8 /home/travis/build/etano/simpimc/bin/gfortran
   - export PATH="/home/travis/build/etano/simpimc/bin:${PATH}"
   - cd ..
-  - sudo apt-get install liblapack-dev
-  - sudo apt-get install -qq libopenmpi-dev openmpi-bin
-  - sudo apt-get install -qq libhdf5-serial-dev
   - export HDF5_HOME=/usr
 
 install:
