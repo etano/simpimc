@@ -11,6 +11,7 @@ private:
   double L_; ///< Cubic box side length
   double iL_; ///< Inverse of cubic box side length
   double vol_; ///< Volume of the simulation cell
+  double surface_; ///< Surface area of the simulation cell
   bool pbc_; ///< Whether or not using periodic boundary conditions
   double beta_; ///< Inverse temperature: 1/(k_B T)
   double importance_weight_; ///< Importance weight of current configuration
@@ -80,7 +81,7 @@ public:
   const double GetVol() { return vol_; }
 
   /// Return surface
-  const double GetSurface() { return surface; }
+  const double GetSurface() { return surface_; }
 
   /// Sets species index by matching the species name string
   std::shared_ptr<Species> GetSpecies(const std::string &species_name)
@@ -196,7 +197,7 @@ public:
   const uint32_t GetNSpecies() { return species_.size(); }
 
   /// Return if we are using periodic boundary conditions or not
-  const bool GetPBC() { return pbc; }
+  const bool GetPBC() { return pbc_; }
 };
 
 #endif // SIMPIMC_PATH_CLASS_H_

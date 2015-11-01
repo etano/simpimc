@@ -203,7 +203,7 @@ protected:
       //double fm2 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
       //f''=(-f(+2h)+16f(+1h)-30f(0h)+16f(-1h)-f(-2h))/12h^2+O(h^4)
       //tot += (-fp2+16*fp1-30*f0+16*fm1-fm2)/(12*eps*eps);
-      tot+= (fp1+fm1-2*f0)/(eps*eps);
+      tot += (fp1+fm1-2*f0)/(eps*eps);
       b->SetR(d_i,r0(d_i));
     }
 
@@ -325,7 +325,7 @@ public:
     // Generate particle pairs
     std::vector<uint32_t> particles_a, particles_b;
     std::vector<std::pair<uint32_t,uint32_t>> particle_pairs;
-    GenerateParticlePairs(particles, particles_a, particles_b, particle_pairs);//FIXME this is wrong for helium contact density
+    GenerateParticlePairs(particles, particles_a, particles_b, particle_pairs); // FIXME: this is wrong for helium contact density
     if (particle_pairs.size() == 0)
       return zero_vec;
 
@@ -342,7 +342,7 @@ public:
     }
 
     // Add in long range part
-    if (use_long_range) { // FIXME: currently this assumes level = 0
+    if (use_long_range) { // TODO: currently this assumes level = 0
       for (auto& particle_pair: particle_pairs)
         tot += CalcGradientULong(b_0, b_1, particle_pair.first, level);
     }

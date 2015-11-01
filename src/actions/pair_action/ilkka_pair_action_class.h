@@ -185,10 +185,12 @@ private:
     double q = 0.5*(r_mag + r_p_mag);
     double x = q + 0.5*r_r_p_mag;
     double y = q - 0.5*r_r_p_mag;
+
     // Calculate U and (dU/dxp,dU/dyp)
     double u = 0.;
     vec<double> du_dxp_du_dyp(2);
     eval_NUBspline_2d_d_vg(u_xy_spline,x,y,&u,du_dxp_du_dyp.memptr());
+
     // Do chain rule to get (dU/dx_i,dU/dy_i,dU/dz_i)
     // dU/dx_i = dU/dxp dxp/dx_i + dU/dyp dyp/dx_i
     // and same for y_i and z_i
@@ -213,16 +215,17 @@ private:
       r_r_p_i_r_r_p_mag.zeros();
     vec<double> tot = -0.5*(du_dxp_du_dyp(0)*(r_i_r_mag + r_r_p_i_r_r_p_mag) + du_dxp_du_dyp(1)*(r_i_r_mag - r_r_p_i_r_r_p_mag));
 
-  // Subtract out long range part
+    // Subtract out long range part
     if (use_long_range) {
-    // Limits
+      // Limits
       SetLimits(r_u_min, r_u_max, r_mag, r_p_mag);
 
-    // Splines
-     double tmp_u, tmp_du_dr;
+      // Splines
+      double tmp_u, tmp_du_dr;
       eval_NUBspline_1d_d_vg(u_long_r_spline,r_mag,&tmp_u,&tmp_du_dr);
       tot -= 0.5*tmp_du_dr*r_i_r_mag;
-   }
+    }
+
     return tot;
   }
 
