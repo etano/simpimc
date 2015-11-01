@@ -34,10 +34,12 @@ public:
     if (pbc_) {
       iL_ = 1./L_;
       vol_ = pow(L_,n_d_);
+      surface_ = 2*n_d*pow(L,n_d-1);
     } else {
       L_ = 0.;
       iL_ = 0.;
       vol_ = 1.;
+      surface_ = 1.;
     }
     tau_ = beta_/(1.*n_bead_);
 
@@ -77,7 +79,10 @@ public:
   /// Return volume
   const double GetVol() { return vol_; }
 
-  /// Returns species by matching the species name string
+  /// Return surface
+  const double GetSurface() { return surface; }
+
+  /// Sets species index by matching the species name string
   std::shared_ptr<Species> GetSpecies(const std::string &species_name)
   {
     for (const auto& species : species_)
@@ -144,7 +149,6 @@ public:
     r_mag = mag(r);
     r_p_mag = mag(r_p);
     r_r_p_mag = mag(r_r_p);
-
   }
 
   /// Get dr, dr_p, and drr_p and keep vectors
@@ -191,6 +195,8 @@ public:
   /// Return the time step
   const uint32_t GetNSpecies() { return species_.size(); }
 
+  /// Return if we are using periodic boundary conditions or not
+  const bool GetPBC() { return pbc; }
 };
 
 #endif // SIMPIMC_PATH_CLASS_H_

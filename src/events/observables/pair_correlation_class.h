@@ -102,9 +102,11 @@ public:
       double vol = path.GetVol();
       double norm;
       if (species_a == species_b)
-        norm = 0.5*n_measure*species_a->GetNPart()*(species_b->GetNPart()-1)*path.GetNBead()/vol;
+        //norm = 0.5*n_measure*species_a->GetNPart()*(species_b->GetNPart()-1)*path.GetNBead()/vol;
+        norm = 0.5*n_measure*species_a->GetNPart()*(species_b->GetNPart()-1)*path.GetNBead();
       else
-        norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/vol;
+        //norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/vol;
+        norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead();
       for (uint32_t i=0; i<gr.x.n_r; i++) {
         double r1 = gr.x(i);
         double r2 = (i<(gr.x.n_r-1)) ? gr.x(i+1):(2.*gr.x(i)-gr.x(i-1));

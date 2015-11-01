@@ -143,10 +143,8 @@ protected:
     // Store original position for particle i
     std::shared_ptr<Bead> b(species_a->GetBead(p_i,b_i));
     vec<double> r0(b->GetR());
-
     // Numerical tolerance
-    double eps = 1.e-7;
-
+    double eps = 1.e-4;
     // Calculate numerical gradient
     double r_mag, r_p_mag, r_r_p_mag;
     vec<double> tot(path.GetND());
@@ -160,7 +158,6 @@ protected:
       tot(d_i) = (f1-f2)/(2.*eps);
       b->SetR(d_i,r0(d_i));
     }
-
     return tot;
   }
 
@@ -184,21 +181,29 @@ protected:
     vec<double> r0(b->GetR());
 
     // Numerical tolerance
-    double eps = 1.e-7;
+    double eps = 1.e-4;
 
     // Calculate numerical gradient
     double r_mag, r_p_mag, r_r_p_mag;
     double tot = 0.;
+    path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+    double f0 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
     for (uint32_t d_i=0; d_i<path.GetND(); ++d_i) {
-      path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
-      double f0 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
       b->SetR(d_i,r0(d_i) + eps);
       path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
-      double f1 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
+      double fp1 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
+      //b->SetR(d_i,r0(d_i) + 2*eps);
+      //path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+      //double fp2 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
       b->SetR(d_i,r0(d_i) - eps);
       path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
-      double f2 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
-      tot += (f1+f2-2.*f0)/(eps*eps);
+      double fm1 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
+      //b->SetR(d_i,r0(d_i) - 2*eps);
+      //path.DrDrpDrrp(b_i,b_j,species_a,species_b,p_i,p_j,r_mag,r_p_mag,r_r_p_mag);
+      //double fm2 = CalcU(r_mag,r_p_mag,r_r_p_mag,level);
+      //f''=(-f(+2h)+16f(+1h)-30f(0h)+16f(-1h)-f(-2h))/12h^2+O(h^4)
+      //tot += (-fp2+16*fp1-30*f0+16*fm1-fm2)/(12*eps*eps);
+      tot+= (fp1+fm1-2*f0)/(eps*eps);
       b->SetR(d_i,r0(d_i));
     }
 
@@ -320,7 +325,7 @@ public:
     // Generate particle pairs
     std::vector<uint32_t> particles_a, particles_b;
     std::vector<std::pair<uint32_t,uint32_t>> particle_pairs;
-    GenerateParticlePairs(particles, particles_a, particles_b, particle_pairs);
+    GenerateParticlePairs(particles, particles_a, particles_b, particle_pairs);//FIXME this is wrong for helium contact density
     if (particle_pairs.size() == 0)
       return zero_vec;
 
