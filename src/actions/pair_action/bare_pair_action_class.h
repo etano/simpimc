@@ -156,7 +156,6 @@ public:
 
     // Sum over k std::vectors
     uint32_t skip = 1<<level;
-    double level_tau = skip*path.GetTau();
     double tot = 0.;
     size_t n_ks = path.ks.vecs.size();
     #pragma omp parallel for collapse(2) reduction(+:tot)
