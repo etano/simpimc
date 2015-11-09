@@ -160,13 +160,14 @@ public:
     size_t n_ks = path.ks.vecs.size();
     #pragma omp parallel for collapse(2) reduction(+:tot)
     for (uint32_t k_i=0; k_i<n_ks; k_i++)
-      for (uint32_t b_i=0; b_i<path.GetNBead(); b_i++)
-        tot += CMag2(rho_k_a(b_i)(k_i),rho_k_b(b_i)(k_i))*v_long_k(k_i);
+      for (uint32_t b_i=b_0; b_i<b_1; b_i+=skip)
+        tot += v_long_k(k_i)*CMag2(rho_k_a(species_a->bead_loop(b_i))(k_i),rho_k_b(species_b->bead_loop(b_i))(k_i));
 
     if (species_a != species_b)
       tot *= 2.;
 
-    return tot;
+    double level_tau = skip*path.GetTau();
+    return level_tau*tot;
   }
 
   /// Calculate the beta derivative of the action
