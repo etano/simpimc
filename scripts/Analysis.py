@@ -335,19 +335,19 @@ def AddObservable(f, section, obs, start_cut):
     elif data_type == "matrix":
         obs.append(Matrix(prefix, section_name, section_type, start_cut))
 
-def usage():
-    print "Usage: %s [start cut] file0.h5 file1.h5 ..." % os.path.basename(sys.argv[0])
+def usage(argv):
+    print "Usage: %s [start cut] file0.h5 file1.h5 ..." % os.path.basename(argv[0])
     sys.exit(2)
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
     if "-h" in argv or "--help" in argv:
-        usage()
+        usage(argv)
 
     # Get start cut
     try:
-        start_cut = int(sys.argv[1])
+        start_cut = int(argv[1])
         firstArg = 2
     except:
         start_cut = 0
@@ -355,7 +355,7 @@ def main(argv=None):
 
     # Get h5 files
     files = []
-    for file in sys.argv[firstArg:]:
+    for file in argv[firstArg:]:
         files.append(file)
 
     # Get observables
