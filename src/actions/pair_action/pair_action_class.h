@@ -110,7 +110,7 @@ protected:
       // Loop B particles with other A particles
       for (const auto& p: particles_b)
         for (const auto& q: other_particles_a)
-          particle_pairs.push_back(std::make_pair(p,q));
+          particle_pairs.push_back(std::make_pair(q,p));
       // Loop over A particles with B particles
       for (const auto& p: particles_a)
         for (const auto& q: particles_b)
