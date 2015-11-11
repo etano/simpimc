@@ -7,6 +7,7 @@
 class BarePairAction : public PairAction
 {
 private:
+  bool is_coulomb; ///< Whether or not the bare action is Coulomb
   double k_cutoff; ///< Cutoff in k space
   double r_v_max; ///< Maximum distance possible in the pair potential spline
   double r_v_min; ///< Minimum distance possible in the pair potential spline
@@ -29,6 +30,9 @@ public:
     // Load file
     IO pa_in;
     pa_in.Load(file_name);
+
+    // Check if bare Coulomb (default false)
+    is_coulomb = in.GetAttribute<bool>("is_coulomb",false);
 
     // Boundary conditions
     BCtype_d xBC = {NATURAL, NATURAL}; // HACK: Is this correct?
@@ -103,10 +107,14 @@ public:
     // Calculate V
     double v = 0.;
     double tmp_v;
-    eval_NUBspline_1d_d(v_r_spline,r,&tmp_v);
-    v += 0.5*tmp_v;
-    eval_NUBspline_1d_d(v_r_spline,r_p,&tmp_v);
-    v += 0.5*tmp_v;
+    if (is_coulomb) {
+        v += (0.5/r) + (0.5/r_p);
+    } else {
+        eval_NUBspline_1d_d(v_r_spline,r,&tmp_v);
+        v += 0.5*tmp_v;
+        eval_NUBspline_1d_d(v_r_spline,r_p,&tmp_v);
+        v += 0.5*tmp_v;
+    }
     if (use_long_range) {
       SetLimits(r_v_long_min, r_v_long_max, r, r_p);
       eval_NUBspline_1d_d(v_long_r_spline,r,&tmp_v);
