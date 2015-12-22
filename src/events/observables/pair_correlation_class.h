@@ -10,35 +10,19 @@ private:
   Histogram gr; ///< Histogram representing g(r)
   std::shared_ptr<Species> species_a; ///< First species
   std::shared_ptr<Species> species_b; ///< Second species
+  std::vector<std::pair<uint32_t,uint32_t>> particle_pairs; ///< Particle pairs
 
   /// Accumulate the observable
   virtual void Accumulate()
   {
     path.SetMode(NEW_MODE);
-    // Homogeneous
     double cofactor = path.GetSign()*path.GetImportanceWeight();
-    if (species_a == species_b) {
-      for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
-        for (uint32_t p_i=0; p_i<species_a->GetNPart()-1; ++p_i) {
-          for (uint32_t p_j=p_i+1; p_j<species_b->GetNPart(); ++p_j) {
-            vec<double> dr(path.Dr(species_a->GetBead(p_i,b_i),species_b->GetBead(p_j,b_i)));
-            uint32_t i = gr.x.ReverseMap(mag(dr));
-            if (i < gr.x.n_r)
-              gr.y(i) = gr.y(i) + 1.*cofactor;
-          }
-        }
-      }
-    // Homologous
-    } else {
-      for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
-        for (uint32_t p_i=0; p_i<species_a->GetNPart(); ++p_i) {
-          for (uint32_t p_j=0; p_j<species_b->GetNPart(); ++p_j) {
-            vec<double> dr(path.Dr(species_a->GetBead(p_i,b_i),species_b->GetBead(p_j,b_i)));
-            uint32_t i = gr.x.ReverseMap(mag(dr));
-            if (i < gr.x.n_r)
-              gr.y(i) = gr.y(i) + 1.*cofactor;
-          }
-        }
+    for (uint32_t b_i=0; b_i<path.GetNBead(); ++b_i) {
+      for (const auto& p : particle_pairs) {
+        vec<double> dr(path.Dr(species_a->GetBead(p.first,b_i),species_b->GetBead(p.second,b_i)));
+        uint32_t i = gr.x.ReverseMap(mag(dr));
+        if (i < gr.x.n_r)
+          gr.y(i) = gr.y(i) + 1.*cofactor;
       }
     }
 
@@ -62,6 +46,17 @@ public:
     std::string species_b_name = in.GetAttribute<std::string>("species_b");
     species_a = path.GetSpecies(species_a_name);
     species_b = path.GetSpecies(species_b_name);
+
+    // Generate particle pairs
+    if (species_a == species_b) {
+      for (uint32_t p_i=0; p_i<species_a->GetNPart()-1; ++p_i)
+        for (uint32_t p_j=p_i+1; p_j<species_b->GetNPart(); ++p_j)
+          particle_pairs.push_back(std::make_pair(p_i,p_j));
+    } else {
+      for (uint32_t p_i=0; p_i<species_a->GetNPart(); ++p_i)
+        for (uint32_t p_j=0; p_j<species_b->GetNPart(); ++p_j)
+          particle_pairs.push_back(std::make_pair(p_i,p_j));
+    }
 
     // Read in grid info
     double r_min = in.GetAttribute<double>("r_min",0.);
