@@ -4,29 +4,28 @@
   <Parallel procs_per_group="1" />
   <System n_d="2" n_bead="64" beta="1.0" L="10.0" pbc="1" />
   <Particles>
-    <Species name="eU" n_part="5" lambda="0.5" fermi="1" fixed_node="0" init_type="Random" cofactor="0.5" prefix="free.0" />
+    <Species name="e_u" n_part="5" lambda="0.5" fermi="1" fixed_node="0" init_type="Random" cofactor="0.5" prefix="free.0" />
   </Particles>
   <Actions>
-    <Action name="KineticU" type="Kinetic" n_images="200" species="eU" />
+    <Action name="kinetic_e_u" type="Kinetic" n_images="200" species="e_u" />
   </Actions>
   <Moves>
-    <Move name="PermBisectU" type="PermBisectIterative" species="eU" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
-    <Move name="BisectU" type="Bisect" species="eU" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
+    <Move name="bisect_e_u" type="PermBisectIterative" species="e_u" n_level="5" n_images="1" adaptive="1" target_ratio="0.1" />
   </Moves>
   <Observables>
-    <Observable name="Energy" type="Energy" measure_per_sector="1" skip="1" />
-    <Observable name="PathDump" type="PathDump" skip="9" />
-    <Observable name="Sign" type="Sign" skip="1" />
-    <Observable name="PermutationU" type="Permutation" skip="1" species="eU" />
-    <Observable name="Time" type="Time" />
+    <Observable name="energy" type="Energy" measure_per_sector="1" skip="1" />
+    <Observable name="path_dump" type="PathDump" skip="9" />
+    <Observable name="sign" type="Sign" skip="1" />
+    <Observable name="permutation_e_u" type="Permutation" skip="1" species="e_u" />
+    <Observable name="time" type="Time" />
   </Observables>
   <Algorithm>
     <Loop n_step="1000">
       <Loop n_step="10000">
-        <Move name="PermBisectU" />
-        <Observable name="Sign" />
-        <Observable name="PermutationU" />
-        <Observable name="Energy" />
+        <Move name="bisect_e_u" />
+        <Observable name="sign" />
+        <Observable name="permutation_e_u" />
+        <Observable name="energy" />
       </Loop>
       <Write />
     </Loop>

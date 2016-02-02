@@ -43,12 +43,14 @@ private:
     // and move them
     affected_beads.clear();
     std::shared_ptr<Bead> beadA(species->GetBead(p_i,0));
-    std::shared_ptr<Bead> beadF(beadA->GetNextBead(species->GetNBead()));
+    std::shared_ptr<Bead> beadF(beadA->GetNextBead(species->GetNBead()-1));
     while(beadA != beadF) {
       affected_beads.push_back(beadA);
-      beadA->GetR() += dr;
+      beadA->SetR(beadA->GetR() + dr);
       beadA = beadA->GetNextBead(1);
     }
+    affected_beads.push_back(beadF);
+    beadF->SetR(beadF->GetR() + dr);
 
     // Calculate action change
     double old_action = 0.;

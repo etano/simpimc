@@ -13,16 +13,33 @@ except:
     startCut = 0
     section = sys.argv[1]
     firstArg = 2
-
 print section
 
 # Plot traces
 fig = plt.figure()
 ax  = fig.add_subplot(111)
-for file in sys.argv[firstArg:]:
-    f = h5.File(file,'r')
-    data = np.array(f[section][startCut:])
-    ax.plot(data,label=file)
+
+files = sys.argv[firstArg:]
+for file in files:
+    file_not_read = True
+    failure_i = 0
+    max_failure = 10
+    while (file_not_read and failure_i < max_failure):
+        try:
+            f = h5.File(file,'r')
+            data = np.array(f[section][startCut:])
+            ax.plot(data,label=file)
+            f.flush()
+            f.close()
+            file_not_read = False
+        except IOError as e:
+            print 'Trouble reading', section, 'in', file
+            failure_i += 1
+        except KeyError as e:
+            print 'Data not found for', section, 'in', file
+            file_not_read = False
+    if (failure_i == max_failure):
+        print 'Skipping', section, 'in', file
 
 # Shrink current axis by 20%
 box = ax.get_position()

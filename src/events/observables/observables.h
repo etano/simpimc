@@ -2,6 +2,7 @@
 #define SIMPIMC_OBSERVABLES_H_
 
 #include "contact_density_class.h"
+#include "contact_density_naive_class.h"
 #include "energy_class.h"
 #include "importance_weight_class.h"
 #include "pair_correlation_class.h"
@@ -17,6 +18,8 @@ std::shared_ptr<Observable> ObservableFactory(Input &in, IO &out, Path& path, st
   std::string type = in.GetAttribute<std::string>("type");
   if (type == "ContactDensity")
     return std::make_shared<ContactDensity>(path,actions,in,out);
+  else if (type == "ContactDensityNaive")
+    return std::make_shared<ContactDensityNaive>(path,actions,in,out);
   else if (type == "Energy")
     return std::make_shared<Energy>(path,actions,in,out);
   else if (type == "ImportanceWeight")
