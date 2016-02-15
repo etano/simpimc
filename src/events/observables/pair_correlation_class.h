@@ -61,7 +61,7 @@ public:
     // Read in grid info
     double r_min = in.GetAttribute<double>("r_min",0.);
     double r_max = in.GetAttribute<double>("r_max",path.GetL()/2.);
-    uint32_t n_r = in.GetAttribute<double>("n_r",1000);
+    uint32_t n_r = in.GetAttribute<double>("n_r",100);
     gr.x.CreateGrid(r_min,r_max,n_r);
     gr.y.zeros(n_r);
 
@@ -97,11 +97,9 @@ public:
       double vol = path.GetVol();
       double norm;
       if (species_a == species_b)
-        //norm = 0.5*n_measure*species_a->GetNPart()*(species_b->GetNPart()-1)*path.GetNBead()/vol;
-        norm = 0.5*n_measure*species_a->GetNPart()*(species_b->GetNPart()-1)*path.GetNBead();
+        norm = 0.5*n_measure*species_a->GetNPart()*(species_b->GetNPart()-1)*path.GetNBead()/vol;
       else
-        //norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/vol;
-        norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead();
+        norm = n_measure*species_a->GetNPart()*species_b->GetNPart()*path.GetNBead()/vol;
       for (uint32_t i=0; i<gr.x.n_r; i++) {
         double r1 = gr.x(i);
         double r2 = (i<(gr.x.n_r-1)) ? gr.x(i+1):(2.*gr.x(i)-gr.x(i-1));

@@ -54,7 +54,7 @@ public:
   virtual double Potential() { return 0.; };
 
   /// Returns the importance weight of the action for the whole path
-  virtual double ImportanceWeight() { return 0; };
+  virtual double ImportanceWeight() { return 1; };
 
   /// Write information about the action
   virtual void Write() {};
