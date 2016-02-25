@@ -36,18 +36,18 @@ for file in files:
             if data.size > all_data.size:
                 all_data.resize(data.shape)
                 count.resize(data.shape)
-                all_data += data
-                count += np.ones(data.shape)
+                all_data = all_data + data
+                count = count + np.ones(data.shape)
             elif all_data.size > data.size:
                 data2 = data.copy()
                 data2.resize(all_data.shape)
-                all_data += data2
+                all_data = all_data + data2
                 count2 = np.ones(data.shape)
                 count2.resize(all_data.shape)
-                count += count2
+                count = count + count2
             else:
-                all_data += data
-                count += np.ones(data.shape)
+                all_data = all_data + data
+                count = count + np.ones(data.shape)
             f.flush()
             f.close()
             file_not_read = False
