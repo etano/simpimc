@@ -11,6 +11,7 @@ private:
   uint32_t n_line_search; ///< Number of line searches performed
   uint32_t n_newton_raphson; ///< Number of complete newton raphson searches performed
 protected:
+  bool use_neighbors; ///< Whether or not to use Ilkka's neighboring determinant check
   bool use_nodal_distance; ///< Whether or not to use a nodal distance
   double dist_tolerance; ///< Tolerance used when computing nodal distance
   int dist_type; ///< Index of type of distance measure used
@@ -107,7 +108,7 @@ protected:
       max_factor *= 2.;
       for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
         other_b_i[p_i]->GetR() = other_b_i_0(p_i) - max_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
-      SetRhoF(b_i,ref_b,other_b_i);
+      SetRhoFRef(b_i,ref_b,other_b_i);
     }
 
     // Perform a bisection search for the sign change
@@ -118,7 +119,7 @@ protected:
         try_factor = 0.5*(max_factor+min_factor);
         for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i)
           other_b_i[p_i]->GetR() = other_b_i_0(p_i) - try_factor*dist_0_i_grad_mag*grad_rho_f_0(p_i);
-        SetRhoF(b_i,ref_b,other_b_i);
+        SetRhoFRef(b_i,ref_b,other_b_i);
         if (rho_f_0*rho_f(b_i) > 0.)
           min_factor = try_factor;
         else
@@ -210,7 +211,7 @@ protected:
         for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
           other_b_i[p_i]->GetR() = t_other_b_i(p_i) - (t_dist/grad_mag)*grad_rho_f(b_i,p_i);
         }
-        SetRhoF(b_i,ref_b,other_b_i);
+        SetRhoFRef(b_i,ref_b,other_b_i);
       } while (rho_f(b_i) < 0.);
 
       // Set new temporary path
@@ -261,24 +262,28 @@ protected:
   }
 
   /// Compute the determinant nodal action for time slice b_i
-  void SetRhoF(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
+  void SetRhoF(const int b_i, const int b_j, const std::vector<std::shared_ptr<Bead>> &other_b_i, const std::vector<std::shared_ptr<Bead>> &other_b_j)
   {
     // Set slice distance
-    uint32_t abs_slice_diff = abs(species->bead_loop(b_i)-species->GetRefBead());
+    uint32_t abs_slice_diff = abs(species->bead_loop(b_i)-species->bead_loop(b_j));
     uint32_t min_slice_diff = std::min(abs_slice_diff, species->GetNBead()-abs_slice_diff);
 
     // Compute Gij matrix
     mat<double> g_ij(species->GetNPart(),species->GetNPart());
     for (uint32_t p_i=0; p_i<species->GetNPart(); ++p_i) {
       for (uint32_t p_j=0; p_j<species->GetNPart(); ++p_j) {
-        g_ij(p_i,p_j) = GetGij(ref_b[p_i], other_b_i[p_j], min_slice_diff); // TODO: Fast updates
+        g_ij(p_i,p_j) = GetGij(other_b_i[p_i], other_b_j[p_j], min_slice_diff); // TODO: Fast updates
       }
     }
 
     // Compute determinant
     rho_f(b_i) = det(g_ij);
+  }
 
-    return;
+  /// Compute the determinant nodal action for time slice b_i
+  void SetRhoFRef(const int b_i, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::shared_ptr<Bead>> &other_b_i)
+  {
+    SetRhoF(b_i, species->GetRefBead(), other_b_i, ref_b);
   }
 
   /// Compute the gradient of the nodal action for time slice b_i
@@ -331,38 +336,66 @@ protected:
   virtual double GetGijDGijDr(const std::shared_ptr<Bead> &b_i, const std::shared_ptr<Bead> &b_j, const uint32_t slice_diff, vec<double> &dgij_dr) = 0;
 
   /// Compute the nodal action without using the nodal distance
-  double SimpleAction(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b, const int n_bead_in_move, const bool check_all)
+  double SimpleAction(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b, const int n_bead_in_move)
   {
     // Compute action
     double tot = 0.;
-      for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-        if (b_i_vec[b_i] != species->GetRefBead())  {
-          SetRhoF(b_i_vec[b_i],ref_b,other_b[b_i]);
-          if (rho_f(b_i_vec[b_i]) < 0.) {
-            tot += 1.e100;
-            break;
-          }
+    for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
+      if (b_i_vec[b_i] != species->GetRefBead()) {
+        SetRhoFRef(b_i_vec[b_i],ref_b,other_b[b_i]);
+        if (rho_f(b_i_vec[b_i]) < 0.) {
+          tot += 1.e100;
+          break;
         }
       }
+    }
+
+    return tot;
+  }
+
+  /// Compute the nodal action without using the nodal distance
+  double NeighborAction(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b, const int n_bead_in_move)
+  {
+    // Compute action
+    double tot = 0.;
+    for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
+      if (b_i_vec[b_i] != species->GetRefBead()) {
+        SetRhoFRef(b_i_vec[b_i], ref_b, other_b[b_i]);
+        if (rho_f(b_i_vec[b_i]) < 0.) {
+          tot += 1.e100;
+          break;
+        }
+      }
+    }
+
+    if (tot < 1.e100) {
+      for (uint32_t b_i=0; b_i<n_bead_in_move-1; ++b_i) {
+        SetRhoF(b_i_vec[b_i], b_i_vec[b_i+1], other_b[b_i], other_b[b_i+1]);
+        if (rho_f(b_i_vec[b_i]) < 0.) {
+          tot += 1.e100;
+          break;
+        }
+      }
+    }
 
     return tot;
   }
 
   /// Compute the nodal action by using a nodal distance measure
-  double DistanceAction(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b, const int n_bead_in_move, const bool check_all)
+  double DistanceAction(const std::vector<uint32_t> &b_i_vec, const std::vector<std::shared_ptr<Bead>> &ref_b, const std::vector<std::vector<std::shared_ptr<Bead>>> &other_b, const int n_bead_in_move)
   {
     // Set nodal distances
     double tot = 0.;
     vec<double> t_dist(n_bead_in_move);
-      for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
-        if (b_i_vec[b_i] != species->GetRefBead())  {
-          t_dist(b_i) = GetNodalDistance(b_i_vec[b_i],ref_b,other_b[b_i]);
-          if (t_dist(b_i) < 0.) {
-            tot += 1.e100;
-            break;
-          }
+    for (uint32_t b_i=0; b_i<n_bead_in_move; ++b_i) {
+      if (b_i_vec[b_i] != species->GetRefBead())  {
+        t_dist(b_i) = GetNodalDistance(b_i_vec[b_i],ref_b,other_b[b_i]);
+        if (t_dist(b_i) < 0.) {
+          tot += 1.e100;
+          break;
         }
       }
+    }
 
     // Compute action from nodal distance
     if (tot == 0.) {
@@ -464,6 +497,9 @@ public:
   {
     // Read in things
     is_importance_weight = in.GetAttribute<bool>("is_importance_weight",false);
+
+    // Whether or not to use Ilkka's neighboring determinant check
+    use_neighbors = in.GetAttribute<bool>("use_neighbors",false);
 
     // Nodal distance things
     use_nodal_distance = in.GetAttribute<bool>("use_nodal_distance",false);
@@ -583,14 +619,17 @@ public:
       return 0.;
 
     // See if ref slice included
-    bool check_all = false;
-    if (b1 < species->GetNBead())
-      check_all = ((b0 <= species->GetRefBead()) && (b1 >= species->GetRefBead()));
-    else
-      check_all = (species->bead_loop(b1) >= species->GetRefBead());
+    bool includes_ref_slice = false;
+    uint32_t skip = 1<<level;
+    for (uint32_t b_i=b0; b_i<=b1; b_i+=skip) {
+      if (species->bead_loop(b_i) == species->GetRefBead()) {
+        includes_ref_slice = true;
+        break;
+      }
+    }
 
     // Set start and end beads
-    if (check_all) {
+    if (includes_ref_slice) {
       start_b = 0;
       end_b = species->GetNBead()-1;
     } else {
@@ -599,7 +638,6 @@ public:
     }
 
     // Set up bead index vector
-    uint32_t skip = 1<<level;
     int n_bead_in_move = 1 + (end_b - start_b)/skip;
     std::vector<uint32_t> b_i_vec;
     for (uint32_t b_i=start_b; b_i<=end_b; b_i+=skip)
@@ -625,9 +663,11 @@ public:
 
     // Decide which type of action to compute
     if (use_nodal_distance)
-      return DistanceAction(b_i_vec, ref_b, other_b, n_bead_in_move, check_all);
+      return DistanceAction(b_i_vec, ref_b, other_b, n_bead_in_move);
+    else if (use_neighbors)
+      return NeighborAction(b_i_vec, ref_b, other_b, n_bead_in_move);
     else
-      return SimpleAction(b_i_vec, ref_b, other_b, n_bead_in_move, check_all);
+      return SimpleAction(b_i_vec, ref_b, other_b, n_bead_in_move);
   }
 
   /// Returns the importance weight of the action for the whole path
