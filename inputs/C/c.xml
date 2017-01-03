@@ -1,0 +1,65 @@
+<Input>
+  <RNG seed="12345" />
+  <IO output_prefix="c.0" />
+  <Parallel procs_per_group="1" />
+  <System n_d="3" n_bead="16" beta="0.031577464" L="1.53327785176" PBC="1" k_cut="18.2615303337" />
+  <Particles>
+    <Species name="eU" type="e" n_part="10" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" />
+    <Species name="eD" type="e" n_part="10" lambda="0.5" fermi="1" fixed_node="1" init_type="Random" />
+    <Species name="p" type="p" n_part="20" lambda="0.00027216030018605583" fermi="0" fixed_node="0" init_type="Random" />
+    <Species name="C" type="C" n_part="1" lambda="0.000022857496211250974" fermi="0" fixed_node="0" init_type="Random" />
+  </Particles>
+  <Actions>
+    <Action name="KineticEU" type="Kinetic" species="eU" n_images="100" />
+    <Action name="KineticED" type="Kinetic" species="eD" n_images="100" />
+    <Action name="KineticP" type="Kinetic" species="p" n_images="100" />
+    <Action name="KineticC" type="Kinetic" species="C" n_images="100" />
+    <Action name="CoulombEUEU" type="IlkkaPairAction" file="e_e.h5" n_images="0" species_a="eU" species_b="eU" max_level="0" use_long_range="1" />
+    <Action name="CoulombEUED" type="IlkkaPairAction" file="e_e.h5" n_images="0" species_a="eU" species_b="eD" max_level="0" use_long_range="1" />
+    <Action name="CoulombEDED" type="IlkkaPairAction" file="e_e.h5" n_images="0" species_a="eD" species_b="eD" max_level="0" use_long_range="1" />
+    <Action name="CoulombEUP" type="IlkkaPairAction" file="e_p.h5" n_images="0" species_a="eU" species_b="p" max_level="0" use_long_range="1" />
+    <Action name="CoulombEDP" type="IlkkaPairAction" file="e_p.h5" n_images="0" species_a="eD" species_b="p" max_level="0" use_long_range="1" />
+    <Action name="CoulombEUC" type="IlkkaPairAction" file="e_C.h5" n_images="0" species_a="eU" species_b="C" max_level="0" use_long_range="1" />
+    <Action name="CoulombEDC" type="IlkkaPairAction" file="e_C.h5" n_images="0" species_a="eD" species_b="C" max_level="0" use_long_range="1" />
+    <Action name="CoulombPP" type="IlkkaPairAction" file="p_p.h5" n_images="0" species_a="p" species_b="p" max_level="0" use_long_range="1" />
+    <Action name="CoulombPC" type="IlkkaPairAction" file="p_C.h5" n_images="0" species_a="p" species_b="C" max_level="0" use_long_range="1" />
+    <Action name="CoulombCC" type="BarePairAction" file="C_C.h5" n_images="0" species_a="C" species_b="C" max_level="0" use_long_range="1" />
+  </Actions>
+  <Moves>
+    <Move name="BisectEU" type="PermBisectIterative" n_images="1" species="eU" n_level="3" adaptive="1" target_ratio="0.1" />
+    <Move name="BisectED" type="PermBisectIterative" n_images="1" species="eD" n_level="3" adaptive="1" target_ratio="0.1" />
+    <Move name="BisectP" type="PermBisectIterative" n_images="1" species="p" n_level="3" adaptive="1" target_ratio="0.1" />
+    <Move name="BisectC" type="PermBisectIterative" n_images="1" species="C" n_level="3" adaptive="1" target_ratio="0.1" />
+    <Move name="DisplaceEU" type="DisplaceParticle" species="eU" step_size="0.1" />
+    <Move name="DisplaceED" type="DisplaceParticle" species="eD" step_size="0.1" />
+    <Move name="DisplaceP" type="DisplaceParticle" species="p" step_size="0.1" />
+    <Move name="DisplaceC" type="DisplaceParticle" species="C" step_size="0.1" />
+  </Moves>
+  <Observables>
+    <Observable name="Energy" type="Energy" skip="1" />
+    <Observable name="PathDump" type="PathDump" skip="1" />
+    <Observable name="Time" type="Time" />
+  </Observables>
+  <Algorithm>
+    <Loop n_step="1000">
+      <Loop n_step="10">
+        <Loop n_step="20">
+          <Move name="BisectEU" />
+          <Move name="BisectED" />
+          <Move name="DisplaceEU" />
+          <Move name="DisplaceED" />
+        </Loop>
+        <Loop n_step="20">
+          <Move name="BisectP" />
+          <Move name="DisplaceP" />
+        </Loop>
+        <Loop n_step="1">
+          <Move name="BisectC" />
+          <Move name="DisplaceC" />
+        </Loop>
+        <Observable name="Energy" />
+      </Loop>
+      <Write />
+    </Loop>
+  </Algorithm>
+</Input>
